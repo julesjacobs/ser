@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 
-mod aut;
+mod ns;
 mod parser;
 
 use parser::{Expr, ExprHc, parse};
-use aut::NS;
+use ns::NS;
 
 fn main() {
     let test_cases = vec![
