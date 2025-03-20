@@ -1,31 +1,44 @@
 # Ser
 
-A Rust project.
+Serializability checker.
 
-## Getting Started
+## TODO
 
-### Prerequisites
+- Compute regex
+- Compute whatever input the tool takes for the semilinear set
 
-- Rust and Cargo (install from [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install))
+- Compute automaton from parsed program
+- Compute petri net from automaton
 
-### Building
+- Call the tool
+- Extract counterexample
 
-```bash
-cargo build
-```
+## Network System
 
-### Running
+Example:
 
-```bash
-cargo run
-```
+    {
+        "requests": [["Req1", "L0"], ["Req2", "L1"], ["Req3", "L2"]],
+        "responses": [["L0", "RespA"], ["L1", "RespB"], ["L2", "RespC"]],
+        "transitions": [
+            ["L0", "G0", "L1", "G1"],
+            ["L1", "G1", "L2", "G2"],
+            ["L2", "G2", "L0", "G3"]
+        ]
+    }
 
-### Testing
+## Syntax
 
-```bash
-cargo test
-```
-
-## License
-
-[MIT](LICENSE)
+e ::=
+  | x := e
+  | X := e
+  | e == e
+  | e ; e
+  | if(e){e}else{e}
+  | while(e){e}
+  | yield
+  | exit
+  | ?
+  | n
+  | x
+  | X

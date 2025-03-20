@@ -13,3 +13,5 @@ Cargo.lock
 
 # MacOS specific
 .DS_Store
+
+out/
