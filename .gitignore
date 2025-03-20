@@ -1,0 +1,15 @@
+# Generated files
+/target/
+
+# Rust specific
+**/*.rs.bk
+Cargo.lock
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# MacOS specific
+.DS_Store
