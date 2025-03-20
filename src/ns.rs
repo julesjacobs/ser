@@ -128,14 +128,12 @@ where
                 // find all reachable states from (l, g)
                 let mut todo = vec![(l, g)];
                 let mut reached = HashSet::new();
-                while !todo.is_empty() {
-                    let (l, g) = todo.pop().unwrap();
+                while let Some((l, g)) = todo.pop() {
+                    
                     reached.insert((l, g));
                     for (l1, g1, l2, g2) in &self.transitions {
-                        if l == l1 && g == g1 {
-                            if !reached.contains(&(l2, g2)) {
-                                todo.push((l2, g2));
-                            }
+                        if l == l1 && g == g1 && !reached.contains(&(l2, g2)) {
+                            todo.push((l2, g2));
                         }
                     }
                 }
@@ -208,7 +206,7 @@ where
             dot.push_str(&format!("  node [shape=diamond, style=filled, fillcolor=salmon] {}; // Responses\n",
                 response_nodes.join(" ")));
         }
-        dot.push_str("\n");
+        dot.push('\n');
 
         // Define all local states
         dot.push_str("  // Local state nodes\n");

@@ -2,6 +2,8 @@
 
 mod ns;
 mod parser;
+mod kleene;
+mod semilinear;
 
 use parser::{Expr, ExprHc, parse};
 use ns::NS;

@@ -113,7 +113,7 @@ pub enum Token {
     RParen,    // )
     LBrace,    // {
     RBrace,    // }
-    EOF,
+    Eof,
 }
 
 /// Parse a string directly into an expression
@@ -131,7 +131,7 @@ impl Parser {
     pub fn parse(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
         let expr = self.expression(table)?;
 
-        if self.current < self.tokens.len() && self.tokens[self.current] != Token::EOF {
+        if self.current < self.tokens.len() && self.tokens[self.current] != Token::Eof {
             return Err(format!(
                 "Unexpected token after expression: {:?}",
                 self.tokens[self.current]
@@ -248,7 +248,7 @@ impl Parser {
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.tokens.len() || self.tokens[self.current] == Token::EOF
+        self.current >= self.tokens.len() || self.tokens[self.current] == Token::Eof
     }
 
     fn previous(&self) -> Option<&Token> {
@@ -297,7 +297,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             '0'..='9' => {
                 let mut number = String::new();
                 while let Some(&c) = chars.peek() {
-                    if c.is_digit(10) {
+                    if c.is_ascii_digit() {
                         number.push(c);
                         chars.next();
                     } else {
@@ -374,7 +374,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
         }
     }
 
-    tokens.push(Token::EOF);
+    tokens.push(Token::Eof);
     Ok(tokens)
 }
 
@@ -392,7 +392,7 @@ mod tests {
                 Token::Identifier("x".to_string()),
                 Token::Assign,
                 Token::Number(42),
-                Token::EOF
+                Token::Eof
             ]
         );
     }
@@ -406,7 +406,7 @@ mod tests {
                 Token::Identifier("x".to_string()),
                 Token::Equal,
                 Token::Identifier("y".to_string()),
-                Token::EOF
+                Token::Eof
             ]
         );
     }
@@ -424,7 +424,7 @@ mod tests {
                 Token::Identifier("y".to_string()),
                 Token::Assign,
                 Token::Number(2),
-                Token::EOF
+                Token::Eof
             ]
         );
     }
@@ -452,7 +452,7 @@ mod tests {
                 Token::Assign,
                 Token::Number(3),
                 Token::RBrace,
-                Token::EOF
+                Token::Eof
             ]
         );
     }
@@ -474,7 +474,7 @@ mod tests {
                 Token::Assign,
                 Token::Identifier("x".to_string()),
                 Token::RBrace,
-                Token::EOF
+                Token::Eof
             ]
         );
     }
@@ -482,13 +482,13 @@ mod tests {
     #[test]
     fn test_tokenize_unknown() {
         let tokens = tokenize("?").unwrap();
-        assert_eq!(tokens, vec![Token::Question, Token::EOF]);
+        assert_eq!(tokens, vec![Token::Question, Token::Eof]);
     }
 
     #[test]
     fn test_tokenize_number() {
         let tokens = tokenize("42").unwrap();
-        assert_eq!(tokens, vec![Token::Number(42), Token::EOF]);
+        assert_eq!(tokens, vec![Token::Number(42), Token::Eof]);
     }
 
     #[test]
@@ -496,7 +496,7 @@ mod tests {
         let tokens = tokenize("variable").unwrap();
         assert_eq!(
             tokens,
-            vec![Token::Identifier("variable".to_string()), Token::EOF]
+            vec![Token::Identifier("variable".to_string()), Token::Eof]
         );
     }
 
