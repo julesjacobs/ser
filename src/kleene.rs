@@ -137,7 +137,7 @@ mod tests {
 
         let result = nfa_to_kleene(&nfa, 0);
         
-        // assert that it's equal to ((a · ((d)* · (b · c))))* as a string
-        assert_eq!(result.to_string(), "((a · ((d)* · (b · c))))*");
+        // assert that it's equal to ((a · ((d)* · (b · c))))* or ((a · ((d)* · (b · c))))*
+        assert!(result.to_string() == "((a · ((d)* · (b · c))))*" || result.to_string() == "((a · ((d)* · (b · c))))*");
     }
 }

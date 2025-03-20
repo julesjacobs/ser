@@ -7,9 +7,6 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::fs::{self, create_dir_all};
-use std::path::Path;
-use std::process::Command;
 
 /// Network System representation with type parameters:
 /// - G: Global state type
@@ -192,7 +189,7 @@ where
         // Define local state nodes style
         let local_state_nodes: Vec<_> = self.get_local_states().iter().map(|local| format!("L_{}", local)).collect();
         if !local_state_nodes.is_empty() {
-            dot.push_str(&format!("  node [shape=circle, style=filled, fillcolor=lightblue] {}; // Local states\n",
+            dot.push_str(&format!("  node [style=\"filled,rounded\", fillcolor=lightblue] {}; // Local states\n",
                 local_state_nodes.join(" ")));
         }
         let request_nodes: Vec<_> = self.get_requests().iter().map(|req| format!("REQ_{}", req)).collect();
@@ -264,7 +261,7 @@ where
         dot.push_str("    // Global state nodes\n");
         let global_nodes: Vec<_> = self.get_global_states().iter().map(|g| format!("G_{}", g)).collect();
         if !global_nodes.is_empty() {
-            dot.push_str(&format!("    node [shape=circle, style=filled, fillcolor=lightblue] {}; // Global states\n\n",
+            dot.push_str(&format!("    node [style=\"filled, rounded\", fillcolor=lightblue] {}; // Global states\n\n",
                 global_nodes.join(" ")));
         }
 
@@ -294,151 +291,19 @@ where
 
     /// Save GraphViz DOT files to disk and generate visualizations
     ///
-    /// This method:
-    /// 1. Creates the output directory if it doesn't exist
-    /// 2. Saves both the full network system and serialized automaton DOT files
-    /// 3. Runs the GraphViz 'dot' command to generate PNG, SVG, and PDF visualizations
-    /// 4. Optionally opens the generated PNG files for viewing
-    ///
     /// # Arguments
     /// * `name` - Base name for the generated files
     /// * `open_files` - Whether to open the generated PNG files for viewing
     ///
     /// Returns a Result with the paths to the generated files or an error message
     pub fn save_graphviz(&self, name: &str, open_files: bool) -> Result<Vec<String>, String> {
-        // Create output directory if it doesn't exist
-        let out_dir = Path::new("out");
-        if let Err(e) = create_dir_all(out_dir) {
-            return Err(format!("Failed to create output directory: {}", e));
-        }
-
-        let mut generated_files = Vec::new();
-
-        // Save full network system visualization
-        let full_dot_path = out_dir.join(format!("{}_network.dot", name));
-        let full_png_path = out_dir.join(format!("{}_network.png", name));
-        let full_svg_path = out_dir.join(format!("{}_network.svg", name));
-        let full_pdf_path = out_dir.join(format!("{}_network.pdf", name));
-
         let dot_content = self.to_graphviz();
-        match fs::write(&full_dot_path, &dot_content) {
-            Ok(_) => {
-                generated_files.push(full_dot_path.to_string_lossy().to_string());
-
-                // Generate PNG
-                match Command::new("dot")
-                    .args(["-Tpng", "-o", &full_png_path.to_string_lossy()])
-                    .arg(&full_dot_path)
-                    .output()
-                {
-                    Ok(output) => {
-                        // Check if the command executed successfully (exit code 0)
-                        if output.status.success() {
-                            // Verify the file was created
-                            if full_png_path.exists() {
-                                generated_files.push(full_png_path.to_string_lossy().to_string());
-                            } else {
-                                println!("Warning: dot command executed but PNG file was not created");
-                                if !output.stderr.is_empty() {
-                                    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
-                                }
-                            }
-                        } else {
-                            // Command failed with non-zero exit code
-                            return Err(format!(
-                                "GraphViz dot command failed with exit code {:?}: {}",
-                                output.status.code(),
-                                String::from_utf8_lossy(&output.stderr)
-                            ));
-                        }
-                    },
-                    Err(e) => {
-                        return Err(format!(
-                            "Failed to generate network visualization PNG: {}. \
-                            Is GraphViz installed? Try installing with 'brew install graphviz' on macOS or \
-                            'apt-get install graphviz' on Linux.",
-                            e
-                        ));
-                    }
-                }
-
-                // Generate SVG (better for web viewing)
-                match Command::new("dot")
-                    .args(["-Tsvg", "-o", &full_svg_path.to_string_lossy()])
-                    .arg(&full_dot_path)
-                    .output()
-                {
-                    Ok(output) => {
-                        if output.status.success() && full_svg_path.exists() {
-                            generated_files.push(full_svg_path.to_string_lossy().to_string());
-                        } else if !output.status.success() {
-                            println!("Warning: Failed to generate SVG: {}",
-                                String::from_utf8_lossy(&output.stderr));
-                        }
-                    },
-                    Err(e) => {
-                        println!("Warning: Failed to execute dot for SVG: {}", e);
-                    }
-                }
-
-                // Generate PDF (better for printing)
-                match Command::new("dot")
-                    .args(["-Tpdf", "-o", &full_pdf_path.to_string_lossy()])
-                    .arg(&full_dot_path)
-                    .output()
-                {
-                    Ok(output) => {
-                        if output.status.success() && full_pdf_path.exists() {
-                            generated_files.push(full_pdf_path.to_string_lossy().to_string());
-                        } else if !output.status.success() {
-                            println!("Warning: Failed to generate PDF: {}",
-                                String::from_utf8_lossy(&output.stderr));
-                        }
-                    },
-                    Err(e) => {
-                        println!("Warning: Failed to execute dot for PDF: {}", e);
-                    }
-                }
-            },
-            Err(e) => return Err(format!("Failed to write network DOT file: {}", e))
-        }
-
-        // Try to open the PNG files for viewing (platform-specific)
-        if open_files {
-
-            // Try to open the full network PNG if it exists
-            if full_png_path.exists() {
-                #[cfg(target_os = "macos")]
-                match Command::new("open").arg(&full_png_path).spawn() {
-                    Ok(_) => {},
-                    Err(e) => println!("Warning: Could not open network PNG: {}", e)
-                }
-
-                #[cfg(target_os = "linux")]
-                match Command::new("xdg-open").arg(&full_png_path).spawn() {
-                    Ok(_) => {},
-                    Err(e) => println!("Warning: Could not open network PNG: {}", e)
-                }
-
-                #[cfg(target_os = "windows")]
-                match Command::new("cmd")
-                    .args(["/C", "start", &full_png_path.to_string_lossy()])
-                    .spawn()
-                {
-                    Ok(_) => {},
-                    Err(e) => println!("Warning: Could not open network PNG: {}", e)
-                }
-            } else {
-                println!("Warning: Network PNG file does not exist: {}", full_png_path.display());
-            }
-        }
-
-        Ok(generated_files)
+        crate::graphviz::save_graphviz(&dot_content, name, "network", open_files)
     }
 
     /// Save GraphViz DOT files to disk and generate visualizations without opening files
     ///
-    /// This is a convenience wrapper for backward compatibility that calls save_graphviz(name, false)
+    /// This is a convenience wrapper that calls save_graphviz(name, false)
     pub fn save_graphviz_no_open(&self, name: &str) -> Result<Vec<String>, String> {
         self.save_graphviz(name, false)
     }
@@ -446,6 +311,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::{fs, path::Path};
+
     use super::*;
 
     #[test]

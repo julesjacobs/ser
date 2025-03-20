@@ -4,9 +4,12 @@ mod ns;
 mod parser;
 mod kleene;
 mod semilinear;
+mod petri;
+mod graphviz;
 
 use parser::{Expr, ExprHc, parse};
 use ns::NS;
+use petri::Petri;
 
 fn main() {
     let test_cases = vec![
@@ -116,6 +119,81 @@ fn main() {
             println!("1. Save the DOT content above to a file (e.g., network.dot)");
             println!("2. Use Graphviz: 'dot -Tpng network.dot -o network.png'");
             println!("3. Or use an online GraphViz viewer like https://dreampuf.github.io/GraphvizOnline/");
+        }
+    }
+    
+    // Demonstrate Petri Net with GraphViz visualization
+    println!("\n--- Petri Net GraphViz Demo ---");
+    
+    // Create a more comprehensive producer-consumer Petri net
+    // Initial marking:
+    // - 3 producers ready
+    // - 2 buffer slots (empty)
+    // - 2 consumers ready
+    let mut petri = Petri::new(vec![
+        // 3 producers ready
+        "producer_ready".to_string(), 
+        "producer_ready".to_string(),
+        "producer_ready".to_string(),
+        // 2 empty buffer slots
+        "buffer_empty".to_string(), 
+        "buffer_empty".to_string(),
+        // 2 consumers ready
+        "consumer_ready".to_string(),
+        "consumer_ready".to_string()
+    ]);
+    
+    // Add transitions
+    
+    // Produce: producer_ready + buffer_empty -> producer_busy + buffer_full
+    petri.add_transition(
+        vec!["producer_ready".to_string(), "buffer_empty".to_string()],
+        vec!["producer_busy".to_string(), "buffer_full".to_string()]
+    );
+    
+    // Producer reset: producer_busy -> producer_ready (after producing)
+    petri.add_transition(
+        vec!["producer_busy".to_string()],
+        vec!["producer_ready".to_string()]
+    );
+    
+    // Consume: consumer_ready + buffer_full -> consumer_busy + buffer_empty
+    petri.add_transition(
+        vec!["consumer_ready".to_string(), "buffer_full".to_string()],
+        vec!["consumer_busy".to_string(), "buffer_empty".to_string()]
+    );
+    
+    // Consumer reset: consumer_busy -> consumer_ready (after consuming)
+    petri.add_transition(
+        vec!["consumer_busy".to_string()],
+        vec!["consumer_ready".to_string()]
+    );
+    
+    // Multiple production (needs 2 empty slots)
+    petri.add_transition(
+        vec!["producer_ready".to_string(), "buffer_empty".to_string(), "buffer_empty".to_string()],
+        vec!["producer_ready".to_string(), "buffer_full".to_string(), "buffer_full".to_string()]
+    );
+    
+    // Generate and print GraphViz DOT representation
+    let dot = petri.to_graphviz();
+    
+    println!("Petri Net Visualization (DOT format):");
+    println!("{}", dot);
+    
+    // Save DOT files, generate visualizations, and automatically open them
+    println!("\nSaving and opening Petri net visualizations...");
+    match petri.save_graphviz("producer_consumer", true) {
+        Ok(files) => {
+            println!("Successfully generated the following files:");
+            for file in files {
+                println!("- {}", file);
+            }
+            println!("\nOpened PNG files in your default image viewer.");
+        },
+        Err(e) => {
+            println!("Failed to save visualizations: {}", e);
+            println!("\nYou can still visualize the DOT format manually using online tools.");
         }
     }
 }
