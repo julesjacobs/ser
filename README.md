@@ -7,11 +7,12 @@ Serializability checker.
 - Compute regex
 - Compute whatever input the tool takes for the semilinear set
 
-- Compute automaton from parsed program
+- Compute automaton from parsed program [Guy]
 - Compute petri net from automaton
 
 - Call the tool
 - Extract counterexample
+- Add short tutorial for how to call the SMPT tool [Guy]
 
 ## Network System
 
