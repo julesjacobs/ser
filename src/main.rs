@@ -94,13 +94,9 @@ fn main() {
 
     // Generate and print GraphViz DOT representations
     let dot = ns.to_graphviz();
-    let serialized_dot = ns.serialized_to_graphviz();
 
     println!("Full Network System Visualization (DOT format):");
     println!("{}", dot);
-
-    println!("\nSerialized Automaton Visualization (DOT format):");
-    println!("{}", serialized_dot);
 
     // Save DOT files, generate visualizations, and automatically open them
     println!("\nSaving and opening visualizations...");

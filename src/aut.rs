@@ -294,107 +294,6 @@ where
         dot
     }
 
-    /// Generate Graphviz DOT format specifically for the serialized automaton
-    pub fn serialized_to_graphviz(&self) -> String {
-        let mut dot = String::from("digraph SerializedAutomaton {\n");
-        dot.push_str("  // Graph settings\n");
-        dot.push_str("  rankdir=LR;\n");
-        dot.push_str("  node [fontsize=10];\n");
-        dot.push_str("  edge [fontsize=10];\n\n");
-
-        // Define node styles for different types
-        dot.push_str("  // Node styles\n");
-
-        // Define separate styles without wildcards
-        // Define global state nodes style
-        let global_state_nodes: Vec<_> = self.get_global_states().iter().map(|global| format!("G_{}", global)).collect();
-        if !global_state_nodes.is_empty() {
-            dot.push_str(&format!("  node [shape=circle, style=filled, fillcolor=lightblue] {}; // Global states\n",
-                global_state_nodes.join(" ")));
-        }
-        let serialized = self.serialized_automaton();
-
-        // Extract unique requests from serialized automaton
-        let mut unique_reqs = HashSet::new();
-        for (_, req, _, _) in &serialized {
-            unique_reqs.insert(req);
-        }
-
-        let request_nodes: Vec<_> = unique_reqs.iter().map(|req| format!("REQ_{}", req)).collect();
-        if !request_nodes.is_empty() {
-            dot.push_str(&format!("  node [shape=diamond, style=filled, fillcolor=lightgreen] {}; // Requests\n",
-                request_nodes.join(" ")));
-        }
-
-        // Extract unique responses from serialized automaton
-        let mut unique_resps = HashSet::new();
-        for (_, _, resp, _) in &serialized {
-            unique_resps.insert(resp);
-        }
-
-        let response_nodes: Vec<_> = unique_resps.iter().map(|resp| format!("RESP_{}", resp)).collect();
-        if !response_nodes.is_empty() {
-            dot.push_str(&format!("  node [shape=diamond, style=filled, fillcolor=salmon] {}; // Responses\n",
-                response_nodes.join(" ")));
-        }
-        dot.push_str("\n");
-
-        // Get all global states for the serialized automaton
-        dot.push_str("  // Global state nodes\n");
-        let globals = self.get_global_states();
-        for global in globals {
-            dot.push_str(&format!("  G_{} [label=\"{}\"];\n", global, global));
-        }
-
-        // Get unique requests and responses from the serialized automaton
-        let serialized = self.serialized_automaton();
-        let mut unique_reqs = HashSet::new();
-        let mut unique_resps = HashSet::new();
-
-        for (_, req, resp, _) in &serialized {
-            unique_reqs.insert(req);
-            unique_resps.insert(resp);
-        }
-
-        // Add request and response nodes
-        dot.push_str("\n  // Request nodes\n");
-        for req in unique_reqs {
-            dot.push_str(&format!("  REQ_{} [label=\"{}\"];\n", req, req));
-        }
-
-        dot.push_str("\n  // Response nodes\n");
-        for resp in unique_resps {
-            dot.push_str(&format!("  RESP_{} [label=\"{}\"];\n", resp, resp));
-        }
-
-        // Add transitions through request and response nodes
-        dot.push_str("\n  // Transitions\n");
-        for (from_global, req, resp, to_global) in &serialized {
-            // From global to request
-            dot.push_str(&format!(
-                "  G_{} -> REQ_{} [style=dashed];\n",
-                from_global, req
-            ));
-
-            // From request to response
-            dot.push_str(&format!(
-                "  REQ_{} -> RESP_{} [label=\"{} → {}\"];\n",
-                req, resp, from_global, to_global
-            ));
-
-            // From response to global
-            dot.push_str(&format!(
-                "  RESP_{} -> G_{} [style=dashed];\n",
-                resp, to_global
-            ));
-        }
-
-        // Close the graph
-        dot.push_str("}\n");
-
-        dot
-    }
-
     /// Save GraphViz DOT files to disk and generate visualizations
     ///
     /// This method:
@@ -506,109 +405,20 @@ where
             Err(e) => return Err(format!("Failed to write network DOT file: {}", e))
         }
 
-        // Save serialized automaton visualization
-        let serialized_dot_path = out_dir.join(format!("{}_serialized.dot", name));
-        let serialized_png_path = out_dir.join(format!("{}_serialized.png", name));
-        let serialized_svg_path = out_dir.join(format!("{}_serialized.svg", name));
-        let serialized_pdf_path = out_dir.join(format!("{}_serialized.pdf", name));
-
-        let serialized_content = self.serialized_to_graphviz();
-        match fs::write(&serialized_dot_path, &serialized_content) {
-            Ok(_) => {
-                generated_files.push(serialized_dot_path.to_string_lossy().to_string());
-
-                // Generate PNG
-                match Command::new("dot")
-                    .args(["-Tpng", "-o", &serialized_png_path.to_string_lossy()])
-                    .arg(&serialized_dot_path)
-                    .output()
-                {
-                    Ok(output) => {
-                        // Check if the command executed successfully (exit code 0)
-                        if output.status.success() {
-                            // Verify the file was created
-                            if serialized_png_path.exists() {
-                                generated_files.push(serialized_png_path.to_string_lossy().to_string());
-                            } else {
-                                println!("Warning: dot command executed but serialized PNG file was not created");
-                                if !output.stderr.is_empty() {
-                                    println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
-                                }
-                            }
-                        } else {
-                            // Command failed with non-zero exit code
-                            return Err(format!(
-                                "GraphViz dot command failed with exit code {:?}: {}",
-                                output.status.code(),
-                                String::from_utf8_lossy(&output.stderr)
-                            ));
-                        }
-                    },
-                    Err(e) => {
-                        return Err(format!("Failed to generate serialized visualization PNG: {}", e));
-                    }
-                }
-
-                // Generate SVG
-                match Command::new("dot")
-                    .args(["-Tsvg", "-o", &serialized_svg_path.to_string_lossy()])
-                    .arg(&serialized_dot_path)
-                    .output()
-                {
-                    Ok(output) => {
-                        if output.status.success() && serialized_svg_path.exists() {
-                            generated_files.push(serialized_svg_path.to_string_lossy().to_string());
-                        } else if !output.status.success() {
-                            println!("Warning: Failed to generate serialized SVG: {}",
-                                String::from_utf8_lossy(&output.stderr));
-                        }
-                    },
-                    Err(e) => {
-                        println!("Warning: Failed to execute dot for serialized SVG: {}", e);
-                    }
-                }
-
-                // Generate PDF
-                match Command::new("dot")
-                    .args(["-Tpdf", "-o", &serialized_pdf_path.to_string_lossy()])
-                    .arg(&serialized_dot_path)
-                    .output()
-                {
-                    Ok(output) => {
-                        if output.status.success() && serialized_pdf_path.exists() {
-                            generated_files.push(serialized_pdf_path.to_string_lossy().to_string());
-                        } else if !output.status.success() {
-                            println!("Warning: Failed to generate serialized PDF: {}",
-                                String::from_utf8_lossy(&output.stderr));
-                        }
-                    },
-                    Err(e) => {
-                        println!("Warning: Failed to execute dot for serialized PDF: {}", e);
-                    }
-                }
-            },
-            Err(e) => return Err(format!("Failed to write serialized DOT file: {}", e))
-        }
-
         // Try to open the PNG files for viewing (platform-specific)
         if open_files {
-            let mut opened_files = false;
 
             // Try to open the full network PNG if it exists
             if full_png_path.exists() {
                 #[cfg(target_os = "macos")]
                 match Command::new("open").arg(&full_png_path).spawn() {
-                    Ok(_) => {
-                        opened_files = true;
-                    },
+                    Ok(_) => {},
                     Err(e) => println!("Warning: Could not open network PNG: {}", e)
                 }
 
                 #[cfg(target_os = "linux")]
                 match Command::new("xdg-open").arg(&full_png_path).spawn() {
-                    Ok(_) => {
-                        opened_files = true;
-                    },
+                    Ok(_) => {},
                     Err(e) => println!("Warning: Could not open network PNG: {}", e)
                 }
 
@@ -617,74 +427,11 @@ where
                     .args(["/C", "start", &full_png_path.to_string_lossy()])
                     .spawn()
                 {
-                    Ok(_) => {
-                        opened_files = true;
-                    },
+                    Ok(_) => {},
                     Err(e) => println!("Warning: Could not open network PNG: {}", e)
                 }
             } else {
                 println!("Warning: Network PNG file does not exist: {}", full_png_path.display());
-            }
-
-            // Try to open the serialized automaton PNG if it exists
-            if serialized_png_path.exists() {
-                #[cfg(target_os = "macos")]
-                match Command::new("open").arg(&serialized_png_path).spawn() {
-                    Ok(_) => {
-                        opened_files = true;
-                    },
-                    Err(e) => println!("Warning: Could not open serialized PNG: {}", e)
-                }
-
-                #[cfg(target_os = "linux")]
-                match Command::new("xdg-open").arg(&serialized_png_path).spawn() {
-                    Ok(_) => {
-                        opened_files = true;
-                    },
-                    Err(e) => println!("Warning: Could not open serialized PNG: {}", e)
-                }
-
-                #[cfg(target_os = "windows")]
-                match Command::new("cmd")
-                    .args(["/C", "start", &serialized_png_path.to_string_lossy()])
-                    .spawn()
-                {
-                    Ok(_) => {
-                        opened_files = true;
-                    },
-                    Err(e) => println!("Warning: Could not open serialized PNG: {}", e)
-                }
-            } else {
-                println!("Warning: Serialized PNG file does not exist: {}", serialized_png_path.display());
-            }
-
-            // Try opening the SVG files if PNGs don't exist
-            if !opened_files {
-                if full_svg_path.exists() {
-                    #[cfg(target_os = "macos")]
-                    let _ = Command::new("open").arg(&full_svg_path).spawn();
-
-                    #[cfg(target_os = "linux")]
-                    let _ = Command::new("xdg-open").arg(&full_svg_path).spawn();
-
-                    #[cfg(target_os = "windows")]
-                    let _ = Command::new("cmd")
-                        .args(["/C", "start", &full_svg_path.to_string_lossy()])
-                        .spawn();
-                }
-
-                if serialized_svg_path.exists() {
-                    #[cfg(target_os = "macos")]
-                    let _ = Command::new("open").arg(&serialized_svg_path).spawn();
-
-                    #[cfg(target_os = "linux")]
-                    let _ = Command::new("xdg-open").arg(&serialized_svg_path).spawn();
-
-                    #[cfg(target_os = "windows")]
-                    let _ = Command::new("cmd")
-                        .args(["/C", "start", &serialized_svg_path.to_string_lossy()])
-                        .spawn();
-                }
             }
         }
 
@@ -1058,21 +805,6 @@ mod tests {
         assert!(dot.contains("G_ActiveSession"));
         assert!(dot.contains("G_NoSession -> G_ActiveSession"));
         assert!(dot.contains("Login / Success"));
-
-        // Test serialized_to_graphviz
-        let serialized_dot = ns.serialized_to_graphviz();
-        assert!(serialized_dot.starts_with("digraph SerializedAutomaton {"));
-
-        // Check for nodes in serialized view
-        assert!(serialized_dot.contains("G_NoSession [label=\"NoSession\"]"));
-        assert!(serialized_dot.contains("G_ActiveSession [label=\"ActiveSession\"]"));
-        assert!(serialized_dot.contains("REQ_Login [label=\"Login\"]"));
-        assert!(serialized_dot.contains("RESP_Success [label=\"Success\"]"));
-
-        // Check for connections in serialized view
-        assert!(serialized_dot.contains("G_NoSession -> REQ_Login"));
-        assert!(serialized_dot.contains("REQ_Login -> RESP_Success"));
-        assert!(serialized_dot.contains("RESP_Success -> G_ActiveSession"));
     }
 
     #[test]
@@ -1102,22 +834,16 @@ mod tests {
 
             // Check DOT files were created
             assert!(files.iter().any(|f| f.contains("test_network.dot")));
-            assert!(files.iter().any(|f| f.contains("test_serialized.dot")));
 
             // Check if files exist
             assert!(Path::new("out/test_network.dot").exists());
-            assert!(Path::new("out/test_serialized.dot").exists());
 
             // Clean up test files
             let _ = fs::remove_file("out/test_network.dot");
-            let _ = fs::remove_file("out/test_serialized.dot");
 
             // PNG files may or may not exist depending on GraphViz installation
             if Path::new("out/test_network.png").exists() {
                 let _ = fs::remove_file("out/test_network.png");
-            }
-            if Path::new("out/test_serialized.png").exists() {
-                let _ = fs::remove_file("out/test_serialized.png");
             }
         }
         // Note: We don't assert on error case since GraphViz might not be installed
