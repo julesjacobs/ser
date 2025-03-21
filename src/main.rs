@@ -6,7 +6,8 @@ mod kleene;
 mod semilinear;
 mod petri;
 mod graphviz;
-
+mod ns_to_petri;
+use ns_to_petri::ns_to_petri;
 use parser::{Expr, ExprHc, parse};
 use ns::NS;
 use petri::Petri;
@@ -71,7 +72,7 @@ fn main() {
     println!("\n--- Network System GraphViz Demo ---");
 
     // Create a simple network system for a login flow
-    let mut ns = NS::<String, String, String, String>::new();
+    let mut ns = NS::<String, String, String, String>::new("NoSession".to_string());
 
     // Add requests and responses
     ns.add_request("Login".to_string(), "Start".to_string());
@@ -184,6 +185,58 @@ fn main() {
     // Save DOT files, generate visualizations, and automatically open them
     println!("\nSaving and opening Petri net visualizations...");
     match petri.save_graphviz("producer_consumer", true) {
+        Ok(files) => {
+            println!("Successfully generated the following files:");
+            for file in files {
+                println!("- {}", file);
+            }
+            println!("\nOpened PNG files in your default image viewer.");
+        },
+        Err(e) => {
+            println!("Failed to save visualizations: {}", e);
+            println!("\nYou can still visualize the DOT format manually using online tools.");
+        }
+    }
+    
+    // Demonstrate NS to Petri conversion
+    println!("\n--- NS to Petri Conversion Demo ---");
+    
+    // Create a simple network system
+    let mut ns = NS::<String, String, String, String>::new("Empty".to_string());
+    
+    // Add requests
+    ns.add_request("GetData".to_string(), "Waiting".to_string());
+    ns.add_request("SaveData".to_string(), "Ready".to_string());
+    
+    // Add responses
+    ns.add_response("DataReceived".to_string(), "Success".to_string());
+    ns.add_response("Ready".to_string(), "Acknowledge".to_string());
+    
+    // Add transitions
+    ns.add_transition(
+        "Waiting".to_string(),
+        "Empty".to_string(),
+        "DataReceived".to_string(),
+        "HasData".to_string(),
+    );
+    
+    ns.add_transition(
+        "DataReceived".to_string(),
+        "HasData".to_string(),
+        "Ready".to_string(),
+        "Empty".to_string(),
+    );
+    
+    // Convert NS to Petri net
+    let petri_from_ns = ns_to_petri(&ns);
+    
+    // Generate visualization
+    println!("NS to Petri Visualization:");
+    println!("{}", petri_from_ns.to_graphviz());
+    
+    // Save DOT files, generate visualizations, and automatically open them
+    println!("\nSaving and opening NS to Petri conversion visualizations...");
+    match petri_from_ns.save_graphviz("ns_to_petri_conversion", true) {
         Ok(files) => {
             println!("Successfully generated the following files:");
             for file in files {

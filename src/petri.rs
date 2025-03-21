@@ -45,6 +45,16 @@ where
         
         places.into_iter().collect()
     }
+    
+    /// Get the initial marking of the Petri net
+    pub fn get_initial_marking(&self) -> Vec<Place> {
+        self.initial_marking.clone()
+    }
+    
+    /// Get all transitions in the Petri net
+    pub fn get_transitions(&self) -> Vec<(Vec<Place>, Vec<Place>)> {
+        self.transitions.clone()
+    }
 
     /// Generate Graphviz DOT format for visualizing the Petri net
     pub fn to_graphviz(&self) -> String {

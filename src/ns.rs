@@ -15,6 +15,9 @@ use std::collections::HashSet;
 /// - Resp: Response type
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct NS<G, L, Req, Resp> {
+    /// Initial global state
+    pub initial_global: G,
+    
     /// Requests from clients with their target local states
     pub requests: Vec<(Req, L)>,
 
@@ -32,13 +35,19 @@ where
     Req: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
     Resp: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
 {
-    /// Create a new empty Network System
-    pub fn new() -> Self {
+    /// Create a new Network System with the given initial global state
+    pub fn new(initial_global: G) -> Self {
         NS {
+            initial_global,
             requests: Vec::new(),
             responses: Vec::new(),
             transitions: Vec::new(),
         }
+    }
+    
+    /// Set the initial global state
+    pub fn set_initial_global(&mut self, initial_global: G) {
+        self.initial_global = initial_global;
     }
 
     /// Add a client request with its target local state
@@ -268,7 +277,15 @@ where
         // Get all global states for the serialized automaton
         let globals = self.get_global_states();
         for global in globals {
-            dot.push_str(&format!("    G_{} [label=\"{}\"];\n", global, global));
+            // Check if this is the initial global state
+            let is_initial = &self.initial_global == global;
+            
+            // Style initial global state differently
+            if is_initial {
+                dot.push_str(&format!("    G_{} [label=\"{} (initial)\", penwidth=3, color=darkgreen];\n", global, global));
+            } else {
+                dot.push_str(&format!("    G_{} [label=\"{}\"];\n", global, global));
+            }
         }
 
         // Add transitions in the serialized automaton
@@ -319,6 +336,7 @@ mod tests {
     fn test_ns_parse() {
         let input = r#"
             {
+                "initial_global": "G0",
                 "requests": [["Req1", "L0"], ["Req2", "L1"], ["Req3", "L2"]],
                 "responses": [["L0", "RespA"], ["L1", "RespB"], ["L2", "RespC"]],
                 "transitions": [
@@ -351,6 +369,7 @@ mod tests {
     fn test_ns_from_json() {
         let input = r#"
             {
+                "initial_global": "G0",
                 "requests": [["Req1", "L0"], ["Req2", "L1"]],
                 "responses": [["L0", "RespA"], ["L1", "RespB"]],
                 "transitions": [
@@ -368,7 +387,7 @@ mod tests {
 
     #[test]
     fn test_ns_build_and_serialize() {
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("EmptySession".to_string());
 
         // Add requests
         ns.add_request("Login".to_string(), "Start".to_string());
@@ -407,7 +426,7 @@ mod tests {
 
     #[test]
     fn test_get_local_and_global_states() {
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("G1".to_string());
 
         // Add transitions
         ns.add_transition(
@@ -440,22 +459,29 @@ mod tests {
     }
     #[test]
     fn test_serialized_automaton_no_transitions() {
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("Initial".to_string());
         // Add a single request and response but no transitions
         ns.add_request("Req1".to_string(), "L0".to_string());
         ns.add_response("L0".to_string(), "RespA".to_string());
 
-        // Without transitions, each (local, global) is just (L0, ?), but since
-        // we don't have any global states defined, get_global_states() is empty.
-        // That means we never enter the main loop since get_global_states() returns [].
-        // So the serialized automaton should be empty.
+        // Without transitions, a request to L0 directly creates a response since L0 has
+        // a response RespA. This will produce a tuple (Initial, Req1, RespA, Initial).
         let automaton = ns.serialized_automaton();
-        assert_eq!(automaton.len(), 0);
+        assert_eq!(automaton.len(), 1);
+        assert_eq!(
+            automaton[0],
+            (
+                "Initial".to_string(),
+                "Req1".to_string(),
+                "RespA".to_string(),
+                "Initial".to_string()
+            )
+        );
     }
 
     #[test]
     fn test_serialized_automaton_single_transition() {
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("G0".to_string());
 
         // Request/Response
         ns.add_request("Req1".to_string(), "L0".to_string());
@@ -469,7 +495,7 @@ mod tests {
             "G1".to_string(),
         );
 
-        // Now we expect to see if, for global state "G0", the request "Req1"
+        // Now we expect to see if, for initial global state "G0", the request "Req1"
         // can eventually yield a response "RespA" in global state "G1".
         // That should produce exactly one tuple: (G0, Req1, RespA, G1).
         let automaton = ns.serialized_automaton();
@@ -487,7 +513,7 @@ mod tests {
 
     #[test]
     fn test_serialized_automaton_chain_of_transitions() {
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("G0".to_string());
 
         // Requests / Responses
         ns.add_request("Req1".to_string(), "L0".to_string());
@@ -524,7 +550,7 @@ mod tests {
 
     #[test]
     fn test_serialized_automaton_branching_paths() {
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("G0".to_string());
 
         // Requests
         ns.add_request("ReqA".to_string(), "L0".to_string());
@@ -547,7 +573,7 @@ mod tests {
             "G2".to_string(),
         );
 
-        // For request "ReqA" or "ReqB" starting from global state G0 and local L0:
+        // For request "ReqA" or "ReqB" starting from initial global state G0 and local L0:
         //   - We can reach L1, G1 => yields "RespA"
         //   - We can reach L2, G2 => yields "RespB"
         //
@@ -593,7 +619,7 @@ mod tests {
 
     #[test]
     fn test_serialized_automaton_cycle() {
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("G0".to_string());
 
         // Request -> local state L0
         ns.add_request("Req1".to_string(), "L0".to_string());
@@ -627,7 +653,7 @@ mod tests {
 
     #[test]
     fn test_graphviz_output() {
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("NoSession".to_string());
 
         // Add requests and responses
         ns.add_request("Login".to_string(), "Init".to_string());
@@ -677,7 +703,7 @@ mod tests {
         // This test is conditional on GraphViz being installed
         // We'll only verify the file creation, not the PNG generation
 
-        let mut ns = NS::<String, String, String, String>::new();
+        let mut ns = NS::<String, String, String, String>::new("G1".to_string());
 
         // Add a simple system
         ns.add_request("Req".to_string(), "L1".to_string());
