@@ -6,247 +6,323 @@ mod kleene;
 mod semilinear;
 mod petri;
 mod graphviz;
+mod expr_to_ns;
 mod ns_to_petri;
-use ns_to_petri::ns_to_petri;
-use parser::{Expr, ExprHc, parse};
+
+use std::env;
+use std::fs;
+use std::path::Path;
+use std::process;
+
+use parser::{ExprHc, parse};
 use ns::NS;
-use petri::Petri;
+
+fn print_usage() {
+    println!("Usage: ser <filename or directory>");
+    println!("  - If a file is provided:");
+    println!("    - .json extension: Parses as a Network System (NS) and saves as graphviz");
+    println!("    - .ser extension: Parses as an Expr and pretty prints it");
+    println!("  - If a directory is provided:");
+    println!("    - Recursively processes all .json and .ser files in the directory and its subdirectories");
+}
 
 fn main() {
-    let test_cases = vec![
-        "x := 42",
-        "x == y",
-        "x := 1; y := 2",
-        "if(x == 1){y := 2}else{z := 3}",
-        "while(x == 0){x := x; y := 2}",
-        "yield",
-        "exit",
-        "?",
-        "42",
-        "variable",
+    let args: Vec<String> = env::args().collect();
+    
+    // First, save the example files that were previously in main()
+    if let Err(err) = save_example_ns() {
+        eprintln!("Warning: Failed to save example NS file: {}", err);
+    }
+    
+    if let Err(err) = save_example_expr() {
+        eprintln!("Warning: Failed to save example Expr file: {}", err);
+    }
+    
+    // Now handle normal command line usage
+    if args.len() != 2 {
+        print_usage();
+        process::exit(1);
+    }
+    
+    let path_str = &args[1];
+    let path = Path::new(path_str);
+    
+    if !path.exists() {
+        eprintln!("Error: '{}' does not exist", path_str);
+        process::exit(1);
+    }
+    
+    if path.is_dir() {
+        // Process directory recursively
+        match process_directory(path) {
+            Ok(count) => {
+                println!("Successfully processed {} files", count);
+            },
+            Err(err) => {
+                eprintln!("Error processing directory: {}", err);
+                process::exit(1);
+            }
+        }
+    } else {
+        // Process single file
+        match path.extension().and_then(|ext| ext.to_str()) {
+            Some("json") => process_json_file(path_str),
+            Some("ser") => process_ser_file(path_str),
+            _ => {
+                eprintln!("Error: Unsupported file extension for '{}'. Please use .json or .ser", path_str);
+                print_usage();
+                process::exit(1);
+            }
+        }
+    }
+}
+
+fn process_json_file(file_path: &str) {
+    println!("Processing JSON file: {}", file_path);
+    
+    let content = match fs::read_to_string(file_path) {
+        Ok(content) => content,
+        Err(err) => {
+            eprintln!("Error reading file: {}", err);
+            process::exit(1);
+        }
+    };
+    
+    // Parse the JSON as a Network System
+    let ns = match NS::<String, String, String, String>::from_json(&content) {
+        Ok(ns) => ns,
+        Err(err) => {
+            eprintln!("Error parsing JSON as Network System: {}", err);
+            process::exit(1);
+        }
+    };
+    
+    // Generate GraphViz output
+    println!("Generating GraphViz visualization...");
+    
+    // Get the file name without extension to use as the base name for output files
+    let path = Path::new(file_path);
+    let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("network");
+    
+    match ns.save_graphviz(file_stem, true) {
+        Ok(files) => {
+            println!("Successfully generated the following files:");
+            for file in files {
+                println!("- {}", file);
+            }
+        },
+        Err(err) => {
+            eprintln!("Failed to save visualization: {}", err);
+            process::exit(1);
+        }
+    }
+}
+
+fn process_ser_file(file_path: &str) {
+    println!("Processing SER file: {}", file_path);
+    
+    let content = match fs::read_to_string(file_path) {
+        Ok(content) => content,
+        Err(err) => {
+            eprintln!("Error reading file: {}", err);
+            process::exit(1);
+        }
+    };
+    
+    // Parse the content as an Expr
+    let mut table = ExprHc::new();
+    match parse(&content, &mut table) {
+        Ok(expr) => {
+            println!("Parsed expression: {}", expr);
+        },
+        Err(err) => {
+            eprintln!("Error parsing SER file: {}", err);
+            process::exit(1);
+        }
+    }
+}
+
+// Save example NS to JSON files
+fn save_example_ns() -> Result<(), String> {
+    // Create examples directory if it doesn't exist
+    let examples_dir = Path::new("examples");
+    if !examples_dir.exists() {
+        if let Err(err) = fs::create_dir_all(examples_dir) {
+            return Err(format!("Failed to create examples directory: {}", err));
+        }
+    }
+
+    // Example 1: Login flow
+    {
+        // Create a simple network system for a login flow
+        let mut ns = NS::<String, String, String, String>::new("NoSession".to_string());
+
+        // Add requests and responses
+        ns.add_request("Login".to_string(), "Start".to_string());
+        ns.add_request("Query".to_string(), "LoggedIn".to_string());
+        ns.add_request("Logout".to_string(), "LoggedIn".to_string());
+
+        ns.add_response("Start".to_string(), "Welcome".to_string());
+        ns.add_response("LoggedIn".to_string(), "QueryResult".to_string());
+        ns.add_response("Start".to_string(), "GoodBye".to_string());
+
+        // Add transitions
+        ns.add_transition(
+            "Start".to_string(),
+            "NoSession".to_string(),
+            "LoggedIn".to_string(),
+            "ActiveSession".to_string(),
+        );
+
+        ns.add_transition(
+            "LoggedIn".to_string(),
+            "ActiveSession".to_string(),
+            "Start".to_string(),
+            "NoSession".to_string(),
+        );
+
+        // Serialize to JSON
+        let json = match ns.to_json() {
+            Ok(json) => json,
+            Err(err) => return Err(format!("Failed to serialize login NS to JSON: {}", err)),
+        };
+
+        // Write to file
+        let file_path = examples_dir.join("login_flow.json");
+        if let Err(err) = fs::write(&file_path, json) {
+            return Err(format!("Failed to write login JSON file: {}", err));
+        }
+    }
+
+    // Example 2: Simple data flow
+    {
+        let mut ns = NS::<String, String, String, String>::new("Empty".to_string());
+        
+        // Add requests
+        ns.add_request("GetData".to_string(), "Waiting".to_string());
+        ns.add_request("SaveData".to_string(), "Ready".to_string());
+        
+        // Add responses
+        ns.add_response("DataReceived".to_string(), "Success".to_string());
+        ns.add_response("Ready".to_string(), "Acknowledge".to_string());
+        
+        // Add transitions
+        ns.add_transition(
+            "Waiting".to_string(),
+            "Empty".to_string(),
+            "DataReceived".to_string(),
+            "HasData".to_string(),
+        );
+        
+        ns.add_transition(
+            "DataReceived".to_string(),
+            "HasData".to_string(),
+            "Ready".to_string(),
+            "Empty".to_string(),
+        );
+
+        // Serialize to JSON
+        let json = match ns.to_json() {
+            Ok(json) => json,
+            Err(err) => return Err(format!("Failed to serialize data flow NS to JSON: {}", err)),
+        };
+
+        // Write to file
+        let file_path = examples_dir.join("data_flow.json");
+        if let Err(err) = fs::write(&file_path, json) {
+            return Err(format!("Failed to write data flow JSON file: {}", err));
+        }
+    }
+
+    Ok(())
+}
+
+// Save example Expr files to .ser files
+fn save_example_expr() -> Result<(), String> {
+    let examples = [
+        ("if_expr.ser", "if(x == 1){y := 2}else{z := 3}"),
+        ("while_expr.ser", "while(x == 0){x := 1}"),
+        ("seq_expr.ser", "x := 1; y := 2; z := 3"),
+        ("complex_expr.ser", "if(x == 1){if(y == 2){z := 3}else{z := 4}}else{z := 5}")
     ];
 
-    let mut table = ExprHc::new();
-
-    for source in test_cases {
-        println!("Source: {}", source);
-        match parse(source, &mut table) {
-            Ok(expr) => println!("AST: {:?}\nPrinted: {}\n", expr, expr),
-            Err(e) => println!("Parse error: {}\n", e),
+    // Create examples directory if it doesn't exist
+    let examples_dir = Path::new("examples");
+    if !examples_dir.exists() {
+        if let Err(err) = fs::create_dir_all(examples_dir) {
+            return Err(format!("Failed to create examples directory: {}", err));
         }
     }
 
-    // Demonstrate hash consing
-    println!("\nDemonstrating hash consing:");
-    let mut table = ExprHc::new();
-    let expr1 = parse("x := 42", &mut table).unwrap();
-    let expr2 = parse("x := 42", &mut table).unwrap();
+    // Write each example to a file
+    for (filename, content) in examples.iter() {
+        let file_path = examples_dir.join(filename);
+        if let Err(err) = fs::write(&file_path, content) {
+            return Err(format!("Failed to write SER file '{}': {}", filename, err));
+        }
+    }
 
-    println!("expr1 == expr2: {}", expr1 == expr2);
+    Ok(())
+}
 
-    let complex = parse("if(x == 1){y := 42}else{z := 42}", &mut table).unwrap();
+#[test]
+fn test_save_examples() {
+    if let Err(err) = save_example_ns() {
+        panic!("Failed to save example NS: {}", err);
+    }
+    
+    if let Err(err) = save_example_expr() {
+        panic!("Failed to save example Expr: {}", err);
+    }
+}
 
-    // Find the 42 constants
-    let number1 = match complex.as_ref() {
-        Expr::If(_, then_branch, _) => match then_branch.as_ref() {
-            Expr::Assign(_, num) => num,
-            _ => panic!("Expected Assign in then branch"),
-        },
-        _ => panic!("Expected If expression"),
+// Recursively process all files in a directory and its subdirectories
+fn process_directory(dir: &Path) -> Result<usize, String> {
+    let mut processed_count = 0;
+    
+    // Read directory contents
+    let entries = match fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(err) => return Err(format!("Error reading directory '{}': {}", dir.display(), err)),
     };
-
-    let number2 = match complex.as_ref() {
-        Expr::If(_, _, else_branch) => match else_branch.as_ref() {
-            Expr::Assign(_, num) => num,
-            _ => panic!("Expected Assign in else branch"),
-        },
-        _ => panic!("Expected If expression"),
-    };
-
-    println!(
-        "Same numbers in different branches are the same object: {}",
-        std::ptr::eq(number1, number2)
-    );
-
-    // Demonstrate Network System with GraphViz visualization
-    println!("\n--- Network System GraphViz Demo ---");
-
-    // Create a simple network system for a login flow
-    let mut ns = NS::<String, String, String, String>::new("NoSession".to_string());
-
-    // Add requests and responses
-    ns.add_request("Login".to_string(), "Start".to_string());
-    ns.add_request("Query".to_string(), "LoggedIn".to_string());
-    ns.add_request("Logout".to_string(), "LoggedIn".to_string());
-
-    ns.add_response("Start".to_string(), "Welcome".to_string());
-    ns.add_response("LoggedIn".to_string(), "QueryResult".to_string());
-    ns.add_response("Start".to_string(), "GoodBye".to_string());
-
-    // Add transitions
-    ns.add_transition(
-        "Start".to_string(),
-        "NoSession".to_string(),
-        "LoggedIn".to_string(),
-        "ActiveSession".to_string(),
-    );
-
-    ns.add_transition(
-        "LoggedIn".to_string(),
-        "ActiveSession".to_string(),
-        "Start".to_string(),
-        "NoSession".to_string(),
-    );
-
-    // Generate and print GraphViz DOT representations
-    let dot = ns.to_graphviz();
-
-    println!("Full Network System Visualization (DOT format):");
-    println!("{}", dot);
-
-    // Save DOT files, generate visualizations, and automatically open them
-    println!("\nSaving and opening visualizations...");
-    match ns.save_graphviz("login_flow", true) {
-        Ok(files) => {
-            println!("Successfully generated the following files:");
-            for file in files {
-                println!("- {}", file);
+    
+    // Process each entry
+    for entry in entries {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(err) => {
+                eprintln!("Warning: Error accessing entry: {}", err);
+                continue;
             }
-            println!("\nOpened PNG files in your default image viewer.");
-        },
-        Err(e) => {
-            println!("Failed to save visualizations: {}", e);
-            println!("\nYou can still visualize the DOT format manually:");
-            println!("1. Save the DOT content above to a file (e.g., network.dot)");
-            println!("2. Use Graphviz: 'dot -Tpng network.dot -o network.png'");
-            println!("3. Or use an online GraphViz viewer like https://dreampuf.github.io/GraphvizOnline/");
+        };
+        
+        let path = entry.path();
+        
+        if path.is_dir() {
+            // Recursively process subdirectory
+            match process_directory(&path) {
+                Ok(count) => processed_count += count,
+                Err(err) => eprintln!("Warning: {}", err),
+            }
+        } else if path.is_file() {
+            // Process file if it has a supported extension
+            if let Some(ext) = path.extension().and_then(|ext| ext.to_str()) {
+                let path_str = path.to_string_lossy().to_string();
+                
+                match ext {
+                    "json" => {
+                        process_json_file(&path_str);
+                        processed_count += 1;
+                    },
+                    "ser" => {
+                        process_ser_file(&path_str);
+                        processed_count += 1;
+                    },
+                    _ => {} // Skip files with unsupported extensions
+                }
+            }
         }
     }
     
-    // Demonstrate Petri Net with GraphViz visualization
-    println!("\n--- Petri Net GraphViz Demo ---");
-    
-    // Create a more comprehensive producer-consumer Petri net
-    // Initial marking:
-    // - 3 producers ready
-    // - 2 buffer slots (empty)
-    // - 2 consumers ready
-    let mut petri = Petri::new(vec![
-        // 3 producers ready
-        "producer_ready".to_string(), 
-        "producer_ready".to_string(),
-        "producer_ready".to_string(),
-        // 2 empty buffer slots
-        "buffer_empty".to_string(), 
-        "buffer_empty".to_string(),
-        // 2 consumers ready
-        "consumer_ready".to_string(),
-        "consumer_ready".to_string()
-    ]);
-    
-    // Add transitions
-    
-    // Produce: producer_ready + buffer_empty -> producer_busy + buffer_full
-    petri.add_transition(
-        vec!["producer_ready".to_string(), "buffer_empty".to_string()],
-        vec!["producer_busy".to_string(), "buffer_full".to_string()]
-    );
-    
-    // Producer reset: producer_busy -> producer_ready (after producing)
-    petri.add_transition(
-        vec!["producer_busy".to_string()],
-        vec!["producer_ready".to_string()]
-    );
-    
-    // Consume: consumer_ready + buffer_full -> consumer_busy + buffer_empty
-    petri.add_transition(
-        vec!["consumer_ready".to_string(), "buffer_full".to_string()],
-        vec!["consumer_busy".to_string(), "buffer_empty".to_string()]
-    );
-    
-    // Consumer reset: consumer_busy -> consumer_ready (after consuming)
-    petri.add_transition(
-        vec!["consumer_busy".to_string()],
-        vec!["consumer_ready".to_string()]
-    );
-    
-    // Multiple production (needs 2 empty slots)
-    petri.add_transition(
-        vec!["producer_ready".to_string(), "buffer_empty".to_string(), "buffer_empty".to_string()],
-        vec!["producer_ready".to_string(), "buffer_full".to_string(), "buffer_full".to_string()]
-    );
-    
-    // Generate and print GraphViz DOT representation
-    let dot = petri.to_graphviz();
-    
-    println!("Petri Net Visualization (DOT format):");
-    println!("{}", dot);
-    
-    // Save DOT files, generate visualizations, and automatically open them
-    println!("\nSaving and opening Petri net visualizations...");
-    match petri.save_graphviz("producer_consumer", true) {
-        Ok(files) => {
-            println!("Successfully generated the following files:");
-            for file in files {
-                println!("- {}", file);
-            }
-            println!("\nOpened PNG files in your default image viewer.");
-        },
-        Err(e) => {
-            println!("Failed to save visualizations: {}", e);
-            println!("\nYou can still visualize the DOT format manually using online tools.");
-        }
-    }
-    
-    // Demonstrate NS to Petri conversion
-    println!("\n--- NS to Petri Conversion Demo ---");
-    
-    // Create a simple network system
-    let mut ns = NS::<String, String, String, String>::new("Empty".to_string());
-    
-    // Add requests
-    ns.add_request("GetData".to_string(), "Waiting".to_string());
-    ns.add_request("SaveData".to_string(), "Ready".to_string());
-    
-    // Add responses
-    ns.add_response("DataReceived".to_string(), "Success".to_string());
-    ns.add_response("Ready".to_string(), "Acknowledge".to_string());
-    
-    // Add transitions
-    ns.add_transition(
-        "Waiting".to_string(),
-        "Empty".to_string(),
-        "DataReceived".to_string(),
-        "HasData".to_string(),
-    );
-    
-    ns.add_transition(
-        "DataReceived".to_string(),
-        "HasData".to_string(),
-        "Ready".to_string(),
-        "Empty".to_string(),
-    );
-    
-    // Convert NS to Petri net
-    let petri_from_ns = ns_to_petri(&ns);
-    
-    // Generate visualization
-    println!("NS to Petri Visualization:");
-    println!("{}", petri_from_ns.to_graphviz());
-    
-    // Save DOT files, generate visualizations, and automatically open them
-    println!("\nSaving and opening NS to Petri conversion visualizations...");
-    match petri_from_ns.save_graphviz("ns_to_petri_conversion", true) {
-        Ok(files) => {
-            println!("Successfully generated the following files:");
-            for file in files {
-                println!("- {}", file);
-            }
-            println!("\nOpened PNG files in your default image viewer.");
-        },
-        Err(e) => {
-            println!("Failed to save visualizations: {}", e);
-            println!("\nYou can still visualize the DOT format manually using online tools.");
-        }
-    }
+    Ok(processed_count)
 }
