@@ -2,6 +2,18 @@
 
 Serializability checker.
 
+## File Structure
+
+- `src/main.rs`: Entry point of the application that handles command line arguments and processes files.
+- `src/parser.rs`: Parses the serializable expressions (`.ser` files).
+- `src/ns.rs`: Implements the Network System (NS) data structure.
+- `src/expr_to_ns.rs`: Converts expressions to Network Systems.
+- `src/ns_to_petri.rs`: Converts Network Systems to Petri nets.
+- `src/kleene.rs`: Implements Kleene algebra operations and Kleene's algorithm.
+- `src/semilinear.rs`: Contains semilinear set operations and implements the Kleene trait.
+- `src/petri.rs`: Implements Petri net data structures.
+- `src/graphviz.rs`: Handles visualization of data structures.
+
 ## TODO
 
 - Compute regex
