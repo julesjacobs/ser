@@ -20,7 +20,7 @@ use ns::NS;
 fn print_usage() {
     println!("Usage: ser <filename or directory>");
     println!("  - If a file is provided:");
-    println!("    - .json extension: Parses as a Network System (NS) and saves as graphviz");
+    println!("    - .json extension: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz");
     println!("    - .ser extension: Parses as an Expr and pretty prints it");
     println!("  - If a directory is provided:");
     println!("    - Recursively processes all .json and .ser files in the directory and its subdirectories");
@@ -97,8 +97,8 @@ fn process_json_file(file_path: &str) {
         }
     };
     
-    // Generate GraphViz output
-    println!("Generating GraphViz visualization...");
+    // Generate GraphViz output for NS
+    println!("Generating GraphViz visualization for Network System...");
     
     // Get the file name without extension to use as the base name for output files
     let path = Path::new(file_path);
@@ -106,13 +106,32 @@ fn process_json_file(file_path: &str) {
     
     match ns.save_graphviz(file_stem, true) {
         Ok(files) => {
-            println!("Successfully generated the following files:");
+            println!("Successfully generated the following Network System files:");
             for file in files {
                 println!("- {}", file);
             }
         },
         Err(err) => {
-            eprintln!("Failed to save visualization: {}", err);
+            eprintln!("Failed to save NS visualization: {}", err);
+            process::exit(1);
+        }
+    }
+    
+    // Convert to Petri net
+    println!("Converting to Petri net and generating visualization...");
+    let petri = ns_to_petri::ns_to_petri(&ns);
+    
+    // Generate Petri net visualization
+    let petri_name = format!("{}_petri", file_stem);
+    match petri.save_graphviz(&petri_name, true) {
+        Ok(files) => {
+            println!("Successfully generated the following Petri net files:");
+            for file in files {
+                println!("- {}", file);
+            }
+        },
+        Err(err) => {
+            eprintln!("Failed to save Petri net visualization: {}", err);
             process::exit(1);
         }
     }

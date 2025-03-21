@@ -47,18 +47,13 @@ where
     // Add a token for the initial global state
     initial_marking.push(PetriState::Global(ns.initial_global.clone()));
     
-    // Add tokens for all requests from the NS
-    for req in ns.get_requests() {
-        initial_marking.push(PetriState::Request((*req).clone()));
-    }
-    
     let mut petri = Petri::new(initial_marking);
     
     // Create transitions for each request transition
     for (req, local) in &ns.requests {
         petri.add_transition(
             vec![PetriState::Request(req.clone())],
-            vec![PetriState::Request(req.clone()), PetriState::Local(local.clone())]
+            vec![PetriState::Local(local.clone())]
         );
     }
     
