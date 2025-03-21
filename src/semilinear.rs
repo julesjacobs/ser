@@ -105,14 +105,12 @@ impl SemilinearSet {
     /// Kleene star (closure under addition) of the semilinear set.
     fn star(&self) -> SemilinearSet {
         let mut result_components = Vec::new();
-        // Add the zero vector as one linear component (empty sum)
-        result_components.push( LinearSet { base: vec![0; self.dimension], periods: vec![] } );
 
         // We use bit masks to iterate over all non-empty subsets of components
         let n = self.components.len();
         // assert that the size is not too large
         debug_assert!(n <= 32, "Number of components in semilinear set is too large");
-        for mask in 1..(1<<n) {
+        for mask in 0..(1<<n) {
             // Determine subset X for this mask
             let mut subset_base = vec![0; self.dimension];
             let mut subset_periods: Vec<Vector> = Vec::new();
