@@ -21,15 +21,11 @@ Serializability checker.
 
 ## TODO
 
-- Compute regex
-- Compute whatever input the tool takes for the semilinear set
 
+- Add short tutorial for how to call the SMPT tool [Guy]
 - Compute automaton from parsed program [Guy]
-- Compute petri net from automaton
-
 - Call the tool
 - Extract counterexample
-- Add short tutorial for how to call the SMPT tool [Guy]
 
 ## Network System
 
