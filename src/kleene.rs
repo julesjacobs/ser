@@ -140,14 +140,14 @@ mod tests {
         // Check if characters 'a', 'b', 'c', and 'd' are in the result exactly once
         let mut chars = HashSet::new();
         for c in result.to_string().chars() {
-            if c.is_ascii() {
-            chars.insert(c);
+            if c.is_ascii_alphabetic() {
+                chars.insert(c);
+            }
         }
         assert_eq!(chars.len(), 4);
         assert!(chars.contains(&'a'));
         assert!(chars.contains(&'b'));
         assert!(chars.contains(&'c'));
         assert!(chars.contains(&'d'));
-        }
     }
 }
