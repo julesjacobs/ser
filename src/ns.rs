@@ -92,6 +92,7 @@ where
     /// Get all unique global states in the network system
     pub fn get_global_states(&self) -> Vec<&G> {
         let mut globals = HashSet::new();
+        globals.insert(&self.initial_global);
 
         // Collect global states from transitions
         for (_, from_global, _, to_global) in &self.transitions {
