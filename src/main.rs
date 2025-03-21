@@ -126,6 +126,24 @@ fn process_json_file(file_path: &str) {
             process::exit(1);
         }
     }
+
+    // Convert to Petri net with requests
+    println!("Converting to Petri net with requests and generating visualization...");
+    let petri_with_requests = ns_to_petri::ns_to_petri_with_requests(&ns);
+
+    let petri_with_requests_name = format!("{}_petri_with_requests", file_stem);
+    match petri_with_requests.save_graphviz(&petri_with_requests_name, true) {
+        Ok(files) => {
+            println!("Successfully generated the following Petri net with requests files:");
+            for file in files {
+                println!("- {}", file);
+            }
+        },
+        Err(err) => {
+            eprintln!("Failed to save Petri net with requests visualization: {}", err);
+            process::exit(1);
+        }
+    }
 }
 
 fn process_ser_file(file_path: &str) {

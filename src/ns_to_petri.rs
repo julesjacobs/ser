@@ -81,6 +81,86 @@ where
     petri
 }
 
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub enum ReqPetriState<L, G, Req, Resp> {
+    Local(Req,L),
+    Global(G),
+    Request(Req),
+    Response(Req,Resp)
+}
+
+impl<L, G, Req, Resp> std::fmt::Display for ReqPetriState<L, G, Req, Resp>
+where
+    L: std::fmt::Display,
+    G: std::fmt::Display,
+    Req: std::fmt::Display,
+    Resp: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ReqPetriState::Local(req, l) => write!(f, "L_{}_REQ_{}", l, req),
+            ReqPetriState::Global(g) => write!(f, "G_{}", g),
+            ReqPetriState::Request(req) => write!(f, "REQ_{}", req),
+            ReqPetriState::Response(req, resp) => write!(f, "RESP_{}_REQ_{}", req, resp),
+        }
+    }
+}
+// We convert the NS to a Petri net but the originating request is tracked by having a copy of the places for each request.
+// That is, for each local place in the original Petri net, we now have a separate copy of each place for each request.
+pub fn ns_to_petri_with_requests<L, G, Req, Resp>(ns: &NS<G, L, Req, Resp>) -> Petri<ReqPetriState<L, G, Req, Resp>>
+where
+    L: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+    G: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+    Req: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+    Resp: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+{
+    // Create a new Petri net with initial marking
+    // Start with one token for the initial global state
+    let mut initial_marking = Vec::new();
+
+    // Add a token for the initial global state
+    initial_marking.push(ReqPetriState::Global(ns.initial_global.clone()));
+
+    // Create a new Petri net with initial marking
+    let mut petri = Petri::new(initial_marking);
+
+    // Create transitions for each request transition
+    for (req, local) in &ns.requests {
+        petri.add_transition(
+            vec![ReqPetriState::Request(req.clone())],
+            vec![ReqPetriState::Local(req.clone(), local.clone())]
+        );
+    }
+
+    // Create transitions for each response transition
+    for req in ns.get_requests() {
+        for (local, resp) in &ns.responses {
+            petri.add_transition(
+                vec![ReqPetriState::Local(req.clone(), local.clone())],
+                vec![ReqPetriState::Response(req.clone(), resp.clone())]
+            );
+        }
+    }
+
+    // Create transitions for each state transition (l, g) -> (l', g')
+    for req in ns.get_requests() {
+        for (from_local, from_global, to_local, to_global) in &ns.transitions {
+            petri.add_transition(
+                vec![
+                    ReqPetriState::Local(req.clone(), from_local.clone()),
+                    ReqPetriState::Global(from_global.clone())
+                ],
+                vec![
+                    ReqPetriState::Local(req.clone(), to_local.clone()),
+                    ReqPetriState::Global(to_global.clone())
+                ]
+            );
+        }
+    }
+
+    petri
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
