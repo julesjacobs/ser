@@ -1,9 +1,11 @@
 // Semi-linear sets
 
+use std::collections::HashSet;
+
 /// A vector in d-dimensional nonnegative integer space.
 type Vector = Vec<usize>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct LinearSet {
     base: Vector,            // u0: the base vector
     periods: Vec<Vector>,    // [u1, u2, ..., um]: list of period generator vectors
@@ -17,16 +19,20 @@ struct SemilinearSet {
 
 impl SemilinearSet {
     /// Create a new semilinear set from a list of LinearSet components.
-    fn from_components(components: Vec<LinearSet>) -> Self {
-        let dimension = if components.is_empty() {
-            0
-        } else {
-            components[0].base.len()
-        };
-        // Ensure all components have the same dimension
-        debug_assert!(components.iter().all(|lin| lin.base.len() == dimension &&
-                                              lin.periods.iter().all(|p| p.len() == dimension)));
-        SemilinearSet { dimension, components }
+    fn new(dimension: usize, components: Vec<LinearSet>) -> Self {
+        // Assert that the dimension is the same for all components
+        debug_assert!(components.iter().all(|lin| lin.base.len() == dimension && lin.periods.iter().all(|p| p.len() == dimension)));
+
+        let mut new_components = HashSet::new();
+        for lin in components {
+            // filter out duplicate period vectors from lin
+            let mut new_periods = HashSet::new();
+            for p in lin.periods {
+                new_periods.insert(p);
+            }
+            new_components.insert(LinearSet { base: lin.base, periods: new_periods.into_iter().collect() });
+        }
+        SemilinearSet { dimension, components: new_components.into_iter().collect() }
     }
 
     /// Check if the semilinear set is empty.
@@ -62,10 +68,7 @@ impl SemilinearSet {
             unit[i] = 1;
             periods.push(unit);
         }
-        SemilinearSet {
-            dimension,
-            components: vec![ LinearSet { base, periods } ],
-        }
+        SemilinearSet::new(dimension, vec![ LinearSet { base, periods } ])
     }
 
     /// Return the union of this set with another semilinear set.
@@ -76,7 +79,7 @@ impl SemilinearSet {
         new_components.extend(self.components.iter().cloned());
         new_components.extend(other.components.iter().cloned());
         // (TODO) we could attempt to simplify or merge components here.
-        SemilinearSet { dimension: self.dimension, components: new_components }
+        SemilinearSet::new(self.dimension, new_components)
     }
 
     /// Sequential composition (a.k.a. Minkowski sum) of two semilinear sets.
@@ -99,7 +102,7 @@ impl SemilinearSet {
                 result_components.push( LinearSet { base: new_base, periods: new_periods } );
             }
         }
-        SemilinearSet { dimension: self.dimension, components: result_components }
+        SemilinearSet::new(self.dimension, result_components)
     }
 
     /// Kleene star (closure under addition) of the semilinear set.
@@ -140,7 +143,7 @@ impl SemilinearSet {
             // Create the linear set for this subset
             result_components.push( LinearSet { base: subset_base, periods: subset_periods } );
         }
-        SemilinearSet { dimension: self.dimension, components: result_components }
+        SemilinearSet::new(self.dimension, result_components)
     }
 }
 
