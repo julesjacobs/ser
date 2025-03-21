@@ -14,6 +14,11 @@ Serializability checker.
 - `src/petri.rs`: Implements Petri net data structures.
 - `src/graphviz.rs`: Handles visualization of data structures.
 
+- `examples/json/*`: NS (Network System) examples with directly specified automaton of requests, transitions, responses.
+- `examples/ser/*`: Examples specified in the Ser programming language.
+
+- `out/*`: Output visualizations.
+
 ## TODO
 
 - Compute regex
