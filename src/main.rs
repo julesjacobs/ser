@@ -144,11 +144,11 @@ fn process_ser_file(file_path: &str) {
 
 // Save example NS to JSON files
 fn save_example_ns() -> Result<(), String> {
-    // Create examples directory if it doesn't exist
-    let examples_dir = Path::new("examples");
-    if !examples_dir.exists() {
-        if let Err(err) = fs::create_dir_all(examples_dir) {
-            return Err(format!("Failed to create examples directory: {}", err));
+    // Create examples/json directory if it doesn't exist
+    let json_dir = Path::new("examples/json");
+    if !json_dir.exists() {
+        if let Err(err) = fs::create_dir_all(json_dir) {
+            return Err(format!("Failed to create examples/json directory: {}", err));
         }
     }
 
@@ -188,7 +188,7 @@ fn save_example_ns() -> Result<(), String> {
         };
 
         // Write to file
-        let file_path = examples_dir.join("login_flow.json");
+        let file_path = json_dir.join("login_flow.json");
         if let Err(err) = fs::write(&file_path, json) {
             return Err(format!("Failed to write login JSON file: {}", err));
         }
@@ -228,9 +228,114 @@ fn save_example_ns() -> Result<(), String> {
         };
 
         // Write to file
-        let file_path = examples_dir.join("data_flow.json");
+        let file_path = json_dir.join("data_flow.json");
         if let Err(err) = fs::write(&file_path, json) {
             return Err(format!("Failed to write data flow JSON file: {}", err));
+        }
+    }
+
+    // Example 3: Shopping cart system
+    {
+        let mut ns = NS::<String, String, String, String>::new("EmptyCart".to_string());
+        
+        // Add requests
+        ns.add_request("AddItem".to_string(), "Shopping".to_string());
+        ns.add_request("RemoveItem".to_string(), "Shopping".to_string());
+        ns.add_request("Checkout".to_string(), "Shopping".to_string());
+        
+        // Add responses
+        ns.add_response("Shopping".to_string(), "ItemAdded".to_string());
+        ns.add_response("Shopping".to_string(), "ItemRemoved".to_string());
+        ns.add_response("Processing".to_string(), "OrderComplete".to_string());
+        
+        // Add transitions
+        ns.add_transition(
+            "Shopping".to_string(),
+            "EmptyCart".to_string(),
+            "Shopping".to_string(),
+            "ItemsInCart".to_string(),
+        );
+        
+        ns.add_transition(
+            "Shopping".to_string(),
+            "ItemsInCart".to_string(),
+            "Shopping".to_string(),
+            "ItemsInCart".to_string(),
+        );
+        
+        ns.add_transition(
+            "Shopping".to_string(),
+            "ItemsInCart".to_string(),
+            "Processing".to_string(),
+            "OrderProcessing".to_string(),
+        );
+        
+        ns.add_transition(
+            "Processing".to_string(),
+            "OrderProcessing".to_string(),
+            "Shopping".to_string(),
+            "EmptyCart".to_string(),
+        );
+
+        // Serialize to JSON
+        let json = match ns.to_json() {
+            Ok(json) => json,
+            Err(err) => return Err(format!("Failed to serialize shopping cart NS to JSON: {}", err)),
+        };
+
+        // Write to file
+        let file_path = json_dir.join("shopping_cart.json");
+        if let Err(err) = fs::write(&file_path, json) {
+            return Err(format!("Failed to write shopping cart JSON file: {}", err));
+        }
+    }
+
+    // Example 4: Simple state machine
+    {
+        let mut ns = NS::<String, String, String, String>::new("Init".to_string());
+        
+        // Add requests
+        ns.add_request("Start".to_string(), "Ready".to_string());
+        ns.add_request("Process".to_string(), "Running".to_string());
+        ns.add_request("Stop".to_string(), "Running".to_string());
+        
+        // Add responses
+        ns.add_response("Ready".to_string(), "Started".to_string());
+        ns.add_response("Running".to_string(), "Processing".to_string());
+        ns.add_response("Running".to_string(), "Stopped".to_string());
+        
+        // Add transitions
+        ns.add_transition(
+            "Ready".to_string(),
+            "Init".to_string(),
+            "Running".to_string(),
+            "Active".to_string(),
+        );
+        
+        ns.add_transition(
+            "Running".to_string(),
+            "Active".to_string(),
+            "Running".to_string(),
+            "Active".to_string(),
+        );
+        
+        ns.add_transition(
+            "Running".to_string(),
+            "Active".to_string(),
+            "Ready".to_string(),
+            "Init".to_string(),
+        );
+
+        // Serialize to JSON
+        let json = match ns.to_json() {
+            Ok(json) => json,
+            Err(err) => return Err(format!("Failed to serialize state machine NS to JSON: {}", err)),
+        };
+
+        // Write to file
+        let file_path = json_dir.join("state_machine.json");
+        if let Err(err) = fs::write(&file_path, json) {
+            return Err(format!("Failed to write state machine JSON file: {}", err));
         }
     }
 
@@ -240,23 +345,39 @@ fn save_example_ns() -> Result<(), String> {
 // Save example Expr files to .ser files
 fn save_example_expr() -> Result<(), String> {
     let examples = [
+        // Basic expressions
         ("if_expr.ser", "if(x == 1){y := 2}else{z := 3}"),
         ("while_expr.ser", "while(x == 0){x := 1}"),
         ("seq_expr.ser", "x := 1; y := 2; z := 3"),
-        ("complex_expr.ser", "if(x == 1){if(y == 2){z := 3}else{z := 4}}else{z := 5}")
+        
+        // Complex and nested expressions
+        ("complex_expr.ser", "if(x == 1){if(y == 2){z := 3}else{z := 4}}else{z := 5}"),
+        ("nested_while.ser", "while(x == 0){while(y == 0){y := 1}; x := 1}"),
+        ("mixed_expr.ser", "x := 1; if(x == 1){y := 2}else{y := 3}; z := 4"),
+        
+        // Special operations
+        ("yield_expr.ser", "x := 1; yield; y := 2"),
+        ("exit_expr.ser", "if(x == 0){exit}else{x := 1}"),
+        
+        // Variables and assignments
+        ("simple_assign.ser", "result := 42"),
+        ("multiple_vars.ser", "a := 1; b := 2; c := 3; d := 4; e := 5"),
+        
+        // Equality conditions
+        ("equality_check.ser", "if(count == 100){status := 1}else{status := 0}")
     ];
 
-    // Create examples directory if it doesn't exist
-    let examples_dir = Path::new("examples");
-    if !examples_dir.exists() {
-        if let Err(err) = fs::create_dir_all(examples_dir) {
-            return Err(format!("Failed to create examples directory: {}", err));
+    // Create examples/ser directory if it doesn't exist
+    let ser_dir = Path::new("examples/ser");
+    if !ser_dir.exists() {
+        if let Err(err) = fs::create_dir_all(ser_dir) {
+            return Err(format!("Failed to create examples/ser directory: {}", err));
         }
     }
 
     // Write each example to a file
     for (filename, content) in examples.iter() {
-        let file_path = examples_dir.join(filename);
+        let file_path = ser_dir.join(filename);
         if let Err(err) = fs::write(&file_path, content) {
             return Err(format!("Failed to write SER file '{}': {}", filename, err));
         }

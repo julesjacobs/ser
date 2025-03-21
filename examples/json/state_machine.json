@@ -1,0 +1,51 @@
+{
+  "initial_global": "Init",
+  "requests": [
+    [
+      "Start",
+      "Ready"
+    ],
+    [
+      "Process",
+      "Running"
+    ],
+    [
+      "Stop",
+      "Running"
+    ]
+  ],
+  "responses": [
+    [
+      "Ready",
+      "Started"
+    ],
+    [
+      "Running",
+      "Processing"
+    ],
+    [
+      "Running",
+      "Stopped"
+    ]
+  ],
+  "transitions": [
+    [
+      "Ready",
+      "Init",
+      "Running",
+      "Active"
+    ],
+    [
+      "Running",
+      "Active",
+      "Running",
+      "Active"
+    ],
+    [
+      "Running",
+      "Active",
+      "Ready",
+      "Init"
+    ]
+  ]
+}
