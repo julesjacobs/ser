@@ -4,6 +4,8 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::clone::Clone;
 
+use crate::kleene::Kleene;
+
 /// A sparse vector in d-dimensional nonnegative integer space.
 /// Keys represent dimensions and values represent the value at that dimension.
 /// Dimensions not present in the HashMap are assumed to be 0.
@@ -122,9 +124,19 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
         let periods = keys.into_iter().map(SparseVector::unit).collect();
         SemilinearSet::new(vec![ LinearSet { base, periods } ])
     }
+}
 
-    /// Return the union of this set with another semilinear set.
-    fn union(&self, other: &SemilinearSet<K>) -> SemilinearSet<K> {
+impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
+    fn zero() -> Self {
+        SemilinearSet::empty()
+    }
+    
+    fn one() -> Self {
+        SemilinearSet::zero()
+    }
+
+    // Union of two semilinear sets.
+    fn plus(self, other: Self) -> Self {
         // Clone components of both and combine
         let mut new_components = Vec::with_capacity(self.components.len() + other.components.len());
         new_components.extend(self.components.iter().cloned());
@@ -133,8 +145,8 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
         SemilinearSet::new(new_components)
     }
 
-    /// Sequential composition (a.k.a. Minkowski sum) of two semilinear sets.
-    fn add(&self, other: &SemilinearSet<K>) -> SemilinearSet<K> {
+    // Sequential composition (a.k.a. Minkowski sum) of two semilinear sets.
+    fn times(self, other: Self) -> Self {
         let mut result_components = Vec::new();
         for lin1 in &self.components {
             for lin2 in &other.components {
@@ -151,8 +163,7 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
         SemilinearSet::new(result_components)
     }
 
-    /// Kleene star (closure under addition) of the semilinear set.
-    fn star(&self) -> SemilinearSet<K> {
+    fn star(self) -> Self {
         let mut result_components = Vec::new();
 
         // We use bit masks to iterate over all non-empty subsets of components
@@ -222,8 +233,8 @@ mod tests {
         v2.set("z".to_string(), 4);
         
         let set1 = SemilinearSet::singleton(v1.clone());
-        let set2 = SemilinearSet::singleton(v2.clone());
-        let union = set1.union(&set2);
+        let set2: SemilinearSet<String> = SemilinearSet::singleton(v2.clone());
+        let union = set1.plus(set2);
         
         assert_eq!(union.components.len(), 2);
         // Check that the components contain our original vectors
@@ -241,7 +252,7 @@ mod tests {
         
         let set1 = SemilinearSet::singleton(v1);
         let set2 = SemilinearSet::singleton(v2);
-        let sum = set1.add(&set2);
+        let sum = set1.times(set2);
         
         assert_eq!(sum.components.len(), 1);
         let result_vector = &sum.components[0].base;
