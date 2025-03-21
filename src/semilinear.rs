@@ -23,9 +23,10 @@ impl SemilinearSet {
         // Assert that the dimension is the same for all components
         debug_assert!(components.iter().all(|lin| lin.base.len() == dimension && lin.periods.iter().all(|p| p.len() == dimension)));
 
+        // Filter out duplicate linear set components
         let mut new_components = HashSet::new();
         for lin in components {
-            // filter out duplicate period vectors from lin
+            // Filter out duplicate period vectors
             let mut new_periods = HashSet::new();
             for p in lin.periods {
                 new_periods.insert(p);
