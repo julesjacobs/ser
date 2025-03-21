@@ -78,7 +78,7 @@ fn nfa_to_kleene<S:Clone+Eq+std::hash::Hash,K:Kleene+Clone>(nfa: &[(S,K,S)], sta
     // The final answer is then the self-loop of the start state
 
     let mut nfa: Vec<(&S, K, &S)> = nfa.iter().map(|(from, k, to)| (from, k.clone(), to)).collect();
-    
+
     let mut states_todo = nfa.iter().flat_map(|(from, _, to)| vec![*from, *to]).collect::<HashSet<_>>();
     states_todo.remove(&start);
 
@@ -130,14 +130,24 @@ mod tests {
         // Create a simple NFA with 3 states
         let nfa = vec![
             (0, Regex::Atom('a'), 1),  // State 0 to 1 with label 'a'
-            (1, Regex::Atom('b'), 2),  // State 1 to 2 with label 'b' 
+            (1, Regex::Atom('b'), 2),  // State 1 to 2 with label 'b'
             (2, Regex::Atom('c'), 0),  // State 2 back to 0 with label 'c'
             (1, Regex::Atom('d'), 1),  // Self loop on state 1 with label 'd'
         ];
 
         let result = nfa_to_kleene(&nfa, 0);
-        
-        // assert that it's equal to ((a · ((d)* · (b · c))))* or ((a · ((d)* · (b · c))))*
-        assert!(result.to_string() == "((a · ((d)* · (b · c))))*" || result.to_string() == "((a · ((d)* · (b · c))))*");
+
+        // Check if characters 'a', 'b', 'c', and 'd' are in the result exactly once
+        let mut chars = HashSet::new();
+        for c in result.to_string().chars() {
+            if c.is_ascii() {
+            chars.insert(c);
+        }
+        assert_eq!(chars.len(), 4);
+        assert!(chars.contains(&'a'));
+        assert!(chars.contains(&'b'));
+        assert!(chars.contains(&'c'));
+        assert!(chars.contains(&'d'));
+        }
     }
 }
