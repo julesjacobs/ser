@@ -309,7 +309,7 @@ mod tests {
             components: vec![ground_truth_a_star_linear_set_1,ground_truth_a_star_linear_set_2]
         };
 
-        assert_eq!(result_a_star, ground_truth_a_star); // todo implenment
+        assert_eq!(result_a_star, ground_truth_a_star);
     }
 
     #[test]
@@ -332,6 +332,108 @@ mod tests {
 
         assert_eq!(a_star, ground_truth_a_star);
     }
+
+
+    #[test]
+    fn test_b_times_c_proper() {
+        // Use the Kleene operations to compute b;c
+        let b = SemilinearSet::singleton(SparseVector::unit("b".to_string()));
+        let c = SemilinearSet::singleton(SparseVector::unit("c".to_string()));
+        let b_times_c = b.clone().times(c.clone());
+        let c_times_b = c.times(b);
+        // check symetry
+        assert_eq!(b_times_c, c_times_b);
+
+
+        let mut b_time_c_sparse_vector = SparseVector::new();
+        b_time_c_sparse_vector.set("b".to_string(), 1);
+        b_time_c_sparse_vector.set("c".to_string(), 1);
+
+
+        // Define the ground truth using the semilinear set constructors
+        let ground_truth_b_times_c = SemilinearSet::new(vec![
+            LinearSet {
+                base: b_time_c_sparse_vector,
+                periods: vec![],
+            }
+        ]);
+
+        assert_eq!(b_times_c, ground_truth_b_times_c);
+        // println!("{:?}", b_times_c);
+        // println!("done!!!");
+    }
+
+
+    #[test]
+    fn test_a_star_times_b_proper() {
+        // Use the Kleene operations to compute a*
+        let a = SemilinearSet::singleton(SparseVector::unit("a".to_string()));
+        let a_star = a.star();
+
+        let b = SemilinearSet::singleton(SparseVector::unit("b".to_string()));
+        // Use the Kleene operations to compute (a*);b
+        let a_star_times_b = a_star.times(b);
+
+        let mut a_b = SparseVector::new();
+        a_b.set("a".to_string(), 1);
+        a_b.set("b".to_string(), 1);
+
+        // Define the ground truth using the semilinear set constructors
+        let ground_truth_a_star_times_b = SemilinearSet::new(vec![
+            LinearSet {
+                base: SparseVector::unit("b".to_string()),  // Ensure consistency
+                periods: vec![],
+            },
+            LinearSet {
+                base: a_b,
+                periods: vec![SparseVector::unit("a".to_string())],  // Ensure consistency
+            },
+        ]);
+
+        assert_eq!(a_star_times_b, ground_truth_a_star_times_b);
+    }
+
+    // new test!
+    #[test]
+    fn test_a_star_times_b_plus_b_times_c_proper() {
+        // Use the Kleene operations to compute a*
+        let a = SemilinearSet::singleton(SparseVector::unit("a".to_string()));
+        let a_star = a.star();
+
+        let b = SemilinearSet::singleton(SparseVector::unit("b".to_string()));
+        // Use the Kleene operations to compute (a*);b
+        let a_star_times_b = a_star.times(b.clone());
+
+        let mut a_b = SparseVector::new();
+        a_b.set("a".to_string(), 1);
+        a_b.set("b".to_string(), 1);
+
+        let c = SemilinearSet::singleton(SparseVector::unit("c".to_string()));
+        let b_times_c = b.times(c);
+        let b_times_c_clone = b_times_c.clone(); // Clone before moving
+
+        let a_star_times_b_plus_b_times_c = a_star_times_b.plus(b_times_c);
+
+        // Define the ground truth using the semilinear set constructors
+        let ground_truth_a_star_times_b_plus_b_times_c = SemilinearSet::new(vec![
+            LinearSet {
+                base: SparseVector::unit("b".to_string()),  // Ensure consistency
+                periods: vec![],
+            },
+            LinearSet {
+                base: a_b,
+                periods: vec![SparseVector::unit("a".to_string())],  // Ensure consistency
+            },
+            LinearSet {
+                base: b_times_c_clone.components[0].base.clone(),
+                periods: vec![],  // Ensure consistency
+            }
+        ]);
+
+        assert_eq!(a_star_times_b_plus_b_times_c, ground_truth_a_star_times_b_plus_b_times_c);
+
+    }
+
 
 }
 
