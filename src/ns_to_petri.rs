@@ -42,10 +42,7 @@ where
 {
     // Create a new Petri net with initial marking
     // Start with one token for the initial global state
-    let mut initial_marking = Vec::new();
-
-    // Add a token for the initial global state
-    initial_marking.push(PetriState::Global(ns.initial_global.clone()));
+    let initial_marking = vec![PetriState::Global(ns.initial_global.clone())];
     let mut petri = Petri::new(initial_marking);
 
     // Create transitions for each request transition
@@ -116,10 +113,7 @@ where
 {
     // Create a new Petri net with initial marking
     // Start with one token for the initial global state
-    let mut initial_marking = Vec::new();
-
-    // Add a token for the initial global state
-    initial_marking.push(ReqPetriState::Global(ns.initial_global.clone()));
+    let initial_marking = vec![ReqPetriState::Global(ns.initial_global.clone())];
 
     // Create a new Petri net with initial marking
     let mut petri = Petri::new(initial_marking);
