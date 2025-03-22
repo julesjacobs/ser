@@ -8,6 +8,7 @@ mod petri;
 mod graphviz;
 mod expr_to_ns;
 mod ns_to_petri;
+mod reachability;
 
 use std::env;
 use std::fs;
@@ -16,6 +17,7 @@ use std::process;
 
 use parser::{ExprHc, parse};
 use ns::NS;
+
 
 fn print_usage() {
     println!("Usage: ser [options] <filename or directory>");

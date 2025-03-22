@@ -74,7 +74,7 @@ struct LinearSet<K: Eq + Hash + Clone + Ord> {
 }
 
 #[derive(Debug, Clone)]
-struct SemilinearSet<K: Eq + Hash + Clone + Ord> {
+pub struct SemilinearSet<K: Eq + Hash + Clone + Ord> {
     components: Vec<LinearSet<K>>,  // finite list of linear sets whose union defines the set
 }
 
