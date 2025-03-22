@@ -20,16 +20,9 @@ impl<K: Eq + Hash + Clone + Ord> Hash for SparseVector<K> {
         // Convert the HashMap to a sorted Vec of (key, value) pairs
         let mut entries: Vec<_> = self.values.iter().collect();
         entries.sort_by(|a, b| a.0.cmp(b.0));
-        
+
         // Hash the sorted entries
         entries.hash(state);
-    }
-}
-
-impl<K: Eq + Hash + Clone + Ord> SparseVector<K> { // by Guy
-    /// Compare two SparseVectors by checking if their underlying HashMaps are equal
-    fn equals(&self, other: &Self) -> bool {
-        self.values == other.values
     }
 }
 
@@ -61,7 +54,7 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
         values.insert(key, 1);
         SparseVector { values }
     }
-    
+
     /// Add another vector to this one element-wise
     fn add(&self, other: &Self) -> Self {
         let mut result = self.clone();
@@ -79,22 +72,6 @@ struct LinearSet<K: Eq + Hash + Clone + Ord> {
     base: SparseVector<K>,            // u0: the base vector
     periods: Vec<SparseVector<K>>,    // [u1, u2, ..., um]: list of period generator vectors
 }
-
-
-impl<K: Eq + Hash + Clone + Ord> LinearSet<K> { // by Guy
-    /// Compare two LinearSets by checking:
-    /// (1) If their base vectors are equal.
-    /// (2) If their period generator vectors are the same, regardless of order.
-    fn equals(&self, other: &Self) -> bool {
-        if self.base != other.base {
-            return false;
-        }
-        let self_periods: HashSet<_> = self.periods.iter().cloned().collect();
-        let other_periods: HashSet<_> = other.periods.iter().cloned().collect();
-        self_periods == other_periods
-    }
-}
-
 
 #[derive(Debug, Clone)]
 struct SemilinearSet<K: Eq + Hash + Clone + Ord> {
@@ -161,7 +138,7 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
     fn zero() -> Self {
         SemilinearSet::empty()
     }
-    
+
     fn one() -> Self {
         SemilinearSet::zero()
     }
@@ -241,11 +218,11 @@ mod tests {
         let mut v1 = SparseVector::new();
         v1.set("x".to_string(), 1);
         v1.set("y".to_string(), 2);
-        
+
         let mut v2 = SparseVector::new();
         v2.set("y".to_string(), 3);
         v2.set("z".to_string(), 4);
-        
+
         let sum = v1.add(&v2);
         assert_eq!(sum.get(&"x".to_string()), 1);
         assert_eq!(sum.get(&"y".to_string()), 5);
@@ -258,15 +235,15 @@ mod tests {
         let mut v1 = SparseVector::new();
         v1.set("x".to_string(), 1);
         v1.set("y".to_string(), 2);
-        
+
         let mut v2 = SparseVector::new();
         v2.set("y".to_string(), 3);
         v2.set("z".to_string(), 4);
-        
+
         let set1 = SemilinearSet::singleton(v1.clone());
         let set2: SemilinearSet<String> = SemilinearSet::singleton(v2.clone());
         let union = set1.plus(set2);
-        
+
         assert_eq!(union.components.len(), 2);
         // Check that the components contain our original vectors
         assert!(union.components.iter().any(|c| c.base == v1));
@@ -277,14 +254,14 @@ mod tests {
     fn test_semilinear_set_add() {
         let mut v1 = SparseVector::new();
         v1.set("x".to_string(), 1);
-        
+
         let mut v2 = SparseVector::new();
         v2.set("y".to_string(), 2);
-        
+
         let set1 = SemilinearSet::singleton(v1);
         let set2 = SemilinearSet::singleton(v2);
         let sum = set1.times(set2);
-        
+
         assert_eq!(sum.components.len(), 1);
         let result_vector = &sum.components[0].base;
         assert_eq!(result_vector.get(&"x".to_string()), 1);
@@ -296,6 +273,7 @@ mod tests {
 
     #[test]
     fn test_a_star() {
+
         let mut base = SparseVector::new();
         base.set("x".to_string(), 1);
 
@@ -310,7 +288,7 @@ mod tests {
 
 
         // {(0,0,0);[]}
-        let mut linear_set_1_base = SparseVector::new();
+        let linear_set_1_base = SparseVector::new();
         let ground_truth_a_star_linear_set_1 = LinearSet {
             base:linear_set_1_base.clone(),
             periods: vec![],
@@ -332,6 +310,27 @@ mod tests {
         };
 
         assert_eq!(result_a_star, ground_truth_a_star); // todo implenment
+    }
+
+    #[test]
+    fn test_a_star_proper() {
+        // Use the Kleene operations to compute a*
+        let a = SemilinearSet::singleton(SparseVector::unit("a"));
+        let a_star = a.star();
+
+        // Define the ground truth using the semilinear set constructors
+        let ground_truth_a_star = SemilinearSet::new(vec![
+            LinearSet {
+                base: SparseVector::unit("a"),
+                periods: vec![SparseVector::unit("a")],
+            },
+            LinearSet {
+                base: SparseVector::new(),
+                periods: vec![],
+            },
+        ]);
+
+        assert_eq!(a_star, ground_truth_a_star);
     }
 
 }
