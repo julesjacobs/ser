@@ -26,6 +26,13 @@ impl<K: Eq + Hash + Clone + Ord> Hash for SparseVector<K> {
     }
 }
 
+impl<K: Eq + Hash + Clone + Ord> SparseVector<K> { // by Guy
+    /// Compare two SparseVectors by checking if their underlying HashMaps are equal
+    fn equals(&self, other: &Self) -> bool {
+        self.values == other.values
+    }
+}
+
 impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
     /// Create a new empty sparse vector (all zeros)
     fn new() -> Self {
@@ -73,9 +80,33 @@ struct LinearSet<K: Eq + Hash + Clone + Ord> {
     periods: Vec<SparseVector<K>>,    // [u1, u2, ..., um]: list of period generator vectors
 }
 
+
+impl<K: Eq + Hash + Clone + Ord> LinearSet<K> { // by Guy
+    /// Compare two LinearSets by checking:
+    /// (1) If their base vectors are equal.
+    /// (2) If their period generator vectors are the same, regardless of order.
+    fn equals(&self, other: &Self) -> bool {
+        if self.base != other.base {
+            return false;
+        }
+        let self_periods: HashSet<_> = self.periods.iter().cloned().collect();
+        let other_periods: HashSet<_> = other.periods.iter().cloned().collect();
+        self_periods == other_periods
+    }
+}
+
+
 #[derive(Debug, Clone)]
 struct SemilinearSet<K: Eq + Hash + Clone + Ord> {
     components: Vec<LinearSet<K>>,  // finite list of linear sets whose union defines the set
+}
+
+impl<K: Eq + Hash + Clone + Ord> PartialEq for SemilinearSet<K> { // by Guy
+    fn eq(&self, other: &Self) -> bool {
+        let self_components: HashSet<_> = self.components.iter().cloned().collect();
+        let other_components: HashSet<_> = other.components.iter().cloned().collect();
+        self_components == other_components
+    }
 }
 
 impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
@@ -259,4 +290,50 @@ mod tests {
         assert_eq!(result_vector.get(&"x".to_string()), 1);
         assert_eq!(result_vector.get(&"y".to_string()), 2);
     }
+
+    //////////////////////////////////////////////
+    ///Guy's Tests
+
+    #[test]
+    fn test_a_star() {
+        let mut base = SparseVector::new();
+        base.set("x".to_string(), 1);
+
+        // a={(1,0,0);[]}
+        let a = LinearSet {
+            base:base.clone(),
+            periods: vec![],
+        };
+
+        // computed a* result from code
+        let result_a_star = SemilinearSet::new(vec![a]).star();
+
+
+        // {(0,0,0);[]}
+        let mut linear_set_1_base = SparseVector::new();
+        let ground_truth_a_star_linear_set_1 = LinearSet {
+            base:linear_set_1_base.clone(),
+            periods: vec![],
+        };
+
+        // {(1,0,0);[(1,0,0)]}
+        let mut linear_set_2_base = SparseVector::new();
+        linear_set_2_base.set("x".to_string(), 1);
+
+        let mut linear_set_2_period = SparseVector::new();
+        linear_set_2_period.set("x".to_string(), 1);
+        let ground_truth_a_star_linear_set_2 = LinearSet {
+            base:linear_set_2_base.clone(),
+            periods: vec![linear_set_2_period],
+        };
+
+        let ground_truth_a_star = SemilinearSet {
+            components: vec![ground_truth_a_star_linear_set_1,ground_truth_a_star_linear_set_2]
+        };
+
+        assert_eq!(result_a_star, ground_truth_a_star); // todo implenment
+    }
+
 }
+
+
