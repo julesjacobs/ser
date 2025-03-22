@@ -393,7 +393,7 @@ mod tests {
         assert_eq!(a_star_times_b, ground_truth_a_star_times_b);
     }
 
-    // new test!
+
     #[test]
     fn test_a_star_times_b_plus_b_times_c_proper() {
         // Use the Kleene operations to compute a*
@@ -431,9 +431,97 @@ mod tests {
         ]);
 
         assert_eq!(a_star_times_b_plus_b_times_c, ground_truth_a_star_times_b_plus_b_times_c);
-
     }
 
+
+    #[test]
+    fn test_star_of_a_star_times_b_plus_b_times_c_proper() {
+
+    // Use the Kleene operations to compute a*
+    let a = SemilinearSet::singleton(SparseVector::unit("a".to_string()));
+    let a_star = a.star();
+
+    let b = SemilinearSet::singleton(SparseVector::unit("b".to_string()));
+    // Use the Kleene operations to compute (a*);b
+    let a_star_times_b = a_star.times(b.clone());
+
+    let mut a_b = SparseVector::new();
+    a_b.set("a".to_string(), 1);
+    a_b.set("b".to_string(), 1);
+
+    let mut b_c = SparseVector::new();
+    b_c.set("b".to_string(), 1);
+    b_c.set("c".to_string(), 1);
+
+    // (1,2,0)
+    let mut  a_1_b_2= SparseVector::new();
+    a_1_b_2.set("a".to_string(), 1);
+    a_1_b_2.set("b".to_string(), 2);
+
+    // (1,2,1)
+    let mut  a_1_b_2_c_1= SparseVector::new();
+    a_1_b_2_c_1.set("a".to_string(), 1);
+    a_1_b_2_c_1.set("b".to_string(), 2);
+    a_1_b_2_c_1.set("c".to_string(), 1);
+
+    // (1,3,1)
+    let mut  a_1_b_3_c_1= SparseVector::new();
+    a_1_b_3_c_1.set("a".to_string(), 1);
+    a_1_b_3_c_1.set("b".to_string(), 3);
+    a_1_b_3_c_1.set("c".to_string(), 1);
+
+    // (0,2,1)
+    let mut  b_2_c_1= SparseVector::new();
+    b_2_c_1.set("b".to_string(), 2);
+    b_2_c_1.set("c".to_string(), 1);
+
+    let c = SemilinearSet::singleton(SparseVector::unit("c".to_string()));
+    let b_times_c = b.times(c);
+
+    // (a*);b + (b;c)
+    let a_star_times_b_plus_b_times_c = a_star_times_b.plus(b_times_c);
+
+    // ( (a*);b + (b;c) )*
+    let star_of_a_star_times_b_plus_b_times_c = a_star_times_b_plus_b_times_c.star();
+
+    // Define the ground truth using the semilinear set constructors
+    let ground_truth_star_of_a_star_times_b_plus_b_times_c = SemilinearSet::new(vec![
+        LinearSet { // {(0,0,0);[]}
+            base: SparseVector::new(),
+            periods: vec![],
+        },
+        LinearSet { // {(0,1,0);[(0,1,0)]}
+            base: SparseVector::unit("b".to_string()),
+            periods: vec![SparseVector::unit("b".to_string())],
+        },
+        LinearSet {
+            base: a_b.clone(), // {(1,1,0);[(1,1,0),(1,0,0)]}
+            periods: vec![a_b.clone(), SparseVector::unit("a".to_string())],  // Ensure consistency
+        },
+        LinearSet { // {(0,1,1);[(0,1,1)]}
+            base: b_c.clone(),
+            periods: vec![b_c.clone()],
+        },
+        LinearSet { // {(1,2,0);[(0,1,0),(1,1,0),(1,0,0)]}
+            base: a_1_b_2,
+            periods: vec![SparseVector::unit("b".to_string()),a_b.clone(),SparseVector::unit("a".to_string())],
+        },
+        LinearSet { // {(0,2,1);[(0,1,0),(0,1,1)]}
+            base: b_2_c_1,
+            periods: vec![SparseVector::unit("b".to_string()),b_c.clone()],
+        },
+        LinearSet { // {(1,2,1);[(1,1,0),(1,0,0),(0,1,1)]}
+            base: a_1_b_2_c_1,
+            periods: vec![a_b.clone(),SparseVector::unit("a".to_string()),b_c.clone()],
+        },
+        LinearSet { // {(1,3,1);[(0,1,0),(1,1,0),(1,0,0),(0,1,1)]}
+            base: a_1_b_3_c_1,
+            periods: vec![SparseVector::unit("b".to_string()),a_b.clone(),SparseVector::unit("a".to_string()),b_c.clone()],
+            }
+        ]);
+
+    assert_eq!(star_of_a_star_times_b_plus_b_times_c, ground_truth_star_of_a_star_times_b_plus_b_times_c);
+    }
 
 }
 
