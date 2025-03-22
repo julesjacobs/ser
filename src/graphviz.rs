@@ -28,7 +28,7 @@ pub fn save_graphviz(
     if let Err(e) = create_dir_all(out_dir) {
         return Err(format!("Failed to create output directory: {}", e));
     }
-    
+
     // Create subdirectory for this specific output
     let subdir_name = name;
     let subdir_path = out_dir.join(subdir_name);
@@ -160,15 +160,4 @@ pub fn save_graphviz(
     }
 
     Ok(generated_files)
-}
-
-/// Save GraphViz DOT files to disk and generate visualizations without opening files
-///
-/// This is a convenience wrapper that calls save_graphviz(dot_content, name, viz_type, false)
-pub fn save_graphviz_no_open(
-    dot_content: &str,
-    name: &str,
-    viz_type: &str,
-) -> Result<Vec<String>, String> {
-    save_graphviz(dot_content, name, viz_type, false)
 }

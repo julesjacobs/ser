@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+// #![allow(dead_code)]
 
 mod ns;
 mod parser;
@@ -35,7 +35,7 @@ fn main() {
     // Parse command line flags
     let mut open_files = false;
     let mut path_str = "";
-    
+
     // Skip the program name (args[0])
     let mut i = 1;
     while i < args.len() {
@@ -58,13 +58,13 @@ fn main() {
             }
         }
     }
-    
+
     // Ensure we have a path
     if path_str.is_empty() {
         print_usage();
         process::exit(1);
     }
-    
+
     let path = Path::new(path_str);
 
     if !path.exists() {
