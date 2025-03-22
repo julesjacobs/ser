@@ -520,9 +520,10 @@ mod tests {
             }
         ]);
 
-    assert_eq!(star_of_a_star_times_b_plus_b_times_c, ground_truth_star_of_a_star_times_b_plus_b_times_c);
+        assert_eq!(star_of_a_star_times_b_plus_b_times_c, ground_truth_star_of_a_star_times_b_plus_b_times_c);
     }
 
 }
 
 
+// todo - add code to sort SemilinerSets and LinearSets
