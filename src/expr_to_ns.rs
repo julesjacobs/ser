@@ -15,13 +15,13 @@ impl std::fmt::Display for Env {
         // Sort variables for consistent output
         let mut pairs: Vec<_> = self.vars.iter().collect();
         pairs.sort_by_key(|(k, _)| *k);
-        
+
         // Format each variable assignment
         let formatted = pairs.iter()
             .map(|(k, v)| format!("{}={}", k, v))
             .collect::<Vec<_>>()
             .join(",");
-        
+
         write!(f, "{{{}}}", formatted)
     }
 }
@@ -155,13 +155,13 @@ pub fn run_expr(exprhc: &mut ExprHc, expr: &Expr, local: Local, global: Global) 
             // Otherwise, we yield or return the result
             let mut todo = vec![(local, global)];
             let mut visited = std::collections::HashSet::new();
-            
+
             while let Some((local, global)) = todo.pop() {
                 // Avoid infinite loops by tracking visited states
                 if !visited.insert((local.clone(), global.clone())) {
                     continue;
                 }
-                
+
                 // First, evaluate the condition
                 for (expr_result, local1, global1) in run_expr(exprhc, cond, local, global) {
                     match expr_result {
@@ -254,39 +254,39 @@ impl std::fmt::Display for LocalExpr {
 pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr, ExprRequest, i64> {
     // Create a new NS with an empty global environment
     let mut ns = NS::new(Global::new());
-    
+
     // Track seen states to avoid duplication and infinite loops
     let mut seen_packets: HashSet<LocalExpr> = HashSet::new();
     let mut seen_globals: HashSet<Global> = HashSet::new();
     let mut todo = vec![(expr.clone(), Local::new(), Global::new())];
-    
+
     // Starting state - add a request that transitions to initial state
     let initial_local = Local::new();
     let initial_expr = expr.clone();
     let initial_global = Global::new();
     let initial_local_expr = LocalExpr(initial_local.clone(), initial_expr.clone());
-    
+
     // Add initial request
     ns.add_request(ExprRequest::Request, initial_local_expr.clone());
     seen_globals.insert(initial_global.clone());
     seen_packets.insert(initial_local_expr.clone());
-    
+
     // Process states
     while let Some((expr, local, global)) = todo.pop() {
         let local_expr = LocalExpr(local.clone(), expr.clone());
-        
+
         // Get all possible results of executing this expression
         let results = run_expr(exprhc, &expr, local.clone(), global.clone());
 
         let mut new_globals = vec![];
         let mut new_packets = vec![];
-        
+
         for (result, new_local, new_global) in results {
             match result {
                 ExprResult::Yielding(e) => {
                     // Create a new expression to continue with
                     let new_local_expr = LocalExpr(new_local.clone(), e.clone());
-                    
+
                     // Add a transition from (local_expr, global) to (new_local_expr, new_global)
                     ns.add_transition(local_expr.clone(), global.clone(), new_local_expr.clone(), new_global.clone());
 
@@ -294,11 +294,17 @@ pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr,
                     new_packets.push(new_local_expr.clone());
                 },
                 ExprResult::Returning(n) => {
-                    // Add a response for this local state
-                    ns.add_response(local_expr.clone(), n);
-                    
-                    // Add new global state to track if it's new
-                    new_globals.push(new_global.clone());
+                    if global == new_global {
+                        // Add a response for this local state
+                        ns.add_response(local_expr.clone(), n);
+                    }else{
+                        // Add new global state to track if it's new
+                        new_globals.push(new_global.clone());
+                        let new_local_expr = LocalExpr(new_local.clone(), exprhc.number(n));
+                        // Add a transition from (local_expr, global) to (new_local_expr, new_global)
+                        ns.add_transition(local_expr.clone(), global.clone(), new_local_expr.clone(), new_global.clone());
+                        new_packets.push(new_local_expr.clone());
+                    }
                 }
             }
         }
@@ -321,6 +327,6 @@ pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr,
             }
         }
     }
-    
+
     ns
 }
