@@ -774,25 +774,20 @@ mod tests {
         );
 
         // Save to out directory with test prefix, don't open files during testing
-        let result = ns.save_graphviz("test", false);
+        let result = ns.save_graphviz("test_graphviz", false);
 
         // Check if saving worked (may fail if GraphViz not installed)
         if result.is_ok() {
             let files = result.unwrap();
 
             // Check DOT files were created
-            assert!(files.iter().any(|f| f.contains("test_network.dot")));
+            assert!(files.iter().any(|f| f.contains("network.dot")));
 
             // Check if files exist
-            assert!(Path::new("out/test_network.dot").exists());
+            assert!(Path::new("out/test_graphviz/network.dot").exists());
 
             // Clean up test files
-            let _ = fs::remove_file("out/test_network.dot");
-
-            // PNG files may or may not exist depending on GraphViz installation
-            if Path::new("out/test_network.png").exists() {
-                let _ = fs::remove_file("out/test_network.png");
-            }
+            let _ = fs::remove_dir_all("out/test_graphviz");
         }
         // Note: We don't assert on error case since GraphViz might not be installed
     }
