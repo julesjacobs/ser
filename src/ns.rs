@@ -32,7 +32,7 @@ fn quote_for_graphviz(s: &str) -> String {
 pub struct NS<G, L, Req, Resp> {
     /// Initial global state
     pub initial_global: G,
-    
+
     /// Requests from clients with their target local states
     pub requests: Vec<(Req, L)>,
 
@@ -59,7 +59,7 @@ where
             transitions: Vec::new(),
         }
     }
-    
+
     /// Set the initial global state
     pub fn set_initial_global(&mut self, initial_global: G) {
         self.initial_global = initial_global;
@@ -157,7 +157,7 @@ where
                 let mut todo = vec![(l, g)];
                 let mut reached = HashSet::new();
                 while let Some((l, g)) = todo.pop() {
-                    
+
                     reached.insert((l, g));
                     for (l1, g1, l2, g2) in &self.transitions {
                         if l == l1 && g == g1 && !reached.contains(&(l2, g2)) {
@@ -225,7 +225,7 @@ where
             dot.push_str(&format!("  node [style=\"filled,rounded\", fillcolor=lightblue] {}; // Local states\n",
                 local_state_nodes.join(" ")));
         }
-        
+
         let request_nodes: Vec<_> = self.get_requests().iter()
             .map(|req| format!("REQ_{}", escape_for_graphviz_id(&format!("{}", req))))
             .collect();
@@ -294,7 +294,7 @@ where
             let from_local_id = format!("L_{}", escape_for_graphviz_id(&format!("{}", from_local)));
             let to_local_id = format!("L_{}", escape_for_graphviz_id(&format!("{}", to_local)));
             let transition_label = quote_for_graphviz(&format!("{} → {}", from_global, to_global));
-            
+
             dot.push_str(&format!(
                 "  {} -> {} [label={}, color=blue, penwidth=1.5];\n",
                 from_local_id, to_local_id, transition_label
@@ -322,7 +322,7 @@ where
         for global in globals {
             // Check if this is the initial global state
             let is_initial = &self.initial_global == global;
-            
+
             // Create properly escaped IDs and labels
             let global_id = format!("G_{}", escape_for_graphviz_id(&format!("{}", global)));
             let global_label = if is_initial {
@@ -330,13 +330,13 @@ where
             } else {
                 quote_for_graphviz(&format!("{}", global))
             };
-            
+
             // Style initial global state differently
             if is_initial {
-                dot.push_str(&format!("    {} [label={}, penwidth=3, color=darkgreen];\n", 
+                dot.push_str(&format!("    {} [label={}, penwidth=3, color=darkgreen];\n",
                     global_id, global_label));
             } else {
-                dot.push_str(&format!("    {} [label={}];\n", 
+                dot.push_str(&format!("    {} [label={}];\n",
                     global_id, global_label));
             }
         }
@@ -348,7 +348,7 @@ where
             let from_global_id = format!("G_{}", escape_for_graphviz_id(&format!("{}", from_global)));
             let to_global_id = format!("G_{}", escape_for_graphviz_id(&format!("{}", to_global)));
             let transition_label = quote_for_graphviz(&format!("{} / {}", req, resp));
-            
+
             dot.push_str(&format!(
                 "    {} -> {} [label={}];\n",
                 from_global_id, to_global_id, transition_label

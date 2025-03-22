@@ -1,5 +1,5 @@
 use crate::graphviz;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 // Helper function to escape strings for use as node IDs in GraphViz DOT language
@@ -210,5 +210,67 @@ where
     pub fn save_graphviz(&self, name: &str, open_files: bool) -> Result<Vec<String>, String> {
         let dot_content = self.to_graphviz();
         graphviz::save_graphviz(&dot_content, name, "petri", open_files)
+    }
+}
+
+impl<Place> Petri<Place>
+where
+    Place: ToString,
+{
+    /// Produce a textual representation of this Petri net,
+    /// with `net_name` as the net's label.
+    pub fn to_pnet(&self, net_name: &str) -> String {
+        // A small helper to sanitize non-alphanumeric chars from strings.
+        fn sanitize(s: &str) -> String {
+            s.chars()
+                .map(|c| if c.is_alphanumeric() { c } else { '_' })
+                .collect()
+        }
+
+        let mut out = String::new();
+
+        // 1. net {...}
+        out.push_str(&format!("net {{{}}}\n", sanitize(net_name)));
+
+        // 2. Count how many times each place appears in the initial marking.
+        let mut marking_count: HashMap<String, usize> = HashMap::new();
+        for place in &self.initial_marking {
+            let place_str = sanitize(&place.to_string());
+            *marking_count.entry(place_str).or_insert(0) += 1;
+        }
+
+        // 3. Output the "pl" lines, e.g. "pl P1 (1)"
+        //    for each place in initial marking.
+        for (place, count) in marking_count {
+            out.push_str(&format!("pl {} ({})\n", place, count));
+        }
+
+        // 4. Output each transition, named t0, t1, ...
+        for (i, (input_places, output_places)) in self.transitions.iter().enumerate() {
+            // "tr tX <inputs> -> <outputs>"
+            out.push_str(&format!("tr t{} ", i));
+
+            // Input places
+            for p in input_places {
+                out.push_str(&sanitize(&p.to_string()));
+                out.push(' ');
+            }
+
+            // Arrow
+            out.push_str("-> ");
+
+            // Output places
+            let mut first = true;
+            for p in output_places {
+                if !first {
+                    out.push(' ');
+                }
+                out.push_str(&sanitize(&p.to_string()));
+                first = false;
+            }
+            out.push('\n');
+        }
+
+        out
     }
 }

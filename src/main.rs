@@ -23,10 +23,13 @@ fn print_usage() {
     println!("  --open                  Open generated visualization files");
     println!("");
     println!("  - If a file is provided:");
-    println!("    - .json extension: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz");
+    println!("    - .json extension: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz and .net");
     println!("    - .ser extension: Parses as an Expr, converts to NS, and processes it like json files");
     println!("  - If a directory is provided:");
     println!("    - Recursively processes all .json and .ser files in the directory and its subdirectories");
+    println!("  - Output:");
+    println!("    - GraphViz (.dot, .png) visualizations for Network Systems and Petri nets");
+    println!("    - Petri net files (.net) in the same directory structure as GraphViz files");
 }
 
 fn main() {
@@ -105,6 +108,15 @@ where
     Req: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
     Resp: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
 {
+    // Create the output directory if it doesn't exist
+    match fs::create_dir_all("out") {
+        Ok(_) => {},
+        Err(err) => {
+            eprintln!("Failed to create output directory: {}", err);
+            process::exit(1);
+        }
+    }
+
     // Generate GraphViz output for the Network System
     println!("Generating GraphViz visualization...");
 
@@ -139,6 +151,24 @@ where
         }
     }
 
+    // Output Petri net in .net format
+    let pnet_content = petri.to_pnet(file_stem);
+    let pnet_file = format!("out/{}/petri.net", file_stem);
+    match fs::create_dir_all(format!("out/{}", file_stem)) {
+        Ok(_) => {},
+        Err(err) => {
+            eprintln!("Failed to create directory: {}", err);
+            process::exit(1);
+        }
+    }
+    match fs::write(&pnet_file, pnet_content) {
+        Ok(_) => println!("- {}", pnet_file),
+        Err(err) => {
+            eprintln!("Failed to save Petri net in .net format: {}", err);
+            process::exit(1);
+        }
+    }
+
     // Convert to Petri net with requests
     println!("Converting to Petri net with requests and generating visualization...");
     let petri_with_requests = ns_to_petri::ns_to_petri_with_requests(ns);
@@ -156,6 +186,17 @@ where
         },
         Err(err) => {
             eprintln!("Failed to save Petri net with requests visualization: {}", err);
+            process::exit(1);
+        }
+    }
+
+    // Output Petri net with requests in .net format
+    let pnet_req_content = petri_with_requests.to_pnet(&format!("{}_with_requests", file_stem));
+    let pnet_req_file = format!("out/{}/petri_with_requests.net", file_stem);
+    match fs::write(&pnet_req_file, pnet_req_content) {
+        Ok(_) => println!("- {}", pnet_req_file),
+        Err(err) => {
+            eprintln!("Failed to save Petri net with requests in .net format: {}", err);
             process::exit(1);
         }
     }
