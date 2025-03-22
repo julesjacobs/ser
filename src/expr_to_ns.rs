@@ -274,55 +274,57 @@ pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr,
     // Process states
     while let Some((expr, local, global)) = todo.pop() {
         let local_expr = LocalExpr(local.clone(), expr.clone());
+        // Check if expr is a constant
+        match expr.get() {
+            Expr::Number(n) => {
+                // Add a response for this local state
+                ns.add_response(local_expr.clone(), *n);
+            },
+            _ => {
+                // Get all possible results of executing this expression
+                let results = run_expr(exprhc, &expr, local.clone(), global.clone());
 
-        // Get all possible results of executing this expression
-        let results = run_expr(exprhc, &expr, local.clone(), global.clone());
+                let mut new_globals = vec![];
+                let mut new_packets = vec![];
 
-        let mut new_globals = vec![];
-        let mut new_packets = vec![];
+                for (result, new_local, new_global) in results {
+                    match result {
+                        ExprResult::Yielding(e) => {
+                            // Create a new expression to continue with
+                            let new_local_expr = LocalExpr(new_local.clone(), e.clone());
 
-        for (result, new_local, new_global) in results {
-            match result {
-                ExprResult::Yielding(e) => {
-                    // Create a new expression to continue with
-                    let new_local_expr = LocalExpr(new_local.clone(), e.clone());
+                            // Add a transition from (local_expr, global) to (new_local_expr, new_global)
+                            ns.add_transition(local_expr.clone(), global.clone(), new_local_expr.clone(), new_global.clone());
 
-                    // Add a transition from (local_expr, global) to (new_local_expr, new_global)
-                    ns.add_transition(local_expr.clone(), global.clone(), new_local_expr.clone(), new_global.clone());
-
-                    new_globals.push(new_global.clone());
-                    new_packets.push(new_local_expr.clone());
-                },
-                ExprResult::Returning(n) => {
-                    if global == new_global {
-                        // Add a response for this local state
-                        ns.add_response(local_expr.clone(), n);
-                    }else{
-                        // Add new global state to track if it's new
-                        new_globals.push(new_global.clone());
-                        let new_local_expr = LocalExpr(new_local.clone(), exprhc.number(n));
-                        // Add a transition from (local_expr, global) to (new_local_expr, new_global)
-                        ns.add_transition(local_expr.clone(), global.clone(), new_local_expr.clone(), new_global.clone());
-                        new_packets.push(new_local_expr.clone());
+                            new_globals.push(new_global.clone());
+                            new_packets.push(new_local_expr.clone());
+                        },
+                        ExprResult::Returning(n) => {
+                            // Add new global state to track if it's new
+                            new_globals.push(new_global.clone());
+                            let new_local_expr = LocalExpr(new_local.clone(), exprhc.number(n));
+                            // Add a transition from (local_expr, global) to (new_local_expr, new_global)
+                            ns.add_transition(local_expr.clone(), global.clone(), new_local_expr.clone(), new_global.clone());
+                            new_packets.push(new_local_expr.clone());
+                        }
                     }
                 }
-            }
-        }
-
-        for new_global in new_globals {
-            if seen_globals.insert(new_global.clone()) {
-                // Add ALL combinations of seen packets and new global
-                for packet in seen_packets.iter() {
-                    todo.push((packet.1.clone(), packet.0.clone(), new_global.clone()));
+                for new_global in new_globals {
+                    if seen_globals.insert(new_global.clone()) {
+                        // Add ALL combinations of seen packets and new global
+                        for packet in seen_packets.iter() {
+                            todo.push((packet.1.clone(), packet.0.clone(), new_global.clone()));
+                        }
+                    }
                 }
-            }
-        }
 
-        for packet in new_packets {
-            if seen_packets.insert(packet.clone()) {
-                // Add ALL combinations of seen globals and new packet
-                for global in seen_globals.iter() {
-                    todo.push((packet.1.clone(), packet.0.clone(), global.clone()));
+                for packet in new_packets {
+                    if seen_packets.insert(packet.clone()) {
+                        // Add ALL combinations of seen globals and new packet
+                        for global in seen_globals.iter() {
+                            todo.push((packet.1.clone(), packet.0.clone(), global.clone()));
+                        }
+                    }
                 }
             }
         }
