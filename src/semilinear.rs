@@ -432,7 +432,7 @@ mod tests {
 
         assert_eq!(a_star_times_b_plus_b_times_c, ground_truth_a_star_times_b_plus_b_times_c);
     }
-
+}
 
 //     #[test]
 //     fn test_star_of_a_star_times_b_plus_b_times_c_proper() {
