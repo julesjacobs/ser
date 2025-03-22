@@ -8,6 +8,21 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
+// Helper function to escape strings for use as node IDs in GraphViz DOT language
+fn escape_for_graphviz_id(s: &str) -> String {
+    // Replace any non-alphanumeric characters with underscore
+    // Hack to avoid syntax errors in the DOT language
+    // Maybe cause issues if two different strings map to the same escaped string
+    s.chars()
+        .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+        .collect()
+}
+
+// Helper function to properly quote strings for GraphViz labels
+fn quote_for_graphviz(s: &str) -> String {
+    format!("\"{}\"", s.replace('\"', "\\\""))
+}
+
 /// Network System representation with type parameters:
 /// - G: Global state type
 /// - L: Local state type
@@ -52,18 +67,24 @@ where
 
     /// Add a client request with its target local state
     pub fn add_request(&mut self, request: Req, local_state: L) {
-        self.requests.push((request, local_state));
+        if !self.requests.contains(&(request.clone(), local_state.clone())) {
+            self.requests.push((request, local_state));
+        }
     }
 
     /// Add a response from a local state
     pub fn add_response(&mut self, local_state: L, response: Resp) {
-        self.responses.push((local_state, response));
+        if !self.responses.contains(&(local_state.clone(), response.clone())) {
+            self.responses.push((local_state, response));
+        }
     }
 
     /// Add a state transition
     pub fn add_transition(&mut self, from_local: L, from_global: G, to_local: L, to_global: G) {
-        self.transitions
-            .push((from_local, from_global, to_local, to_global));
+        let transition = (from_local.clone(), from_global.clone(), to_local.clone(), to_global.clone());
+        if !self.transitions.contains(&transition) {
+            self.transitions.push(transition);
+        }
     }
 
     /// Get all unique local states in the network system
@@ -196,19 +217,26 @@ where
         dot.push_str("  // Node styles\n");
 
         // Define separate styles without wildcards
-        // Define local state nodes style
-        let local_state_nodes: Vec<_> = self.get_local_states().iter().map(|local| format!("L_{}", local)).collect();
+        // Define local state nodes style with proper escaping
+        let local_state_nodes: Vec<_> = self.get_local_states().iter()
+            .map(|local| format!("L_{}", escape_for_graphviz_id(&format!("{}", local))))
+            .collect();
         if !local_state_nodes.is_empty() {
             dot.push_str(&format!("  node [style=\"filled,rounded\", fillcolor=lightblue] {}; // Local states\n",
                 local_state_nodes.join(" ")));
         }
-        let request_nodes: Vec<_> = self.get_requests().iter().map(|req| format!("REQ_{}", req)).collect();
+        
+        let request_nodes: Vec<_> = self.get_requests().iter()
+            .map(|req| format!("REQ_{}", escape_for_graphviz_id(&format!("{}", req))))
+            .collect();
         if !request_nodes.is_empty() {
             dot.push_str(&format!("  node [shape=diamond, style=filled, fillcolor=lightgreen] {}; // Requests\n",
                 request_nodes.join(" ")));
         }
 
-        let response_nodes: Vec<_> = self.get_responses().iter().map(|resp| format!("RESP_{}", resp)).collect();
+        let response_nodes: Vec<_> = self.get_responses().iter()
+            .map(|resp| format!("RESP_{}", escape_for_graphviz_id(&format!("{}", resp))))
+            .collect();
         if !response_nodes.is_empty() {
             dot.push_str(&format!("  node [shape=diamond, style=filled, fillcolor=salmon] {}; // Responses\n",
                 response_nodes.join(" ")));
@@ -219,20 +247,25 @@ where
         dot.push_str("  // Local state nodes\n");
         let local_states = self.get_local_states();
         for local in local_states {
-            dot.push_str(&format!("  L_{} [label=\"{}\"];\n", local, local));
+            let id = format!("L_{}", escape_for_graphviz_id(&format!("{}", local)));
+            let label = quote_for_graphviz(&format!("{}", local));
+            dot.push_str(&format!("  {} [label={}];\n", id, label));
         }
 
         // Define request nodes and connections to local states
         dot.push_str("\n  // Request nodes and connections\n");
         let unique_requests = self.get_requests();
         for req in unique_requests {
-            // Create request node
-            dot.push_str(&format!("  REQ_{} [label=\"{}\"];\n", req, req));
+            // Create request node with proper escaping
+            let req_id = format!("REQ_{}", escape_for_graphviz_id(&format!("{}", req)));
+            let req_label = quote_for_graphviz(&format!("{}", req));
+            dot.push_str(&format!("  {} [label={}];\n", req_id, req_label));
 
             // Connect request to local states
             for (request, local) in &self.requests {
                 if request == req {
-                    dot.push_str(&format!("  REQ_{} -> L_{} [style=dashed];\n", req, local));
+                    let local_id = format!("L_{}", escape_for_graphviz_id(&format!("{}", local)));
+                    dot.push_str(&format!("  {} -> {} [style=dashed];\n", req_id, local_id));
                 }
             }
         }
@@ -241,13 +274,16 @@ where
         dot.push_str("\n  // Response nodes and connections\n");
         let unique_responses = self.get_responses();
         for resp in unique_responses {
-            // Create response node
-            dot.push_str(&format!("  RESP_{} [label=\"{}\"];\n", resp, resp));
+            // Create response node with proper escaping
+            let resp_id = format!("RESP_{}", escape_for_graphviz_id(&format!("{}", resp)));
+            let resp_label = quote_for_graphviz(&format!("{}", resp));
+            dot.push_str(&format!("  {} [label={}];\n", resp_id, resp_label));
 
             // Connect local states to responses
             for (local, response) in &self.responses {
                 if response == resp {
-                    dot.push_str(&format!("  L_{} -> RESP_{} [style=dashed];\n", local, resp));
+                    let local_id = format!("L_{}", escape_for_graphviz_id(&format!("{}", local)));
+                    dot.push_str(&format!("  {} -> {} [style=dashed];\n", local_id, resp_id));
                 }
             }
         }
@@ -255,9 +291,13 @@ where
         // Define transitions between local states with global states
         dot.push_str("\n  // Transitions between local states with global states\n");
         for (from_local, from_global, to_local, to_global) in &self.transitions {
+            let from_local_id = format!("L_{}", escape_for_graphviz_id(&format!("{}", from_local)));
+            let to_local_id = format!("L_{}", escape_for_graphviz_id(&format!("{}", to_local)));
+            let transition_label = quote_for_graphviz(&format!("{} → {}", from_global, to_global));
+            
             dot.push_str(&format!(
-                "  L_{} -> L_{} [label=\"{} → {}\", color=blue, penwidth=1.5];\n",
-                from_local, to_local, from_global, to_global
+                "  {} -> {} [label={}, color=blue, penwidth=1.5];\n",
+                from_local_id, to_local_id, transition_label
             ));
         }
 
@@ -269,7 +309,9 @@ where
 
         // Global state nodes in serialized view
         dot.push_str("    // Global state nodes\n");
-        let global_nodes: Vec<_> = self.get_global_states().iter().map(|g| format!("G_{}", g)).collect();
+        let global_nodes: Vec<_> = self.get_global_states().iter()
+            .map(|g| format!("G_{}", escape_for_graphviz_id(&format!("{}", g))))
+            .collect();
         if !global_nodes.is_empty() {
             dot.push_str(&format!("    node [style=\"filled, rounded\", fillcolor=lightblue] {}; // Global states\n\n",
                 global_nodes.join(" ")));
@@ -281,11 +323,21 @@ where
             // Check if this is the initial global state
             let is_initial = &self.initial_global == global;
             
+            // Create properly escaped IDs and labels
+            let global_id = format!("G_{}", escape_for_graphviz_id(&format!("{}", global)));
+            let global_label = if is_initial {
+                quote_for_graphviz(&format!("{} (initial)", global))
+            } else {
+                quote_for_graphviz(&format!("{}", global))
+            };
+            
             // Style initial global state differently
             if is_initial {
-                dot.push_str(&format!("    G_{} [label=\"{} (initial)\", penwidth=3, color=darkgreen];\n", global, global));
+                dot.push_str(&format!("    {} [label={}, penwidth=3, color=darkgreen];\n", 
+                    global_id, global_label));
             } else {
-                dot.push_str(&format!("    G_{} [label=\"{}\"];\n", global, global));
+                dot.push_str(&format!("    {} [label={}];\n", 
+                    global_id, global_label));
             }
         }
 
@@ -293,9 +345,13 @@ where
         dot.push_str("\n    // Transitions in serialized automaton\n");
         let serialized = self.serialized_automaton();
         for (from_global, req, resp, to_global) in &serialized {
+            let from_global_id = format!("G_{}", escape_for_graphviz_id(&format!("{}", from_global)));
+            let to_global_id = format!("G_{}", escape_for_graphviz_id(&format!("{}", to_global)));
+            let transition_label = quote_for_graphviz(&format!("{} / {}", req, resp));
+            
             dot.push_str(&format!(
-                "    G_{} -> G_{} [label=\"{} / {}\"];\n",
-                from_global, to_global, req, resp
+                "    {} -> {} [label={}];\n",
+                from_global_id, to_global_id, transition_label
             ));
         }
 

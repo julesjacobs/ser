@@ -21,7 +21,7 @@ fn print_usage() {
     println!("Usage: ser <filename or directory>");
     println!("  - If a file is provided:");
     println!("    - .json extension: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz");
-    println!("    - .ser extension: Parses as an Expr and pretty prints it");
+    println!("    - .ser extension: Parses as an Expr, converts to NS, and processes it like json files");
     println!("  - If a directory is provided:");
     println!("    - Recursively processes all .json and .ser files in the directory and its subdirectories");
 }
@@ -68,6 +68,68 @@ fn main() {
     }
 }
 
+// Process a Network System: generate visualizations for NS, Petri net, and Petri net with requests
+fn process_ns<G, L, Req, Resp>(ns: &NS<G, L, Req, Resp>, file_stem: &str) 
+where
+    G: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
+    L: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
+    Req: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
+    Resp: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
+{
+    // Generate GraphViz output for the Network System
+    println!("Generating GraphViz visualization...");
+
+    match ns.save_graphviz(file_stem, true) {
+        Ok(files) => {
+            println!("Successfully generated the following Network System files:");
+            for file in files {
+                println!("- {}", file);
+            }
+        },
+        Err(err) => {
+            eprintln!("Failed to save NS visualization: {}", err);
+            process::exit(1);
+        }
+    }
+    
+    // Convert to Petri net
+    println!("Converting to Petri net and generating visualization...");
+    let petri = ns_to_petri::ns_to_petri(ns);
+    
+    // Generate Petri net visualization
+    let petri_name = format!("{}_petri", file_stem);
+    match petri.save_graphviz(&petri_name, true) {
+        Ok(files) => {
+            println!("Successfully generated the following Petri net files:");
+            for file in files {
+                println!("- {}", file);
+            }
+        },
+        Err(err) => {
+            eprintln!("Failed to save Petri net visualization: {}", err);
+            process::exit(1);
+        }
+    }
+
+    // Convert to Petri net with requests
+    println!("Converting to Petri net with requests and generating visualization...");
+    let petri_with_requests = ns_to_petri::ns_to_petri_with_requests(ns);
+
+    let petri_with_requests_name = format!("{}_petri_with_requests", file_stem);
+    match petri_with_requests.save_graphviz(&petri_with_requests_name, true) {
+        Ok(files) => {
+            println!("Successfully generated the following Petri net with requests files:");
+            for file in files {
+                println!("- {}", file);
+            }
+        },
+        Err(err) => {
+            eprintln!("Failed to save Petri net with requests visualization: {}", err);
+            process::exit(1);
+        }
+    }
+}
+
 fn process_json_file(file_path: &str) {
     println!("Processing JSON file: {}", file_path);
 
@@ -88,62 +150,12 @@ fn process_json_file(file_path: &str) {
         }
     };
 
-    // Generate GraphViz output
-    println!("Generating GraphViz visualization...");
-
     // Get the file name without extension to use as the base name for output files
     let path = Path::new(file_path);
     let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("network");
-
-    match ns.save_graphviz(file_stem, true) {
-        Ok(files) => {
-            println!("Successfully generated the following Network System files:");
-            for file in files {
-                println!("- {}", file);
-            }
-        },
-        Err(err) => {
-            eprintln!("Failed to save NS visualization: {}", err);
-            process::exit(1);
-        }
-    }
     
-    // Convert to Petri net
-    println!("Converting to Petri net and generating visualization...");
-    let petri = ns_to_petri::ns_to_petri(&ns);
-    
-    // Generate Petri net visualization
-    let petri_name = format!("{}_petri", file_stem);
-    match petri.save_graphviz(&petri_name, true) {
-        Ok(files) => {
-            println!("Successfully generated the following Petri net files:");
-            for file in files {
-                println!("- {}", file);
-            }
-        },
-        Err(err) => {
-            eprintln!("Failed to save Petri net visualization: {}", err);
-            process::exit(1);
-        }
-    }
-
-    // Convert to Petri net with requests
-    println!("Converting to Petri net with requests and generating visualization...");
-    let petri_with_requests = ns_to_petri::ns_to_petri_with_requests(&ns);
-
-    let petri_with_requests_name = format!("{}_petri_with_requests", file_stem);
-    match petri_with_requests.save_graphviz(&petri_with_requests_name, true) {
-        Ok(files) => {
-            println!("Successfully generated the following Petri net with requests files:");
-            for file in files {
-                println!("- {}", file);
-            }
-        },
-        Err(err) => {
-            eprintln!("Failed to save Petri net with requests visualization: {}", err);
-            process::exit(1);
-        }
-    }
+    // Process the Network System
+    process_ns(&ns, file_stem);
 }
 
 fn process_ser_file(file_path: &str) {
@@ -159,15 +171,27 @@ fn process_ser_file(file_path: &str) {
 
     // Parse the content as an Expr
     let mut table = ExprHc::new();
-    match parse(&content, &mut table) {
+    let expr = match parse(&content, &mut table) {
         Ok(expr) => {
             println!("Parsed expression: {}", expr);
+            expr
         },
         Err(err) => {
             eprintln!("Error parsing SER file: {}", err);
             process::exit(1);
         }
-    }
+    };
+
+    // Convert expression to Network System
+    println!("Converting expression to Network System...");
+    let ns = expr_to_ns::expr_to_ns(&mut table, &expr);
+
+    // Get the file name without extension to use as the base name for output files
+    let path = Path::new(file_path);
+    let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("expr");
+    
+    // Process the Network System
+    process_ns(&ns, file_stem);
 }
 
 // Recursively process all files in a directory and its subdirectories

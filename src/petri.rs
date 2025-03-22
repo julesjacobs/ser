@@ -2,6 +2,15 @@ use crate::graphviz;
 use std::collections::HashSet;
 use std::hash::Hash;
 
+// Helper function to escape strings for use as node IDs in GraphViz DOT language
+fn escape_for_graphviz_id(s: &str) -> String {
+    // Replace any non-alphanumeric characters with underscore
+    // This helps avoid syntax errors in the DOT language
+    s.chars()
+        .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+        .collect()
+}
+
 pub struct Petri<Place> {
     initial_marking: Vec<Place>,
     transitions: Vec<(Vec<Place>, Vec<Place>)>,
@@ -101,18 +110,22 @@ where
             } else {
                 format!("{}●", count)
             };
+            // Escape special characters for GraphViz node ID
+            let escaped_place_id = format!("P_{}", escape_for_graphviz_id(&format!("{}", place)));
+            
+            // Prepare HTML label with tokens
             let token_html = if *count > 0 {
                 format!(
                     "<<TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\"><TR><TD>{}</TD></TR><TR><TD><FONT POINT-SIZE=\"14\">{}</FONT></TD></TR></TABLE>>",
                     place, dots
                 )
             } else {
-                format!("{}", place)
+                format!("\"{}\"", place)
             };
             
             dot.push_str(&format!(
-                "  P_{} [label={}, fillcolor=\"#D0F0FF\", fontcolor=\"#000000\", fixedsize=false, style=\"filled,rounded\"];\n",
-                place, token_html
+                "  {} [label={}, fillcolor=\"#D0F0FF\", fontcolor=\"#000000\", fixedsize=false, style=\"filled,rounded\"];\n",
+                escaped_place_id, token_html
             ));
         }
         
@@ -146,16 +159,18 @@ where
             
             // Connect input places to transition with weights if needed
             for (place, count) in unique_inputs {
+                let escaped_place_id = format!("P_{}", escape_for_graphviz_id(&format!("{}", place)));
+                
                 if count == 1 {
                     dot.push_str(&format!(
-                        "  P_{} -> T_{} [arrowhead=normal, color=\"#404040\", penwidth=1.2];\n", 
-                        place, i
+                        "  {} -> T_{} [arrowhead=normal, color=\"#404040\", penwidth=1.2];\n", 
+                        escaped_place_id, i
                     ));
                 } else {
                     // Add weight label for multiple arcs
                     dot.push_str(&format!(
-                        "  P_{} -> T_{} [label=\" {}\", fontsize=12, arrowhead=normal, color=\"#404040\", penwidth=1.2];\n", 
-                        place, i, count
+                        "  {} -> T_{} [label=\" {}\", fontsize=12, arrowhead=normal, color=\"#404040\", penwidth=1.2];\n", 
+                        escaped_place_id, i, count
                     ));
                 }
             }
@@ -168,16 +183,18 @@ where
             
             // Connect transition to output places with weights if needed
             for (place, count) in unique_outputs {
+                let escaped_place_id = format!("P_{}", escape_for_graphviz_id(&format!("{}", place)));
+                
                 if count == 1 {
                     dot.push_str(&format!(
-                        "  T_{} -> P_{} [arrowhead=normal, color=\"#404040\", penwidth=1.2];\n", 
-                        i, place
+                        "  T_{} -> {} [arrowhead=normal, color=\"#404040\", penwidth=1.2];\n", 
+                        i, escaped_place_id
                     ));
                 } else {
                     // Add weight label for multiple arcs
                     dot.push_str(&format!(
-                        "  T_{} -> P_{} [label=\" {}\", fontsize=12, arrowhead=normal, color=\"#404040\", penwidth=1.2];\n", 
-                        i, place, count
+                        "  T_{} -> {} [label=\" {}\", fontsize=12, arrowhead=normal, color=\"#404040\", penwidth=1.2];\n", 
+                        i, escaped_place_id, count
                     ));
                 }
             }

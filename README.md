@@ -21,9 +21,7 @@ Serializability checker.
 
 ## TODO
 
-
 - Add short tutorial for how to call the SMPT tool [Guy]
-- Compute automaton from parsed program [Guy]
 - Call the tool
 - Extract counterexample
 
@@ -44,15 +42,15 @@ Example:
 ## Syntax
 
 e ::=
-  | x := e
-  | X := e
+  | n                     (constant) 
+  | x := e                (local variable / packet field write)
+  | x                     (read)
+  | X := e                (global variable / switch variable)
+  | X                     (read)
   | e == e
   | e ; e
   | if(e){e}else{e}
   | while(e){e}
-  | yield
-  | exit
-  | ?
-  | n
-  | x
-  | X
+  | yield                 (yields to the scheduler; allows other threads/packets to run)
+  | exit                  (exit the entire execution of whole program / network -- maybe remove this?)
+  | ?                     (nondeterministic choice between 0 and 1)
