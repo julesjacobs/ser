@@ -5,7 +5,7 @@ use std::process::Command;
 /// Save GraphViz DOT files to disk and generate visualizations
 ///
 /// This function:
-/// 1. Creates the output directory if it doesn't exist
+/// 1. Creates the output directory and subdirectory if they don't exist
 /// 2. Saves the DOT file
 /// 3. Runs the GraphViz 'dot' command to generate PNG, SVG, and PDF visualizations
 /// 4. Optionally opens the generated PNG files for viewing
@@ -23,19 +23,26 @@ pub fn save_graphviz(
     viz_type: &str,
     open_files: bool,
 ) -> Result<Vec<String>, String> {
-    // Create output directory if it doesn't exist
+    // Create main output directory if it doesn't exist
     let out_dir = Path::new("out");
     if let Err(e) = create_dir_all(out_dir) {
         return Err(format!("Failed to create output directory: {}", e));
     }
 
+    // Create subdirectory for this specific output
+    let subdir_name = name;
+    let subdir_path = out_dir.join(subdir_name);
+    if let Err(e) = create_dir_all(&subdir_path) {
+        return Err(format!("Failed to create output subdirectory: {}", e));
+    }
+
     let mut generated_files = Vec::new();
 
     // Save full visualization
-    let dot_path = out_dir.join(format!("{}_{}.dot", name, viz_type));
-    let png_path = out_dir.join(format!("{}_{}.png", name, viz_type));
-    let svg_path = out_dir.join(format!("{}_{}.svg", name, viz_type));
-    let pdf_path = out_dir.join(format!("{}_{}.pdf", name, viz_type));
+    let dot_path = subdir_path.join(format!("{}.dot", viz_type));
+    let png_path = subdir_path.join(format!("{}.png", viz_type));
+    let svg_path = subdir_path.join(format!("{}.svg", viz_type));
+    let pdf_path = subdir_path.join(format!("{}.pdf", viz_type));
 
     match fs::write(&dot_path, dot_content) {
         Ok(_) => {
@@ -153,15 +160,4 @@ pub fn save_graphviz(
     }
 
     Ok(generated_files)
-}
-
-/// Save GraphViz DOT files to disk and generate visualizations without opening files
-///
-/// This is a convenience wrapper that calls save_graphviz(dot_content, name, viz_type, false)
-pub fn save_graphviz_no_open(
-    dot_content: &str,
-    name: &str,
-    viz_type: &str,
-) -> Result<Vec<String>, String> {
-    save_graphviz(dot_content, name, viz_type, false)
 }
