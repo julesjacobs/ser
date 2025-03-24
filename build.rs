@@ -8,7 +8,10 @@ fn main() {
         Ok(p) => PathBuf::from(p),
         Err(_) => PathBuf::from("/usr"),
     };
-    println!("cargo:rustc-link-search={}", isl_prefix.join("lib").display());
+    println!(
+        "cargo:rustc-link-search={}",
+        isl_prefix.join("lib").display()
+    );
     println!("cargo:rustc-link-lib=isl");
 
     let bindings = bindgen::Builder::default()

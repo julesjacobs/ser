@@ -7,7 +7,7 @@
 //! thread-local context that never gets freed.
 
 use std::cell::Cell;
-use std::ffi::{c_void, CString};
+use std::ffi::{CString, c_void};
 use std::{mem, ptr};
 
 /// Based on https://rust-lang.github.io/rust-bindgen/tutorial-4.html
@@ -183,7 +183,6 @@ impl Set {
 
     /// Iterate over each basic set in the set. They may not be disjoint
     pub fn foreach_basic_set<F: FnMut(BasicSet)>(&self, mut f: F) {
-
         extern "C" fn callback<F: FnMut(BasicSet)>(
             bset: *mut isl_basic_set,
             user: *mut c_void,

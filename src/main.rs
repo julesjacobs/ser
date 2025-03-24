@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 
+mod affine_constraints;
 mod expr_to_ns;
 mod graphviz;
+mod isl;
 mod kleene;
 mod ns;
 mod ns_to_petri;
@@ -9,7 +11,6 @@ mod parser;
 mod petri;
 mod reachability;
 mod semilinear;
-mod isl;
 
 use std::env;
 use std::fs;
