@@ -33,7 +33,62 @@ fn get_ctx() -> *mut isl_ctx {
     ctx
 }
 
+/// Some functions return `isl_size`. This may be negative, in which case we panic.
+fn check_isl_size(size: isl_size) -> usize {
+    assert!(size >= 0);
+    size as usize
+}
+
+/// An isl space. We only care about sets, so for us, the only thing that matters is the dimension.
+///
+/// (In particular, we only ever create set spaces with 0 parameters.)
+///
+/// Every set / basic set / etc. has a space; get it with `.space()`. Or, create a new space with
+/// [`Space::new`].
+#[derive(Debug)]
+pub struct Space {
+    ptr: *mut isl_space,
+}
+
+impl Drop for Space {
+    fn drop(&mut self) {
+        self.ptr = unsafe { isl_space_free(self.ptr) };
+    }
+}
+impl Clone for Space {
+    fn clone(&self) -> Self {
+        Space {
+            ptr: unsafe { isl_space_copy(self.ptr) },
+        }
+    }
+}
+
+impl Space {
+    fn from_ptr(ptr: *mut isl_space) -> Self {
+        assert!(!ptr.is_null(), "ptr is null!");
+        Self { ptr }
+    }
+    fn into_ptr(self) -> *mut isl_space {
+        let result = self.ptr;
+        mem::forget(self);
+        result
+    }
+
+    /// A new set space with the specified dimension
+    pub fn new(dim: usize) -> Self {
+        Self::from_ptr(unsafe { isl_space_set_alloc(get_ctx(), 0, dim as _) })
+    }
+
+    /// The dimension (number of variables) of the space
+    pub fn dim(&self) -> usize {
+        todo!()
+        // check_isl_size(unsafe { isl_space_dim(self.ptr, isl_dim_set) })
+    }
+}
+
 /// An isl basic set. A existentially-quantified conjunction of affine constraints
+///
+/// Turn it into a `Set` with `.into()`.
 #[derive(Debug)]
 pub struct BasicSet {
     ptr: *mut isl_basic_set,
@@ -67,6 +122,10 @@ impl BasicSet {
         let text = CString::new(text).expect("text should not have ascii \\0 in it");
         BasicSet::from_ptr(unsafe { isl_basic_set_read_from_str(get_ctx(), text.as_ptr()) })
     }
+
+    pub fn space(&self) -> Space {
+        Space::from_ptr(unsafe { isl_basic_set_get_space(self.ptr) })
+    }
 }
 
 /// An isl set. A union of basic sets
@@ -95,6 +154,10 @@ impl Set {
     fn from_ptr(ptr: *mut isl_set) -> Self {
         assert!(!ptr.is_null(), "ptr is null!");
         Set { ptr }
+    }
+
+    pub fn space(&self) -> Space {
+        Space::from_ptr(unsafe { isl_set_get_space(self.ptr) })
     }
 
     pub fn union(self, other: Set) -> Set {
