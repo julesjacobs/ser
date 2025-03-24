@@ -22,6 +22,7 @@ pub enum ConstraintType {
 pub struct Constraint {
     /// Linear combination of variables: (coeff, var) pairs
     affine_formula: Vec<(i32, Var)>,
+    offset: i32,
     /// What kind of constraint (inequality or equality)
     constraint_type: ConstraintType,
 }
