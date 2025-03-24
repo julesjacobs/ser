@@ -13,11 +13,23 @@ Serializability checker.
 - `src/semilinear.rs`: Contains semilinear set operations and implements the Kleene trait.
 - `src/petri.rs`: Implements Petri net data structures.
 - `src/graphviz.rs`: Handles visualization of data structures.
+- `src/isl.rs`: Wrapper around the ISL library.
 
 - `examples/json/*`: NS (Network System) examples with directly specified automaton of requests, transitions, responses.
 - `examples/ser/*`: Examples specified in the Ser programming language.
 
 - `out/*`: Output visualizations.
+
+## Dependencies
+
+Depends on [isl](https://libisl.sourceforge.io/), which you may already have
+installed (it comes with GCC).  For a non-standard install, you may need to set
+the `ISL_PREFIX` environment variable. For example, with homebrew on Mac:
+
+```
+$ brew install isl
+$ export ISL_PREFIX=/opt/homebrew/Cellar/isl/0.27
+```
 
 ## TODO
 

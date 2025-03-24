@@ -9,6 +9,7 @@ mod parser;
 mod petri;
 mod reachability;
 mod semilinear;
+mod isl;
 
 use std::env;
 use std::fs;
