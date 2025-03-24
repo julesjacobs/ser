@@ -14,7 +14,13 @@ fn escape_for_graphviz_id(s: &str) -> String {
     // Hack to avoid syntax errors in the DOT language
     // Maybe cause issues if two different strings map to the same escaped string
     s.chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 
@@ -67,21 +73,32 @@ where
 
     /// Add a client request with its target local state
     pub fn add_request(&mut self, request: Req, local_state: L) {
-        if !self.requests.contains(&(request.clone(), local_state.clone())) {
+        if !self
+            .requests
+            .contains(&(request.clone(), local_state.clone()))
+        {
             self.requests.push((request, local_state));
         }
     }
 
     /// Add a response from a local state
     pub fn add_response(&mut self, local_state: L, response: Resp) {
-        if !self.responses.contains(&(local_state.clone(), response.clone())) {
+        if !self
+            .responses
+            .contains(&(local_state.clone(), response.clone()))
+        {
             self.responses.push((local_state, response));
         }
     }
 
     /// Add a state transition
     pub fn add_transition(&mut self, from_local: L, from_global: G, to_local: L, to_global: G) {
-        let transition = (from_local.clone(), from_global.clone(), to_local.clone(), to_global.clone());
+        let transition = (
+            from_local.clone(),
+            from_global.clone(),
+            to_local.clone(),
+            to_global.clone(),
+        );
         if !self.transitions.contains(&transition) {
             self.transitions.push(transition);
         }
@@ -157,7 +174,6 @@ where
                 let mut todo = vec![(l, g)];
                 let mut reached = HashSet::new();
                 while let Some((l, g)) = todo.pop() {
-
                     reached.insert((l, g));
                     for (l1, g1, l2, g2) in &self.transitions {
                         if l == l1 && g == g1 && !reached.contains(&(l2, g2)) {
@@ -218,28 +234,40 @@ where
 
         // Define separate styles without wildcards
         // Define local state nodes style with proper escaping
-        let local_state_nodes: Vec<_> = self.get_local_states().iter()
+        let local_state_nodes: Vec<_> = self
+            .get_local_states()
+            .iter()
             .map(|local| format!("L_{}", escape_for_graphviz_id(&format!("{}", local))))
             .collect();
         if !local_state_nodes.is_empty() {
-            dot.push_str(&format!("  node [style=\"filled,rounded\", fillcolor=lightblue] {}; // Local states\n",
-                local_state_nodes.join(" ")));
+            dot.push_str(&format!(
+                "  node [style=\"filled,rounded\", fillcolor=lightblue] {}; // Local states\n",
+                local_state_nodes.join(" ")
+            ));
         }
 
-        let request_nodes: Vec<_> = self.get_requests().iter()
+        let request_nodes: Vec<_> = self
+            .get_requests()
+            .iter()
             .map(|req| format!("REQ_{}", escape_for_graphviz_id(&format!("{}", req))))
             .collect();
         if !request_nodes.is_empty() {
-            dot.push_str(&format!("  node [shape=diamond, style=filled, fillcolor=lightgreen] {}; // Requests\n",
-                request_nodes.join(" ")));
+            dot.push_str(&format!(
+                "  node [shape=diamond, style=filled, fillcolor=lightgreen] {}; // Requests\n",
+                request_nodes.join(" ")
+            ));
         }
 
-        let response_nodes: Vec<_> = self.get_responses().iter()
+        let response_nodes: Vec<_> = self
+            .get_responses()
+            .iter()
             .map(|resp| format!("RESP_{}", escape_for_graphviz_id(&format!("{}", resp))))
             .collect();
         if !response_nodes.is_empty() {
-            dot.push_str(&format!("  node [shape=diamond, style=filled, fillcolor=salmon] {}; // Responses\n",
-                response_nodes.join(" ")));
+            dot.push_str(&format!(
+                "  node [shape=diamond, style=filled, fillcolor=salmon] {}; // Responses\n",
+                response_nodes.join(" ")
+            ));
         }
         dot.push('\n');
 
@@ -309,7 +337,9 @@ where
 
         // Global state nodes in serialized view
         dot.push_str("    // Global state nodes\n");
-        let global_nodes: Vec<_> = self.get_global_states().iter()
+        let global_nodes: Vec<_> = self
+            .get_global_states()
+            .iter()
             .map(|g| format!("G_{}", escape_for_graphviz_id(&format!("{}", g))))
             .collect();
         if !global_nodes.is_empty() {
@@ -333,11 +363,12 @@ where
 
             // Style initial global state differently
             if is_initial {
-                dot.push_str(&format!("    {} [label={}, penwidth=3, color=darkgreen];\n",
-                    global_id, global_label));
+                dot.push_str(&format!(
+                    "    {} [label={}, penwidth=3, color=darkgreen];\n",
+                    global_id, global_label
+                ));
             } else {
-                dot.push_str(&format!("    {} [label={}];\n",
-                    global_id, global_label));
+                dot.push_str(&format!("    {} [label={}];\n", global_id, global_label));
             }
         }
 
@@ -345,7 +376,8 @@ where
         dot.push_str("\n    // Transitions in serialized automaton\n");
         let serialized = self.serialized_automaton();
         for (from_global, req, resp, to_global) in &serialized {
-            let from_global_id = format!("G_{}", escape_for_graphviz_id(&format!("{}", from_global)));
+            let from_global_id =
+                format!("G_{}", escape_for_graphviz_id(&format!("{}", from_global)));
             let to_global_id = format!("G_{}", escape_for_graphviz_id(&format!("{}", to_global)));
             let transition_label = quote_for_graphviz(&format!("{} / {}", req, resp));
 

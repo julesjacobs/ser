@@ -17,7 +17,8 @@ impl std::fmt::Display for Env {
         pairs.sort_by_key(|(k, _)| *k);
 
         // Format each variable assignment
-        let formatted = pairs.iter()
+        let formatted = pairs
+            .iter()
             .map(|(k, v)| format!("{}={}", k, v))
             .collect::<Vec<_>>()
             .join(",");
@@ -67,21 +68,38 @@ fn is_local(var: &str) -> bool {
     var.chars().next().unwrap().is_lowercase()
 }
 
-pub fn run_expr(exprhc: &mut ExprHc, expr: &Expr, local: Local, global: Global) -> Vec<(ExprResult, Local, Global)> {
+pub fn run_expr(
+    exprhc: &mut ExprHc,
+    expr: &Expr,
+    local: Local,
+    global: Global,
+) -> Vec<(ExprResult, Local, Global)> {
     let mut results = Vec::new();
     match expr {
         Expr::Assign(var, e) => {
             for (expr_result, local, global) in run_expr(exprhc, e, local, global) {
                 match expr_result {
                     ExprResult::Yielding(e) => {
-                        results.push((ExprResult::Yielding(exprhc.assign(var.clone(), e)), local, global));
+                        results.push((
+                            ExprResult::Yielding(exprhc.assign(var.clone(), e)),
+                            local,
+                            global,
+                        ));
                     }
                     ExprResult::Returning(n) => {
                         // Assign to local or global
                         if is_local(var) {
-                            results.push((ExprResult::Returning(n), local.insert(var.clone(), n), global));
+                            results.push((
+                                ExprResult::Returning(n),
+                                local.insert(var.clone(), n),
+                                global,
+                            ));
                         } else {
-                            results.push((ExprResult::Returning(n), local, global.insert(var.clone(), n)));
+                            results.push((
+                                ExprResult::Returning(n),
+                                local,
+                                global.insert(var.clone(), n),
+                            ));
                         }
                     }
                 }
@@ -91,10 +109,15 @@ pub fn run_expr(exprhc: &mut ExprHc, expr: &Expr, local: Local, global: Global) 
             for (expr_result1, local1, global1) in run_expr(exprhc, e1, local, global) {
                 match expr_result1 {
                     ExprResult::Yielding(e) => {
-                        results.push((ExprResult::Yielding(exprhc.equal(e, e2.clone())), local1, global1));
+                        results.push((
+                            ExprResult::Yielding(exprhc.equal(e, e2.clone())),
+                            local1,
+                            global1,
+                        ));
                     }
                     ExprResult::Returning(n1) => {
-                        for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1) {
+                        for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1)
+                        {
                             match expr_result2 {
                                 ExprResult::Yielding(e) => {
                                     let e1 = exprhc.number(n1);
@@ -115,11 +138,16 @@ pub fn run_expr(exprhc: &mut ExprHc, expr: &Expr, local: Local, global: Global) 
             for (expr_result1, local1, global1) in run_expr(exprhc, e1, local, global) {
                 match expr_result1 {
                     ExprResult::Yielding(e) => {
-                        results.push((ExprResult::Yielding(exprhc.sequence(e, e2.clone())), local1, global1));
+                        results.push((
+                            ExprResult::Yielding(exprhc.sequence(e, e2.clone())),
+                            local1,
+                            global1,
+                        ));
                     }
                     ExprResult::Returning(_) => {
                         // Ignore the result of e1 and continue with e2
-                        for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1) {
+                        for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1)
+                        {
                             results.push((expr_result2, local2, global2));
                         }
                     }
@@ -130,17 +158,29 @@ pub fn run_expr(exprhc: &mut ExprHc, expr: &Expr, local: Local, global: Global) 
             for (expr_result, local1, global1) in run_expr(exprhc, cond, local, global) {
                 match expr_result {
                     ExprResult::Yielding(e) => {
-                        results.push((ExprResult::Yielding(exprhc.if_expr(e, then_branch.clone(), else_branch.clone())), local1, global1));
+                        results.push((
+                            ExprResult::Yielding(exprhc.if_expr(
+                                e,
+                                then_branch.clone(),
+                                else_branch.clone(),
+                            )),
+                            local1,
+                            global1,
+                        ));
                     }
                     ExprResult::Returning(n) => {
                         if n != 0 {
                             // Condition is true, execute then branch
-                            for (expr_result2, local2, global2) in run_expr(exprhc, then_branch, local1, global1) {
+                            for (expr_result2, local2, global2) in
+                                run_expr(exprhc, then_branch, local1, global1)
+                            {
                                 results.push((expr_result2, local2, global2));
                             }
                         } else {
                             // Condition is false, execute else branch
-                            for (expr_result2, local2, global2) in run_expr(exprhc, else_branch, local1, global1) {
+                            for (expr_result2, local2, global2) in
+                                run_expr(exprhc, else_branch, local1, global1)
+                            {
                                 results.push((expr_result2, local2, global2));
                             }
                         }
@@ -167,18 +207,27 @@ pub fn run_expr(exprhc: &mut ExprHc, expr: &Expr, local: Local, global: Global) 
                     match expr_result {
                         ExprResult::Yielding(e) => {
                             // If condition yields, we yield the entire while expression
-                            results.push((ExprResult::Yielding(exprhc.while_expr(e, body.clone())), local1, global1));
+                            results.push((
+                                ExprResult::Yielding(exprhc.while_expr(e, body.clone())),
+                                local1,
+                                global1,
+                            ));
                         }
                         ExprResult::Returning(n) => {
                             if n != 0 {
                                 // Condition is true, execute body
-                                for (expr_result2, local2, global2) in run_expr(exprhc, body, local1, global1) {
+                                for (expr_result2, local2, global2) in
+                                    run_expr(exprhc, body, local1, global1)
+                                {
                                     match expr_result2 {
                                         ExprResult::Yielding(e) => {
                                             // If body yields, we yield followed by the while loop
-                                            let while_expr = exprhc.while_expr(cond.clone(), body.clone());
+                                            let while_expr =
+                                                exprhc.while_expr(cond.clone(), body.clone());
                                             results.push((
-                                                ExprResult::Yielding(exprhc.sequence(e, while_expr)),
+                                                ExprResult::Yielding(
+                                                    exprhc.sequence(e, while_expr),
+                                                ),
                                                 local2,
                                                 global2,
                                             ));
@@ -231,7 +280,7 @@ pub fn run_expr(exprhc: &mut ExprHc, expr: &Expr, local: Local, global: Global) 
 // Dummy type to represent a request for the Ser case
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub enum ExprRequest {
-    Request
+    Request,
 }
 
 impl std::fmt::Display for ExprRequest {
@@ -249,7 +298,6 @@ impl std::fmt::Display for LocalExpr {
         write!(f, "({}, {})", self.0, self.1)
     }
 }
-
 
 pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr, ExprRequest, i64> {
     // Create a new NS with an empty global environment
@@ -279,7 +327,7 @@ pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr,
             Expr::Number(n) => {
                 // Add a response for this local state
                 ns.add_response(local_expr.clone(), *n);
-            },
+            }
             _ => {
                 // Get all possible results of executing this expression
                 let results = run_expr(exprhc, &expr, local.clone(), global.clone());
@@ -294,17 +342,27 @@ pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr,
                             let new_local_expr = LocalExpr(new_local.clone(), e.clone());
 
                             // Add a transition from (local_expr, global) to (new_local_expr, new_global)
-                            ns.add_transition(local_expr.clone(), global.clone(), new_local_expr.clone(), new_global.clone());
+                            ns.add_transition(
+                                local_expr.clone(),
+                                global.clone(),
+                                new_local_expr.clone(),
+                                new_global.clone(),
+                            );
 
                             new_globals.push(new_global.clone());
                             new_packets.push(new_local_expr.clone());
-                        },
+                        }
                         ExprResult::Returning(n) => {
                             // Add new global state to track if it's new
                             new_globals.push(new_global.clone());
                             let new_local_expr = LocalExpr(new_local.clone(), exprhc.number(n));
                             // Add a transition from (local_expr, global) to (new_local_expr, new_global)
-                            ns.add_transition(local_expr.clone(), global.clone(), new_local_expr.clone(), new_global.clone());
+                            ns.add_transition(
+                                local_expr.clone(),
+                                global.clone(),
+                                new_local_expr.clone(),
+                                new_global.clone(),
+                            );
                             new_packets.push(new_local_expr.clone());
                         }
                     }

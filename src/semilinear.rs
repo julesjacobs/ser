@@ -1,8 +1,8 @@
 // Semi-linear sets
 
+use std::clone::Clone;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
-use std::clone::Clone;
 
 use crate::kleene::Kleene;
 
@@ -66,19 +66,19 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct LinearSet<K: Eq + Hash + Clone + Ord> {
-    base: SparseVector<K>,            // u0: the base vector
-    periods: Vec<SparseVector<K>>,    // [u1, u2, ..., um]: list of period generator vectors
+    base: SparseVector<K>,         // u0: the base vector
+    periods: Vec<SparseVector<K>>, // [u1, u2, ..., um]: list of period generator vectors
 }
 
 #[derive(Debug, Clone)]
 pub struct SemilinearSet<K: Eq + Hash + Clone + Ord> {
-    components: Vec<LinearSet<K>>,  // finite list of linear sets whose union defines the set
+    components: Vec<LinearSet<K>>, // finite list of linear sets whose union defines the set
 }
 
-impl<K: Eq + Hash + Clone + Ord> PartialEq for SemilinearSet<K> { // by Guy
+impl<K: Eq + Hash + Clone + Ord> PartialEq for SemilinearSet<K> {
+    // by Guy
     fn eq(&self, other: &Self) -> bool {
         let self_components: HashSet<_> = self.components.iter().cloned().collect();
         let other_components: HashSet<_> = other.components.iter().cloned().collect();
@@ -97,9 +97,14 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
             for p in lin.periods {
                 new_periods.insert(p);
             }
-            new_components.insert(LinearSet { base: lin.base, periods: new_periods.into_iter().collect() });
+            new_components.insert(LinearSet {
+                base: lin.base,
+                periods: new_periods.into_iter().collect(),
+            });
         }
-        SemilinearSet { components: new_components.into_iter().collect() }
+        SemilinearSet {
+            components: new_components.into_iter().collect(),
+        }
     }
 
     /// Check if the semilinear set is empty.
@@ -110,7 +115,10 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Create a semilinear set containing a single vector (an atomic singleton).
     fn singleton(vector: SparseVector<K>) -> Self {
         SemilinearSet {
-            components: vec![ LinearSet { base: vector, periods: vec![] } ],
+            components: vec![LinearSet {
+                base: vector,
+                periods: vec![],
+            }],
         }
     }
 
@@ -121,7 +129,9 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
 
     /// The empty semilinear set (contains no vectors).
     fn empty() -> Self {
-        SemilinearSet { components: Vec::new() }
+        SemilinearSet {
+            components: Vec::new(),
+        }
     }
 
     /// The universe (all possible sparse vectors) as a semilinear set.
@@ -130,7 +140,7 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
         // Universe = linear set with base = empty (all zeros), periods = unit vectors for each key
         let base = SparseVector::new();
         let periods = keys.into_iter().map(SparseVector::unit).collect();
-        SemilinearSet::new(vec![ LinearSet { base, periods } ])
+        SemilinearSet::new(vec![LinearSet { base, periods }])
     }
 }
 
@@ -165,7 +175,10 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
                 new_periods.extend_from_slice(&lin1.periods);
                 new_periods.extend_from_slice(&lin2.periods);
                 // (TODO) remove duplicate period vectors in new_periods
-                result_components.push( LinearSet { base: new_base, periods: new_periods } );
+                result_components.push(LinearSet {
+                    base: new_base,
+                    periods: new_periods,
+                });
             }
         }
         SemilinearSet::new(result_components)
@@ -177,8 +190,11 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         // We use bit masks to iterate over all non-empty subsets of components
         let n = self.components.len();
         // assert that the size is not too large
-        debug_assert!(n <= 32, "Number of components in semilinear set is too large");
-        for mask in 0..(1<<n) {
+        debug_assert!(
+            n <= 32,
+            "Number of components in semilinear set is too large"
+        );
+        for mask in 0..(1 << n) {
             // Determine subset X for this mask
             let mut subset_base = SparseVector::new();
             let mut subset_periods: Vec<SparseVector<K>> = Vec::new();
@@ -186,7 +202,7 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
             let mut period_set = HashSet::new();
 
             for i in 0..n {
-                if mask & (1<<i) != 0 {
+                if mask & (1 << i) != 0 {
                     let comp = &self.components[i];
                     // add this component's base to subset_base
                     subset_base = subset_base.add(&comp.base);
@@ -203,7 +219,10 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
                 }
             }
             // Create the linear set for this subset
-            result_components.push( LinearSet { base: subset_base, periods: subset_periods } );
+            result_components.push(LinearSet {
+                base: subset_base,
+                periods: subset_periods,
+            });
         }
         SemilinearSet::new(result_components)
     }
@@ -227,7 +246,7 @@ mod tests {
         assert_eq!(sum.get(&"x".to_string()), 1);
         assert_eq!(sum.get(&"y".to_string()), 5);
         assert_eq!(sum.get(&"z".to_string()), 4);
-        assert_eq!(sum.get(&"w".to_string()), 0);  // Non-existent key
+        assert_eq!(sum.get(&"w".to_string()), 0); // Non-existent key
     }
 
     #[test]
@@ -273,24 +292,22 @@ mod tests {
 
     #[test]
     fn test_a_star() {
-
         let mut base = SparseVector::new();
         base.set("x".to_string(), 1);
 
         // a={(1,0,0);[]}
         let a = LinearSet {
-            base:base.clone(),
+            base: base.clone(),
             periods: vec![],
         };
 
         // computed a* result from code
         let result_a_star = SemilinearSet::new(vec![a]).star();
 
-
         // {(0,0,0);[]}
         let linear_set_1_base = SparseVector::new();
         let ground_truth_a_star_linear_set_1 = LinearSet {
-            base:linear_set_1_base.clone(),
+            base: linear_set_1_base.clone(),
             periods: vec![],
         };
 
@@ -301,12 +318,15 @@ mod tests {
         let mut linear_set_2_period = SparseVector::new();
         linear_set_2_period.set("x".to_string(), 1);
         let ground_truth_a_star_linear_set_2 = LinearSet {
-            base:linear_set_2_base.clone(),
+            base: linear_set_2_base.clone(),
             periods: vec![linear_set_2_period],
         };
 
         let ground_truth_a_star = SemilinearSet {
-            components: vec![ground_truth_a_star_linear_set_1,ground_truth_a_star_linear_set_2]
+            components: vec![
+                ground_truth_a_star_linear_set_1,
+                ground_truth_a_star_linear_set_2,
+            ],
         };
 
         assert_eq!(result_a_star, ground_truth_a_star);
@@ -333,7 +353,6 @@ mod tests {
         assert_eq!(a_star, ground_truth_a_star);
     }
 
-
     #[test]
     fn test_b_times_c_proper() {
         // Use the Kleene operations to compute b;c
@@ -344,25 +363,20 @@ mod tests {
         // check symetry
         assert_eq!(b_times_c, c_times_b);
 
-
         let mut b_time_c_sparse_vector = SparseVector::new();
         b_time_c_sparse_vector.set("b".to_string(), 1);
         b_time_c_sparse_vector.set("c".to_string(), 1);
 
-
         // Define the ground truth using the semilinear set constructors
-        let ground_truth_b_times_c = SemilinearSet::new(vec![
-            LinearSet {
-                base: b_time_c_sparse_vector,
-                periods: vec![],
-            }
-        ]);
+        let ground_truth_b_times_c = SemilinearSet::new(vec![LinearSet {
+            base: b_time_c_sparse_vector,
+            periods: vec![],
+        }]);
 
         assert_eq!(b_times_c, ground_truth_b_times_c);
         // println!("{:?}", b_times_c);
         // println!("done!!!");
     }
-
 
     #[test]
     fn test_a_star_times_b_proper() {
@@ -381,18 +395,17 @@ mod tests {
         // Define the ground truth using the semilinear set constructors
         let ground_truth_a_star_times_b = SemilinearSet::new(vec![
             LinearSet {
-                base: SparseVector::unit("b".to_string()),  // Ensure consistency
+                base: SparseVector::unit("b".to_string()), // Ensure consistency
                 periods: vec![],
             },
             LinearSet {
                 base: a_b,
-                periods: vec![SparseVector::unit("a".to_string())],  // Ensure consistency
+                periods: vec![SparseVector::unit("a".to_string())], // Ensure consistency
             },
         ]);
 
         assert_eq!(a_star_times_b, ground_truth_a_star_times_b);
     }
-
 
     #[test]
     fn test_a_star_times_b_plus_b_times_c_proper() {
@@ -417,20 +430,23 @@ mod tests {
         // Define the ground truth using the semilinear set constructors
         let ground_truth_a_star_times_b_plus_b_times_c = SemilinearSet::new(vec![
             LinearSet {
-                base: SparseVector::unit("b".to_string()),  // Ensure consistency
+                base: SparseVector::unit("b".to_string()), // Ensure consistency
                 periods: vec![],
             },
             LinearSet {
                 base: a_b,
-                periods: vec![SparseVector::unit("a".to_string())],  // Ensure consistency
+                periods: vec![SparseVector::unit("a".to_string())], // Ensure consistency
             },
             LinearSet {
                 base: b_times_c_clone.components[0].base.clone(),
-                periods: vec![],  // Ensure consistency
-            }
+                periods: vec![], // Ensure consistency
+            },
         ]);
 
-        assert_eq!(a_star_times_b_plus_b_times_c, ground_truth_a_star_times_b_plus_b_times_c);
+        assert_eq!(
+            a_star_times_b_plus_b_times_c,
+            ground_truth_a_star_times_b_plus_b_times_c
+        );
     }
 }
 
@@ -524,7 +540,6 @@ mod tests {
 //     }
 //
 // }
-
 
 // todo - add code to sort SemilinerSets and LinearSets
 // after that --- unmask last test

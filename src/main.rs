@@ -1,23 +1,22 @@
 #![allow(dead_code)]
 
-mod ns;
-mod parser;
-mod kleene;
-mod semilinear;
-mod petri;
-mod graphviz;
 mod expr_to_ns;
+mod graphviz;
+mod kleene;
+mod ns;
 mod ns_to_petri;
+mod parser;
+mod petri;
 mod reachability;
+mod semilinear;
 
 use std::env;
 use std::fs;
 use std::path::Path;
 use std::process;
 
-use parser::{ExprHc, parse};
 use ns::NS;
-
+use parser::{ExprHc, parse};
 
 fn print_usage() {
     println!("Usage: ser [options] <filename or directory>");
@@ -25,10 +24,16 @@ fn print_usage() {
     println!("  --open                  Open generated visualization files");
     println!("");
     println!("  - If a file is provided:");
-    println!("    - .json extension: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz and .net");
-    println!("    - .ser extension: Parses as an Expr, converts to NS, and processes it like json files");
+    println!(
+        "    - .json extension: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz and .net"
+    );
+    println!(
+        "    - .ser extension: Parses as an Expr, converts to NS, and processes it like json files"
+    );
     println!("  - If a directory is provided:");
-    println!("    - Recursively processes all .json and .ser files in the directory and its subdirectories");
+    println!(
+        "    - Recursively processes all .json and .ser files in the directory and its subdirectories"
+    );
     println!("  - Output:");
     println!("    - GraphViz (.dot, .png) visualizations for Network Systems and Petri nets");
     println!("    - Petri net files (.net) in the same directory structure as GraphViz files");
@@ -48,7 +53,7 @@ fn main() {
             "--open" => {
                 open_files = true;
                 i += 1;
-            },
+            }
             _ => {
                 // If it's not a recognized flag, it must be the path
                 if path_str.is_empty() {
@@ -82,7 +87,7 @@ fn main() {
         match process_directory(path, open_files) {
             Ok(count) => {
                 println!("Successfully processed {} files", count);
-            },
+            }
             Err(err) => {
                 eprintln!("Error processing directory: {}", err);
                 process::exit(1);
@@ -94,7 +99,10 @@ fn main() {
             Some("json") => process_json_file(path_str, open_files),
             Some("ser") => process_ser_file(path_str, open_files),
             _ => {
-                eprintln!("Error: Unsupported file extension for '{}'. Please use .json or .ser", path_str);
+                eprintln!(
+                    "Error: Unsupported file extension for '{}'. Please use .json or .ser",
+                    path_str
+                );
                 print_usage();
                 process::exit(1);
             }
@@ -112,7 +120,7 @@ where
 {
     // Create the output directory if it doesn't exist
     match fs::create_dir_all("out") {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(err) => {
             eprintln!("Failed to create output directory: {}", err);
             process::exit(1);
@@ -128,7 +136,7 @@ where
             for file in files {
                 println!("- {}", file);
             }
-        },
+        }
         Err(err) => {
             eprintln!("Failed to save NS visualization: {}", err);
             process::exit(1);
@@ -146,7 +154,7 @@ where
             for file in files {
                 println!("- {}", file);
             }
-        },
+        }
         Err(err) => {
             eprintln!("Failed to save Petri net visualization: {}", err);
             process::exit(1);
@@ -157,7 +165,7 @@ where
     let pnet_content = petri.to_pnet(file_stem);
     let pnet_file = format!("out/{}/petri.net", file_stem);
     match fs::create_dir_all(format!("out/{}", file_stem)) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(err) => {
             eprintln!("Failed to create directory: {}", err);
             process::exit(1);
@@ -179,15 +187,19 @@ where
     // Create a custom method or modify the underlying implementation to use a different viz_type
     // For now, we need to make a direct call to the graphviz module
     let dot_content = petri_with_requests.to_graphviz();
-    match crate::graphviz::save_graphviz(&dot_content, file_stem, "petri_with_requests", open_files) {
+    match crate::graphviz::save_graphviz(&dot_content, file_stem, "petri_with_requests", open_files)
+    {
         Ok(files) => {
             println!("Successfully generated the following Petri net with requests files:");
             for file in files {
                 println!("- {}", file);
             }
-        },
+        }
         Err(err) => {
-            eprintln!("Failed to save Petri net with requests visualization: {}", err);
+            eprintln!(
+                "Failed to save Petri net with requests visualization: {}",
+                err
+            );
             process::exit(1);
         }
     }
@@ -198,7 +210,10 @@ where
     match fs::write(&pnet_req_file, pnet_req_content) {
         Ok(_) => println!("- {}", pnet_req_file),
         Err(err) => {
-            eprintln!("Failed to save Petri net with requests in .net format: {}", err);
+            eprintln!(
+                "Failed to save Petri net with requests in .net format: {}",
+                err
+            );
             process::exit(1);
         }
     }
@@ -226,7 +241,10 @@ fn process_json_file(file_path: &str, open_files: bool) {
 
     // Get the file name without extension to use as the base name for output files
     let path = Path::new(file_path);
-    let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("network");
+    let file_stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("network");
 
     // Process the Network System
     process_ns(&ns, file_stem, open_files);
@@ -249,7 +267,7 @@ fn process_ser_file(file_path: &str, open_files: bool) {
         Ok(expr) => {
             println!("Parsed expression: {}", expr);
             expr
-        },
+        }
         Err(err) => {
             eprintln!("Error parsing SER file: {}", err);
             process::exit(1);
@@ -275,7 +293,13 @@ fn process_directory(dir: &Path, open_files: bool) -> Result<usize, String> {
     // Read directory contents
     let entries = match fs::read_dir(dir) {
         Ok(entries) => entries,
-        Err(err) => return Err(format!("Error reading directory '{}': {}", dir.display(), err)),
+        Err(err) => {
+            return Err(format!(
+                "Error reading directory '{}': {}",
+                dir.display(),
+                err
+            ));
+        }
     };
 
     // Process each entry
@@ -305,11 +329,11 @@ fn process_directory(dir: &Path, open_files: bool) -> Result<usize, String> {
                     "json" => {
                         process_json_file(&path_str, open_files);
                         processed_count += 1;
-                    },
+                    }
                     "ser" => {
                         process_ser_file(&path_str, open_files);
                         processed_count += 1;
-                    },
+                    }
                     _ => {} // Skip files with unsupported extensions
                 }
             }

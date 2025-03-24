@@ -4,8 +4,8 @@
 // Additionally, for each request transition req -> l, we add a corresponding transition in the Petri net,
 // and similarly for the response transitions l -> res.
 
-use crate::petri::Petri;
 use crate::ns::NS;
+use crate::petri::Petri;
 use std::hash::Hash;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -13,7 +13,7 @@ pub enum PetriState<L, G, Req, Resp> {
     Local(L),
     Global(G),
     Request(Req),
-    Response(Resp)
+    Response(Resp),
 }
 
 impl<L, G, Req, Resp> std::fmt::Display for PetriState<L, G, Req, Resp>
@@ -49,7 +49,7 @@ where
     for (req, local) in &ns.requests {
         petri.add_transition(
             vec![PetriState::Request(req.clone())],
-            vec![PetriState::Local(local.clone())]
+            vec![PetriState::Local(local.clone())],
         );
     }
 
@@ -57,7 +57,7 @@ where
     for (local, resp) in &ns.responses {
         petri.add_transition(
             vec![PetriState::Local(local.clone())],
-            vec![PetriState::Response(resp.clone())]
+            vec![PetriState::Response(resp.clone())],
         );
     }
 
@@ -66,12 +66,12 @@ where
         petri.add_transition(
             vec![
                 PetriState::Local(from_local.clone()),
-                PetriState::Global(from_global.clone())
+                PetriState::Global(from_global.clone()),
             ],
             vec![
                 PetriState::Local(to_local.clone()),
-                PetriState::Global(to_global.clone())
-            ]
+                PetriState::Global(to_global.clone()),
+            ],
         );
     }
 
@@ -80,10 +80,10 @@ where
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum ReqPetriState<L, G, Req, Resp> {
-    Local(Req,L),
+    Local(Req, L),
     Global(G),
     Request(Req),
-    Response(Req,Resp)
+    Response(Req, Resp),
 }
 
 impl<L, G, Req, Resp> std::fmt::Display for ReqPetriState<L, G, Req, Resp>
@@ -104,7 +104,9 @@ where
 }
 // We convert the NS to a Petri net but the originating request is tracked by having a copy of the places for each request.
 // That is, for each local place in the original Petri net, we now have a separate copy of each place for each request.
-pub fn ns_to_petri_with_requests<L, G, Req, Resp>(ns: &NS<G, L, Req, Resp>) -> Petri<ReqPetriState<L, G, Req, Resp>>
+pub fn ns_to_petri_with_requests<L, G, Req, Resp>(
+    ns: &NS<G, L, Req, Resp>,
+) -> Petri<ReqPetriState<L, G, Req, Resp>>
 where
     L: Clone + PartialEq + Eq + Hash + std::fmt::Display,
     G: Clone + PartialEq + Eq + Hash + std::fmt::Display,
@@ -122,7 +124,7 @@ where
     for (req, local) in &ns.requests {
         petri.add_transition(
             vec![ReqPetriState::Request(req.clone())],
-            vec![ReqPetriState::Local(req.clone(), local.clone())]
+            vec![ReqPetriState::Local(req.clone(), local.clone())],
         );
     }
 
@@ -131,7 +133,7 @@ where
         for (local, resp) in &ns.responses {
             petri.add_transition(
                 vec![ReqPetriState::Local(req.clone(), local.clone())],
-                vec![ReqPetriState::Response(req.clone(), resp.clone())]
+                vec![ReqPetriState::Response(req.clone(), resp.clone())],
             );
         }
     }
@@ -142,12 +144,12 @@ where
             petri.add_transition(
                 vec![
                     ReqPetriState::Local(req.clone(), from_local.clone()),
-                    ReqPetriState::Global(from_global.clone())
+                    ReqPetriState::Global(from_global.clone()),
                 ],
                 vec![
                     ReqPetriState::Local(req.clone(), to_local.clone()),
-                    ReqPetriState::Global(to_global.clone())
-                ]
+                    ReqPetriState::Global(to_global.clone()),
+                ],
             );
         }
     }
@@ -204,4 +206,3 @@ mod tests {
         assert_eq!(petri.get_transitions().len(), 3);
     }
 }
-

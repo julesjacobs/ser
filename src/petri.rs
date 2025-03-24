@@ -7,7 +7,13 @@ fn escape_for_graphviz_id(s: &str) -> String {
     // Replace any non-alphanumeric characters with underscore
     // This helps avoid syntax errors in the DOT language
     s.chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 
@@ -159,7 +165,8 @@ where
 
             // Connect input places to transition with weights if needed
             for (place, count) in unique_inputs {
-                let escaped_place_id = format!("P_{}", escape_for_graphviz_id(&format!("{}", place)));
+                let escaped_place_id =
+                    format!("P_{}", escape_for_graphviz_id(&format!("{}", place)));
 
                 if count == 1 {
                     dot.push_str(&format!(
@@ -183,7 +190,8 @@ where
 
             // Connect transition to output places with weights if needed
             for (place, count) in unique_outputs {
-                let escaped_place_id = format!("P_{}", escape_for_graphviz_id(&format!("{}", place)));
+                let escaped_place_id =
+                    format!("P_{}", escape_for_graphviz_id(&format!("{}", place)));
 
                 if count == 1 {
                     dot.push_str(&format!(
