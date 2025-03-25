@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
+<property-set>
+  <property>
+    <id>ConjunctionExample</id>
+    <description>(2P1 + P2 ≥ 4) AND (P1 = P2)</description>
+    <formula>
+      <all-paths>
+        <globally>
+          <conjunction>
+            <integer-ge>
+              <integer-add>
+                <integer-mul>
+                  <integer-constant>2</integer-constant>
+                  <tokens-count><place>P1</place></tokens-count>
+                </integer-mul>
+                <tokens-count><place>P2</place></tokens-count>
+              </integer-add>
+              <integer-constant>4</integer-constant>
+            </integer-ge>
+            <integer-eq>
+              <tokens-count><place>P1</place></tokens-count>
+              <tokens-count><place>P2</place></tokens-count>
+            </integer-eq>
+          </conjunction>
+        </globally>
+      </all-paths>
+    </formula>
+  </property>
+</property-set>
