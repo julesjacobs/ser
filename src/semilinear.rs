@@ -49,7 +49,7 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
     }
 
     /// Create a unit vector with 1 at the specified dimension
-    fn unit(key: K) -> Self {
+    pub fn unit(key: K) -> Self {
         let mut values = HashMap::new();
         values.insert(key, 1);
         SparseVector { values }
@@ -113,7 +113,7 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     }
 
     /// Create a semilinear set containing a single vector (an atomic singleton).
-    fn singleton(vector: SparseVector<K>) -> Self {
+    pub fn singleton(vector: SparseVector<K>) -> Self {
         SemilinearSet {
             components: vec![LinearSet {
                 base: vector,
