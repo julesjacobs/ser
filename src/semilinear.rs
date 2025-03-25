@@ -2,7 +2,7 @@
 
 use std::clone::Clone;
 use std::collections::{HashMap, HashSet};
-use std::hash::Hash;
+pub use std::hash::Hash;
 
 use crate::kleene::Kleene;
 
@@ -10,8 +10,8 @@ use crate::kleene::Kleene;
 /// Keys represent dimensions and values represent the value at that dimension.
 /// Dimensions not present in the HashMap are assumed to be 0.
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct SparseVector<K: Eq + Hash + Clone + Ord> {
-    values: HashMap<K, usize>,
+pub struct SparseVector<K: Eq + Hash + Clone + Ord> {
+    pub values: HashMap<K, usize>,
 }
 
 // Manual implementation of Hash for SparseVector by converting the HashMap to a sorted Vec
@@ -28,19 +28,19 @@ impl<K: Eq + Hash + Clone + Ord> Hash for SparseVector<K> {
 
 impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
     /// Create a new empty sparse vector (all zeros)
-    fn new() -> Self {
+    pub fn new() -> Self {
         SparseVector {
             values: HashMap::new(),
         }
     }
 
     /// Get the value at a specific dimension
-    fn get(&self, key: &K) -> usize {
+    pub fn get(&self, key: &K) -> usize {
         *self.values.get(key).unwrap_or(&0)
     }
 
     /// Set the value at a specific dimension
-    fn set(&mut self, key: K, value: usize) {
+    pub fn set(&mut self, key: K, value: usize) {
         if value == 0 {
             self.values.remove(&key);
         } else {
@@ -67,14 +67,14 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct LinearSet<K: Eq + Hash + Clone + Ord> {
-    base: SparseVector<K>,         // u0: the base vector
-    periods: Vec<SparseVector<K>>, // [u1, u2, ..., um]: list of period generator vectors
+pub struct LinearSet<K: Eq + Hash + Clone + Ord> {
+    pub base: SparseVector<K>,         // u0: the base vector
+    pub periods: Vec<SparseVector<K>>, // [u1, u2, ..., um]: list of period generator vectors
 }
 
 #[derive(Debug, Clone)]
 pub struct SemilinearSet<K: Eq + Hash + Clone + Ord> {
-    components: Vec<LinearSet<K>>, // finite list of linear sets whose union defines the set
+    pub components: Vec<LinearSet<K>>, // finite list of linear sets whose union defines the set
 }
 
 impl<K: Eq + Hash + Clone + Ord> PartialEq for SemilinearSet<K> {
@@ -88,7 +88,7 @@ impl<K: Eq + Hash + Clone + Ord> PartialEq for SemilinearSet<K> {
 
 impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Create a new semilinear set from a list of LinearSet components.
-    fn new(components: Vec<LinearSet<K>>) -> Self {
+    pub fn new(components: Vec<LinearSet<K>>) -> Self {
         // Filter out duplicate linear set components
         let mut new_components = HashSet::new();
         for lin in components {
