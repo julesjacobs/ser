@@ -1,7 +1,7 @@
-use isl_rs::{Context, Set, BasicSet, Space, Aff, DimType, Mat};
-use std::fmt::{Debug, Display};
+use crate::semilinear::{Hash, LinearSet, SemilinearSet, SparseVector};
+use isl_rs::{Aff, BasicSet, Context, DimType, Mat, Set, Space};
 use std::collections::{HashMap, HashSet};
-use crate::semilinear::{SemilinearSet, LinearSet, SparseVector, Hash};
+use std::fmt::{Debug, Display};
 
 impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Returns a set of all unique keys (names) in all base and period SparseVectors.
@@ -26,8 +26,6 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
         unique_keys
     }
 }
-
-
 
 /// Generates a string representation of the LinearSet and returns the set of all pi variables.
 pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
@@ -68,7 +66,7 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
     let prefix_keys: Vec<String> = sorted_keys.iter().map(|key| format!("{}", key)).collect();
     let prefix = format!(
         "{{[{}] : exists ({} : ",
-        prefix_keys.join(", "),  // Join the sorted keys with commas
+        prefix_keys.join(", "), // Join the sorted keys with commas
         sorted_pi_variables.join(", ")
     );
 
@@ -82,7 +80,7 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
             .join(" and "),
         sorted_keys
             .iter()
-            .map(|key| format!("{} >= 0", key))  // Assuming keys are also non-negative
+            .map(|key| format!("{} >= 0", key)) // Assuming keys are also non-negative
             .collect::<Vec<String>>()
             .join(" and ")
     );
@@ -90,13 +88,15 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
     // Combine prefix, main string, and suffix
     let final_string = format!("{}{}{}", prefix, result, suffix);
 
-    println!("{:}","string generated is:");
-    println!("{:}",final_string);
+    println!("{:}", "string generated is:");
+    println!("{:}", final_string);
     final_string
 }
 
 // This function receives a hash map and outputs a string representing the linear set of non-negatives
-pub fn generate_string_of_linear_set_with_non_negatives<K: Eq + Hash + Clone + Ord + Debug + Display>(
+pub fn generate_string_of_linear_set_with_non_negatives<
+    K: Eq + Hash + Clone + Ord + Debug + Display,
+>(
     unique_keys: &HashSet<K>,
 ) -> String {
     let mut result = String::new();
@@ -149,14 +149,12 @@ pub fn translate_semilinear_set_to_ISL_sets<K: Eq + Hash + Clone + Ord + Debug +
         let string_encoding_of_set = generate_linear_set_string(&linear_set, &unique_keys);
 
         let ctx = Context::alloc();
-        let isl_set_format = Set::read_from_str(&ctx,&string_encoding_of_set);
+        let isl_set_format = Set::read_from_str(&ctx, &string_encoding_of_set);
         original_linear_sets_in_ISL_format.push(isl_set_format);
     }
 
     original_linear_sets_in_ISL_format
 }
-
-
 
 // This function receves a SemilinearSet obejct and returns an ISL Set object representing
 // the complement of the original SemiLinear Set (notice that the compliment is also semilinear,
@@ -165,7 +163,8 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Debug + Display>(
     semilinear_set: &SemilinearSet<K>,
 ) -> Set {
     // Generate a collection (Rust Vector) of ISL sets, each corresponding to a LinearSet object of the SemilinearSet
-    let vector_of_semilinear_set_translated_to_isl_sets = translate_semilinear_set_to_ISL_sets(&semilinear_set);
+    let vector_of_semilinear_set_translated_to_isl_sets =
+        translate_semilinear_set_to_ISL_sets(&semilinear_set);
 
     // Create a vector of complemented sets directly in isl_main
     let vector_of_complemented_sets: Vec<Set> = vector_of_semilinear_set_translated_to_isl_sets
@@ -175,9 +174,11 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Debug + Display>(
 
     // generate ISL set of non-negative values (to intersect later with all complemented ISL sets)
     let unique_keys = semilinear_set.get_unique_keys();
-    let string_of_set_of_non_negatives = generate_string_of_linear_set_with_non_negatives(&unique_keys);
+    let string_of_set_of_non_negatives =
+        generate_string_of_linear_set_with_non_negatives(&unique_keys);
     let ctx_for_non_negatives = Context::alloc();
-    let isl_set_of_non_negatives = Set::read_from_str(&ctx_for_non_negatives, &string_of_set_of_non_negatives);
+    let isl_set_of_non_negatives =
+        Set::read_from_str(&ctx_for_non_negatives, &string_of_set_of_non_negatives);
 
     // Accumulate the result of intersections of the non-negative set with the complement sets
     let mut result_set = isl_set_of_non_negatives;
@@ -193,8 +194,8 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Debug + Display>(
     result_set
 }
 
-
 // old tests
+#[test]
 pub fn test_1() {
     // todo - semilinear set #1
     // Create a base vector
@@ -220,23 +221,23 @@ pub fn test_1() {
         periods: vec![period_vector_1, period_vector_2],
     };
 
-    let semilinear_set = SemilinearSet::new(vec![
-        linear_set_1]);
+    let semilinear_set = SemilinearSet::new(vec![linear_set_1]);
 
-    let isl_set_representing_complement_of_ths_semilinear_set = complement_semilinear_set(&semilinear_set);
+    let isl_set_representing_complement_of_ths_semilinear_set =
+        complement_semilinear_set(&semilinear_set);
 }
 
-
-pub fn test_2(){
+#[test]
+pub fn test_2() {
     let ctx_1 = Context::alloc();
     // Create a new ISL context
-    let set_1 = Set::read_from_str(&ctx_1,"{[x] : exists (k : x = 2 k and x >= 0 and k >= 0)}");
+    let set_1 = Set::read_from_str(&ctx_1, "{[x] : exists (k : x = 2 k and x >= 0 and k >= 0)}");
     println!("{:}", "DEFINE set_1");
     println!("{:}", set_1.to_str());
 
     let ctx_2 = Context::alloc();
     // Create a new ISL context
-    let set_2 = Set::read_from_str(&ctx_2,"{[x] : exists (k : x = 5 k and x >= 0 and k >= 0)}");
+    let set_2 = Set::read_from_str(&ctx_2, "{[x] : exists (k : x = 5 k and x >= 0 and k >= 0)}");
     println!("{:}", "DEFINE set_2");
     println!("{:}", set_2.to_str());
     let set_3 = set_1.intersect(set_2);
@@ -250,11 +251,11 @@ pub fn test_2(){
     println!("{:}", set_4.to_str());
 
     let ctx_5 = Context::alloc();
-    let set_5 = Set::read_from_str(&ctx_5,"{[x] : (x >= 0)}");
+    let set_5 = Set::read_from_str(&ctx_5, "{[x] : (x >= 0)}");
     println!("{:}", "set_5 = DEFINE {X | X>=0 }}");
     println!("{:}", set_5.to_str());
 
-    let set_6= set_4.intersect(set_5);
+    let set_6 = set_4.intersect(set_5);
     println!("{:}", "set_6 = INTERSECT set_4 and set_5");
     println!("{:}", set_6.to_str());
     // let set_5 = set_;
@@ -263,8 +264,7 @@ pub fn test_2(){
     // todo - NEW (start)
     let ctx_7 = Context::alloc();
     // Create a new ISL context
-    let set_7_string =
-        "{[x,y,z] : \
+    let set_7_string = "{[x,y,z] : \
     exists (p1_x,p1_y,p1_z,p2_x,p2_y,p2_z : \
     x = 1 + 7 p1_x + 6 p2_x and \
     y = 2 + 8 p1_y + 5 p2_y and \
@@ -279,12 +279,12 @@ pub fn test_2(){
     y >= 0 \
     z >= 0 \
     )}";
-    let set_7 = Set::read_from_str(&ctx_7,set_7_string);
+    let set_7 = Set::read_from_str(&ctx_7, set_7_string);
     println!("{:}", "DEFINE set_7");
     println!("{:}", set_7.to_str());
 
     let ctx_8 = Context::alloc();
-    let set_8 = Set::read_from_str(&ctx_8,"{[x,y,z] | (x = 20) and (y = 20) and (z = 16)}");
+    let set_8 = Set::read_from_str(&ctx_8, "{[x,y,z] | (x = 20) and (y = 20) and (z = 16)}");
     // {[0,0,0],[1,2,3],[20,20,16]}
     println!("{:}", "DEFINE set_8");
     println!("{:}", set_8.to_str());
@@ -296,7 +296,7 @@ pub fn test_2(){
     // todo delete - start
 
     let ctx_a = Context::alloc();
-    let set_a = Set::read_from_str(&ctx_8,"{[x] :  exists (k : x = 2 k)}");
+    let set_a = Set::read_from_str(&ctx_8, "{[x] :  exists (k : x = 2 k)}");
     println!("{:}", set_a.to_str());
     println!("{:}", "complement is: ");
     let set_b = set_a.complement();
@@ -310,7 +310,4 @@ pub fn test_2(){
     //
     // println!("Hello, World!");
     // println!("boo");
-
 }
-
-
