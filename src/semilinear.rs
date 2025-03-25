@@ -49,7 +49,7 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
     }
 
     /// Create a unit vector with 1 at the specified dimension
-     fn unit(key: K) -> Self {
+     pub fn unit(key: K) -> Self {
         let mut values = HashMap::new();
         values.insert(key, 1);
         SparseVector { values }
