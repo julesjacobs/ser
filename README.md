@@ -20,6 +20,8 @@ Serializability checker.
 
 - `out/*`: Output visualizations.
 
+- `.vscode/*`: VSCode configuration files for syntax highlighting and editor settings.
+
 ## Dependencies
 
 Depends on [isl](https://libisl.sourceforge.io/), which you may already have
@@ -112,3 +114,13 @@ request logout {
 ```
 
 The Petri net produced will have String as the request set, which comes from the request names.
+
+## VSCode Integration
+
+This repository includes VSCode configuration for syntax highlighting of `.ser` files in the `ser-lang-vscode` directory. Install with:
+
+```bash
+cd ser-lang-vscode
+./build-vsix.sh
+code --install-extension ser-lang-*.vsix
+```

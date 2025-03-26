@@ -15,3 +15,8 @@ Cargo.lock
 .DS_Store
 
 out/
+
+# VSCode extension
+ser-lang-vscode/node_modules/
+ser-lang-vscode/*.vsix
+ser-lang-vscode/package-lock.json
