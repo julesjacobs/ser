@@ -161,6 +161,9 @@ pub fn translate_semilinear_set_to_ISL_sets<K: Eq + Hash + Clone + Ord + Debug +
         // TODO - IMPORTANT!! Fix memory issues with the ctx object that Mark mentioned
         let ctx = Context::alloc();
         let isl_set_format = Set::read_from_str(&ctx, &string_encoding_of_set);
+        println!("***"); // todo delete
+        println!("{:}", isl_set_format.to_str()); // todo delete
+        println!("***"); // todo delete
         original_linear_sets_in_ISL_format.push(isl_set_format);
     }
 
@@ -173,6 +176,10 @@ pub fn translate_semilinear_set_to_ISL_sets<K: Eq + Hash + Clone + Ord + Debug +
 pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Debug + Display>(
     semilinear_set: &SemilinearSet<K>,
 ) -> Set {
+    // TODO (!!!) make this function receive a set of all coordinates and send it to the
+    // translate_semilinear_set_to_ISL_sets() function (and downtream), instead of using "unique keys"
+    // like we currently do!
+
     // Generate a collection (Rust Vector) of ISL sets, each corresponding to a LinearSet object of the SemilinearSet
     let vector_of_semilinear_set_translated_to_isl_sets =
         translate_semilinear_set_to_ISL_sets(&semilinear_set);
