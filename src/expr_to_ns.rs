@@ -47,7 +47,11 @@ impl Env {
     }
     fn insert(self, var: String, value: i64) -> Self {
         let mut vars = self.vars.clone();
-        vars.insert(var, value);
+        if value == 0 {
+            vars.remove(&var);
+        } else {
+            vars.insert(var, value);
+        }
         Self { vars }
     }
     fn get(&self, var: &str) -> i64 {
