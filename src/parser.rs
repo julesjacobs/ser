@@ -60,10 +60,20 @@ impl ExprHc {
     }
 
     pub fn equal(&mut self, left: Hc<Expr>, right: Hc<Expr>) -> Hc<Expr> {
+        // If both are constants, return 1 or 0
+        if let Expr::Number(n1) = left.as_ref() {
+            if let Expr::Number(n2) = right.as_ref() {
+                return self.number(if n1 == n2 { 1 } else { 0 });
+            }
+        }
         self.table.hashcons(Expr::Equal(left, right))
     }
 
     pub fn sequence(&mut self, first: Hc<Expr>, second: Hc<Expr>) -> Hc<Expr> {
+        // If first is a constant, return second
+        if let Expr::Number(_) = first.as_ref() {
+            return second;
+        }
         self.table.hashcons(Expr::Sequence(first, second))
     }
 
@@ -73,11 +83,25 @@ impl ExprHc {
         then_branch: Hc<Expr>,
         else_branch: Hc<Expr>,
     ) -> Hc<Expr> {
+        // If cond is a constant, return then_branch or else_branch
+        if let Expr::Number(_) = cond.as_ref() {
+            if cond == self.number(0) {
+                return else_branch;
+            } else {
+                return then_branch;
+            }
+        }
         self.table
             .hashcons(Expr::If(cond, then_branch, else_branch))
     }
 
     pub fn while_expr(&mut self, cond: Hc<Expr>, body: Hc<Expr>) -> Hc<Expr> {
+        // If cond is a 0 constant, return 0
+        if let Expr::Number(_) = cond.as_ref() {
+            if cond == self.number(0) {
+                return self.number(0);
+            }
+        }
         self.table.hashcons(Expr::While(cond, body))
     }
 
