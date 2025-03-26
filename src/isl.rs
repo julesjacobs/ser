@@ -31,16 +31,32 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
 pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
     linear_set: &LinearSet<K>,
     unique_keys: &HashSet<K>,
-) -> String {
+    period_counter: usize,
+) -> (String, usize) {
     let mut result = String::new();
     let mut pi_variables = HashSet::new();
+    let mut current_counter = period_counter;
+
+    // First extract only keys that exist in this linear set
+    let mut relevant_keys: Vec<&K> = unique_keys.iter()
+        .filter(|key| {
+            // Check if key has non-zero value in base or any period
+            linear_set.base.get(key).ne(&0) ||
+                linear_set.periods.iter().any(|p| p.get(key).ne(&0))
+        })
+        .collect();
+
+    // Convert to sorted Vec (now only for relevant keys)
+    relevant_keys.sort();
 
     // Convert the HashSet of keys into a sorted Vec
     let mut sorted_keys: Vec<&K> = unique_keys.iter().collect();
     sorted_keys.sort(); // Sort the keys
 
+
+
     // Generate the main string
-    for (i, key) in sorted_keys.iter().enumerate() {
+    for (i, key) in relevant_keys.iter().enumerate() {
         if i > 0 {
             result.push_str(" and ");
         }
@@ -53,12 +69,14 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
         for (period_index, period) in linear_set.periods.iter().enumerate() {
             let period_value = period.get(key);
             if period_value != 0 {
-                let pi_var = format!("p{}", period_index + 1); // Use p1, p2, etc.
+                let pi_var = format!("p{}", current_counter + period_index + 1);
                 result.push_str(&format!(" + {} {}", period_value, pi_var));
                 pi_variables.insert(pi_var);
             }
         }
     }
+
+    current_counter += linear_set.periods.len();
 
     // Generate the prefix
     let mut sorted_pi_variables: Vec<String> = pi_variables.iter().cloned().collect();
@@ -90,7 +108,7 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
 
     println!("{:}", "string generated is:");
     println!("{:}", final_string);
-    final_string
+    (format!("{}{}{}", prefix, result, suffix), current_counter)
 }
 
 // This function receives a hash map and outputs a string representing the linear set of non-negatives
@@ -141,13 +159,18 @@ pub fn translate_semilinear_set_to_ISL_sets<K: Eq + Hash + Clone + Ord + Debug +
     // extract unique keys in all SparsVectors in all LinearSet components of the SemilinearSet input
     let unique_keys = semilinear_set.get_unique_keys();
 
+    let mut period_counter = 0;
+
     // Iterate over all LinearSet components
     for linear_set in &semilinear_set.components {
         // translate each single LinearSet to an equivalent ISL set format
 
         // Generate the string and pi variables
-        let string_encoding_of_set = generate_linear_set_string(&linear_set, &unique_keys);
+        let (string_encoding_of_set, new_counter) = generate_linear_set_string(&linear_set, &unique_keys, period_counter);
+        period_counter = new_counter;
 
+
+        // TODO - IMPORTANT!! Fix memory issues with the ctx object that Mark mentioned
         let ctx = Context::alloc();
         let isl_set_format = Set::read_from_str(&ctx, &string_encoding_of_set);
         original_linear_sets_in_ISL_format.push(isl_set_format);
