@@ -3,6 +3,9 @@
   "name": "Ser",
   "patterns": [
     {
+      "include": "#comments"
+    },
+    {
       "include": "#keywords"
     },
     {
@@ -16,9 +19,6 @@
     },
     {
       "include": "#variables"
-    },
-    {
-      "include": "#comments"
     },
     {
       "include": "#requests"

@@ -87,6 +87,7 @@ e ::=
   | yield                 (yields to the scheduler; allows other threads/packets to run)
   | exit                  (exit the entire execution of whole program / network -- maybe remove this?)
   | ?                     (nondeterministic choice between 0 and 1)
+  | // text                (single-line comment, ignored by the parser)
 
 ### Multiple Requests Syntax
 
@@ -118,23 +119,34 @@ request logout {
 }
 ```
 
-Example with arithmetic operations:
+Example with arithmetic operations and comments:
 
 ```
+// Main request with arithmetic operations
 request main {
   x := 5 + 3;     // x = 8
   y := x - 2;     // y = 6
   z := y + y;     // z = 12
+  
+  // This yield allows other threads/packets to run
   yield
 }
 ```
 
 ## VSCode Integration
 
-This repository includes VSCode configuration for syntax highlighting of `.ser` files in the `ser-lang-vscode` directory. Install with:
+This repository includes VSCode configuration for syntax highlighting of `.ser` files in the `ser-lang-vscode` directory. 
+
+Features:
+- Syntax highlighting
+- Auto-closing of brackets and parentheses
+- Code folding
+
+Install with:
 
 ```bash
 cd ser-lang-vscode
 ./build-vsix.sh
-code --install-extension ser-lang-*.vsix
 ```
+
+The script will automatically build and install the extension. You may need to restart VSCode to see the changes.

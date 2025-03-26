@@ -9,6 +9,7 @@ This extension provides syntax highlighting for Ser language (`.ser`) files.
 - Code folding
 - Distinction between local variables (lowercase) and global variables (uppercase)
 - Support for "request" declarations
+- Support for single-line comments with `//` syntax
 
 ## Installation
 

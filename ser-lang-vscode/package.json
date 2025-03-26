@@ -2,7 +2,7 @@
   "name": "ser-lang",
   "displayName": "Ser Language",
   "description": "Syntax highlighting for Ser language files",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "ser-project",
   "repository": {
     "type": "git",

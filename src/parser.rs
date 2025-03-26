@@ -420,6 +420,22 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
             ' ' | '\t' | '\n' | '\r' => {
                 chars.next();
             }
+            '/' => {
+                chars.next(); // consume the first '/'
+                if let Some(&'/') = chars.peek() {
+                    // This is a comment, consume the second '/'
+                    chars.next();
+                    // Consume all characters until the end of the line
+                    while let Some(&c) = chars.peek() {
+                        if c == '\n' {
+                            break;
+                        }
+                        chars.next();
+                    }
+                } else {
+                    return Err("Unexpected character: /".to_string());
+                }
+            }
             '0'..='9' => {
                 let mut number = String::new();
                 while let Some(&c) = chars.peek() {
@@ -569,6 +585,58 @@ mod tests {
                 Token::Identifier("x".to_string()),
                 Token::Minus,
                 Token::Identifier("y".to_string()),
+                Token::Eof
+            ]
+        );
+    }
+    
+    #[test]
+    fn test_tokenize_with_comments() {
+        let source = "x := 10; // This is a comment\ny := 20; // Another comment";
+        let tokens = tokenize(source).unwrap();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Identifier("x".to_string()),
+                Token::Assign,
+                Token::Number(10),
+                Token::Semicolon,
+                Token::Identifier("y".to_string()),
+                Token::Assign,
+                Token::Number(20),
+                Token::Semicolon,
+                Token::Eof
+            ]
+        );
+    }
+    
+    #[test]
+    fn test_tokenize_comment_at_end() {
+        let source = "x := 10; // This is a comment at the end";
+        let tokens = tokenize(source).unwrap();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Identifier("x".to_string()),
+                Token::Assign,
+                Token::Number(10),
+                Token::Semicolon,
+                Token::Eof
+            ]
+        );
+    }
+    
+    #[test]
+    fn test_tokenize_line_with_only_comment() {
+        let source = "// This line has only a comment\nx := 10;";
+        let tokens = tokenize(source).unwrap();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Identifier("x".to_string()),
+                Token::Assign,
+                Token::Number(10),
+                Token::Semicolon,
                 Token::Eof
             ]
         );
