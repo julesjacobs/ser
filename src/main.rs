@@ -12,6 +12,7 @@ mod petri;
 mod reachability;
 mod semilinear;
 
+use colored::*;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -21,24 +22,38 @@ use ns::NS;
 use parser::{ExprHc, parse, parse_program};
 
 fn print_usage() {
-    println!("Usage: ser [options] <filename or directory>");
-    println!("Options:");
-    println!("  --open                  Open generated visualization files");
+    println!("{}", "Usage: ser [options] <filename or directory>".bold());
+    println!("{}", "Options:".bold());
+    println!(
+        "  {}                  Open generated visualization files",
+        "--open".green()
+    );
     println!("");
-    println!("  - If a file is provided:");
+    println!("  - {}", "If a file is provided:".bold());
     println!(
-        "    - .json extension: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz and .net"
+        "    - {}: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz and .net",
+        ".json extension".yellow()
     );
     println!(
-        "    - .ser extension: Parses as an Expr, converts to NS, and processes it like json files"
+        "    - {}: Parses as an Expr, converts to NS, and processes it like json files",
+        ".ser extension".yellow()
     );
-    println!("  - If a directory is provided:");
+    println!("  - {}", "If a directory is provided:".bold());
     println!(
-        "    - Recursively processes all .json and .ser files in the directory and its subdirectories"
+        "    - Recursively processes all {} and {} files in the directory and its subdirectories",
+        ".json".yellow(),
+        ".ser".yellow()
     );
-    println!("  - Output:");
-    println!("    - GraphViz (.dot, .png) visualizations for Network Systems and Petri nets");
-    println!("    - Petri net files (.net) in the same directory structure as GraphViz files");
+    println!("  - {}:", "Output".bold());
+    println!(
+        "    - GraphViz ({}, {}) visualizations for Network Systems and Petri nets",
+        ".dot".yellow(),
+        ".png".yellow()
+    );
+    println!(
+        "    - Petri net files ({}) in the same directory structure as GraphViz files",
+        ".net".yellow()
+    );
 }
 
 fn main() {
@@ -63,7 +78,11 @@ fn main() {
                     i += 1;
                 } else {
                     // We already have a path, so this is an error
-                    eprintln!("Error: Unexpected argument '{}'", args[i]);
+                    eprintln!(
+                        "{}: Unexpected argument '{}'",
+                        "Error".red().bold(),
+                        args[i]
+                    );
                     print_usage();
                     process::exit(1);
                 }
@@ -80,7 +99,7 @@ fn main() {
     let path = Path::new(path_str);
 
     if !path.exists() {
-        eprintln!("Error: '{}' does not exist", path_str);
+        eprintln!("{}: '{}' does not exist", "Error".red().bold(), path_str);
         process::exit(1);
     }
 
@@ -88,10 +107,14 @@ fn main() {
         // Process directory recursively
         match process_directory(path, open_files) {
             Ok(count) => {
-                println!("Successfully processed {} files", count);
+                println!(
+                    "{} {} files",
+                    "Successfully processed".green().bold(),
+                    count
+                );
             }
             Err(err) => {
-                eprintln!("Error processing directory: {}", err);
+                eprintln!("{} directory: {}", "Error processing".red().bold(), err);
                 process::exit(1);
             }
         }
@@ -102,8 +125,11 @@ fn main() {
             Some("ser") => process_ser_file(path_str, open_files),
             _ => {
                 eprintln!(
-                    "Error: Unsupported file extension for '{}'. Please use .json or .ser",
-                    path_str
+                    "{}: Unsupported file extension for '{}'. Please use {} or {}",
+                    "Error".red().bold(),
+                    path_str,
+                    ".json".yellow(),
+                    ".ser".yellow()
                 );
                 print_usage();
                 process::exit(1);
@@ -124,41 +150,64 @@ where
     match fs::create_dir_all("out") {
         Ok(_) => {}
         Err(err) => {
-            eprintln!("Failed to create output directory: {}", err);
+            eprintln!(
+                "{} output directory: {}",
+                "Failed to create".red().bold(),
+                err
+            );
             process::exit(1);
         }
     }
 
     // Generate GraphViz output for the Network System
-    println!("Generating GraphViz visualization...");
+    println!("{}", "Generating GraphViz visualization...".cyan().bold());
 
     match ns.save_graphviz(file_stem, open_files) {
         Ok(files) => {
-            println!("Successfully generated the following Network System files:");
+            println!(
+                "{} the following Network System files:",
+                "Successfully generated".green().bold()
+            );
             for file in files {
-                println!("- {}", file);
+                println!("- {}", file.green());
             }
         }
         Err(err) => {
-            eprintln!("Failed to save NS visualization: {}", err);
+            eprintln!(
+                "{} NS visualization: {}",
+                "Failed to save".red().bold(),
+                err
+            );
             process::exit(1);
         }
     }
 
     // Convert to Petri net
-    println!("Converting to Petri net and generating visualization...");
+    println!(
+        "{}",
+        "Converting to Petri net and generating visualization..."
+            .cyan()
+            .bold()
+    );
     let petri = ns_to_petri::ns_to_petri(ns);
 
     // Generate Petri net visualization
     match petri.save_graphviz(file_stem, open_files) {
         Ok(files) => {
-            println!("Successfully generated the following Petri net files:");
+            println!(
+                "{} the following Petri net files:",
+                "Successfully generated".green().bold()
+            );
             for file in files {
-                println!("- {}", file);
+                println!("- {}", file.green());
             }
         }
         Err(err) => {
-            eprintln!("Failed to save Petri net visualization: {}", err);
+            eprintln!(
+                "{} Petri net visualization: {}",
+                "Failed to save".red().bold(),
+                err
+            );
             process::exit(1);
         }
     }
@@ -169,20 +218,29 @@ where
     match fs::create_dir_all(format!("out/{}", file_stem)) {
         Ok(_) => {}
         Err(err) => {
-            eprintln!("Failed to create directory: {}", err);
+            eprintln!("{} directory: {}", "Failed to create".red().bold(), err);
             process::exit(1);
         }
     }
     match fs::write(&pnet_file, pnet_content) {
-        Ok(_) => println!("- {}", pnet_file),
+        Ok(_) => println!("- {}", pnet_file.green()),
         Err(err) => {
-            eprintln!("Failed to save Petri net in .net format: {}", err);
+            eprintln!(
+                "{} Petri net in .net format: {}",
+                "Failed to save".red().bold(),
+                err
+            );
             process::exit(1);
         }
     }
 
     // Convert to Petri net with requests
-    println!("Converting to Petri net with requests and generating visualization...");
+    println!(
+        "{}",
+        "Converting to Petri net with requests and generating visualization..."
+            .cyan()
+            .bold()
+    );
     let petri_with_requests = ns_to_petri::ns_to_petri_with_requests(ns);
 
     // Use the same output directory for Petri net with requests
@@ -192,14 +250,18 @@ where
     match crate::graphviz::save_graphviz(&dot_content, file_stem, "petri_with_requests", open_files)
     {
         Ok(files) => {
-            println!("Successfully generated the following Petri net with requests files:");
+            println!(
+                "{} the following Petri net with requests files:",
+                "Successfully generated".green().bold()
+            );
             for file in files {
-                println!("- {}", file);
+                println!("- {}", file.green());
             }
         }
         Err(err) => {
             eprintln!(
-                "Failed to save Petri net with requests visualization: {}",
+                "{} Petri net with requests visualization: {}",
+                "Failed to save".red().bold(),
                 err
             );
             process::exit(1);
@@ -210,24 +272,37 @@ where
     let pnet_req_content = petri_with_requests.to_pnet(&format!("{}_with_requests", file_stem));
     let pnet_req_file = format!("out/{}/petri_with_requests.net", file_stem);
     match fs::write(&pnet_req_file, pnet_req_content) {
-        Ok(_) => println!("- {}", pnet_req_file),
+        Ok(_) => println!("- {}", pnet_req_file.green()),
         Err(err) => {
             eprintln!(
-                "Failed to save Petri net with requests in .net format: {}",
+                "{} Petri net with requests in .net format: {}",
+                "Failed to save".red().bold(),
                 err
             );
             process::exit(1);
         }
     }
+
+    // Check serializability
+    println!("{}", "Checking serializability...".cyan().bold());
+    let serializable = ns.is_serializable();
+    println!(
+        "Serializable: {}",
+        if serializable {
+            "Yes".green().bold()
+        } else {
+            "No".red().bold()
+        }
+    );
 }
 
 fn process_json_file(file_path: &str, open_files: bool) {
-    println!("Processing JSON file: {}", file_path);
+    println!("{} {}", "Processing JSON file:".blue().bold(), file_path);
 
     let content = match fs::read_to_string(file_path) {
         Ok(content) => content,
         Err(err) => {
-            eprintln!("Error reading file: {}", err);
+            eprintln!("{} file: {}", "Error reading".red().bold(), err);
             process::exit(1);
         }
     };
@@ -236,7 +311,11 @@ fn process_json_file(file_path: &str, open_files: bool) {
     let ns = match NS::<String, String, String, String>::from_json(&content) {
         Ok(ns) => ns,
         Err(err) => {
-            eprintln!("Error parsing JSON as Network System: {}", err);
+            eprintln!(
+                "{} JSON as Network System: {}",
+                "Error parsing".red().bold(),
+                err
+            );
             process::exit(1);
         }
     };
@@ -253,12 +332,12 @@ fn process_json_file(file_path: &str, open_files: bool) {
 }
 
 fn process_ser_file(file_path: &str, open_files: bool) {
-    println!("Processing SER file: {}", file_path);
+    println!("{} {}", "Processing SER file:".blue().bold(), file_path);
 
     let content = match fs::read_to_string(file_path) {
         Ok(content) => content,
         Err(err) => {
-            eprintln!("Error reading file: {}", err);
+            eprintln!("{} file: {}", "Error reading".red().bold(), err);
             process::exit(1);
         }
     };
@@ -267,22 +346,32 @@ fn process_ser_file(file_path: &str, open_files: bool) {
     let mut table = ExprHc::new();
     let ns = match parse_program(&content, &mut table) {
         Ok(program) => {
-            println!("Parsed program with {} requests", program.requests.len());
+            println!(
+                "{} {} requests",
+                "Parsed program with".blue().bold(),
+                program.requests.len()
+            );
             // Convert program to Network System
-            println!("Converting program to Network System...");
+            println!(
+                "{}",
+                "Converting program to Network System...".cyan().bold()
+            );
             expr_to_ns::program_to_ns(&mut table, &program)
         }
         Err(_) => {
             // Fall back to parsing as a single expression
             match parse(&content, &mut table) {
                 Ok(expr) => {
-                    println!("Parsed expression: {}", expr);
+                    println!("{} {}", "Parsed expression:".blue().bold(), expr);
                     // Convert expression to Network System
-                    println!("Converting expression to Network System...");
+                    println!(
+                        "{}",
+                        "Converting expression to Network System...".cyan().bold()
+                    );
                     expr_to_ns::expr_to_ns(&mut table, &expr)
                 }
                 Err(err) => {
-                    eprintln!("Error parsing SER file: {}", err);
+                    eprintln!("{} SER file: {}", "Error parsing".red().bold(), err);
                     process::exit(1);
                 }
             }
@@ -306,7 +395,8 @@ fn process_directory(dir: &Path, open_files: bool) -> Result<usize, String> {
         Ok(entries) => entries,
         Err(err) => {
             return Err(format!(
-                "Error reading directory '{}': {}",
+                "{} directory '{}': {}",
+                "Error reading".red().bold(),
                 dir.display(),
                 err
             ));
@@ -318,7 +408,11 @@ fn process_directory(dir: &Path, open_files: bool) -> Result<usize, String> {
         let entry = match entry {
             Ok(entry) => entry,
             Err(err) => {
-                eprintln!("Warning: Error accessing entry: {}", err);
+                eprintln!(
+                    "{}: Error accessing entry: {}",
+                    "Warning".yellow().bold(),
+                    err
+                );
                 continue;
             }
         };
@@ -329,7 +423,7 @@ fn process_directory(dir: &Path, open_files: bool) -> Result<usize, String> {
             // Recursively process subdirectory
             match process_directory(&path, open_files) {
                 Ok(count) => processed_count += count,
-                Err(err) => eprintln!("Warning: {}", err),
+                Err(err) => eprintln!("{}: {}", "Warning".yellow().bold(), err),
             }
         } else if path.is_file() {
             // Process file if it has a supported extension
@@ -347,6 +441,7 @@ fn process_directory(dir: &Path, open_files: bool) -> Result<usize, String> {
                     }
                     _ => {} // Skip files with unsupported extensions
                 }
+                println!("");
             }
         }
     }

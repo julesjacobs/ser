@@ -304,22 +304,29 @@ pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr,
 }
 
 // Function to convert a program with multiple requests to a network system
-pub fn program_to_ns(exprhc: &mut ExprHc, program: &Program) -> NS<Global, LocalExpr, ExprRequest, i64> {
+pub fn program_to_ns(
+    exprhc: &mut ExprHc,
+    program: &Program,
+) -> NS<Global, LocalExpr, ExprRequest, i64> {
     let mut ns = NS::new(Global::new());
-    
+
     // Process each request in the program
     for request in &program.requests {
         let request_ns = expr_to_ns_with_request(exprhc, &request.body, &request.name);
-        
+
         // Merge the request's network system into the main network system
         ns.merge_requests(&request_ns);
     }
-    
+
     ns
 }
 
 // New function to convert a single expression to a network system with a specified request name
-pub fn expr_to_ns_with_request(exprhc: &mut ExprHc, expr: &Hc<Expr>, request_name: &str) -> NS<Global, LocalExpr, ExprRequest, i64> {
+pub fn expr_to_ns_with_request(
+    exprhc: &mut ExprHc,
+    expr: &Hc<Expr>,
+    request_name: &str,
+) -> NS<Global, LocalExpr, ExprRequest, i64> {
     // Create a new NS with an empty global environment
     let mut ns = NS::new(Global::new());
 
@@ -335,7 +342,12 @@ pub fn expr_to_ns_with_request(exprhc: &mut ExprHc, expr: &Hc<Expr>, request_nam
     let initial_local_expr = LocalExpr(initial_local.clone(), initial_expr.clone());
 
     // Add initial request with the specified name
-    ns.add_request(ExprRequest { name: request_name.to_string() }, initial_local_expr.clone());
+    ns.add_request(
+        ExprRequest {
+            name: request_name.to_string(),
+        },
+        initial_local_expr.clone(),
+    );
     seen_globals.insert(initial_global.clone());
     seen_packets.insert(initial_local_expr.clone());
 

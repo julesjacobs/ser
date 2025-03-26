@@ -159,10 +159,10 @@ impl Parser {
 
         Ok(expr)
     }
-    
+
     pub fn parse_program(&mut self, table: &mut ExprHc) -> Result<Program, String> {
         let mut requests = Vec::new();
-        
+
         while !self.is_at_end() {
             if self.check(&Token::Request) {
                 let request = self.parse_request(table)?;
@@ -176,26 +176,26 @@ impl Parser {
                 ));
             }
         }
-        
+
         if requests.is_empty() {
             return Err("No requests found in program".to_string());
         }
-        
+
         Ok(Program { requests })
     }
-    
+
     fn parse_request(&mut self, table: &mut ExprHc) -> Result<Request, String> {
         self.consume(Token::Request, "Expected 'request' keyword")?;
-        
+
         let name = match self.advance() {
             Some(Token::Identifier(name)) => name.clone(),
             _ => return Err("Expected request name".to_string()),
         };
-        
+
         self.consume(Token::LBrace, "Expected '{' after request name")?;
         let body = self.expression(table)?;
         self.consume(Token::RBrace, "Expected '}' after request body")?;
-        
+
         Ok(Request { name, body })
     }
 

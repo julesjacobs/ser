@@ -1,6 +1,6 @@
 use crate::semilinear::*;
 use isl_rs::{Context, Set};
-use std::collections::HashSet;
+// use std::collections::HashSet;
 use std::fmt::Display;
 
 /// Generates a string representation of the LinearSet and returns the set of all pi variables.
