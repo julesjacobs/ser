@@ -28,6 +28,9 @@ Depends on [isl](https://libisl.sourceforge.io/), which you may already have
 installed (it comes with GCC).  For a non-standard install, you may need to set
 the `ISL_PREFIX` environment variable.
 
+Depends on SMPT.
+[Add description of how to install SMPT here.]
+
 ### macOS Setup
 
 On macOS, you'll need to install ISL and some build tools. Here's a step-by-step guide:
@@ -85,7 +88,7 @@ e ::=
 
 ### Multiple Requests Syntax
 
-The parser now supports multiple top-level programs with named requests:
+The parser supports multiple top-level programs with named requests:
 
 ```
 request <request_name> {
@@ -112,8 +115,6 @@ request logout {
   r := 10
 }
 ```
-
-The Petri net produced will have String as the request set, which comes from the request names.
 
 ## VSCode Integration
 
