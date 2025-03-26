@@ -24,12 +24,24 @@ Serializability checker.
 
 Depends on [isl](https://libisl.sourceforge.io/), which you may already have
 installed (it comes with GCC).  For a non-standard install, you may need to set
-the `ISL_PREFIX` environment variable. For example, with homebrew on Mac:
+the `ISL_PREFIX` environment variable.
 
+### macOS Setup
+
+On macOS, you'll need to install ISL and some build tools. Here's a step-by-step guide:
+
+```bash
+# Install ISL using Homebrew
+brew install isl
+
+# Install automake (needed by the isl-rs crate)
+brew install automake
+
+# Set the ISL_PREFIX environment variable (add this to your ~/.zshrc or ~/.bashrc)
+export ISL_PREFIX=/opt/homebrew/Cellar/isl/0.27
 ```
-$ brew install isl
-$ export ISL_PREFIX=/opt/homebrew/Cellar/isl/0.27
-```
+
+If you're having issues with the ISL path, verify the installed version with `brew info isl` and adjust the path accordingly.
 
 ## TODO
 
@@ -53,6 +65,8 @@ Example:
 
 ## Syntax
 
+### Expression Syntax
+
 e ::=
   | n                     (constant) 
   | x := e                (local variable / packet field write)
@@ -66,3 +80,35 @@ e ::=
   | yield                 (yields to the scheduler; allows other threads/packets to run)
   | exit                  (exit the entire execution of whole program / network -- maybe remove this?)
   | ?                     (nondeterministic choice between 0 and 1)
+
+### Multiple Requests Syntax
+
+The parser now supports multiple top-level programs with named requests:
+
+```
+request <request_name> {
+    // program body
+}
+
+request <another_request_name> {
+    // another program body
+}
+```
+
+Example:
+
+```
+request login {
+  x := 1;
+  yield;
+  r := 42
+}
+
+request logout {
+  y := 2;
+  yield;
+  r := 10
+}
+```
+
+The Petri net produced will have String as the request set, which comes from the request names.

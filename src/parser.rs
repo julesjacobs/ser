@@ -15,6 +15,17 @@ pub enum Expr {
     Variable(String),
 }
 
+#[derive(Hash, Eq, PartialEq, Debug, Clone)]
+pub struct Program {
+    pub requests: Vec<Request>,
+}
+
+#[derive(Hash, Eq, PartialEq, Debug, Clone)]
+pub struct Request {
+    pub name: String,
+    pub body: Hc<Expr>,
+}
+
 impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -109,6 +120,7 @@ pub enum Token {
     Yield,     // yield
     Exit,      // exit
     Question,  // ?
+    Request,   // request
     LParen,    // (
     RParen,    // )
     LBrace,    // {
@@ -121,6 +133,13 @@ pub fn parse(source: &str, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
     let tokens = tokenize(source)?;
     let mut parser = Parser::new(tokens);
     parser.parse(table)
+}
+
+/// Parse a string into a program containing multiple requests
+pub fn parse_program(source: &str, table: &mut ExprHc) -> Result<Program, String> {
+    let tokens = tokenize(source)?;
+    let mut parser = Parser::new(tokens);
+    parser.parse_program(table)
 }
 
 impl Parser {
@@ -139,6 +158,45 @@ impl Parser {
         }
 
         Ok(expr)
+    }
+    
+    pub fn parse_program(&mut self, table: &mut ExprHc) -> Result<Program, String> {
+        let mut requests = Vec::new();
+        
+        while !self.is_at_end() {
+            if self.check(&Token::Request) {
+                let request = self.parse_request(table)?;
+                requests.push(request);
+            } else if self.is_at_end() {
+                break;
+            } else {
+                return Err(format!(
+                    "Expected 'request' keyword, found {:?}",
+                    self.tokens[self.current]
+                ));
+            }
+        }
+        
+        if requests.is_empty() {
+            return Err("No requests found in program".to_string());
+        }
+        
+        Ok(Program { requests })
+    }
+    
+    fn parse_request(&mut self, table: &mut ExprHc) -> Result<Request, String> {
+        self.consume(Token::Request, "Expected 'request' keyword")?;
+        
+        let name = match self.advance() {
+            Some(Token::Identifier(name)) => name.clone(),
+            _ => return Err("Expected request name".to_string()),
+        };
+        
+        self.consume(Token::LBrace, "Expected '{' after request name")?;
+        let body = self.expression(table)?;
+        self.consume(Token::RBrace, "Expected '}' after request body")?;
+        
+        Ok(Request { name, body })
     }
 
     fn expression(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
@@ -323,6 +381,7 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     "while" => tokens.push(Token::While),
                     "yield" => tokens.push(Token::Yield),
                     "exit" => tokens.push(Token::Exit),
+                    "request" => tokens.push(Token::Request),
                     _ => tokens.push(Token::Identifier(identifier)),
                 }
             }

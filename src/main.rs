@@ -18,7 +18,7 @@ use std::path::Path;
 use std::process;
 
 use ns::NS;
-use parser::{ExprHc, parse};
+use parser::{ExprHc, parse, parse_program};
 
 fn print_usage() {
     println!("Usage: ser [options] <filename or directory>");
@@ -263,22 +263,31 @@ fn process_ser_file(file_path: &str, open_files: bool) {
         }
     };
 
-    // Parse the content as an Expr
+    // Try to parse as a program with multiple requests first
     let mut table = ExprHc::new();
-    let expr = match parse(&content, &mut table) {
-        Ok(expr) => {
-            println!("Parsed expression: {}", expr);
-            expr
+    let ns = match parse_program(&content, &mut table) {
+        Ok(program) => {
+            println!("Parsed program with {} requests", program.requests.len());
+            // Convert program to Network System
+            println!("Converting program to Network System...");
+            expr_to_ns::program_to_ns(&mut table, &program)
         }
-        Err(err) => {
-            eprintln!("Error parsing SER file: {}", err);
-            process::exit(1);
+        Err(_) => {
+            // Fall back to parsing as a single expression
+            match parse(&content, &mut table) {
+                Ok(expr) => {
+                    println!("Parsed expression: {}", expr);
+                    // Convert expression to Network System
+                    println!("Converting expression to Network System...");
+                    expr_to_ns::expr_to_ns(&mut table, &expr)
+                }
+                Err(err) => {
+                    eprintln!("Error parsing SER file: {}", err);
+                    process::exit(1);
+                }
+            }
         }
     };
-
-    // Convert expression to Network System
-    println!("Converting expression to Network System...");
-    let ns = expr_to_ns::expr_to_ns(&mut table, &expr);
 
     // Get the file name without extension to use as the base name for output files
     let path = Path::new(file_path);

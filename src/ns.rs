@@ -413,6 +413,23 @@ where
     pub fn save_graphviz_no_open(&self, name: &str) -> Result<Vec<String>, String> {
         self.save_graphviz(name, false)
     }
+    
+    pub fn merge_requests(&mut self, other: &NS<G, L, Req, Resp>) {
+        // Merge all requests
+        for (req, l) in &other.requests {
+            self.add_request(req.clone(), l.clone());
+        }
+        
+        // Merge all the transitions
+        for (l1, g1, l2, g2) in &other.transitions {
+            self.add_transition(l1.clone(), g1.clone(), l2.clone(), g2.clone());
+        }
+        
+        // Merge all responses
+        for (l, resp) in &other.responses {
+            self.add_response(l.clone(), resp.clone());
+        }
+    }
 }
 
 #[cfg(test)]
