@@ -221,6 +221,34 @@ where
     }
 }
 
+impl<P> Petri<P> {
+    /// Run an operation on each place
+    pub fn for_each_place(&self, mut f: impl for<'a> FnMut(&'a P)) {
+        self.initial_marking.iter().for_each(&mut f);
+        for (from, to) in &self.transitions {
+            from.iter().for_each(&mut f);
+            to.iter().for_each(&mut f);
+        }
+    }
+
+    /// Rename all the places
+    pub fn rename<Q>(self, mut f: impl FnMut(P) -> Q) -> Petri<Q> {
+        Petri {
+            initial_marking: self.initial_marking.into_iter().map(&mut f).collect(),
+            transitions: self
+                .transitions
+                .into_iter()
+                .map(|(from, to)| {
+                    (
+                        from.into_iter().map(&mut f).collect(),
+                        to.into_iter().map(&mut f).collect(),
+                    )
+                })
+                .collect(),
+        }
+    }
+}
+
 impl<Place> Petri<Place>
 where
     Place: ToString,

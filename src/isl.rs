@@ -1,64 +1,46 @@
-use crate::semilinear::{Hash, LinearSet, SemilinearSet, SparseVector};
-use isl_rs::{Aff, BasicSet, Context, DimType, Mat, Set, Space};
-use std::collections::{HashMap, HashSet};
-use std::fmt::{Debug, Display};
+use crate::semilinear::*;
+use isl_rs::{Context, Set, Space};
+use std::collections::HashSet;
+use std::fmt::{Display, Write};
 
 impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Returns a set of all unique keys (names) in all base and period SparseVectors.
     pub fn get_unique_keys(&self) -> HashSet<K> {
         let mut unique_keys = HashSet::new();
-
-        // Iterate over all LinearSet components
-        for linear_set in &self.components {
-            // Add keys from the base SparseVector
-            for key in linear_set.base.values.keys() {
-                unique_keys.insert(key.clone());
-            }
-
-            // Add keys from all period SparseVectors
-            for period in &linear_set.periods {
-                for key in period.values.keys() {
-                    unique_keys.insert(key.clone());
-                }
-            }
-        }
-
+        self.for_each_key(|key| {
+            unique_keys.insert(key.clone());
+        });
         unique_keys
     }
 }
 
 /// Generates a string representation of the LinearSet and returns the set of all pi variables.
-pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
+pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Display>(
     linear_set: &LinearSet<K>,
-    unique_keys: &HashSet<K>,
+    keys: &[K],
     period_counter: usize,
 ) -> (String, usize) {
     let mut result = String::new();
     let mut pi_variables = HashSet::new();
     let mut current_counter = period_counter;
 
-    // Convert the HashSet of keys into a sorted Vec
-    let mut sorted_keys: Vec<&K> = unique_keys.iter().collect();
-    sorted_keys.sort(); // Sort the keys
-
-
-
     // Generate the main string
-    for (i, key) in sorted_keys.iter().enumerate() {
+    for (i, key) in keys.iter().enumerate() {
         if i > 0 {
             result.push_str(" and ");
         }
 
         // Add the base value
         let base_value = linear_set.base.get(key);
-        result.push_str(&format!("{} = {}", key, base_value));
+        write!(result, "{key} = {base_value}");
+        // result.push_str(&format!("{} = {}", key, base_value));
 
         // Add period values
         for (period_index, period) in linear_set.periods.iter().enumerate() {
             let period_value = period.get(key);
             if period_value != 0 {
                 let pi_var = format!("p{}", current_counter + period_index + 1);
-                result.push_str(&format!(" + {} {}", period_value, pi_var));
+                write!(result, " + {period_value} {pi_var}");
                 pi_variables.insert(pi_var);
             }
         }
@@ -69,7 +51,7 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
     // Generate the prefix
     let mut sorted_pi_variables: Vec<String> = pi_variables.iter().cloned().collect();
     sorted_pi_variables.sort(); // Sort the pi variables
-    let prefix_keys: Vec<String> = sorted_keys.iter().map(|key| format!("{}", key)).collect();
+    let prefix_keys: Vec<String> = keys.iter().map(|key| format!("{}", key)).collect();
     let prefix = format!(
         "{{[{}] : exists ({} : ",
         prefix_keys.join(", "), // Join the sorted keys with commas
@@ -84,8 +66,7 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
             .map(|var| format!("{} >= 0", var))
             .collect::<Vec<String>>()
             .join(" and "),
-        sorted_keys
-            .iter()
+        keys.iter()
             .map(|key| format!("{} >= 0", key)) // Assuming keys are also non-negative
             .collect::<Vec<String>>()
             .join(" and ")
@@ -100,19 +81,11 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
 }
 
 // This function receives a hash map and outputs a string representing the linear set of non-negatives
-pub fn generate_string_of_linear_set_with_non_negatives<
-    K: Eq + Hash + Clone + Ord + Debug + Display,
->(
-    unique_keys: &HashSet<K>,
+pub fn generate_string_of_linear_set_with_non_negatives<K: Eq + Hash + Clone + Ord + Display>(
+    keys: &[K],
 ) -> String {
-    let mut result = String::new();
-
-    // Convert the HashSet of keys into a sorted Vec
-    let mut sorted_keys: Vec<&K> = unique_keys.iter().collect();
-    sorted_keys.sort(); // Sort the keys
-
     // Generate the prefix
-    let prefix_keys: Vec<String> = sorted_keys.iter().map(|key| format!("{}", key)).collect();
+    let prefix_keys: Vec<String> = keys.iter().map(|key| format!("{}", key)).collect();
     let prefix = format!(
         "{{[{}] : ", // Prefix with the sorted keys
         prefix_keys.join(", ")
@@ -121,31 +94,24 @@ pub fn generate_string_of_linear_set_with_non_negatives<
     // Generate the suffix with non-negativity constraints for all keys
     let suffix = format!(
         "{} }}",
-        sorted_keys
-            .iter()
+        keys.iter()
             .map(|key| format!("{} >= 0", key)) // Add non-negativity constraints for each key
             .collect::<Vec<String>>()
             .join(" and ")
     );
 
     // Combine prefix and suffix
-    let final_string = format!("{}{}", prefix, suffix);
-
-    println!("{:}", "string generated for set of non-negatives:");
-    println!("{:}", final_string);
-    final_string
+    format!("{}{}", prefix, suffix)
 }
 
 /// Function that iterates over all LinearSet components in a SemilinearSet,
 /// and generates a hashSet with the equivalent ISL set components (before intersecting
 /// and negating them)
-pub fn translate_semilinear_set_to_ISL_sets<K: Eq + Hash + Clone + Ord + Debug + Display>(
+pub fn translate_semilinear_set_to_ISL_sets<K: Eq + Hash + Clone + Ord + Display>(
     semilinear_set: &SemilinearSet<K>,
+    keys: &[K],
 ) -> Vec<Set> {
     let mut original_linear_sets_in_ISL_format = Vec::new();
-
-    // extract unique keys in all SparsVectors in all LinearSet components of the SemilinearSet input
-    let unique_keys = semilinear_set.get_unique_keys();
 
     let mut period_counter = 0;
 
@@ -154,27 +120,25 @@ pub fn translate_semilinear_set_to_ISL_sets<K: Eq + Hash + Clone + Ord + Debug +
         // translate each single LinearSet to an equivalent ISL set format
 
         // Generate the string and pi variables
-        let (string_encoding_of_set, new_counter) = generate_linear_set_string(&linear_set, &unique_keys, period_counter);
+        let (string_encoding_of_set, new_counter) =
+            generate_linear_set_string(&linear_set, keys, period_counter);
         period_counter = new_counter;
-
 
         // TODO - IMPORTANT!! Fix memory issues with the ctx object that Mark mentioned
         let ctx = Context::alloc();
         let isl_set_format = Set::read_from_str(&ctx, &string_encoding_of_set);
-        println!("***"); // todo delete
-        println!("{:}", isl_set_format.to_str()); // todo delete
-        println!("***"); // todo delete
         original_linear_sets_in_ISL_format.push(isl_set_format);
     }
 
     original_linear_sets_in_ISL_format
 }
 
-// This function receves a SemilinearSet obejct and returns an ISL Set object representing
+// This function receves a SemilinearSet object and returns an ISL Set object representing
 // the complement of the original SemiLinear Set (notice that the compliment is also semilinear,
-// however, is  returned in the ISL Set format)
-pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Debug + Display>(
+// however, is returned in the ISL Set format)
+pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Display>(
     semilinear_set: &SemilinearSet<K>,
+    keys: &[K],
 ) -> Set {
     // TODO (!!!) make this function receive a set of all coordinates and send it to the
     // translate_semilinear_set_to_ISL_sets() function (and downtream), instead of using "unique keys"
@@ -182,7 +146,7 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Debug + Display>(
 
     // Generate a collection (Rust Vector) of ISL sets, each corresponding to a LinearSet object of the SemilinearSet
     let vector_of_semilinear_set_translated_to_isl_sets =
-        translate_semilinear_set_to_ISL_sets(&semilinear_set);
+        translate_semilinear_set_to_ISL_sets(&semilinear_set, keys);
 
     // Create a vector of complemented sets directly in isl_main
     let vector_of_complemented_sets: Vec<Set> = vector_of_semilinear_set_translated_to_isl_sets
@@ -191,9 +155,7 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Debug + Display>(
         .collect(); // Collect the results into a new vector
 
     // generate ISL set of non-negative values (to intersect later with all complemented ISL sets)
-    let unique_keys = semilinear_set.get_unique_keys();
-    let string_of_set_of_non_negatives =
-        generate_string_of_linear_set_with_non_negatives(&unique_keys);
+    let string_of_set_of_non_negatives = generate_string_of_linear_set_with_non_negatives(keys);
     let ctx_for_non_negatives = Context::alloc();
     let isl_set_of_non_negatives =
         Set::read_from_str(&ctx_for_non_negatives, &string_of_set_of_non_negatives);
@@ -241,8 +203,10 @@ pub fn test_1() {
 
     let semilinear_set = SemilinearSet::new(vec![linear_set_1]);
 
+    let mut unique_keys: Vec<_> = semilinear_set.get_unique_keys().into_iter().collect();
+    unique_keys.sort();
     let isl_set_representing_complement_of_ths_semilinear_set =
-        complement_semilinear_set(&semilinear_set);
+        complement_semilinear_set(&semilinear_set, &unique_keys);
 }
 
 #[test]

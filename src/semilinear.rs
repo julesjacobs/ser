@@ -49,14 +49,14 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
     }
 
     /// Create a unit vector with 1 at the specified dimension
-     pub fn unit(key: K) -> Self {
+    pub fn unit(key: K) -> Self {
         let mut values = HashMap::new();
         values.insert(key, 1);
         SparseVector { values }
     }
 
     /// Add another vector to this one element-wise
-    fn add(&self, other: &Self) -> Self {
+    pub fn add(&self, other: &Self) -> Self {
         let mut result = self.clone();
         for (key, &value) in &other.values {
             let new_value = self.get(key) + value;
@@ -64,12 +64,47 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
         }
         result
     }
+
+    /// Run an operation on each key
+    pub fn for_each_key(&self, mut f: impl for<'a> FnMut(&'a K)) {
+        for (key, _) in &self.values {
+            f(key);
+        }
+    }
+
+    /// Rename all the keys
+    pub fn rename<L: Eq + Hash + Clone + Ord>(self, mut f: impl FnMut(K) -> L) -> SparseVector<L> {
+        let mut new_map = HashMap::new();
+        for (k, v) in self.values {
+            let k = f(k);
+            *new_map.entry(k).or_insert(0) += v;
+        }
+        SparseVector { values: new_map }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LinearSet<K: Eq + Hash + Clone + Ord> {
     pub base: SparseVector<K>,         // u0: the base vector
     pub periods: Vec<SparseVector<K>>, // [u1, u2, ..., um]: list of period generator vectors
+}
+
+impl<K: Eq + Hash + Clone + Ord> LinearSet<K> {
+    /// Run an operation on each key mentioned in the linear set
+    pub fn for_each_key(&self, mut f: impl for<'a> FnMut(&'a K)) {
+        self.base.for_each_key(&mut f);
+        for period in &self.periods {
+            period.for_each_key(&mut f);
+        }
+    }
+
+    /// Rename all the keys
+    pub fn rename<L: Eq + Hash + Clone + Ord>(self, mut f: impl FnMut(K) -> L) -> LinearSet<L> {
+        LinearSet {
+            base: self.base.rename(&mut f),
+            periods: self.periods.into_iter().map(|p| p.rename(&mut f)).collect(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -142,6 +177,24 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
         let periods = keys.into_iter().map(SparseVector::unit).collect();
         SemilinearSet::new(vec![LinearSet { base, periods }])
     }
+
+    /// Run an operation on all keys mentioned in the semilinear set
+    pub fn for_each_key(&self, mut f: impl for<'a> FnMut(&'a K)) {
+        for c in &self.components {
+            c.for_each_key(&mut f);
+        }
+    }
+
+    /// Rename all the keys
+    pub fn rename<L: Eq + Hash + Clone + Ord>(self, mut f: impl FnMut(K) -> L) -> SemilinearSet<L> {
+        SemilinearSet {
+            components: self
+                .components
+                .into_iter()
+                .map(|l| l.rename(&mut f))
+                .collect(),
+        }
+    }
 }
 
 impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
@@ -154,13 +207,11 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
     }
 
     // Union of two semilinear sets.
-    fn plus(self, other: Self) -> Self {
+    fn plus(mut self, mut other: Self) -> Self {
         // Clone components of both and combine
-        let mut new_components = Vec::with_capacity(self.components.len() + other.components.len());
-        new_components.extend(self.components.iter().cloned());
-        new_components.extend(other.components.iter().cloned());
         // (TODO) we could attempt to simplify or merge components here.
-        SemilinearSet::new(new_components)
+        self.components.append(&mut other.components);
+        self
     }
 
     // Sequential composition (a.k.a. Minkowski sum) of two semilinear sets.
