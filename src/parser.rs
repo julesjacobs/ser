@@ -5,6 +5,8 @@ use std::fmt;
 pub enum Expr {
     Assign(String, Hc<Expr>),
     Equal(Hc<Expr>, Hc<Expr>),
+    Add(Hc<Expr>, Hc<Expr>),
+    Subtract(Hc<Expr>, Hc<Expr>),
     Sequence(Hc<Expr>, Hc<Expr>),
     If(Hc<Expr>, Hc<Expr>, Hc<Expr>),
     While(Hc<Expr>, Hc<Expr>),
@@ -31,6 +33,8 @@ impl fmt::Display for Expr {
         match self {
             Expr::Assign(var, expr) => write!(f, "{} := {}", var, expr),
             Expr::Equal(left, right) => write!(f, "{} == {}", left, right),
+            Expr::Add(left, right) => write!(f, "{} + {}", left, right),
+            Expr::Subtract(left, right) => write!(f, "{} - {}", left, right),
             Expr::Sequence(first, second) => write!(f, "{}; {}", first, second),
             Expr::If(cond, then_branch, else_branch) => {
                 write!(f, "if({}){{{}}}else{{{}}}", cond, then_branch, else_branch)
@@ -67,6 +71,26 @@ impl ExprHc {
             }
         }
         self.table.hashcons(Expr::Equal(left, right))
+    }
+    
+    pub fn add(&mut self, left: Hc<Expr>, right: Hc<Expr>) -> Hc<Expr> {
+        // If both are constants, return the sum
+        if let Expr::Number(n1) = left.as_ref() {
+            if let Expr::Number(n2) = right.as_ref() {
+                return self.number(n1 + n2);
+            }
+        }
+        self.table.hashcons(Expr::Add(left, right))
+    }
+    
+    pub fn subtract(&mut self, left: Hc<Expr>, right: Hc<Expr>) -> Hc<Expr> {
+        // If both are constants, return the difference
+        if let Expr::Number(n1) = left.as_ref() {
+            if let Expr::Number(n2) = right.as_ref() {
+                return self.number(n1 - n2);
+            }
+        }
+        self.table.hashcons(Expr::Subtract(left, right))
     }
 
     pub fn sequence(&mut self, first: Hc<Expr>, second: Hc<Expr>) -> Hc<Expr> {
@@ -137,6 +161,8 @@ pub enum Token {
     Number(i64),
     Assign,    // :=
     Equal,     // ==
+    Plus,      // +
+    Minus,     // -
     Semicolon, // ;
     If,        // if
     Else,      // else
@@ -253,13 +279,31 @@ impl Parser {
     }
 
     fn equality(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
-        let mut expr = self.primary(table)?;
+        let mut expr = self.term(table)?;
 
         if self.match_token(&[Token::Equal]) {
-            let right = self.primary(table)?;
+            let right = self.term(table)?;
             expr = table.equal(expr, right);
         }
 
+        Ok(expr)
+    }
+    
+    fn term(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
+        let mut expr = self.primary(table)?;
+        
+        loop {
+            if self.match_token(&[Token::Plus]) {
+                let right = self.primary(table)?;
+                expr = table.add(expr, right);
+            } else if self.match_token(&[Token::Minus]) {
+                let right = self.primary(table)?;
+                expr = table.subtract(expr, right);
+            } else {
+                break;
+            }
+        }
+        
         Ok(expr)
     }
 
@@ -427,6 +471,14 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                     return Err("Expected '=' after '='".to_string());
                 }
             }
+            '+' => {
+                chars.next();
+                tokens.push(Token::Plus);
+            }
+            '-' => {
+                chars.next();
+                tokens.push(Token::Minus);
+            }
             ';' => {
                 chars.next();
                 tokens.push(Token::Semicolon);
@@ -488,6 +540,34 @@ mod tests {
             vec![
                 Token::Identifier("x".to_string()),
                 Token::Equal,
+                Token::Identifier("y".to_string()),
+                Token::Eof
+            ]
+        );
+    }
+    
+    #[test]
+    fn test_tokenize_add() {
+        let tokens = tokenize("x + y").unwrap();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Identifier("x".to_string()),
+                Token::Plus,
+                Token::Identifier("y".to_string()),
+                Token::Eof
+            ]
+        );
+    }
+    
+    #[test]
+    fn test_tokenize_subtract() {
+        let tokens = tokenize("x - y").unwrap();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Identifier("x".to_string()),
+                Token::Minus,
                 Token::Identifier("y".to_string()),
                 Token::Eof
             ]
@@ -692,6 +772,54 @@ mod tests {
         let mut table = ExprHc::new();
         let expr = parse("variable", &mut table).unwrap();
         let expected = table.variable("variable".to_string());
+        assert_eq!(expr, expected);
+    }
+    
+    #[test]
+    fn test_parse_add() {
+        let mut table = ExprHc::new();
+        let expr = parse("5 + 3", &mut table).unwrap();
+        let five = table.number(5);
+        let three = table.number(3);
+        let expected = table.add(five, three);
+        assert_eq!(expr, expected);
+    }
+    
+    #[test]
+    fn test_parse_add_constant_folding() {
+        let mut table = ExprHc::new();
+        let expr = parse("5 + 3", &mut table).unwrap();
+        let expected = table.number(8);
+        assert_eq!(expr, expected);
+    }
+    
+    #[test]
+    fn test_parse_subtract() {
+        let mut table = ExprHc::new();
+        let expr = parse("10 - 4", &mut table).unwrap();
+        let ten = table.number(10);
+        let four = table.number(4);
+        let expected = table.subtract(ten, four);
+        assert_eq!(expr, expected);
+    }
+    
+    #[test]
+    fn test_parse_subtract_constant_folding() {
+        let mut table = ExprHc::new();
+        let expr = parse("10 - 4", &mut table).unwrap();
+        let expected = table.number(6);
+        assert_eq!(expr, expected);
+    }
+    
+    #[test]
+    fn test_parse_mixed_arithmetic() {
+        let mut table = ExprHc::new();
+        let expr = parse("x + 3 - y", &mut table).unwrap();
+        let x = table.variable("x".to_string());
+        let three = table.number(3);
+        let y = table.variable("y".to_string());
+        let add = table.add(x, three);
+        let expected = table.subtract(add, y);
         assert_eq!(expr, expected);
     }
 

@@ -138,6 +138,64 @@ pub fn run_expr(
                 }
             }
         }
+        Expr::Add(e1, e2) => {
+            for (expr_result1, local1, global1) in run_expr(exprhc, e1, local, global) {
+                match expr_result1 {
+                    ExprResult::Yielding(e) => {
+                        results.push((
+                            ExprResult::Yielding(exprhc.add(e, e2.clone())),
+                            local1,
+                            global1,
+                        ));
+                    }
+                    ExprResult::Returning(n1) => {
+                        for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1)
+                        {
+                            match expr_result2 {
+                                ExprResult::Yielding(e) => {
+                                    let e1 = exprhc.number(n1);
+                                    let e = exprhc.add(e1, e);
+                                    results.push((ExprResult::Yielding(e), local2, global2));
+                                }
+                                ExprResult::Returning(n2) => {
+                                    let result = n1 + n2;
+                                    results.push((ExprResult::Returning(result), local2, global2));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Expr::Subtract(e1, e2) => {
+            for (expr_result1, local1, global1) in run_expr(exprhc, e1, local, global) {
+                match expr_result1 {
+                    ExprResult::Yielding(e) => {
+                        results.push((
+                            ExprResult::Yielding(exprhc.subtract(e, e2.clone())),
+                            local1,
+                            global1,
+                        ));
+                    }
+                    ExprResult::Returning(n1) => {
+                        for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1)
+                        {
+                            match expr_result2 {
+                                ExprResult::Yielding(e) => {
+                                    let e1 = exprhc.number(n1);
+                                    let e = exprhc.subtract(e1, e);
+                                    results.push((ExprResult::Yielding(e), local2, global2));
+                                }
+                                ExprResult::Returning(n2) => {
+                                    let result = n1 - n2;
+                                    results.push((ExprResult::Returning(result), local2, global2));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         Expr::Sequence(e1, e2) => {
             for (expr_result1, local1, global1) in run_expr(exprhc, e1, local, global) {
                 match expr_result1 {

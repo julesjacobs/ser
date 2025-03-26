@@ -78,10 +78,12 @@ e ::=
   | x                     (read)
   | X := e                (global variable / switch variable)
   | X                     (read)
-  | e == e
-  | e ; e
-  | if(e){e}else{e}
-  | while(e){e}
+  | e + e                 (addition)
+  | e - e                 (subtraction)
+  | e == e                (equality check)
+  | e ; e                 (sequence)
+  | if(e){e}else{e}       (conditional)
+  | while(e){e}           (loop)
   | yield                 (yields to the scheduler; allows other threads/packets to run)
   | exit                  (exit the entire execution of whole program / network -- maybe remove this?)
   | ?                     (nondeterministic choice between 0 and 1)
@@ -100,7 +102,7 @@ request <another_request_name> {
 }
 ```
 
-Example:
+Examples:
 
 ```
 request login {
@@ -113,6 +115,17 @@ request logout {
   y := 2;
   yield;
   r := 10
+}
+```
+
+Example with arithmetic operations:
+
+```
+request main {
+  x := 5 + 3;     // x = 8
+  y := x - 2;     // y = 6
+  z := y + y;     // z = 12
+  yield
 }
 ```
 

@@ -1,0 +1,5 @@
+request main {
+  x := 5 + 3;
+  y := x - 2;
+  yield
+}
