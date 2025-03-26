@@ -13,6 +13,8 @@ mod reachability;
 mod semilinear;
 
 use colored::*;
+use parser::Program;
+use parser::Request;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -368,7 +370,15 @@ fn process_ser_file(file_path: &str, open_files: bool) {
                         "{}",
                         "Converting expression to Network System...".cyan().bold()
                     );
-                    expr_to_ns::expr_to_ns(&mut table, &expr)
+                    expr_to_ns::program_to_ns(
+                        &mut table,
+                        &Program {
+                            requests: vec![Request {
+                                name: "request".to_string(),
+                                body: expr,
+                            }],
+                        },
+                    )
                 }
                 Err(err) => {
                     eprintln!("{} SER file: {}", "Error parsing".red().bold(), err);

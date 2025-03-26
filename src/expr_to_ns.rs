@@ -299,10 +299,6 @@ impl std::fmt::Display for LocalExpr {
     }
 }
 
-pub fn expr_to_ns(exprhc: &mut ExprHc, expr: &Hc<Expr>) -> NS<Global, LocalExpr, ExprRequest, i64> {
-    expr_to_ns_with_request(exprhc, expr, "default")
-}
-
 // Function to convert a program with multiple requests to a network system
 pub fn program_to_ns(
     exprhc: &mut ExprHc,
@@ -310,46 +306,38 @@ pub fn program_to_ns(
 ) -> NS<Global, LocalExpr, ExprRequest, i64> {
     let mut ns = NS::new(Global::new());
 
-    // Process each request in the program
-    for request in &program.requests {
-        let request_ns = expr_to_ns_with_request(exprhc, &request.body, &request.name);
-
-        // Merge the request's network system into the main network system
-        ns.merge_requests(&request_ns);
-    }
-
-    ns
-}
-
-// New function to convert a single expression to a network system with a specified request name
-pub fn expr_to_ns_with_request(
-    exprhc: &mut ExprHc,
-    expr: &Hc<Expr>,
-    request_name: &str,
-) -> NS<Global, LocalExpr, ExprRequest, i64> {
-    // Create a new NS with an empty global environment
-    let mut ns = NS::new(Global::new());
-
     // Track seen states to avoid duplication and infinite loops
     let mut seen_packets: HashSet<LocalExpr> = HashSet::new();
     let mut seen_globals: HashSet<Global> = HashSet::new();
-    let mut todo = vec![(expr.clone(), Local::new(), Global::new())];
+    let mut todo = vec![];
 
-    // Starting state - add a request that transitions to initial state
-    let initial_local = Local::new();
-    let initial_expr = expr.clone();
-    let initial_global = Global::new();
-    let initial_local_expr = LocalExpr(initial_local.clone(), initial_expr.clone());
+    // Process each request in the program
+    for request in &program.requests {
+        let request_name = &request.name;
+        let expr = &request.body;
 
-    // Add initial request with the specified name
-    ns.add_request(
-        ExprRequest {
-            name: request_name.to_string(),
-        },
-        initial_local_expr.clone(),
-    );
-    seen_globals.insert(initial_global.clone());
-    seen_packets.insert(initial_local_expr.clone());
+        // Starting state - add a request that transitions to initial state
+        let initial_local = Local::new();
+        let initial_expr = expr.clone();
+        let initial_global = Global::new();
+        let initial_local_expr = LocalExpr(initial_local.clone(), initial_expr.clone());
+
+        todo.push((
+            initial_expr.clone(),
+            initial_local.clone(),
+            initial_global.clone(),
+        ));
+
+        // Add initial request with the specified name
+        ns.add_request(
+            ExprRequest {
+                name: request_name.to_string(),
+            },
+            initial_local_expr.clone(),
+        );
+        seen_globals.insert(initial_global.clone());
+        seen_packets.insert(initial_local_expr.clone());
+    }
 
     // Process states
     while let Some((expr, local, global)) = todo.pop() {
