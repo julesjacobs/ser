@@ -37,18 +37,6 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
     let mut pi_variables = HashSet::new();
     let mut current_counter = period_counter;
 
-    // First extract only keys that exist in this linear set
-    let mut relevant_keys: Vec<&K> = unique_keys.iter()
-        .filter(|key| {
-            // Check if key has non-zero value in base or any period
-            linear_set.base.get(key).ne(&0) ||
-                linear_set.periods.iter().any(|p| p.get(key).ne(&0))
-        })
-        .collect();
-
-    // Convert to sorted Vec (now only for relevant keys)
-    relevant_keys.sort();
-
     // Convert the HashSet of keys into a sorted Vec
     let mut sorted_keys: Vec<&K> = unique_keys.iter().collect();
     sorted_keys.sort(); // Sort the keys
@@ -56,7 +44,7 @@ pub fn generate_linear_set_string<K: Eq + Hash + Clone + Ord + Debug + Display>(
 
 
     // Generate the main string
-    for (i, key) in relevant_keys.iter().enumerate() {
+    for (i, key) in sorted_keys.iter().enumerate() {
         if i > 0 {
             result.push_str(" and ");
         }
