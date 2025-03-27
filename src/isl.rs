@@ -160,7 +160,7 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Display>(
     unsafe {
         isl_set_subtract(
             universe_set(keys),
-            semilinear_set_to_isl_set(semilinear_set, keys),
+            dbg!(semilinear_set_to_isl_set(semilinear_set, keys)),
         )
     }
 }
@@ -220,16 +220,15 @@ pub unsafe fn isl_set_to_affine_constraints(num_vars: usize, set: *mut isl_set) 
     let var_names: Vec<_> = (0..num_vars)
         .map(|i| CString::new(format!("{}", Var(i))).expect("can't have \\0 in var names"))
         .collect();
-    let mut total_dim = num_vars;
+    let mut total_exists = 0;
     let mut constraints = Vec::new();
 
     for_each_basic_set(set, |bset| {
         // find the dimension + var labelling
         let local_space = isl_basic_set_get_local_space(bset);
-        let dim = check_isl_size(isl_local_space_dim(local_space, isl_dim_type_isl_dim_all));
-        dbg!(dim, local_space);
-        if dim > total_dim {
-            total_dim = dim;
+        let num_exists = check_isl_size(isl_local_space_dim(local_space, isl_dim_type_isl_dim_div));
+        if num_exists > total_exists {
+            total_exists = num_exists;
         }
         let var_to_dim_idx: HashMap<usize, i32> = var_names
             .iter()
@@ -244,7 +243,6 @@ pub unsafe fn isl_set_to_affine_constraints(num_vars: usize, set: *mut isl_set) 
                 (i, dim_idx)
             })
             .collect();
-        dbg!(&var_to_dim_idx);
         isl_local_space_free(local_space);
 
         // collect the affine constraints
@@ -257,22 +255,30 @@ pub unsafe fn isl_set_to_affine_constraints(num_vars: usize, set: *mut isl_set) 
                 constraint_type = NonNegative;
             }
             let offset = int_of_isl_val(isl_constraint_get_constant_val(c));
-            let affine_formula = (0..dim)
-                .filter_map(|i| {
-                    let (dim_idx, dim_type) = if i < num_vars {
-                        (var_to_dim_idx[&i], isl_dim_type_isl_dim_set)
-                    } else {
-                        ((i - num_vars) as _, isl_dim_type_isl_dim_div)
-                    };
-                    let coeff =
-                        int_of_isl_val(isl_constraint_get_coefficient_val(c, dim_type, dim_idx));
-                    if coeff == 0 {
-                        None
-                    } else {
-                        Some((coeff, Var(i)))
-                    }
-                })
-                .collect::<Vec<_>>();
+            let mut affine_formula = Vec::new();
+            // Add the normal vars
+            for i in 0..num_vars {
+                let coeff = int_of_isl_val(isl_constraint_get_coefficient_val(
+                    c,
+                    isl_dim_type_isl_dim_set,
+                    var_to_dim_idx[&i],
+                ));
+                if coeff != 0 {
+                    affine_formula.push((coeff, Var(i)));
+                }
+            }
+            // Add the existential vars. ISL existential vars are ints; ours are nats
+            for i in 0..num_exists {
+                let coeff = int_of_isl_val(isl_constraint_get_coefficient_val(
+                    c,
+                    isl_dim_type_isl_dim_div,
+                    i as _,
+                ));
+                if coeff != 0 {
+                    affine_formula.push((coeff, Var(num_vars + 2 * i)));
+                    affine_formula.push((-coeff, Var(num_vars + 2 * i + 1)));
+                }
+            }
 
             isl_constraint_free(c);
 
@@ -289,7 +295,7 @@ pub unsafe fn isl_set_to_affine_constraints(num_vars: usize, set: *mut isl_set) 
 
     Constraints {
         num_vars,
-        num_existential_vars: total_dim - num_vars,
+        num_existential_vars: 2 * total_exists,
         constraints,
     }
 }

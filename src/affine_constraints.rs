@@ -31,6 +31,8 @@ pub struct Constraint {
 
 /// Variables 0...N-1 are the real variables.
 /// Variables N...N+k-1 are the newly introduced existential variables
+///
+/// All variables have a domain of $\mathbb{N}$, but the constants / coefficients can be negative.
 #[derive(Debug, Clone)]
 pub struct Constraints {
     pub num_vars: usize,             // N
