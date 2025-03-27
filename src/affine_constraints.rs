@@ -161,7 +161,7 @@ pub fn test_to_xml_1() {
         ],
     };
 
-    let xml = constraints_to_xml(&constraints, "DisjunctionExample");
+    let xml = constraints_to_xml(&constraints, "test-1");
     println!("{}", xml);
 
     // Verify the output contains expected XML fragments
@@ -198,7 +198,7 @@ pub fn test_to_xml_2() {
         ],
     };
 
-    let xml = constraints_to_xml(&constraints, "DisjunctionExample");
+    let xml = constraints_to_xml(&constraints, "test-2");
     println!("{}", xml);
 
     // Verify the output contains expected XML fragments

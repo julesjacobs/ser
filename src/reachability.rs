@@ -4,6 +4,8 @@ use crate::isl::affine_constraints_for_complement;
 use crate::semilinear::*;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use std::fs;
+use std::io::Write;
 
 pub fn is_petri_reachability_set_subset_of_semilinear<Place>(
     petri: Petri<Place>,
@@ -33,7 +35,12 @@ where
     let semilinear = semilinear.rename(|p| renaming[&p]);
 
     // 1. Find the affine constraints for the bad states
-    let _constraints = affine_constraints_for_complement(num_vars, &semilinear);
+    let constraints = affine_constraints_for_complement(num_vars, &semilinear);
+    let xml = constraints_to_xml(&constraints, "XML-file");
+    let mut tmp = tempfile::Builder::new().suffix(".xml").tempfile().unwrap();
+    tmp.write_all(xml.as_bytes()).unwrap();
+    let tmp = tmp.into_temp_path();
+    let filename = tmp.to_str().unwrap();
 
     // 2. Decide if petri reaches any bad states
     return false; // TODO: Implement this
