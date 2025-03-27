@@ -7,7 +7,10 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::hash::Hash;
+use std::fmt::Display;
 
+use crate::semilinear::*;
 use crate::kleene::{nfa_to_kleene, Kleene, Regex};
 
 // Helper function to escape strings for use as node IDs in GraphViz DOT language
@@ -448,11 +451,37 @@ where
             self.add_response(l.clone(), resp.clone());
         }
     }
+}
 
+impl<G, L, Req, Resp> NS<G, L, Req, Resp>
+where
+    G: Clone + Ord + Hash + Display,
+    L: Clone + Ord + Hash + Display,
+    Req: Clone + Ord + Hash + Display,
+    Resp: Clone + Ord + Hash + Display,
+{
     /// Check if the network system is serializable
     pub fn is_serializable(&self) -> bool {
-        // TODO: Implement this
-        false
+        use crate::ns_to_petri::*;
+
+        let petri = ns_to_petri_with_requests(&self);
+
+        let mut non_response_places = HashSet::new();
+        petri.for_each_place(|p| {
+            if !matches!(p, ReqPetriState::Response(_, _)) {
+                non_response_places.insert(p.clone());
+            }
+        });
+        let non_response_places: Vec<_> = non_response_places.into_iter().collect();
+
+        let ser: SemilinearSet<_> = self
+            .serialized_automaton_kleene(|req, resp| {
+                SemilinearSet::singleton(SparseVector::unit((req, resp)))
+            })
+            .rename(|(req, resp)| ReqPetriState::Response(req, resp))
+            .times(SemilinearSet::universe(non_response_places));
+
+        crate::reachability::is_petri_reachability_set_subset_of_semilinear(petri, ser)
     }
 }
 

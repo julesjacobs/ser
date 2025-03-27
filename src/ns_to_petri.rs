@@ -35,10 +35,10 @@ where
 
 pub fn ns_to_petri<L, G, Req, Resp>(ns: &NS<G, L, Req, Resp>) -> Petri<PetriState<L, G, Req, Resp>>
 where
-    L: Clone + PartialEq + Eq + Hash + std::fmt::Display,
-    G: Clone + PartialEq + Eq + Hash + std::fmt::Display,
-    Req: Clone + PartialEq + Eq + Hash + std::fmt::Display,
-    Resp: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+    L: Clone + Eq + Hash + std::fmt::Display,
+    G: Clone + Eq + Hash + std::fmt::Display,
+    Req: Clone + Eq + Hash + std::fmt::Display,
+    Resp: Clone + Eq + Hash + std::fmt::Display,
 {
     // Create a new Petri net with initial marking
     // Start with one token for the initial global state
@@ -78,7 +78,7 @@ where
     petri
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Ord, PartialOrd)]
 pub enum ReqPetriState<L, G, Req, Resp> {
     Local(Req, L),
     Global(G),

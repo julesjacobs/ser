@@ -10,7 +10,7 @@ pub fn is_petri_reachability_set_subset_of_semilinear<Place>(
     semilinear: SemilinearSet<Place>,
 ) -> bool
 where
-    Place: Clone + PartialEq + Eq + Hash + Ord,
+    Place: Clone + Hash + Ord,
 {
     // 0. Make new names for all the places
     let mut places = HashSet::new();

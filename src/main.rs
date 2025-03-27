@@ -19,6 +19,8 @@ use std::env;
 use std::fs;
 use std::path::Path;
 use std::process;
+use std::hash::Hash;
+use std::fmt::Display;
 
 use ns::NS;
 use parser::{parse, parse_program, ExprHc};
@@ -143,10 +145,10 @@ fn main() {
 // Process a Network System: generate visualizations for NS, Petri net, and Petri net with requests
 fn process_ns<G, L, Req, Resp>(ns: &NS<G, L, Req, Resp>, file_stem: &str, open_files: bool)
 where
-    G: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
-    L: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
-    Req: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
-    Resp: Clone + PartialEq + Eq + std::hash::Hash + std::fmt::Display,
+    G: Clone + Ord + Hash + Display,
+    L: Clone + Ord + Hash + Display,
+    Req: Clone + Ord + Hash + Display,
+    Resp: Clone + Ord + Hash + Display,
 {
     // Create the output directory if it doesn't exist
     match fs::create_dir_all("out") {

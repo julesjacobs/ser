@@ -5,9 +5,26 @@ use hash_cons::Hc;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
+use std::cmp::Ordering;
+
 #[derive(Clone, Eq, PartialEq)]
 pub struct Env {
     vars: HashMap<String, i64>,
+}
+
+impl PartialOrd for Env {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for Env {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let mut a: Vec<_> = self.vars.iter().collect();
+        let mut b: Vec<_> = other.vars.iter().collect();
+        a.sort();
+        b.sort();
+        a.cmp(&b)
+    }
 }
 
 impl std::fmt::Display for Env {
@@ -62,6 +79,7 @@ impl Env {
 
 pub type Local = Env;
 pub type Global = Env;
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum ExprResult {
     Yielding(Hc<Expr>),
     Returning(i64),
@@ -433,7 +451,7 @@ pub fn run_expr(
 }
 
 // Request type that holds the request name
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct ExprRequest {
     pub name: String,
 }
@@ -445,7 +463,7 @@ impl std::fmt::Display for ExprRequest {
 }
 
 // We need a wrapper type since we can't implement Display directly for a tuple
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct LocalExpr(pub Local, pub Hc<Expr>);
 
 impl std::fmt::Display for LocalExpr {

@@ -1,7 +1,7 @@
 use hash_cons::{Hc, HcTable};
 use std::fmt;
 
-#[derive(Hash, Eq, PartialEq, Debug, Clone)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
 pub enum Expr {
     Assign(String, Hc<Expr>),
     Equal(Hc<Expr>, Hc<Expr>),
@@ -20,12 +20,12 @@ pub enum Expr {
     Variable(String),
 }
 
-#[derive(Hash, Eq, PartialEq, Debug, Clone)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
 pub struct Program {
     pub requests: Vec<Request>,
 }
 
-#[derive(Hash, Eq, PartialEq, Debug, Clone)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
 pub struct Request {
     pub name: String,
     pub body: Hc<Expr>,
@@ -192,6 +192,7 @@ impl ExprHc {
     }
 }
 
+#[derive(Debug)]
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,

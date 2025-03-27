@@ -148,7 +148,7 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     }
 
     /// Create a semilinear set containing a single vector (an atomic singleton).
-    fn singleton(vector: SparseVector<K>) -> Self {
+    pub fn singleton(vector: SparseVector<K>) -> Self {
         SemilinearSet {
             components: vec![LinearSet {
                 base: vector,
@@ -171,7 +171,7 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
 
     /// The universe (all possible sparse vectors) as a semilinear set.
     /// This requires providing a set of possible dimensions.
-    fn universe(keys: Vec<K>) -> Self {
+    pub fn universe(keys: Vec<K>) -> Self {
         // Universe = linear set with base = empty (all zeros), periods = unit vectors for each key
         let base = SparseVector::new();
         let periods = keys.into_iter().map(SparseVector::unit).collect();
