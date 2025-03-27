@@ -21,16 +21,19 @@ where
     });
     let mut places: Vec<_> = places.into_iter().collect();
     places.sort(); // so the renaming is predictable
+    let num_vars = places.len();
 
     let renaming: HashMap<&Place, Var> = places
         .iter()
         .enumerate()
         .map(|(i, v)| (v, Var(i)))
         .collect();
-    let _petri = petri.rename(|p| renaming[&p]);
-    let _semilinear = semilinear.rename(|p| renaming[&p]);
+    let petri = petri.rename(|p| renaming[&p]);
+    let semilinear = semilinear.rename(|p| renaming[&p]);
 
-    // 1. Construct an ISL set for the semilinear set
-    // 2. Complement it
+    // 1. Find the affine constraints for the bad states
+    let constraints = affine_constraints_for_complement(num_vars, semilinear);
+
+    // 2. Decide if petri reaches any bad states
     return false; // TODO: Implement this
 }
