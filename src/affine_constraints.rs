@@ -18,21 +18,24 @@ pub enum ConstraintType {
     NonNegative,
     EqualToZero,
 }
+pub use ConstraintType::*;
 
+#[derive(Debug, Clone)]
 pub struct Constraint {
     /// Linear combination of variables: (coeff, var) pairs
-    affine_formula: Vec<(i32, Var)>,
-    offset: i32,
+    pub affine_formula: Vec<(i32, Var)>,
+    pub offset: i32,
     /// What kind of constraint (inequality or equality)
-    constraint_type: ConstraintType,
+    pub constraint_type: ConstraintType,
 }
 
 /// Variables 0...N-1 are the real variables.
 /// Variables N...N+k-1 are the newly introduced existential variables
+#[derive(Debug, Clone)]
 pub struct Constraints {
-    num_vars: usize,             // N
-    num_existential_vars: usize, // k
+    pub num_vars: usize,             // N
+    pub num_existential_vars: usize, // k
 
     /// A big OR over a bunch of big ANDs of constraints
-    constraints: Vec<Vec<Constraint>>,
+    pub constraints: Vec<Vec<Constraint>>,
 }
