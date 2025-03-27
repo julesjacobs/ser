@@ -21,7 +21,7 @@ use std::path::Path;
 use std::process;
 
 use ns::NS;
-use parser::{ExprHc, parse, parse_program};
+use parser::{parse, parse_program, ExprHc};
 
 fn print_usage() {
     println!("{}", "Usage: ser [options] <filename or directory>".bold());
