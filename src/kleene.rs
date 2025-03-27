@@ -5,7 +5,7 @@
 // - one
 // - zero
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub trait Kleene {
     fn zero() -> Self;
@@ -88,32 +88,40 @@ impl<T> Kleene for Regex<T> {
 // Kleene's algorithm for converting a NFA to a Kleene algebra
 // Takes a start state and computes the Kleene element for going from the start state to any other state
 pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
-    nfa: &[(S, K, S)],
+    nfa_vec: &[(S, K, S)],
     start: S,
 ) -> K {
     // The algorithm works by eliminating all states except the start state
     // The final answer is then the self-loop of the start state
 
-    let mut nfa: Vec<(&S, K, &S)> = nfa
-        .iter()
-        .map(|(from, k, to)| (from, k.clone(), to))
-        .collect();
+    let mut nfa: HashMap<(&S, &S), K> = HashMap::new();
+    for (from, k, to) in nfa_vec.iter() {
+        nfa.entry((from, to))
+            .and_modify(|e| *e = e.clone().plus(k.clone()))
+            .or_insert(k.clone());
+    }
 
     let mut states_todo = nfa
         .iter()
-        .flat_map(|(from, _, to)| vec![*from, *to])
+        .flat_map(|((from, to), _)| vec![*from, *to])
         .collect::<HashSet<_>>();
     states_todo.remove(&start);
 
     while !states_todo.is_empty() {
-        let state = *states_todo.iter().next().unwrap();
+        let state = *states_todo.iter()
+            .min_by_key(|s| {
+                let in_count = nfa.iter().filter(|((_, to), _)| to == *s).count();
+                let out_count = nfa.iter().filter(|((from, _), _)| from == *s).count();
+                in_count * out_count
+            })
+            .unwrap();
         states_todo.remove(&state);
         let mut new_nfa: Vec<(&S, K, &S)> = vec![];
         let mut incoming: Vec<(&S, K, &S)> = vec![];
         let mut outgoing: Vec<(&S, K, &S)> = vec![];
         let mut self_loops: Vec<(&S, K, &S)> = vec![];
 
-        for (from, k, to) in nfa.iter() {
+        for ((from, to), k) in nfa.iter() {
             let edge: (&S, K, &S) = (from, k.clone(), to);
             if from == &state && to == &state {
                 self_loops.push(edge);
@@ -141,10 +149,16 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
                 ));
             }
         }
-        nfa = new_nfa;
+        let mut new_nfa_map: HashMap<(&S, &S), K> = HashMap::new();
+        for (from, k, to) in new_nfa.iter() {
+            new_nfa_map.entry((from, to))
+                .and_modify(|e| *e = e.clone().plus(k.clone()))
+                .or_insert(k.clone());
+        }
+        nfa = new_nfa_map;
     }
     let mut answer = K::zero();
-    for (from, k, to) in nfa.iter() {
+    for ((from, to), k) in nfa.iter() {
         assert!(**from == start);
         assert!(**to == start);
         answer = answer.plus(k.clone());
