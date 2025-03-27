@@ -8,6 +8,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
+use crate::kleene::{nfa_to_kleene, Kleene, Regex};
+
 // Helper function to escape strings for use as node IDs in GraphViz DOT language
 fn escape_for_graphviz_id(s: &str) -> String {
     // Replace any non-alphanumeric characters with underscore
@@ -197,6 +199,16 @@ where
             }
         }
         serialized_automaton
+    }
+
+    pub fn serialized_automaton_regex(&self) -> Regex<String> {
+        let serialized: Vec<(G, Req, Resp, G)> = self.serialized_automaton();
+        let mut nfa: Vec<(&G, Regex<String>, &G)> = serialized
+            .iter()
+            .map(|(g, req, resp, g2)| (g, Regex::Atom(format!("{}/{}", req, resp)), g2))
+            .collect();
+        let k = nfa_to_kleene(&nfa, &self.initial_global);
+        k
     }
 
     /// Serialize the network system to a JSON string

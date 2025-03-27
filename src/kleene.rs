@@ -34,7 +34,7 @@ impl Kleene for bool {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-enum Regex<T> {
+pub enum Regex<T> {
     Atom(T),
     Zero,
     One,
@@ -87,7 +87,7 @@ impl<T> Kleene for Regex<T> {
 
 // Kleene's algorithm for converting a NFA to a Kleene algebra
 // Takes a start state and computes the Kleene element for going from the start state to any other state
-fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
+pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
     nfa: &[(S, K, S)],
     start: S,
 ) -> K {

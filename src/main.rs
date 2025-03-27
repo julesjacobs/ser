@@ -285,6 +285,21 @@ where
         }
     }
 
+    // Output the Regex to semilinear.txt
+    let regex = ns.serialized_automaton_regex();
+    let regex_file = format!("out/{}/semilinear.txt", file_stem);
+    match fs::write(&regex_file, regex.to_string()) {
+        Ok(_) => println!("- {}", regex_file.green()),
+        Err(err) => {
+            eprintln!(
+                "{} Regex in semilinear format: {}",
+                "Failed to save".red().bold(),
+                err
+            );
+            process::exit(1);
+        }
+    }
+
     // Check serializability
     println!("{}", "Checking serializability...".cyan().bold());
     let serializable = ns.is_serializable();
