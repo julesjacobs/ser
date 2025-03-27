@@ -201,14 +201,20 @@ where
         serialized_automaton
     }
 
-    pub fn serialized_automaton_regex(&self) -> Regex<String> {
-        let serialized: Vec<(G, Req, Resp, G)> = self.serialized_automaton();
-        let mut nfa: Vec<(&G, Regex<String>, &G)> = serialized
-            .iter()
-            .map(|(g, req, resp, g2)| (g, Regex::Atom(format!("{}/{}", req, resp)), g2))
+    pub fn serialized_automaton_kleene<K: Kleene + Clone>(
+        &self,
+        atom: impl Fn(Req, Resp) -> K,
+    ) -> K {
+        let nfa: Vec<(G, K, G)> = self
+            .serialized_automaton()
+            .into_iter()
+            .map(|(g, req, resp, g2)| (g, atom(req, resp), g2))
             .collect();
-        let k = nfa_to_kleene(&nfa, &self.initial_global);
-        k
+        nfa_to_kleene(&nfa, self.initial_global.clone())
+    }
+
+    pub fn serialized_automaton_regex(&self) -> Regex<String> {
+        self.serialized_automaton_kleene(|req, resp| Regex::Atom(format!("{req}/{resp}")))
     }
 
     /// Serialize the network system to a JSON string
