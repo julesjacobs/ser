@@ -335,6 +335,91 @@ pub fn run_expr(
                 results.push((ExprResult::Returning(global.get(x)), local, global));
             }
         }
+        Expr::Not(e) => {
+            for (expr_result, local1, global1) in run_expr(exprhc, e, local, global) {
+                match expr_result {
+                    ExprResult::Yielding(e) => {
+                        results.push((
+                            ExprResult::Yielding(exprhc.not(e)),
+                            local1,
+                            global1,
+                        ));
+                    }
+                    ExprResult::Returning(n) => {
+                        let result = if n == 0 { 1 } else { 0 };
+                        results.push((ExprResult::Returning(result), local1, global1));
+                    }
+                }
+            }
+        }
+        Expr::And(e1, e2) => {
+            for (expr_result1, local1, global1) in run_expr(exprhc, e1, local, global) {
+                match expr_result1 {
+                    ExprResult::Yielding(e) => {
+                        results.push((
+                            ExprResult::Yielding(exprhc.and(e, e2.clone())),
+                            local1,
+                            global1,
+                        ));
+                    }
+                    ExprResult::Returning(n1) => {
+                        if n1 == 0 {
+                            // Short-circuit: If first operand is false, result is false
+                            results.push((ExprResult::Returning(0), local1, global1));
+                        } else {
+                            // First operand is true, evaluate second operand
+                            for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1) {
+                                match expr_result2 {
+                                    ExprResult::Yielding(e) => {
+                                        // Second operand yielded
+                                        results.push((ExprResult::Yielding(e), local2, global2));
+                                    }
+                                    ExprResult::Returning(n2) => {
+                                        // Second operand returned, result is n2 != 0
+                                        let result = if n2 == 0 { 0 } else { 1 };
+                                        results.push((ExprResult::Returning(result), local2, global2));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Expr::Or(e1, e2) => {
+            for (expr_result1, local1, global1) in run_expr(exprhc, e1, local, global) {
+                match expr_result1 {
+                    ExprResult::Yielding(e) => {
+                        results.push((
+                            ExprResult::Yielding(exprhc.or(e, e2.clone())),
+                            local1,
+                            global1,
+                        ));
+                    }
+                    ExprResult::Returning(n1) => {
+                        if n1 != 0 {
+                            // Short-circuit: If first operand is true, result is true
+                            results.push((ExprResult::Returning(1), local1, global1));
+                        } else {
+                            // First operand is false, evaluate second operand
+                            for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1) {
+                                match expr_result2 {
+                                    ExprResult::Yielding(e) => {
+                                        // Second operand yielded
+                                        results.push((ExprResult::Yielding(e), local2, global2));
+                                    }
+                                    ExprResult::Returning(n2) => {
+                                        // Second operand returned, result is n2 != 0
+                                        let result = if n2 == 0 { 0 } else { 1 };
+                                        results.push((ExprResult::Returning(result), local2, global2));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     results
 }

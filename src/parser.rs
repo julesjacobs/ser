@@ -10,6 +10,9 @@ pub enum Expr {
     Sequence(Hc<Expr>, Hc<Expr>),
     If(Hc<Expr>, Hc<Expr>, Hc<Expr>),
     While(Hc<Expr>, Hc<Expr>),
+    Not(Hc<Expr>),
+    And(Hc<Expr>, Hc<Expr>),
+    Or(Hc<Expr>, Hc<Expr>),
     Yield,
     Exit,
     Unknown,
@@ -40,6 +43,9 @@ impl fmt::Display for Expr {
                 write!(f, "if({}){{{}}}else{{{}}}", cond, then_branch, else_branch)
             }
             Expr::While(cond, body) => write!(f, "while({}){{ {} }}", cond, body),
+            Expr::Not(expr) => write!(f, "!{}", expr),
+            Expr::And(left, right) => write!(f, "{} && {}", left, right),
+            Expr::Or(left, right) => write!(f, "{} || {}", left, right),
             Expr::Yield => write!(f, "yield"),
             Expr::Exit => write!(f, "exit"),
             Expr::Unknown => write!(f, "?"),
@@ -72,7 +78,7 @@ impl ExprHc {
         }
         self.table.hashcons(Expr::Equal(left, right))
     }
-    
+
     pub fn add(&mut self, left: Hc<Expr>, right: Hc<Expr>) -> Hc<Expr> {
         // If both are constants, return the sum
         if let Expr::Number(n1) = left.as_ref() {
@@ -82,7 +88,7 @@ impl ExprHc {
         }
         self.table.hashcons(Expr::Add(left, right))
     }
-    
+
     pub fn subtract(&mut self, left: Hc<Expr>, right: Hc<Expr>) -> Hc<Expr> {
         // If both are constants, return the difference
         if let Expr::Number(n1) = left.as_ref() {
@@ -91,6 +97,42 @@ impl ExprHc {
             }
         }
         self.table.hashcons(Expr::Subtract(left, right))
+    }
+
+    pub fn not(&mut self, expr: Hc<Expr>) -> Hc<Expr> {
+        // If expr is a constant, return 1 or 0
+        if let Expr::Number(n) = expr.as_ref() {
+            return self.number(if *n == 0 { 1 } else { 0 });
+        }
+        self.table.hashcons(Expr::Not(expr))
+    }
+
+    pub fn and(&mut self, left: Hc<Expr>, right: Hc<Expr>) -> Hc<Expr> {
+        // Short-circuit: if left is 0, return 0 without evaluating right
+        if let Expr::Number(n) = left.as_ref() {
+            if *n == 0 {
+                return self.number(0);
+            }
+            // If left is non-zero constant, return right
+            // This preserves any effects in right
+            return right;
+        }
+
+        self.table.hashcons(Expr::And(left, right))
+    }
+
+    pub fn or(&mut self, left: Hc<Expr>, right: Hc<Expr>) -> Hc<Expr> {
+        // Short-circuit: if left is non-zero, return 1 without evaluating right
+        if let Expr::Number(n) = left.as_ref() {
+            if *n != 0 {
+                return self.number(1);
+            }
+            // If left is 0, return right
+            // This preserves any effects in right
+            return right;
+        }
+
+        self.table.hashcons(Expr::Or(left, right))
     }
 
     pub fn sequence(&mut self, first: Hc<Expr>, second: Hc<Expr>) -> Hc<Expr> {
@@ -171,6 +213,9 @@ pub enum Token {
     Exit,      // exit
     Question,  // ?
     Request,   // request
+    Not,       // !
+    And,       // &&
+    Or,        // ||
     LParen,    // (
     RParen,    // )
     LBrace,    // {
@@ -275,7 +320,29 @@ impl Parser {
             }
         }
 
-        self.equality(table)
+        self.logical_or(table)
+    }
+
+    fn logical_or(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
+        let mut expr = self.logical_and(table)?;
+
+        while self.match_token(&[Token::Or]) {
+            let right = self.logical_and(table)?;
+            expr = table.or(expr, right);
+        }
+
+        Ok(expr)
+    }
+
+    fn logical_and(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
+        let mut expr = self.equality(table)?;
+
+        while self.match_token(&[Token::And]) {
+            let right = self.equality(table)?;
+            expr = table.and(expr, right);
+        }
+
+        Ok(expr)
     }
 
     fn equality(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
@@ -288,23 +355,32 @@ impl Parser {
 
         Ok(expr)
     }
-    
+
     fn term(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
-        let mut expr = self.primary(table)?;
-        
+        let mut expr = self.unary(table)?;
+
         loop {
             if self.match_token(&[Token::Plus]) {
-                let right = self.primary(table)?;
+                let right = self.unary(table)?;
                 expr = table.add(expr, right);
             } else if self.match_token(&[Token::Minus]) {
-                let right = self.primary(table)?;
+                let right = self.unary(table)?;
                 expr = table.subtract(expr, right);
             } else {
                 break;
             }
         }
-        
+
         Ok(expr)
+    }
+
+    fn unary(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
+        if self.match_token(&[Token::Not]) {
+            let expr = self.unary(table)?;
+            return Ok(table.not(expr));
+        }
+
+        self.primary(table)
     }
 
     fn primary(&mut self, table: &mut ExprHc) -> Result<Hc<Expr>, String> {
@@ -495,6 +571,28 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, String> {
                 chars.next();
                 tokens.push(Token::Minus);
             }
+            '!' => {
+                chars.next();
+                tokens.push(Token::Not);
+            }
+            '&' => {
+                chars.next();
+                if let Some(&'&') = chars.peek() {
+                    chars.next();
+                    tokens.push(Token::And);
+                } else {
+                    return Err("Expected '&' after '&'".to_string());
+                }
+            }
+            '|' => {
+                chars.next();
+                if let Some(&'|') = chars.peek() {
+                    chars.next();
+                    tokens.push(Token::Or);
+                } else {
+                    return Err("Expected '|' after '|'".to_string());
+                }
+            }
             ';' => {
                 chars.next();
                 tokens.push(Token::Semicolon);
@@ -561,7 +659,7 @@ mod tests {
             ]
         );
     }
-    
+
     #[test]
     fn test_tokenize_add() {
         let tokens = tokenize("x + y").unwrap();
@@ -575,7 +673,7 @@ mod tests {
             ]
         );
     }
-    
+
     #[test]
     fn test_tokenize_subtract() {
         let tokens = tokenize("x - y").unwrap();
@@ -589,7 +687,44 @@ mod tests {
             ]
         );
     }
-    
+
+    #[test]
+    fn test_tokenize_not() {
+        let tokens = tokenize("!x").unwrap();
+        assert_eq!(
+            tokens,
+            vec![Token::Not, Token::Identifier("x".to_string()), Token::Eof]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_and() {
+        let tokens = tokenize("x && y").unwrap();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Identifier("x".to_string()),
+                Token::And,
+                Token::Identifier("y".to_string()),
+                Token::Eof
+            ]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_or() {
+        let tokens = tokenize("x || y").unwrap();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Identifier("x".to_string()),
+                Token::Or,
+                Token::Identifier("y".to_string()),
+                Token::Eof
+            ]
+        );
+    }
+
     #[test]
     fn test_tokenize_with_comments() {
         let source = "x := 10; // This is a comment\ny := 20; // Another comment";
@@ -609,7 +744,7 @@ mod tests {
             ]
         );
     }
-    
+
     #[test]
     fn test_tokenize_comment_at_end() {
         let source = "x := 10; // This is a comment at the end";
@@ -625,7 +760,7 @@ mod tests {
             ]
         );
     }
-    
+
     #[test]
     fn test_tokenize_line_with_only_comment() {
         let source = "// This line has only a comment\nx := 10;";
@@ -842,7 +977,7 @@ mod tests {
         let expected = table.variable("variable".to_string());
         assert_eq!(expr, expected);
     }
-    
+
     #[test]
     fn test_parse_add() {
         let mut table = ExprHc::new();
@@ -852,7 +987,7 @@ mod tests {
         let expected = table.add(five, three);
         assert_eq!(expr, expected);
     }
-    
+
     #[test]
     fn test_parse_add_constant_folding() {
         let mut table = ExprHc::new();
@@ -860,7 +995,7 @@ mod tests {
         let expected = table.number(8);
         assert_eq!(expr, expected);
     }
-    
+
     #[test]
     fn test_parse_subtract() {
         let mut table = ExprHc::new();
@@ -870,7 +1005,7 @@ mod tests {
         let expected = table.subtract(ten, four);
         assert_eq!(expr, expected);
     }
-    
+
     #[test]
     fn test_parse_subtract_constant_folding() {
         let mut table = ExprHc::new();
@@ -878,7 +1013,7 @@ mod tests {
         let expected = table.number(6);
         assert_eq!(expr, expected);
     }
-    
+
     #[test]
     fn test_parse_mixed_arithmetic() {
         let mut table = ExprHc::new();
@@ -888,6 +1023,86 @@ mod tests {
         let y = table.variable("y".to_string());
         let add = table.add(x, three);
         let expected = table.subtract(add, y);
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn test_parse_not() {
+        let mut table = ExprHc::new();
+        let expr = parse("!x", &mut table).unwrap();
+        let x = table.variable("x".to_string());
+        let expected = table.not(x);
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn test_parse_and() {
+        let mut table = ExprHc::new();
+        let expr = parse("x && y", &mut table).unwrap();
+        let x = table.variable("x".to_string());
+        let y = table.variable("y".to_string());
+        let expected = table.and(x, y);
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn test_parse_or() {
+        let mut table = ExprHc::new();
+        let expr = parse("x || y", &mut table).unwrap();
+        let x = table.variable("x".to_string());
+        let y = table.variable("y".to_string());
+        let expected = table.or(x, y);
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn test_parse_complex_boolean() {
+        let mut table = ExprHc::new();
+        let expr = parse("x && (y || !z)", &mut table).unwrap();
+        let x = table.variable("x".to_string());
+        let y = table.variable("y".to_string());
+        let z = table.variable("z".to_string());
+
+        let not_z = table.not(z);
+        let y_or_not_z = table.or(y, not_z);
+        let expected = table.and(x, y_or_not_z);
+
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn test_not_constant_folding() {
+        let mut table = ExprHc::new();
+        let expr = parse("!0", &mut table).unwrap();
+        let expected = table.number(1);
+        assert_eq!(expr, expected);
+
+        let expr = parse("!1", &mut table).unwrap();
+        let expected = table.number(0);
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn test_and_constant_folding() {
+        let mut table = ExprHc::new();
+        let expr = parse("0 && 1", &mut table).unwrap();
+        let expected = table.number(0);
+        assert_eq!(expr, expected);
+
+        let expr = parse("1 && 1", &mut table).unwrap();
+        let expected = table.number(1);
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn test_or_constant_folding() {
+        let mut table = ExprHc::new();
+        let expr = parse("0 || 0", &mut table).unwrap();
+        let expected = table.number(0);
+        assert_eq!(expr, expected);
+
+        let expr = parse("1 || 0", &mut table).unwrap();
+        let expected = table.number(1);
         assert_eq!(expr, expected);
     }
 
