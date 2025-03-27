@@ -1,3 +1,5 @@
+use either::Either;
+
 use crate::graphviz;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
@@ -246,6 +248,22 @@ impl<P> Petri<P> {
                 })
                 .collect(),
         }
+    }
+}
+
+impl<P : Clone + PartialEq + Eq + Hash + std::fmt::Display> Petri<P> {
+    /// Create a Petri net with extra places and transitions with empty input and only that place as output
+    pub fn add_existential_places<Q : Clone + PartialEq + Eq + Hash + std::fmt::Display>(self, places: Vec<Q>) -> Petri<Either<P, Q>> {
+        let mut new_petri: Petri<Either<P,Q>> = Petri::new(self.initial_marking.into_iter().map(Either::Left).collect());
+        // Add old transitions
+        for (input, output) in self.transitions {
+            new_petri.add_transition(input.into_iter().map(Either::Left).collect(), output.into_iter().map(Either::Left).collect());
+        }
+        // Add existential transitions
+        for place in places {
+            new_petri.add_transition(vec![], vec![Either::Right(place)]);
+        }
+        new_petri
     }
 }
 
