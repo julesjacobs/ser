@@ -68,20 +68,20 @@ pub fn save_graphviz(
                         }
                     } else {
                         // Command failed with non-zero exit code
-                        return Err(format!(
-                            "GraphViz dot command failed with exit code {:?}: {}",
+                        println!(
+                            "Warning: GraphViz dot command failed with exit code {:?}: {}",
                             output.status.code(),
                             String::from_utf8_lossy(&output.stderr)
-                        ));
+                        );
                     }
                 }
                 Err(e) => {
-                    return Err(format!(
-                        "Failed to generate visualization PNG: {}. \
+                    println!(
+                        "Warning: Failed to generate visualization PNG: {}. \
                         Is GraphViz installed? Try installing with 'brew install graphviz' on macOS or \
                         'apt-get install graphviz' on Linux.",
                         e
-                    ));
+                    );
                 }
             }
 
