@@ -339,11 +339,7 @@ pub fn run_expr(
             for (expr_result, local1, global1) in run_expr(exprhc, e, local, global) {
                 match expr_result {
                     ExprResult::Yielding(e) => {
-                        results.push((
-                            ExprResult::Yielding(exprhc.not(e)),
-                            local1,
-                            global1,
-                        ));
+                        results.push((ExprResult::Yielding(exprhc.not(e)), local1, global1));
                     }
                     ExprResult::Returning(n) => {
                         let result = if n == 0 { 1 } else { 0 };
@@ -368,7 +364,9 @@ pub fn run_expr(
                             results.push((ExprResult::Returning(0), local1, global1));
                         } else {
                             // First operand is true, evaluate second operand
-                            for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1) {
+                            for (expr_result2, local2, global2) in
+                                run_expr(exprhc, e2, local1, global1)
+                            {
                                 match expr_result2 {
                                     ExprResult::Yielding(e) => {
                                         // Second operand yielded
@@ -377,7 +375,11 @@ pub fn run_expr(
                                     ExprResult::Returning(n2) => {
                                         // Second operand returned, result is n2 != 0
                                         let result = if n2 == 0 { 0 } else { 1 };
-                                        results.push((ExprResult::Returning(result), local2, global2));
+                                        results.push((
+                                            ExprResult::Returning(result),
+                                            local2,
+                                            global2,
+                                        ));
                                     }
                                 }
                             }
@@ -402,7 +404,9 @@ pub fn run_expr(
                             results.push((ExprResult::Returning(1), local1, global1));
                         } else {
                             // First operand is false, evaluate second operand
-                            for (expr_result2, local2, global2) in run_expr(exprhc, e2, local1, global1) {
+                            for (expr_result2, local2, global2) in
+                                run_expr(exprhc, e2, local1, global1)
+                            {
                                 match expr_result2 {
                                     ExprResult::Yielding(e) => {
                                         // Second operand yielded
@@ -411,7 +415,11 @@ pub fn run_expr(
                                     ExprResult::Returning(n2) => {
                                         // Second operand returned, result is n2 != 0
                                         let result = if n2 == 0 { 0 } else { 1 };
-                                        results.push((ExprResult::Returning(result), local2, global2));
+                                        results.push((
+                                            ExprResult::Returning(result),
+                                            local2,
+                                            global2,
+                                        ));
                                     }
                                 }
                             }

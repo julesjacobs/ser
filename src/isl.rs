@@ -9,12 +9,15 @@ use crate::semilinear::*;
 
 use std::cell::Cell;
 use std::collections::HashMap;
-use std::ffi::{c_void, CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::fmt::Display;
 use std::ptr;
 
 /// Give the affine constraints corresponding to the complement of this semilinear set.
-pub fn affine_constraints_for_complement(num_vars: usize, sset: &SemilinearSet<Var>) -> Constraints {
+pub fn affine_constraints_for_complement(
+    num_vars: usize,
+    sset: &SemilinearSet<Var>,
+) -> Constraints {
     unsafe {
         let all_vars: Vec<Var> = (0..num_vars).map(|i| Var(i)).collect();
         let isl_set = complement_semilinear_set(sset, &all_vars);
