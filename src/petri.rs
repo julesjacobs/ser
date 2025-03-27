@@ -26,7 +26,7 @@ pub struct Petri<Place> {
 
 impl<Place> Petri<Place>
 where
-    Place: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+    Place: Clone + PartialEq + Eq + Hash,
 {
     /// Create a new Petri net with initial marking
     pub fn new(initial_marking: Vec<Place>) -> Self {
@@ -72,7 +72,12 @@ where
     pub fn get_transitions(&self) -> Vec<(Vec<Place>, Vec<Place>)> {
         self.transitions.clone()
     }
+}
 
+impl<Place> Petri<Place>
+where
+    Place: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+{
     /// Generate Graphviz DOT format for visualizing the Petri net
     pub fn to_graphviz(&self) -> String {
         let mut dot = String::from("digraph PetriNet {\n");
@@ -251,7 +256,7 @@ impl<P> Petri<P> {
     }
 }
 
-impl<P : Clone + PartialEq + Eq + Hash + std::fmt::Display> Petri<P> {
+impl<P : Clone + PartialEq + Eq + Hash> Petri<P> {
     /// Create a Petri net with extra places and transitions with empty input and only that place as output
     pub fn add_existential_places<Q : Clone + PartialEq + Eq + Hash + std::fmt::Display>(self, places: Vec<Q>) -> Petri<Either<P, Q>> {
         let mut new_petri: Petri<Either<P,Q>> = Petri::new(self.initial_marking.into_iter().map(Either::Left).collect());

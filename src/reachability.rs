@@ -29,11 +29,11 @@ where
         .enumerate()
         .map(|(i, v)| (v, Var(i)))
         .collect();
-    let petri = petri.rename(|p| renaming[&p]);
+    let _petri = petri.rename(|p| renaming[&p]);
     let semilinear = semilinear.rename(|p| renaming[&p]);
 
     // 1. Find the affine constraints for the bad states
-    let constraints = affine_constraints_for_complement(num_vars, &semilinear);
+    let _constraints = affine_constraints_for_complement(num_vars, &semilinear);
 
     // 2. Decide if petri reaches any bad states
     return false; // TODO: Implement this
