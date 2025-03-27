@@ -107,12 +107,29 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
         .collect::<HashSet<_>>();
     states_todo.remove(&start);
 
+    // Insert epsilon edges from all states_todo to start
+    // JULES WARNING TO MARK: Two bugs cancel out here
+    for state in states_todo.iter() {
+        nfa.entry((state, &start))
+            .and_modify(|e| *e = e.clone().plus(K::one()))
+            .or_insert(K::one());
+    }
+
     while !states_todo.is_empty() {
         let state = *states_todo.iter()
             .min_by_key(|s| {
-                let in_count = nfa.iter().filter(|((_, to), _)| to == *s).count();
-                let out_count = nfa.iter().filter(|((from, _), _)| from == *s).count();
-                in_count * out_count
+                let mut count = 0;
+                for ((_, to), _) in nfa.iter() {
+                    if to == *s && !nfa.contains_key(&(**s, *to)) {
+                        count += 1;
+                    }
+                }
+                for ((from, _), _) in nfa.iter() {
+                    if from == *s && !nfa.contains_key(&(*from, **s)) {
+                        count += 1;
+                    }
+                }
+                count
             })
             .unwrap();
         states_todo.remove(&state);
