@@ -1,5 +1,6 @@
 use crate::affine_constraints::*;
 use crate::petri::*;
+use crate::isl::affine_constraints_for_complement;
 use crate::semilinear::*;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
@@ -32,7 +33,7 @@ where
     let semilinear = semilinear.rename(|p| renaming[&p]);
 
     // 1. Find the affine constraints for the bad states
-    let constraints = affine_constraints_for_complement(num_vars, semilinear);
+    let constraints = affine_constraints_for_complement(num_vars, &semilinear);
 
     // 2. Decide if petri reaches any bad states
     return false; // TODO: Implement this
