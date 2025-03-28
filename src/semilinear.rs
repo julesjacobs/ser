@@ -500,7 +500,7 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
     fn plus(mut self, mut other: Self) -> Self {
         // Clone components of both and combine
         self.components.append(&mut other.components);
-        self
+        SemilinearSet::new(self.components)
     }
 
     // Sequential composition (a.k.a. Minkowski sum) of two semilinear sets.
