@@ -158,11 +158,10 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Display>(
     keys: &[K],
 ) -> *mut isl_set {
     unsafe {
-        let sset = semilinear_set_to_isl_set(semilinear_set, keys);
-        dbg!(to_str(sset));
-        let complement = isl_set_subtract(universe_set(keys), sset);
-        dbg!(to_str(complement));
-        complement
+        isl_set_subtract(
+            universe_set(keys),
+            dbg!(semilinear_set_to_isl_set(semilinear_set, keys)),
+        )
     }
 }
 
@@ -294,11 +293,7 @@ pub unsafe fn isl_set_to_affine_constraints(num_vars: usize, set: *mut isl_set) 
         constraints.push(cs);
     });
 
-    Constraints {
-        num_vars,
-        num_existential_vars: 2 * total_exists,
-        constraints,
-    }
+    Constraints::new(num_vars, 2 * total_exists, constraints)
 }
 
 #[test]

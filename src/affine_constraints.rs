@@ -22,11 +22,18 @@ pub use ConstraintType::*;
 
 #[derive(Debug, Clone)]
 pub struct Constraint {
+    // Represents  \sum_i a_i x_i + b >= 0 or \sum_i a_i x_i + b = 0 where a_i are the coefficients and b is the offset
     /// Linear combination of variables: (coeff, var) pairs
     pub affine_formula: Vec<(i32, Var)>,
     pub offset: i32,
     /// What kind of constraint (inequality or equality)
     pub constraint_type: ConstraintType,
+}
+
+impl Constraint {
+    pub fn is_redundant(&self) -> bool {
+        self.affine_formula.iter().all(|(coeff, _)| *coeff > 0) && self.offset >= 0 && self.constraint_type == NonNegative
+    }
 }
 
 /// Variables 0...N-1 are the real variables.
@@ -40,6 +47,20 @@ pub struct Constraints {
 
     /// A big OR over a bunch of big ANDs of constraints
     pub constraints: Vec<Vec<Constraint>>,
+}
+
+impl Constraints {
+    pub fn new(num_vars: usize, num_existential_vars: usize, mut constraints: Vec<Vec<Constraint>>) -> Self {
+        // Eliminate redundant constraints of the form (positive linear combination) >= 0
+        for constraint_vec in constraints.iter_mut() {
+            constraint_vec.retain(|constraint| !constraint.is_redundant());
+        }
+        Self {
+            num_vars,
+            num_existential_vars,
+            constraints,
+        }
+    }
 }
 
 // Converts a full Constraints structure to XML with proper nesting
