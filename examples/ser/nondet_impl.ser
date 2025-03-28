@@ -1,0 +1,9 @@
+// Implementing nondeterminism using globals
+
+request randomize_global {
+    X := 1 - X
+}
+
+request read {
+    y := X; yield; y + X
+}
