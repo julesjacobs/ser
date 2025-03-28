@@ -16,14 +16,14 @@ use colored::*;
 use parser::Program;
 use parser::Request;
 use std::env;
+use std::fmt::Display;
 use std::fs;
+use std::hash::Hash;
 use std::path::Path;
 use std::process;
-use std::hash::Hash;
-use std::fmt::Display;
 
 use ns::NS;
-use parser::{parse, parse_program, ExprHc};
+use parser::{ExprHc, parse, parse_program};
 
 fn print_usage() {
     println!("{}", "Usage: ser [options] <filename or directory>".bold());
@@ -290,7 +290,13 @@ where
     // Output the Regex to semilinear.txt
     let regex = ns.serialized_automaton_regex();
     let regex_file = format!("out/{}/semilinear.txt", file_stem);
-    match fs::write(&regex_file, regex.to_string()) {
+    let mut regex_content = String::new();
+    regex_content.push_str(&format!("Regex: {}\n", regex));
+    regex_content.push_str(&format!(
+        "Semilinear:\n{}\n",
+        ns.serialized_automaton_semilinear()
+    ));
+    match fs::write(&regex_file, regex_content) {
         Ok(_) => println!("- {}", regex_file.green()),
         Err(err) => {
             eprintln!(

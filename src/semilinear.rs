@@ -14,6 +14,27 @@ pub struct SparseVector<K: Eq + Hash + Clone + Ord> {
     pub values: HashMap<K, usize>,
 }
 
+/// Display a sparse vector as a string of the form "ab^3cde^3"
+impl<K: Eq + Hash + Clone + Ord + std::fmt::Display> std::fmt::Display for SparseVector<K> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut entries: Vec<_> = self.values.iter().collect();
+        entries.sort_by(|a, b| a.0.cmp(b.0));
+
+        let formatted_entries: Vec<String> = entries
+            .into_iter()
+            .map(|(key, value)| {
+                if *value == 1 {
+                    format!("{}", key)
+                } else {
+                    format!("{}^{}", key, value)
+                }
+            })
+            .collect();
+        write!(f, "{}", formatted_entries.join(" "))?;
+        Ok(())
+    }
+}
+
 // Manual implementation of Hash for SparseVector by converting the HashMap to a sorted Vec
 impl<K: Eq + Hash + Clone + Ord> Hash for SparseVector<K> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -81,6 +102,11 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
         }
         SparseVector { values: new_map }
     }
+
+    /// Check if the vector is zero
+    pub fn is_zero(&self) -> bool {
+        self.values.is_empty()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -107,6 +133,24 @@ impl<K: Eq + Hash + Clone + Ord> LinearSet<K> {
     }
 }
 
+/// Display a linear set as a string of the form "base(period1 + period2 + ...)*"
+impl<K: Eq + Hash + Clone + Ord + std::fmt::Display> std::fmt::Display for LinearSet<K> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.base)?;
+        if !self.periods.is_empty() {
+            write!(f, " (")?;
+            for (i, period) in self.periods.iter().enumerate() {
+                if i > 0 {
+                    write!(f, " + ")?;
+                }
+                write!(f, "{}", period)?;
+            }
+            write!(f, ")*")?;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SemilinearSet<K: Eq + Hash + Clone + Ord> {
     pub components: Vec<LinearSet<K>>, // finite list of linear sets whose union defines the set
@@ -118,6 +162,21 @@ impl<K: Eq + Hash + Clone + Ord> PartialEq for SemilinearSet<K> {
         let self_components: HashSet<_> = self.components.iter().cloned().collect();
         let other_components: HashSet<_> = other.components.iter().cloned().collect();
         self_components == other_components
+    }
+}
+
+/// Display a semilinear set as a string of the form "component1 + component2 + ..."
+impl<K: Eq + Hash + Clone + Ord + std::fmt::Display> std::fmt::Display for SemilinearSet<K> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.components
+                .iter()
+                .map(|c| c.to_string())
+                .collect::<Vec<_>>()
+                .join(" + \n")
+        )
     }
 }
 
@@ -238,8 +297,55 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
     fn star(self) -> Self {
         let mut result_components = Vec::new();
 
+        // We can add the bases without periods, and the periods of components with zero base as extra periods to all components of the starred result
+        let mut extra_periods = HashSet::new();
+
+        let mut components_with_both = self.components.clone();
+
+        loop {
+            // We remove periods that appear in all components_with_both and add them to extra_periods
+            for comp in &components_with_both {
+                for p in &comp.periods {
+                    // We check if the period is in all components_with_both
+                    if components_with_both.iter().all(|c| c.periods.contains(p)) {
+                        extra_periods.insert(p.clone());
+                    }
+                }
+            }
+            for p in &extra_periods {
+                // We remove the period from all components_with_both
+                components_with_both.iter_mut().for_each(|c| {
+                    if let Some(index) = c.periods.iter().position(|x| x == p) {
+                        c.periods.remove(index);
+                    }
+                });
+            }
+
+            // We separate self.components into four parts:
+            // 0. Components with no periods and non-zero base (this can be discarded)
+            // 1. Components with no periods
+            // 2. Components with zero base
+            // 3. Components with both periods and non-zero base
+            let mut new_components = Vec::new();
+            for comp in &components_with_both {
+                if comp.periods.is_empty() && !comp.base.is_zero() {
+                    extra_periods.insert(comp.base.clone());
+                } else if comp.base.is_zero() {
+                    for p in &comp.periods {
+                        extra_periods.insert(p.clone());
+                    }
+                } else {
+                    new_components.push(comp.clone());
+                }
+            }
+            if new_components.len() == components_with_both.len() {
+                break;
+            }
+            components_with_both = new_components;
+        }
+
         // We use bit masks to iterate over all non-empty subsets of components
-        let n = self.components.len();
+        let n = components_with_both.len();
         // assert that the size is not too large
         debug_assert!(
             n <= 32,
@@ -275,6 +381,14 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
                 periods: subset_periods,
             });
         }
+
+        // Add the extra periods to all the components
+        for comp in &mut result_components {
+            for p in &extra_periods {
+                comp.periods.push(p.clone());
+            }
+        }
+
         SemilinearSet::new(result_components)
     }
 }

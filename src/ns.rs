@@ -7,11 +7,11 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::hash::Hash;
 use std::fmt::Display;
+use std::hash::Hash;
 
+use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
-use crate::kleene::{nfa_to_kleene, Kleene, Regex};
 
 // Helper function to escape strings for use as node IDs in GraphViz DOT language
 fn escape_for_graphviz_id(s: &str) -> String {
@@ -218,6 +218,12 @@ where
 
     pub fn serialized_automaton_regex(&self) -> Regex<String> {
         self.serialized_automaton_kleene(|req, resp| Regex::Atom(format!("{req}/{resp}")))
+    }
+
+    pub fn serialized_automaton_semilinear(&self) -> SemilinearSet<String> {
+        self.serialized_automaton_kleene(|req, resp| {
+            SemilinearSet::singleton(SparseVector::unit(format!("{req}/{resp}")))
+        })
     }
 
     /// Serialize the network system to a JSON string

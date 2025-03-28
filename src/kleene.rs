@@ -94,38 +94,42 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
     // The algorithm works by eliminating all states except the start state
     // The final answer is then the self-loop of the start state
 
-    let mut nfa: HashMap<(&S, &S), K> = HashMap::new();
+    let mut nfa: HashMap<(Option<&S>, Option<&S>), K> = HashMap::new();
     for (from, k, to) in nfa_vec.iter() {
-        nfa.entry((from, to))
+        nfa.entry((Some(from), Some(to)))
             .and_modify(|e| *e = e.clone().plus(k.clone()))
             .or_insert(k.clone());
     }
 
-    let mut states_todo = nfa
-        .iter()
-        .flat_map(|((from, to), _)| vec![*from, *to])
-        .collect::<HashSet<_>>();
-    states_todo.remove(&start);
+    // Add epsilon edge from None to start
+    nfa.entry((None, Some(&start)))
+        .and_modify(|e| *e = e.clone().plus(K::one()))
+        .or_insert(K::one());
 
-    // Insert epsilon edges from all states_todo to start
-    // JULES WARNING TO MARK: Two bugs cancel out here
+    let mut states_todo = nfa_vec
+        .iter()
+        .flat_map(|(from, _, to)| vec![from, to])
+        .collect::<HashSet<_>>();
+
+    // Insert epsilon edges from all states_todo to None
     for state in states_todo.iter() {
-        nfa.entry((state, &start))
+        nfa.entry((Some(state), None))
             .and_modify(|e| *e = e.clone().plus(K::one()))
             .or_insert(K::one());
     }
 
     while !states_todo.is_empty() {
-        let state = *states_todo.iter()
+        let state = *states_todo
+            .iter()
             .min_by_key(|s| {
                 let mut count = 0;
                 for ((_, to), _) in nfa.iter() {
-                    if to == *s && !nfa.contains_key(&(**s, *to)) {
+                    if to == &Some(**s) && !nfa.contains_key(&(Some(s), *to)) {
                         count += 1;
                     }
                 }
                 for ((from, _), _) in nfa.iter() {
-                    if from == *s && !nfa.contains_key(&(*from, **s)) {
+                    if from == &Some(**s) && !nfa.contains_key(&(*from, Some(s))) {
                         count += 1;
                     }
                 }
@@ -133,18 +137,18 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
             })
             .unwrap();
         states_todo.remove(&state);
-        let mut new_nfa: Vec<(&S, K, &S)> = vec![];
-        let mut incoming: Vec<(&S, K, &S)> = vec![];
-        let mut outgoing: Vec<(&S, K, &S)> = vec![];
-        let mut self_loops: Vec<(&S, K, &S)> = vec![];
+        let mut new_nfa: Vec<(Option<&S>, Option<&S>, K)> = vec![];
+        let mut incoming: Vec<(Option<&S>, Option<&S>, K)> = vec![];
+        let mut outgoing: Vec<(Option<&S>, Option<&S>, K)> = vec![];
+        let mut self_loops: Vec<(Option<&S>, Option<&S>, K)> = vec![];
 
         for ((from, to), k) in nfa.iter() {
-            let edge: (&S, K, &S) = (from, k.clone(), to);
-            if from == &state && to == &state {
+            let edge: (Option<&S>, Option<&S>, K) = (*from, *to, k.clone());
+            if from == &Some(state) && to == &Some(state) {
                 self_loops.push(edge);
-            } else if from == &state {
+            } else if from == &Some(state) {
                 outgoing.push(edge);
-            } else if to == &state {
+            } else if to == &Some(state) {
                 incoming.push(edge);
             } else {
                 new_nfa.push(edge);
@@ -153,22 +157,23 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
         // Add up the self loops
         let self_loop = self_loops
             .iter()
-            .map(|(_, k, _)| k)
+            .map(|(_, _, k)| k)
             .fold(K::zero(), |acc, k| acc.plus(k.clone()))
             .star();
         // Insert all the shortcut edges into the new NFA
-        for (from, k1, _) in incoming.iter() {
-            for (_, k2, to) in outgoing.iter() {
+        for (from, _, k1) in incoming.iter() {
+            for (_, to, k2) in outgoing.iter() {
                 new_nfa.push((
                     *from,
-                    k1.clone().times(self_loop.clone().times(k2.clone())),
                     *to,
+                    k1.clone().times(self_loop.clone().times(k2.clone())),
                 ));
             }
         }
-        let mut new_nfa_map: HashMap<(&S, &S), K> = HashMap::new();
-        for (from, k, to) in new_nfa.iter() {
-            new_nfa_map.entry((from, to))
+        let mut new_nfa_map: HashMap<(Option<&S>, Option<&S>), K> = HashMap::new();
+        for (from, to, k) in new_nfa.iter() {
+            new_nfa_map
+                .entry((*from, *to))
                 .and_modify(|e| *e = e.clone().plus(k.clone()))
                 .or_insert(k.clone());
         }
@@ -176,11 +181,11 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
     }
     let mut answer = K::zero();
     for ((from, to), k) in nfa.iter() {
-        assert!(**from == start);
-        assert!(**to == start);
+        assert!(from == &None);
+        assert!(to == &None);
         answer = answer.plus(k.clone());
     }
-    answer.star()
+    answer
 }
 
 #[cfg(test)]
