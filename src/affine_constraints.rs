@@ -105,18 +105,18 @@ pub fn single_constraint_to_xml(constraint: &Constraint) -> String {
     // Build the affine expression
     if constraint.affine_formula.len() == 1 && constraint.affine_formula[0].0 == 1 {
         xml.push_str(&format!("  <tokens-count><place>P{}</place></tokens-count>\n",
-                              constraint.affine_formula[0].1.0 + 1));
+                              constraint.affine_formula[0].1.0));
     } else {
         xml.push_str("  <integer-add>\n");
         for (coeff, var) in &constraint.affine_formula {
             if *coeff == 1 {
                 xml.push_str(&format!("    <tokens-count><place>P{}</place></tokens-count>\n",
-                                      var.0 + 1));
+                                      var.0));
             } else {
                 xml.push_str("    <integer-mul>\n");
                 xml.push_str(&format!("      <integer-constant>{}</integer-constant>\n", coeff));
                 xml.push_str(&format!("      <tokens-count><place>P{}</place></tokens-count>\n",
-                                      var.0 + 1));
+                                      var.0));
                 xml.push_str("    </integer-mul>\n");
             }
         }
@@ -137,20 +137,20 @@ pub fn single_constraint_to_xml(constraint: &Constraint) -> String {
 #[test]
 pub fn test_to_xml_1() {
     // Create example constraints matching the XML example
-    // (2P1 + P2 ≥ 4) OR (P1 = P2)
+    // (2P0 + P1 ≥ 4) OR (P0 = P1)
     let constraints = Constraints {
-        num_vars: 2,             // P1 (v0) and P2 (v1)
+        num_vars: 2,           // P0 (v0) and P1 (v1)
         num_existential_vars: 0,
         constraints: vec![
-            // First OR clause: 2P1 + P2 ≥ 4
+            // First OR clause: 2P0 + P1 ≥ 4
             vec![
                 Constraint {
                     affine_formula: vec![(2, Var(0)), (1, Var(1))],
-                    offset: -4,  // 2P1 + P2 - 4 ≥ 0
+                    offset: -4,  // 2P0 + P1 - 4 ≥ 0
                     constraint_type: NonNegative,
                 }
             ],
-            // Second OR clause: P1 = P2
+            // Second OR clause: P0 = P1
             vec![
                 Constraint {
                     affine_formula: vec![(1, Var(0)), (-1, Var(1))],
@@ -161,15 +161,15 @@ pub fn test_to_xml_1() {
         ],
     };
 
-    let xml = constraints_to_xml(&constraints, "test-1");
+    let xml = constraints_to_xml(&constraints, "test-1-true");
     println!("{}", xml);
 
     // Verify the output contains expected XML fragments
     assert!(xml.contains("<disjunction>"));
     assert!(xml.contains("<integer-ge>"));
     assert!(xml.contains("<integer-eq>"));
+    assert!(xml.contains("<place>P0</place>"));
     assert!(xml.contains("<place>P1</place>"));
-    assert!(xml.contains("<place>P2</place>"));
     assert!(xml.contains("<integer-constant>2</integer-constant>"));
     assert!(xml.contains("<integer-constant>4</integer-constant>"));
 }
@@ -178,18 +178,18 @@ pub fn test_to_xml_1() {
 #[test]
 pub fn test_to_xml_2() {
     // Create example constraints matching the XML example
-    // (2P1 + P2 ≥ 4) AND (P1 = P2)
+    // (2P0 + P1 ≥ 4) AND (P0 = P1)
     let constraints = Constraints {
         num_vars: 2,             // P1 (v0) and P2 (v1)
         num_existential_vars: 0,
         constraints: vec![
             vec![
-                Constraint { //  2P1 + P2 ≥ 4
+                Constraint { //  2P0 + P1 ≥ 4
                     affine_formula: vec![(2, Var(0)), (1, Var(1))],
-                    offset: -4,  // 2P1 + P2 - 4 ≥ 0
+                    offset: -4,  // 2P0 + P1 - 4 ≥ 0
                     constraint_type: NonNegative,
                 },
-                Constraint { // P1 = P2
+                Constraint { // P0 = P1
                     affine_formula: vec![(1, Var(0)), (-1, Var(1))],
                     offset: 0,
                     constraint_type: EqualToZero,
@@ -198,15 +198,15 @@ pub fn test_to_xml_2() {
         ],
     };
 
-    let xml = constraints_to_xml(&constraints, "test-2");
+    let xml = constraints_to_xml(&constraints, "test-2-false");
     println!("{}", xml);
 
     // Verify the output contains expected XML fragments
     assert!(xml.contains("<disjunction>"));
     assert!(xml.contains("<integer-ge>"));
     assert!(xml.contains("<integer-eq>"));
+    assert!(xml.contains("<place>P0</place>"));
     assert!(xml.contains("<place>P1</place>"));
-    assert!(xml.contains("<place>P2</place>"));
     assert!(xml.contains("<integer-constant>2</integer-constant>"));
     assert!(xml.contains("<integer-constant>4</integer-constant>"));
 }
