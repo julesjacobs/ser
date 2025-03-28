@@ -444,6 +444,9 @@ pub fn try_merge_linear_sets<K: Eq + Hash + Clone + Ord>(
     l1: &LinearSet<K>,
     l2: &LinearSet<K>,
 ) -> Option<LinearSet<K>> {
+    if l1 == l2 {
+        return Some(l1.clone());
+    }
     // Check if l1 is a subset of l2
     if linear_set_subset(l1, l2) {
         return Some(l2.clone());
