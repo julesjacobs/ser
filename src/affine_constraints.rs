@@ -161,7 +161,8 @@ pub fn test_to_xml_1() {
         constraints: vec![
             // First OR clause: 2P0 + P1 ≥ 4
             vec![Constraint {
-                affine_formula: vec![(2, Var(0)), (1, Var(1))],
+                affine_formula: vec![(2, Var(0)), (1,
+                                                   Var(1))],
                 offset: -4, // 2P0 + P1 - 4 ≥ 0
                 constraint_type: NonNegative,
             }],
