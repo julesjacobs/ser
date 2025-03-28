@@ -218,18 +218,37 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
                 periods: dedup_periods(new_periods.into_iter().collect()),
             });
         }
-        // Filter out by linear_set_subset
-        let mut new_components2: Vec<LinearSet<K>> = Vec::new();
-        for comp in new_components.iter() {
-            if !new_components
-                .iter()
-                .any(|c| linear_set_subset(&comp, c) && comp != c)
-            {
-                new_components2.push(comp.clone());
+        // // Filter out by linear_set_subset
+        // let mut new_components2: Vec<LinearSet<K>> = Vec::new();
+        // for comp in new_components.iter() {
+        //     if !new_components
+        //         .iter()
+        //         .any(|c| linear_set_subset(&comp, c) && comp != c)
+        //     {
+        //         new_components2.push(comp.clone());
+        //     }
+        // }
+
+        // Try merging any of the new_components into another
+        'outer: loop {
+            let new_components_vec: Vec<LinearSet<K>> =
+                new_components.iter().map(|l| l.clone()).collect();
+            for new_comp1 in &new_components_vec {
+                for new_comp2 in &new_components_vec {
+                    if new_comp1 != new_comp2 {
+                        if let Some(merged) = try_merge_linear_sets(new_comp1, new_comp2) {
+                            new_components.remove(new_comp1);
+                            new_components.remove(new_comp2);
+                            new_components.insert(merged);
+                            continue 'outer;
+                        }
+                    }
+                }
             }
+            break;
         }
         SemilinearSet {
-            components: new_components2,
+            components: new_components.into_iter().collect(),
         }
     }
 
@@ -417,6 +436,52 @@ pub fn linear_set_subset<K: Eq + Hash + Clone + Ord>(l1: &LinearSet<K>, l2: &Lin
     }
 
     true
+}
+
+/// Attempt to merge two linear sets L1 and L2 into a single linear set L
+/// with L1 ∪ L2 = L. Returns Some(merged_set) if successful, else None.
+pub fn try_merge_linear_sets<K: Eq + Hash + Clone + Ord>(
+    l1: &LinearSet<K>,
+    l2: &LinearSet<K>,
+) -> Option<LinearSet<K>> {
+    // Check if l1 is a subset of l2
+    if linear_set_subset(l1, l2) {
+        return Some(l2.clone());
+    }
+    // Check if it's aP* and ab(P+b)*
+    // Merge into a(P+b)*
+    // i.e., if (l2.base - l1.base) \cup periods1 is periods2
+    match sub_vectors(&l2.base, &l1.base) {
+        Some(diff) => {
+            let mut periods1_set: HashSet<SparseVector<K>> = l1.periods.iter().cloned().collect();
+            periods1_set.insert(diff);
+            let periods2_set: HashSet<SparseVector<K>> = l2.periods.iter().cloned().collect();
+            if periods1_set == periods2_set {
+                return Some(LinearSet {
+                    base: l1.base.clone(),
+                    periods: l2.periods.clone(),
+                });
+            } else {
+                None
+            }
+        }
+        None => None,
+    }
+}
+
+/// A very naive membership check:
+///    does `vec` ∈ { l.base + Σ α_i l.periods[i] } for some α_i ≥ 0 } ?
+fn vector_in_linear_set<K: Eq + Hash + Clone + Ord>(
+    vec: &SparseVector<K>,
+    lin: &LinearSet<K>,
+) -> bool {
+    // We want to see if vec - lin.base is in submonoid(lin.periods).
+    // If (vec < lin.base) in some dimension => false immediately.
+    if let Some(diff) = sub_vectors(vec, &lin.base) {
+        is_nonnegative_combination(&diff, &lin.periods)
+    } else {
+        false
+    }
 }
 
 impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
