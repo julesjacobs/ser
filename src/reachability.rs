@@ -61,6 +61,12 @@ where
         Left(p) => renaming[&p],
         Right(v) => v,
     });
+
+    // save the Petri Net
+    let string_representation_of_petri_net = petri.to_pnet(out_dir);
+    let petri_net_file_output_path = format!("{}/temp_interleaving_petri_net.net", out_dir);
+    fs::write(&petri_net_file_output_path, string_representation_of_petri_net).expect("Failed to write final Petri Net to output path");
+
     constraints.num_vars += non_outputs.len();
     for (_, v) in renaming {
         constraints.assert(Constraint {
@@ -78,10 +84,8 @@ where
     let _filename = tmp.to_str().unwrap();
 
     // also, save the XML in the main output directory
-    let output_path = format!("{}/non_serializable_outputs.xml", out_dir);
-
-    /****** NEW: Write XML to both temporary and output paths ******/
-    fs::write(&output_path, xml).expect("Failed to write XML to output path");
+    let xml_file_output_path = format!("{}/temp_non_serializable_outputs.xml", out_dir);
+    fs::write(&xml_file_output_path, xml).expect("Failed to write XML to output path");
 
     // 3. Encode the Petri net for the SMPT tool
     // 4. Run the SMPT tool
