@@ -9,7 +9,7 @@ pub struct Var(pub usize);
 
 impl fmt::Display for Var {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "v{}", self.0)
+        write!(f, "P{}", self.0)
     }
 }
 
@@ -131,16 +131,15 @@ pub fn single_constraint_to_xml(constraint: &Constraint) -> String {
     // Build the affine expression
     if constraint.affine_formula.len() == 1 && constraint.affine_formula[0].0 == 1 {
         xml.push_str(&format!(
-            "  <tokens-count><place>P{}</place></tokens-count>\n",
-            constraint.affine_formula[0].1.0
+            "  <tokens-count><place>{}</place></tokens-count>\n",
+            constraint.affine_formula[0].1
         ));
     } else {
         xml.push_str("  <integer-add>\n");
         for (coeff, var) in &constraint.affine_formula {
             if *coeff == 1 {
                 xml.push_str(&format!(
-                    "    <tokens-count><place>P{}</place></tokens-count>\n",
-                    var.0
+                    "    <tokens-count><place>{var}</place></tokens-count>\n"
                 ));
             } else {
                 xml.push_str("    <integer-mul>\n");
@@ -149,8 +148,7 @@ pub fn single_constraint_to_xml(constraint: &Constraint) -> String {
                     coeff
                 ));
                 xml.push_str(&format!(
-                    "      <tokens-count><place>P{}</place></tokens-count>\n",
-                    var.0
+                    "      <tokens-count><place>{var}</place></tokens-count>\n"
                 ));
                 xml.push_str("    </integer-mul>\n");
             }
