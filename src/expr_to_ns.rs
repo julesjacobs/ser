@@ -2,10 +2,10 @@ use crate::ns::*;
 use crate::parser::*;
 use hash_cons::Hc;
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
-use std::cmp::Ordering;
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct Env {
