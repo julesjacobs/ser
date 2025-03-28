@@ -183,6 +183,25 @@ impl<K: Eq + Hash + Clone + Ord + std::fmt::Display> std::fmt::Display for Semil
     }
 }
 
+fn dedup_periods<K: Eq + Hash + Clone + Ord>(
+    mut periods: Vec<SparseVector<K>>,
+) -> Vec<SparseVector<K>> {
+    // iteratively remove periods that are linear combinations of others
+    'outer: loop {
+        // try to find an index i such that periods[i] is a linear combination of the other periods
+        for i in 0..periods.len() {
+            let mut other_periods = periods.clone();
+            other_periods.remove(i);
+            if is_nonnegative_combination(&periods[i], &other_periods) {
+                periods.remove(i);
+                continue 'outer;
+            }
+        }
+        break;
+    }
+    periods
+}
+
 impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Create a new semilinear set from a list of LinearSet components.
     pub fn new(components: Vec<LinearSet<K>>) -> Self {
@@ -196,7 +215,7 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
             }
             new_components.insert(LinearSet {
                 base: lin.base,
-                periods: new_periods.into_iter().collect(),
+                periods: dedup_periods(new_periods.into_iter().collect()),
             });
         }
         // Filter out by linear_set_subset
@@ -475,10 +494,17 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
             // }
             components_with_both.iter_mut().for_each(|c| {
                 c.periods.retain(|p| !extra_periods.contains(p));
-                // c.periods.retain(|p| {
-                //     let periods: Vec<_> = extra_periods.iter().map(|p| p.clone()).collect();
-                //     !is_linear_combination(p, &periods)
-                // });
+                let periods_copy = c.periods.clone();
+                c.periods.retain(|p| {
+                    let mut periods: Vec<_> = extra_periods.iter().map(|p| p.clone()).collect();
+                    // Also add periods_copy to periods, except for p
+                    for p2 in &periods_copy {
+                        if p2 != p {
+                            periods.push(p2.clone());
+                        }
+                    }
+                    !is_nonnegative_combination(p, &periods)
+                });
             });
 
             // If we find components with no periods, we add their base to extra_periods
