@@ -44,7 +44,8 @@ pub struct Constraints {
 
 // Converts a full Constraints structure to XML with proper nesting
 pub fn constraints_to_xml(constraints: &Constraints, id: &str) -> String {
-    let mut xml = format!(r#"<?xml version='1.0' encoding='utf-8'?>
+    let mut xml = format!(
+        r#"<?xml version='1.0' encoding='utf-8'?>
 <property-set>
   <property>
     <id>{}</id>
@@ -53,7 +54,9 @@ pub fn constraints_to_xml(constraints: &Constraints, id: &str) -> String {
       <exists-path>
         <finally>
           <disjunction>
-"#, id);
+"#,
+        id
+    );
 
     // Each top-level group is a disjunct
     for and_clause in &constraints.constraints {
@@ -81,12 +84,14 @@ pub fn constraints_to_xml(constraints: &Constraints, id: &str) -> String {
         }
     }
 
-    xml.push_str(r#"          </disjunction>
+    xml.push_str(
+        r#"          </disjunction>
         </finally>
       </exists-path>
     </formula>
   </property>
-</property-set>"#);
+</property-set>"#,
+    );
 
     xml
 }
@@ -104,19 +109,28 @@ pub fn single_constraint_to_xml(constraint: &Constraint) -> String {
 
     // Build the affine expression
     if constraint.affine_formula.len() == 1 && constraint.affine_formula[0].0 == 1 {
-        xml.push_str(&format!("  <tokens-count><place>P{}</place></tokens-count>\n",
-                              constraint.affine_formula[0].1.0));
+        xml.push_str(&format!(
+            "  <tokens-count><place>P{}</place></tokens-count>\n",
+            constraint.affine_formula[0].1.0
+        ));
     } else {
         xml.push_str("  <integer-add>\n");
         for (coeff, var) in &constraint.affine_formula {
             if *coeff == 1 {
-                xml.push_str(&format!("    <tokens-count><place>P{}</place></tokens-count>\n",
-                                      var.0));
+                xml.push_str(&format!(
+                    "    <tokens-count><place>P{}</place></tokens-count>\n",
+                    var.0
+                ));
             } else {
                 xml.push_str("    <integer-mul>\n");
-                xml.push_str(&format!("      <integer-constant>{}</integer-constant>\n", coeff));
-                xml.push_str(&format!("      <tokens-count><place>P{}</place></tokens-count>\n",
-                                      var.0));
+                xml.push_str(&format!(
+                    "      <integer-constant>{}</integer-constant>\n",
+                    coeff
+                ));
+                xml.push_str(&format!(
+                    "      <tokens-count><place>P{}</place></tokens-count>\n",
+                    var.0
+                ));
                 xml.push_str("    </integer-mul>\n");
             }
         }
@@ -125,7 +139,10 @@ pub fn single_constraint_to_xml(constraint: &Constraint) -> String {
 
     // Add the offset
     if constraint.offset != 0 {
-        xml.push_str(&format!("  <integer-constant>{}</integer-constant>\n", -constraint.offset));
+        xml.push_str(&format!(
+            "  <integer-constant>{}</integer-constant>\n",
+            -constraint.offset
+        ));
     } else {
         xml.push_str("  <integer-constant>0</integer-constant>\n");
     }
@@ -139,25 +156,21 @@ pub fn test_to_xml_1() {
     // Create example constraints matching the XML example
     // (2P0 + P1 ≥ 4) OR (P0 = P1)
     let constraints = Constraints {
-        num_vars: 2,           // P0 (v0) and P1 (v1)
+        num_vars: 2, // P0 (v0) and P1 (v1)
         num_existential_vars: 0,
         constraints: vec![
             // First OR clause: 2P0 + P1 ≥ 4
-            vec![
-                Constraint {
-                    affine_formula: vec![(2, Var(0)), (1, Var(1))],
-                    offset: -4,  // 2P0 + P1 - 4 ≥ 0
-                    constraint_type: NonNegative,
-                }
-            ],
+            vec![Constraint {
+                affine_formula: vec![(2, Var(0)), (1, Var(1))],
+                offset: -4, // 2P0 + P1 - 4 ≥ 0
+                constraint_type: NonNegative,
+            }],
             // Second OR clause: P0 = P1
-            vec![
-                Constraint {
-                    affine_formula: vec![(1, Var(0)), (-1, Var(1))],
-                    offset: 0,
-                    constraint_type: EqualToZero,
-                }
-            ],
+            vec![Constraint {
+                affine_formula: vec![(1, Var(0)), (-1, Var(1))],
+                offset: 0,
+                constraint_type: EqualToZero,
+            }],
         ],
     };
 
@@ -174,28 +187,27 @@ pub fn test_to_xml_1() {
     assert!(xml.contains("<integer-constant>4</integer-constant>"));
 }
 
-
 #[test]
 pub fn test_to_xml_2() {
     // Create example constraints matching the XML example
     // (2P0 + P1 ≥ 4) AND (P0 = P1)
     let constraints = Constraints {
-        num_vars: 2,             // P1 (v0) and P2 (v1)
+        num_vars: 2, // P1 (v0) and P2 (v1)
         num_existential_vars: 0,
-        constraints: vec![
-            vec![
-                Constraint { //  2P0 + P1 ≥ 4
-                    affine_formula: vec![(2, Var(0)), (1, Var(1))],
-                    offset: -4,  // 2P0 + P1 - 4 ≥ 0
-                    constraint_type: NonNegative,
-                },
-                Constraint { // P0 = P1
-                    affine_formula: vec![(1, Var(0)), (-1, Var(1))],
-                    offset: 0,
-                    constraint_type: EqualToZero,
-                }
-            ],
-        ],
+        constraints: vec![vec![
+            Constraint {
+                //  2P0 + P1 ≥ 4
+                affine_formula: vec![(2, Var(0)), (1, Var(1))],
+                offset: -4, // 2P0 + P1 - 4 ≥ 0
+                constraint_type: NonNegative,
+            },
+            Constraint {
+                // P0 = P1
+                affine_formula: vec![(1, Var(0)), (-1, Var(1))],
+                offset: 0,
+                constraint_type: EqualToZero,
+            },
+        ]],
     };
 
     let xml = constraints_to_xml(&constraints, "test-2-false");

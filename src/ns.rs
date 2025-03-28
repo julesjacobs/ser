@@ -5,6 +5,7 @@
 // - Responses (L -> Resp): Server responses from a local state
 // - Transitions (L,G -> L',G'): State transitions between local and global states
 
+use either::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fmt::Display;
@@ -468,22 +469,14 @@ where
     pub fn is_serializable(&self) -> bool {
         use crate::ns_to_petri::*;
 
-        let petri = ns_to_petri_with_requests(&self);
-
-        let mut non_response_places = HashSet::new();
-        petri.for_each_place(|p| {
-            if !matches!(p, ReqPetriState::Response(_, _)) {
-                non_response_places.insert(p.clone());
-            }
+        let petri = ns_to_petri_with_requests(&self).rename(|st| match st {
+            ReqPetriState::Response(req, resp) => Right((req, resp)),
+            _ => Left(st),
         });
-        let non_response_places: Vec<_> = non_response_places.into_iter().collect();
 
-        let ser: SemilinearSet<_> = self
-            .serialized_automaton_kleene(|req, resp| {
-                SemilinearSet::singleton(SparseVector::unit((req, resp)))
-            })
-            .rename(|(req, resp)| ReqPetriState::Response(req, resp))
-            .times(SemilinearSet::universe(non_response_places));
+        let ser: SemilinearSet<_> = self.serialized_automaton_kleene(|req, resp| {
+            SemilinearSet::singleton(SparseVector::unit((req, resp)))
+        });
 
         crate::reachability::is_petri_reachability_set_subset_of_semilinear(petri, ser)
     }
