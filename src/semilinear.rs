@@ -138,7 +138,10 @@ impl<K: Eq + Hash + Clone + Ord + std::fmt::Display> std::fmt::Display for Linea
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.base)?;
         if !self.periods.is_empty() {
-            write!(f, " (")?;
+            if self.base.to_string().len() != 0 {
+                write!(f, " ")?;
+            }
+            write!(f, "(")?;
             for (i, period) in self.periods.iter().enumerate() {
                 if i > 0 {
                     write!(f, " + ")?;
