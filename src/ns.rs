@@ -466,7 +466,7 @@ where
     Resp: Clone + Ord + Hash + Display,
 {
     /// Check if the network system is serializable
-    pub fn is_serializable(&self, xml_file_path: &str) -> bool {
+    pub fn is_serializable(&self, out_dir: &str) -> bool {
         use crate::ns_to_petri::*;
 
         let petri = ns_to_petri_with_requests(&self).rename(|st| match st {
@@ -478,7 +478,7 @@ where
             SemilinearSet::singleton(SparseVector::unit((req, resp)))
         });
 
-        crate::reachability::is_petri_reachability_set_subset_of_semilinear(petri, ser, xml_file_path)
+        crate::reachability::is_petri_reachability_set_subset_of_semilinear(petri, ser, out_dir)
     }
 }
 

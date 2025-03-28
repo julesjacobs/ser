@@ -143,7 +143,7 @@ fn main() {
 }
 
 // Process a Network System: generate visualizations for NS, Petri net, and Petri net with requests
-fn process_ns<G, L, Req, Resp>(ns: &NS<G, L, Req, Resp>, file_stem: &str, open_files: bool)
+fn process_ns<G, L, Req, Resp>(ns: &NS<G, L, Req, Resp>, out_dir: &str, open_files: bool)
 where
     G: Clone + Ord + Hash + Display,
     L: Clone + Ord + Hash + Display,
@@ -166,7 +166,7 @@ where
     // Generate GraphViz output for the Network System
     println!("{}", "Generating GraphViz visualization...".cyan().bold());
 
-    match ns.save_graphviz(file_stem, open_files) {
+    match ns.save_graphviz(out_dir, open_files) {
         Ok(files) => {
             println!(
                 "{} the following Network System files:",
@@ -196,7 +196,7 @@ where
     let petri = ns_to_petri::ns_to_petri(ns);
 
     // Generate Petri net visualization
-    match petri.save_graphviz(file_stem, open_files) {
+    match petri.save_graphviz(out_dir, open_files) {
         Ok(files) => {
             println!(
                 "{} the following Petri net files:",
@@ -217,9 +217,9 @@ where
     }
 
     // Output Petri net in .net format
-    let pnet_content = petri.to_pnet(file_stem);
-    let pnet_file = format!("out/{}/petri.net", file_stem);
-    match fs::create_dir_all(format!("out/{}", file_stem)) {
+    let pnet_content = petri.to_pnet(out_dir);
+    let pnet_file = format!("{}/petri.net", out_dir);
+    match fs::create_dir_all(format!("{}", out_dir)) {
         Ok(_) => {}
         Err(err) => {
             eprintln!("{} directory: {}", "Failed to create".red().bold(), err);
@@ -251,7 +251,7 @@ where
     // Create a custom method or modify the underlying implementation to use a different viz_type
     // For now, we need to make a direct call to the graphviz module
     let dot_content = petri_with_requests.to_graphviz();
-    match crate::graphviz::save_graphviz(&dot_content, file_stem, "petri_with_requests", open_files)
+    match crate::graphviz::save_graphviz(&dot_content, out_dir, "petri_with_requests", open_files)
     {
         Ok(files) => {
             println!(
@@ -273,8 +273,8 @@ where
     }
 
     // Output Petri net with requests in .net format
-    let pnet_req_content = petri_with_requests.to_pnet(&format!("{}_with_requests", file_stem));
-    let pnet_req_file = format!("out/{}/petri_with_requests.net", file_stem);
+    let pnet_req_content = petri_with_requests.to_pnet(&format!("{}_with_requests", out_dir));
+    let pnet_req_file = format!("{}/petri_with_requests.net", out_dir);
     match fs::write(&pnet_req_file, pnet_req_content) {
         Ok(_) => println!("- {}", pnet_req_file.green()),
         Err(err) => {
@@ -289,7 +289,7 @@ where
 
     // Output the Regex to semilinear.txt
     let regex = ns.serialized_automaton_regex();
-    let regex_file = format!("out/{}/semilinear.txt", file_stem);
+    let regex_file = format!("{}/semilinear.txt", out_dir);
     let mut regex_content = String::new();
     regex_content.push_str(&format!("Regex: {}\n", regex));
     regex_content.push_str(&format!(
@@ -309,10 +309,8 @@ where
     }
 
     // Check serializability
-    let xml_file_path = format!("out/{}/non_serializable_outputs.xml", file_stem);
-    println!("- {}", xml_file_path.green());
     println!("{}", "Checking serializability...".cyan().bold());
-    let serializable = ns.is_serializable(&xml_file_path);
+    let serializable = ns.is_serializable(&out_dir);
     println!(
         "Serializable: {}",
         if serializable {
@@ -353,9 +351,10 @@ fn process_json_file(file_path: &str, open_files: bool) {
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("network");
+    let out_dir = format!("out/{}", file_stem);
 
     // Process the Network System
-    process_ns(&ns, file_stem, open_files);
+    process_ns(&ns, &out_dir, open_files);
 }
 
 fn process_ser_file(file_path: &str, open_files: bool) {
@@ -419,10 +418,14 @@ fn process_ser_file(file_path: &str, open_files: bool) {
 
     // Get the file name without extension to use as the base name for output files
     let path = Path::new(file_path);
-    let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("expr");
+    let file_stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("expr");
+    let out_dir = format!("out/{}", file_stem);
 
     // Process the Network System
-    process_ns(&ns, file_stem, open_files);
+    process_ns(&ns, &out_dir, open_files);
 }
 
 // Recursively process all files in a directory and its subdirectories
