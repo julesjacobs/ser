@@ -300,7 +300,17 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         // We can add the bases without periods, and the periods of components with zero base as extra periods to all components of the starred result
         let mut extra_periods = HashSet::new();
 
-        let mut components_with_both = self.components.clone();
+        let mut components_with_both = Vec::new();
+        // Add all components with zero base to extra_periods, and with nonzero base to components_with_both
+        for comp in &self.components {
+            if comp.base.is_zero() {
+                for p in &comp.periods {
+                    extra_periods.insert(p.clone());
+                }
+            } else {
+                components_with_both.push(comp.clone());
+            }
+        }
 
         loop {
             // We remove periods that appear in all components_with_both and add them to extra_periods
@@ -328,12 +338,8 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
             // 3. Components with both periods and non-zero base
             let mut new_components = Vec::new();
             for comp in &components_with_both {
-                if comp.periods.is_empty() && !comp.base.is_zero() {
+                if comp.periods.is_empty() {
                     extra_periods.insert(comp.base.clone());
-                } else if comp.base.is_zero() {
-                    for p in &comp.periods {
-                        extra_periods.insert(p.clone());
-                    }
                 } else {
                     new_components.push(comp.clone());
                 }
