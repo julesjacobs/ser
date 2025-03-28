@@ -200,10 +200,13 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
             });
         }
         // Filter out by linear_set_subset
-        let mut new_components2 = Vec::new();
-        for comp in new_components {
-            if !new_components2.iter().any(|c| linear_set_subset(c, &comp)) {
-                new_components2.push(comp);
+        let mut new_components2: Vec<LinearSet<K>> = Vec::new();
+        for comp in new_components.iter() {
+            if !new_components
+                .iter()
+                .any(|c| linear_set_subset(&comp, c) && comp != c)
+            {
+                new_components2.push(comp.clone());
             }
         }
         SemilinearSet {
