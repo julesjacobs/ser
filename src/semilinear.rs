@@ -494,17 +494,17 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
             // }
             components_with_both.iter_mut().for_each(|c| {
                 c.periods.retain(|p| !extra_periods.contains(p));
-                let periods_copy = c.periods.clone();
-                c.periods.retain(|p| {
-                    let mut periods: Vec<_> = extra_periods.iter().map(|p| p.clone()).collect();
-                    // Also add periods_copy to periods, except for p
-                    for p2 in &periods_copy {
-                        if p2 != p {
-                            periods.push(p2.clone());
-                        }
-                    }
-                    !is_nonnegative_combination(p, &periods)
-                });
+                // let periods_copy = c.periods.clone();
+                // c.periods.retain(|p| {
+                //     let mut periods: Vec<_> = extra_periods.iter().map(|p| p.clone()).collect();
+                //     // Also add periods_copy to periods, except for p
+                //     for p2 in &periods_copy {
+                //         if p2 != p {
+                //             periods.push(p2.clone());
+                //         }
+                //     }
+                //     !is_nonnegative_combination(p, &periods)
+                // });
             });
 
             // If we find components with no periods, we add their base to extra_periods
