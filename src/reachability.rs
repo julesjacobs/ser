@@ -35,12 +35,15 @@ where
 
     // 1. Find the affine constraints for the bad states
     let constraints = affine_constraints_for_complement(num_vars, &semilinear);
+
+    // 2. Encode the constraints in XML for the SMPT tool
     let xml = constraints_to_xml(&constraints, "XML-file");
     let mut tmp = tempfile::Builder::new().suffix(".xml").tempfile().unwrap();
     tmp.write_all(xml.as_bytes()).unwrap();
     let tmp = tmp.into_temp_path();
     let filename = tmp.to_str().unwrap();
 
-    // 2. Decide if petri reaches any bad states
+    // 3. Encode the Petri net for the SMPT tool
+    // 4. Run the SMPT tool
     return false; // TODO: Implement this
 }
