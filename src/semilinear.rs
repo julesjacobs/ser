@@ -331,11 +331,7 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
                 });
             }
 
-            // We separate self.components into four parts:
-            // 0. Components with no periods and non-zero base (this can be discarded)
-            // 1. Components with no periods
-            // 2. Components with zero base
-            // 3. Components with both periods and non-zero base
+            // If we find components with no periods, we add their base to extra_periods
             let mut new_components = Vec::new();
             for comp in &components_with_both {
                 if comp.periods.is_empty() {
