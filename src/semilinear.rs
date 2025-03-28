@@ -315,15 +315,16 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         }
 
         loop {
-            // We remove periods that appear in all components_with_both and add them to extra_periods
-            for comp in &components_with_both {
-                for p in &comp.periods {
-                    // We check if the period is in all components_with_both
-                    if components_with_both.iter().all(|c| c.periods.contains(p)) {
-                        extra_periods.insert(p.clone());
-                    }
-                }
-            }
+            // THIS IS WRONG:
+            // // We remove periods that appear in all components_with_both and add them to extra_periods
+            // for comp in &components_with_both {
+            //     for p in &comp.periods {
+            //         // We check if the period is in all components_with_both
+            //         if components_with_both.iter().all(|c| c.periods.contains(p)) {
+            //             extra_periods.insert(p.clone());
+            //         }
+            //     }
+            // }
             for p in &extra_periods {
                 // We remove the period from all components_with_both
                 components_with_both.iter_mut().for_each(|c| {
