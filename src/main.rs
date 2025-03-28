@@ -310,7 +310,8 @@ where
 
     // Check serializability
     println!("{}", "Checking serializability...".cyan().bold());
-    let serializable = ns.is_serializable();
+    let xml_file_path = format!("out/{}/non_serializable_outputs.xml", file_stem);
+    let serializable = ns.is_serializable(&xml_file_path);
     println!(
         "Serializable: {}",
         if serializable {

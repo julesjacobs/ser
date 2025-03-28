@@ -6,10 +6,12 @@ use either::*;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::io::Write;
+use std::fs;
 
 pub fn is_petri_reachability_set_subset_of_semilinear<P, Q>(
     petri: Petri<Either<P, Q>>,
     semilinear: SemilinearSet<Q>,
+    xml_file_path: &str,
 ) -> bool
 where
     P: Clone + Hash + Ord,
@@ -42,6 +44,15 @@ where
     tmp.write_all(xml.as_bytes()).unwrap();
     let tmp = tmp.into_temp_path();
     let _filename = tmp.to_str().unwrap();
+
+    // also, save the XML in the main output directory
+    let output_path = if xml_file_path.ends_with(".xml") {
+        xml_file_path.to_string()
+    } else {
+        format!("{}.xml", xml_file_path)
+    };
+    /****** NEW: Write XML to both temporary and output paths ******/
+    fs::write(&output_path, xml).expect("Failed to write XML to output path");
 
     // 3. Encode the Petri net for the SMPT tool
     // 4. Run the SMPT tool
