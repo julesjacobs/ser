@@ -263,6 +263,82 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     }
 }
 
+/// Returns true if `target` can be expressed as a nonnegative integer combination
+/// of the vectors in `periods`.
+pub fn is_linear_combination<K: Eq + Hash + Clone + Ord>(
+    target: &SparseVector<K>,
+    periods: &[SparseVector<K>],
+) -> bool {
+    // We'll do a DFS with memoization.  The memo stores `(current_vector, index_in_periods)`.
+    let mut memo = HashSet::new();
+    dfs(target, 0, periods, &mut memo)
+}
+
+fn dfs<K: Eq + Hash + Clone + Ord>(
+    target: &SparseVector<K>,
+    idx: usize,
+    periods: &[SparseVector<K>],
+    memo: &mut HashSet<(SparseVector<K>, usize)>,
+) -> bool {
+    // If our target has become the zero vector, we are done.
+    if target.values.is_empty() {
+        return true;
+    }
+    // If we've run out of period vectors, and we still haven't zeroed out `target`, fail.
+    if idx == periods.len() {
+        return false;
+    }
+
+    // Check if we already encountered this (vector, index) pair.
+    let key = (target.clone(), idx);
+    if memo.contains(&key) {
+        return false;
+    }
+    memo.insert(key);
+
+    let p = &periods[idx];
+
+    // We'll compute the maximum times we might subtract p from target in *any* dimension
+    // (to keep all coordinates nonnegative).
+    let mut max_coeff = usize::MAX;
+    for (k, &p_val) in &p.values {
+        if p_val > 0 {
+            let t_val = target.values.get(k).copied().unwrap_or(0);
+            let c = t_val / p_val;
+            if c < max_coeff {
+                max_coeff = c;
+            }
+        }
+    }
+
+    // We try all coefficients c = 0..=max_coeff.
+    // c=0 => skip p entirely, check next.
+    for c in 0..=max_coeff {
+        if c == 0 {
+            // Not using p at all
+            if dfs(target, idx + 1, periods, memo) {
+                return true;
+            }
+        } else {
+            // Subtract c * p from the target
+            let mut new_target = target.clone();
+            for (k, &p_val) in &p.values {
+                let t_val = new_target.values.get(k).copied().unwrap_or(0);
+                let new_val = t_val.saturating_sub(c * p_val);
+                if new_val == 0 {
+                    new_target.values.remove(k);
+                } else {
+                    new_target.values.insert(k.clone(), new_val);
+                }
+            }
+            if dfs(&new_target, idx + 1, periods, memo) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
     fn zero() -> Self {
         SemilinearSet::empty()
@@ -328,14 +404,21 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
             //         }
             //     }
             // }
-            for p in &extra_periods {
-                // We remove the period from all components_with_both
-                components_with_both.iter_mut().for_each(|c| {
-                    if let Some(index) = c.periods.iter().position(|x| x == p) {
-                        c.periods.remove(index);
-                    }
-                });
-            }
+            // for p in &extra_periods {
+            //     // We remove the period from all components_with_both
+            //     components_with_both.iter_mut().for_each(|c| {
+            //         if let Some(index) = c.periods.iter().position(|x| x == p) {
+            //             c.periods.remove(index);
+            //         }
+            //     });
+            // }
+            components_with_both.iter_mut().for_each(|c| {
+                c.periods.retain(|p| !extra_periods.contains(p));
+                // c.periods.retain(|p| {
+                //     let periods: Vec<_> = extra_periods.iter().map(|p| p.clone()).collect();
+                //     !is_linear_combination(p, &periods)
+                // });
+            });
 
             // If we find components with no periods, we add their base to extra_periods
             let mut new_components = Vec::new();
@@ -366,7 +449,7 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
 
             for i in 0..n {
                 if mask & (1 << i) != 0 {
-                    let comp = &self.components[i];
+                    let comp = &components_with_both[i];
                     // add this component's base to subset_base
                     subset_base = subset_base.add(&comp.base);
                     // include this component's base and periods in subset_periods
