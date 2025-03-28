@@ -67,6 +67,18 @@ impl Constraints {
             constraints,
         }
     }
+
+    /// Add this constraint as a conjunct.
+    ///
+    /// Because the constraints are in DNF, this adds it to every disjunct in the list.
+    pub fn assert(&mut self, conjunct: Constraint) {
+        if conjunct.is_redundant() {
+            return;
+        }
+        for c in &mut self.constraints {
+            c.push(conjunct.clone());
+        }
+    }
 }
 
 // Converts a full Constraints structure to XML with proper nesting

@@ -17,7 +17,7 @@ where
     P: Clone + Hash + Ord,
     Q: Clone + Hash + Ord,
 {
-    // 0. Make new names for all the vars in the semilinear set
+    // 1. Make new names for all the output places
     let mut outputs = HashSet::new();
     let mut non_outputs = HashSet::new();
     petri.for_each_place(|place| {
@@ -30,22 +30,45 @@ where
         outputs.insert(q.clone());
     });
     let mut outputs: Vec<_> = outputs.into_iter().collect();
+    let mut non_outputs: Vec<_> = non_outputs.into_iter().collect();
     outputs.sort(); // so the renaming is predictable
-    let num_vars = outputs.len();
-
+    non_outputs.sort();
     let renaming: HashMap<&Q, Var> = outputs
         .iter()
         .enumerate()
-        .map(|(i, v)| (v, Var(i)))
+        .map(|(i, q)| (q, Var(i)))
         .collect();
-    let petri: Petri<Either<P, Var>> = petri.rename(|p| p.map_right(|q| renaming[&q]));
-    let petri: Petri<Var> =
-        todo!("TODO: mark: add places for existentials, rename all places to vars");
+    let mut petri: Petri<Either<P, Var>> = petri.rename(|p| p.map_right(|q| renaming[&q]));
     let semilinear = semilinear.rename(|p| renaming[&p]);
 
-    // 1. Find the affine constraints for the bad states
-    let constraints = affine_constraints_for_complement(num_vars, &semilinear);
-    // TODO: mark: add constriants that the other Petri places are empty
+    // Compute the constraints
+    let mut constraints = affine_constraints_for_complement(outputs.len(), &semilinear);
+
+    // Reify existential vars as places in the petri net
+    for i in 0..constraints.num_existential_vars {
+        petri.add_existential_place(Right(Var(constraints.num_vars + i)));
+    }
+    constraints.num_vars += constraints.num_existential_vars;
+    constraints.num_existential_vars = 0;
+
+    // Rename the non-output places; assert that they are zero at the end
+    let renaming: HashMap<&P, Var> = non_outputs
+        .iter()
+        .enumerate()
+        .map(|(i, p)| (p, Var(i + constraints.num_vars)))
+        .collect();
+    let petri: Petri<Var> = petri.rename(|place| match place {
+        Left(p) => renaming[&p],
+        Right(v) => v,
+    });
+    constraints.num_vars += non_outputs.len();
+    for (_, v) in renaming {
+        constraints.assert(Constraint {
+            affine_formula: vec![(1, v)],
+            offset: 0,
+            constraint_type: EqualToZero,
+        });
+    }
 
     // 2. Encode the constraints in XML for the SMPT tool
     let xml = constraints_to_xml(&constraints, "XML-file");
