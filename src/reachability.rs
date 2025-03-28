@@ -41,7 +41,7 @@ where
     let mut tmp = tempfile::Builder::new().suffix(".xml").tempfile().unwrap();
     tmp.write_all(xml.as_bytes()).unwrap();
     let tmp = tmp.into_temp_path();
-    let filename = tmp.to_str().unwrap();
+    let _filename = tmp.to_str().unwrap();
 
     // 3. Encode the Petri net for the SMPT tool
     // 4. Run the SMPT tool

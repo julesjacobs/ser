@@ -357,7 +357,11 @@ fn process_json_file(file_path: &str, open_files: bool) {
 }
 
 fn process_ser_file(file_path: &str, open_files: bool) {
-    println!("{} {}", "Processing SER file:".blue().bold(), file_path);
+    println!(
+        "{}",
+        "----------------------------------------".blue().bold()
+    );
+    println!("{} {}", "Processing Ser file:".blue().bold(), file_path);
 
     let content = match fs::read_to_string(file_path) {
         Ok(content) => content,
