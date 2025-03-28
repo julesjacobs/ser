@@ -11,7 +11,7 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::hash::Hash;
 
-use crate::kleene::{Kleene, Regex, nfa_to_kleene};
+use crate::kleene::{nfa_to_kleene, Kleene, Regex};
 use crate::semilinear::*;
 
 // Helper function to escape strings for use as node IDs in GraphViz DOT language
@@ -468,17 +468,28 @@ where
     /// Check if the network system is serializable
     pub fn is_serializable(&self, out_dir: &str) -> bool {
         use crate::ns_to_petri::*;
+        use ReqPetriState::*;
 
+        let mut places_that_must_be_zero = Vec::new();
         let petri = ns_to_petri_with_requests(&self).rename(|st| match st {
-            ReqPetriState::Response(req, resp) => Right((req, resp)),
-            _ => Left(st),
+            Response(req, resp) => Right((req, resp)),
+            Global(_) => Left(st),
+            Local(_, _) | Request(_) => {
+                places_that_must_be_zero.push(st.clone());
+                Left(st)
+            }
         });
 
         let ser: SemilinearSet<_> = self.serialized_automaton_kleene(|req, resp| {
             SemilinearSet::singleton(SparseVector::unit((req, resp)))
         });
 
-        crate::reachability::is_petri_reachability_set_subset_of_semilinear(petri, ser, out_dir)
+        crate::reachability::is_petri_reachability_set_subset_of_semilinear(
+            petri,
+            &places_that_must_be_zero,
+            ser,
+            out_dir,
+        )
     }
 }
 

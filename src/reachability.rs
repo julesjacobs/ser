@@ -10,6 +10,7 @@ use std::io::Write;
 
 pub fn is_petri_reachability_set_subset_of_semilinear<P, Q>(
     petri: Petri<Either<P, Q>>,
+    places_that_must_be_zero: &[P],
     semilinear: SemilinearSet<Q>,
     out_dir: &str,
 ) -> bool
@@ -61,20 +62,20 @@ where
         Left(p) => renaming[&p],
         Right(v) => v,
     });
+    constraints.num_vars += places_that_must_be_zero.len();
+    for p in places_that_must_be_zero {
+        constraints.assert(Constraint {
+            affine_formula: vec![(1, renaming[p])],
+            offset: 0,
+            constraint_type: EqualToZero,
+        });
+    }
 
     // save the Petri Net
     let string_representation_of_petri_net = petri.to_pnet(out_dir);
     let petri_net_file_output_path = format!("{}/temp_interleaving_petri_net.net", out_dir);
     fs::write(&petri_net_file_output_path, string_representation_of_petri_net).expect("Failed to write final Petri Net to output path");
 
-    constraints.num_vars += non_outputs.len();
-    for (_, v) in renaming {
-        constraints.assert(Constraint {
-            affine_formula: vec![(1, v)],
-            offset: 0,
-            constraint_type: EqualToZero,
-        });
-    }
 
     // 2. Encode the constraints in XML for the SMPT tool
     let xml = constraints_to_xml(&constraints, "XML-file");

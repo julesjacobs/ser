@@ -9,7 +9,7 @@ use crate::semilinear::*;
 
 use std::cell::Cell;
 use std::collections::HashMap;
-use std::ffi::{CStr, CString, c_void};
+use std::ffi::{c_void, CStr, CString};
 use std::fmt::Display;
 use std::ptr;
 
@@ -160,7 +160,7 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Display>(
     unsafe {
         isl_set_subtract(
             universe_set(keys),
-            dbg!(semilinear_set_to_isl_set(semilinear_set, keys)),
+            semilinear_set_to_isl_set(semilinear_set, keys),
         )
     }
 }
