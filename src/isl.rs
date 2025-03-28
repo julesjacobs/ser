@@ -158,10 +158,11 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Display>(
     keys: &[K],
 ) -> *mut isl_set {
     unsafe {
-        isl_set_subtract(
-            universe_set(keys),
-            dbg!(semilinear_set_to_isl_set(semilinear_set, keys)),
-        )
+        let sset = semilinear_set_to_isl_set(semilinear_set, keys);
+        dbg!(to_str(sset));
+        let complement = isl_set_subtract(universe_set(keys), sset);
+        dbg!(to_str(complement));
+        complement
     }
 }
 
