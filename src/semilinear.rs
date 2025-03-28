@@ -352,7 +352,7 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         let n = components_with_both.len();
         // assert that the size is not too large
         debug_assert!(
-            n <= 32,
+            n <= 30,
             "Number of components in semilinear set is too large"
         );
         for mask in 0..(1 << n) {
