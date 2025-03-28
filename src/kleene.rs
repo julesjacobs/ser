@@ -91,8 +91,7 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
     nfa_vec: &[(S, K, S)],
     start: S,
 ) -> K {
-    // The algorithm works by eliminating all states except the start state
-    // The final answer is then the self-loop of the start state
+    // We add an extra state `None` and eliminate all states except that one
 
     let mut nfa: HashMap<(Option<&S>, Option<&S>), K> = HashMap::new();
     for (from, k, to) in nfa_vec.iter() {
@@ -110,6 +109,8 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
         .iter()
         .flat_map(|(from, _, to)| vec![from, to])
         .collect::<HashSet<_>>();
+
+    states_todo.insert(&start);
 
     // Insert epsilon edges from all states_todo to None
     for state in states_todo.iter() {
