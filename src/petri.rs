@@ -1,5 +1,3 @@
-use either::Either;
-
 use crate::graphviz;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
