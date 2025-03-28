@@ -123,7 +123,8 @@ where
     // Create transitions for each request transition
     for (req, local) in &ns.requests {
         petri.add_transition(
-            vec![ReqPetriState::Request(req.clone())],
+            // vec![ReqPetriState::Request(req.clone())],
+            vec![],
             vec![ReqPetriState::Local(req.clone(), local.clone())],
         );
     }
