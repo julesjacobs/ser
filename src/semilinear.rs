@@ -216,6 +216,10 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
         }
     }
 
+    pub fn atom(k: K) -> Self {
+        Self::singleton(SparseVector::unit(k))
+    }
+
     /// Singleton containing the zero vector.
     fn zero() -> Self {
         SemilinearSet::singleton(SparseVector::new())
@@ -268,7 +272,6 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
     // Union of two semilinear sets.
     fn plus(mut self, mut other: Self) -> Self {
         // Clone components of both and combine
-        // (TODO) we could attempt to simplify or merge components here.
         self.components.append(&mut other.components);
         self
     }
@@ -284,7 +287,6 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
                 let mut new_periods = Vec::with_capacity(lin1.periods.len() + lin2.periods.len());
                 new_periods.extend_from_slice(&lin1.periods);
                 new_periods.extend_from_slice(&lin2.periods);
-                // (TODO) remove duplicate period vectors in new_periods
                 result_components.push(LinearSet {
                     base: new_base,
                     periods: new_periods,
@@ -357,8 +359,6 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
             // Determine subset X for this mask
             let mut subset_base = SparseVector::new();
             let mut subset_periods: Vec<SparseVector<K>> = Vec::new();
-            // We'll also use a set to avoid duplicate period vectors
-            let mut period_set = HashSet::new();
 
             for i in 0..n {
                 if mask & (1 << i) != 0 {
@@ -366,14 +366,9 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
                     // add this component's base to subset_base
                     subset_base = subset_base.add(&comp.base);
                     // include this component's base and periods in subset_periods
-                    let base_vec = &comp.base;
-                    if period_set.insert(base_vec) {
-                        subset_periods.push(base_vec.clone());
-                    }
+                    subset_periods.push(comp.base.clone());
                     for p in &comp.periods {
-                        if period_set.insert(p) {
-                            subset_periods.push(p.clone());
-                        }
+                        subset_periods.push(p.clone());
                     }
                 }
             }

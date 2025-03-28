@@ -221,9 +221,7 @@ where
     }
 
     pub fn serialized_automaton_semilinear(&self) -> SemilinearSet<String> {
-        self.serialized_automaton_kleene(|req, resp| {
-            SemilinearSet::singleton(SparseVector::unit(format!("{req}/{resp}")))
-        })
+        self.serialized_automaton_kleene(|req, resp| SemilinearSet::atom(format!("{req}/{resp}")))
     }
 
     /// Serialize the network system to a JSON string
