@@ -32,7 +32,9 @@ pub struct Constraint {
 
 impl Constraint {
     pub fn is_redundant(&self) -> bool {
-        self.affine_formula.iter().all(|(coeff, _)| *coeff > 0) && self.offset >= 0 && self.constraint_type == NonNegative
+        self.affine_formula.iter().all(|(coeff, _)| *coeff >= 0)
+            && self.offset >= 0
+            && self.constraint_type == NonNegative
     }
 }
 
@@ -50,7 +52,11 @@ pub struct Constraints {
 }
 
 impl Constraints {
-    pub fn new(num_vars: usize, num_existential_vars: usize, mut constraints: Vec<Vec<Constraint>>) -> Self {
+    pub fn new(
+        num_vars: usize,
+        num_existential_vars: usize,
+        mut constraints: Vec<Vec<Constraint>>,
+    ) -> Self {
         // Eliminate redundant constraints of the form (positive linear combination) >= 0
         for constraint_vec in constraints.iter_mut() {
             constraint_vec.retain(|constraint| !constraint.is_redundant());
@@ -180,8 +186,7 @@ pub fn test_to_xml_1() {
         constraints: vec![
             // First OR clause: 2P0 + P1 ≥ 4
             vec![Constraint {
-                affine_formula: vec![(2, Var(0)), (1,
-                                                   Var(1))],
+                affine_formula: vec![(2, Var(0)), (1, Var(1))],
                 offset: -4, // 2P0 + P1 - 4 ≥ 0
                 constraint_type: NonNegative,
             }],
