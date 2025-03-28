@@ -9,7 +9,7 @@ pub struct Var(pub usize);
 
 impl fmt::Display for Var {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "v{}", self.0)
+        write!(f, "P{}", self.0)
     }
 }
 
