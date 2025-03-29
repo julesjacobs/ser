@@ -91,4 +91,6 @@ where
     // 3. Encode the Petri net for the SMPT tool
     // 4. Run the SMPT tool
     return false; // TODO: Implement this
+    // TODO: add optiization: if Constraints are empty (=FALSE) for the complement semilinear set, then
+    // just return "FALSE". Currently the generated XML (e.g., simple_ser) is not parsed correctly
 }
