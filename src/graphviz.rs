@@ -24,12 +24,17 @@ pub fn save_graphviz(
     open_files: bool,
 ) -> Result<Vec<String>, String> {
 
+
     let out_path = Path::new(out_dir);
 
-    // **** Removed directory creation - caller handles this ****
+    // *** Create directory if it doesn't exist ***
     if !out_path.exists() {
-        return Err(format!("Output directory does not exist: {}", out_dir));
+        match create_dir_all(out_path) {
+            Ok(_) => (),
+            Err(e) => return Err(format!("Failed to create output directory: {}", e)),
+        }
     }
+
 
     let mut generated_files = Vec::new();
 
