@@ -19,30 +19,25 @@ use std::process::Command;
 /// Returns a Result with the paths to the generated files or an error message
 pub fn save_graphviz(
     dot_content: &str,
-    name: &str,
+    out_dir: &str,
     viz_type: &str,
     open_files: bool,
 ) -> Result<Vec<String>, String> {
-    // Create main output directory if it doesn't exist
-    let out_dir = Path::new("out");
-    if let Err(e) = create_dir_all(out_dir) {
-        return Err(format!("Failed to create output directory: {}", e));
-    }
 
-    // Create subdirectory for this specific output
-    let subdir_name = name;
-    let subdir_path = out_dir.join(subdir_name);
-    if let Err(e) = create_dir_all(&subdir_path) {
-        return Err(format!("Failed to create output subdirectory: {}", e));
+    let out_path = Path::new(out_dir);
+
+    // **** Removed directory creation - caller handles this ****
+    if !out_path.exists() {
+        return Err(format!("Output directory does not exist: {}", out_dir));
     }
 
     let mut generated_files = Vec::new();
 
     // Save full visualization
-    let dot_path = subdir_path.join(format!("{}.dot", viz_type));
-    let png_path = subdir_path.join(format!("{}.png", viz_type));
-    let svg_path = subdir_path.join(format!("{}.svg", viz_type));
-    let pdf_path = subdir_path.join(format!("{}.pdf", viz_type));
+    let dot_path = out_path.join(format!("{}.dot", viz_type));
+    let png_path = out_path.join(format!("{}.png", viz_type));
+    let svg_path = out_path.join(format!("{}.svg", viz_type));
+    let pdf_path = out_path.join(format!("{}.pdf", viz_type));
 
     match fs::write(&dot_path, dot_content) {
         Ok(_) => {

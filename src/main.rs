@@ -166,7 +166,7 @@ where
     // Generate GraphViz output for the Network System
     println!("{}", "Generating GraphViz visualization...".cyan().bold());
 
-    match ns.save_graphviz(out_dir, open_files) {
+    match ns.save_graphviz(&out_dir, open_files) {
         Ok(files) => {
             println!(
                 "{} the following Network System files:",
@@ -196,7 +196,7 @@ where
     let petri = ns_to_petri::ns_to_petri(ns);
 
     // Generate Petri net visualization
-    match petri.save_graphviz(out_dir, open_files) {
+    match petri.save_graphviz(&out_dir, open_files) {
         Ok(files) => {
             println!(
                 "{} the following Petri net files:",
@@ -251,7 +251,7 @@ where
     // Create a custom method or modify the underlying implementation to use a different viz_type
     // For now, we need to make a direct call to the graphviz module
     let dot_content = petri_with_requests.to_graphviz();
-    match crate::graphviz::save_graphviz(&dot_content, out_dir, "petri_with_requests", open_files)
+    match crate::graphviz::save_graphviz(&dot_content, &out_dir, "petri_with_requests", open_files)
     {
         Ok(files) => {
             println!(
