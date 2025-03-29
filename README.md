@@ -35,10 +35,12 @@ dependencies for SMPT need to be clarified (Guy)
 - state machine (always serializable, terminates + FALSE) 
 - shopping cart (always serializable, terminates + FALSE)
 - fred1 (always serializable, TO instead of returning FALSE)
+- fred_arith simplified until 1 (always serializable, terminates + FALSE)
 - fred_arith simplified until 2 (always serializable, TO instead of returning FALSE)
-- fred_arith simplified until 1 (always serializable, TO instead of returning FALSE)
 - fred2 (NOT always serializable, terminates + TRUE + counterexample)
 
+Note: when TRUE, the answer is typically returned via BMC
+Note: when FALSE, the answer (when returned) is typically via --method --STATE-EQUATION
 
 
 Depends on SMPT.
