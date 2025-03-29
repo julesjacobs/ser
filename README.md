@@ -28,6 +28,19 @@ Depends on [isl](https://libisl.sourceforge.io/), which you may already have
 installed (it comes with GCC).  For a non-standard install, you may need to set
 the `ISL_PREFIX` environment variable.
 
+## TODO
+dependencies for SMPT need to be clarified (Guy)
+
+## Working examples:
+- state machine (always serializable, terminates + FALSE) 
+- shopping cart (always serializable, terminates + FALSE)
+- fred1 (always serializable, TO instead of returning FALSE)
+- fred_arith simplified until 2 (always serializable, TO instead of returning FALSE)
+- fred_arith simplified until 1 (always serializable, TO instead of returning FALSE)
+- fred2 (NOT always serializable, terminates + TRUE + counterexample)
+
+
+
 Depends on SMPT.
 [Add description of how to install SMPT here.]
 
