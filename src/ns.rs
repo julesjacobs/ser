@@ -472,7 +472,7 @@ where
 
         let mut places_that_must_be_zero = Vec::new();
         let petri = ns_to_petri_with_requests(&self).rename(|st| match st {
-            Response(req, resp) => Right((req, resp)),
+            Response(_, _) => Right(st),
             Global(_) => Left(st),
             Local(_, _) | Request(_) => {
                 places_that_must_be_zero.push(st.clone());
@@ -481,7 +481,7 @@ where
         });
 
         let ser: SemilinearSet<_> = self.serialized_automaton_kleene(|req, resp| {
-            SemilinearSet::singleton(SparseVector::unit((req, resp)))
+            SemilinearSet::singleton(SparseVector::unit(Response(req, resp)))
         });
 
         crate::reachability::is_petri_reachability_set_subset_of_semilinear(
