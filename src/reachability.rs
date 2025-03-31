@@ -81,8 +81,11 @@ where
         });
     }
     petri.remove_identity_transitions();
+
     // //todo Guy (March 31st) - START
-    // println!("hi");
+
+    let unreachable = petri.find_unreachable_places();
+    println!("hi");
     // //todo Guy (March 31st) - END
 
     // Save the Petri Net

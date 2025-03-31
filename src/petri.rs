@@ -18,7 +18,7 @@ fn escape_for_graphviz_id(s: &str) -> String {
 }
 
 pub struct Petri<Place> {
-    initial_marking: Vec<Place>,
+    pub initial_marking: Vec<Place>,
     transitions: Vec<(Vec<Place>, Vec<Place>)>,
 }
 
@@ -268,6 +268,46 @@ where
     /// Remove transitions where input places are exactly the same as output places
     pub fn remove_identity_transitions(&mut self) {
         self.transitions.retain(|(input, output)| input != output);
+    }
+}
+
+impl<Place> Petri<Place>
+where
+    Place: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+{
+    /// Find and print all unreachable places (places with no incoming transitions,
+    /// excluding places that are in the initial marking)
+    pub fn find_unreachable_places(&self) -> Vec<Place> {
+        let all_places = self.get_places();
+        let initial_marking_set: HashSet<Place> = self.initial_marking.iter().cloned().collect();
+        let mut reachable_places = HashSet::new();
+
+        // Collect all places that appear as outputs of any transition
+        for (_, output) in &self.transitions {
+            for place in output {
+                reachable_places.insert(place.clone());
+            }
+        }
+
+        // Find places that are not in reachable_places and not in initial marking
+        let unreachable: Vec<Place> = all_places
+            .into_iter()
+            .filter(|place| {
+                !reachable_places.contains(place) && !initial_marking_set.contains(place)
+            })
+            .collect();
+
+        // Print the results
+        if !unreachable.is_empty() {
+            println!("Unreachable places (no incoming transitions and not in initial marking):");
+            for place in &unreachable {
+                println!("- {}", place);
+            }
+        } else {
+            println!("All places are either reachable (have incoming transitions) or in initial marking");
+        }
+
+        unreachable
     }
 }
 
