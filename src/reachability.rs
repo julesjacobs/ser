@@ -80,11 +80,16 @@ where
             constraint_type: EqualToZero,
         });
     }
+
+    // remove transitions with input places = output places
     petri.remove_identity_transitions();
 
-    // //todo Guy (March 31st) - START
-
+    // identify non-reachable places, and add a constraint that their marking is 0
     let unreachable = petri.find_unreachable_places();
+    constraints.assert_places_zero(&unreachable);
+
+    // //todo Guy (March 31st) - START
+    println!("*************************");
     println!("hi");
     // //todo Guy (March 31st) - END
 

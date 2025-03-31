@@ -81,6 +81,32 @@ impl Constraints {
     }
 }
 
+impl Constraints {
+    /// Adds constraints that each specified place must equal zero,
+    /// but only if such a constraint doesn't already exist in each AND clause
+    pub fn assert_places_zero(&mut self, places: &[Var]) {
+        for and_clause in &mut self.constraints {
+            for place in places {
+                // Check if this exact zero constraint already exists in this AND clause
+                let already_constrained = and_clause.iter().any(|constraint| {
+                    // Exact match for "place = 0" constraint
+                        constraint.affine_formula == vec![(1, *place)] &&
+                        constraint.offset == 0 &&
+                         constraint.constraint_type == EqualToZero
+                });
+
+                if !already_constrained {
+                    and_clause.push(Constraint {
+                        affine_formula: vec![(1, *place)],
+                        offset: 0,
+                        constraint_type: EqualToZero,
+                    });
+                }
+            }
+        }
+    }
+}
+
 // Converts a full Constraints structure to XML with proper nesting
 pub fn constraints_to_xml(constraints: &Constraints, id: &str) -> String {
     let mut xml = format!(
