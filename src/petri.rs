@@ -18,7 +18,7 @@ fn escape_for_graphviz_id(s: &str) -> String {
 }
 
 pub struct Petri<Place> {
-    pub initial_marking: Vec<Place>,
+    initial_marking: Vec<Place>,
     transitions: Vec<(Vec<Place>, Vec<Place>)>,
 }
 
