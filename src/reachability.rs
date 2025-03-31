@@ -65,7 +65,7 @@ where
         .enumerate()
         .map(|(i, p)| (p, Var(i + constraints.num_vars)))
         .collect();
-    let petri: Petri<Var> = petri.rename(|place| match place {
+    let mut petri: Petri<Var> = petri.rename(|place| match place {
         Left(p) => renaming[&p],
         Right(v) => v,
     });
@@ -80,6 +80,42 @@ where
             constraint_type: EqualToZero,
         });
     }
+
+
+    println!("*************************");
+
+    // per each (AND) clause constraint
+    for (i, and_clause) in constraints.constraints.iter_mut().enumerate() {
+        println!("\n#####");
+        println!("\nProcessing AND clause {}:", i);
+        println!("Current constraints:");
+        for constraint in &*and_clause {
+            println!("  {:?}", constraint);
+        }
+        // deduce invariant on places that must be zero
+        let deduced_new_zero_vars = petri.deduce_zero_places_from_constraints(&and_clause);
+
+        // add to the current (iterated) AND clause a new constraint of the deduced places that is 0
+        for var in deduced_new_zero_vars {
+            and_clause.push(Constraint {
+                affine_formula: vec![(1, var)],
+                offset: 0,
+                constraint_type: EqualToZero,
+            });
+        }
+
+    }
+
+
+    println!("*************************");
+
+    // identify non-reachable places, and add a constraint that their marking is 0
+    let unreachable = petri.find_unreachable_places();
+    constraints.assert_places_zero(&unreachable);
+
+    // IMPORTANT: to do this after finding upstream paths, as this changes the numbering of the transitions
+    // remove transitions with input places = output places
+    petri.remove_identity_transitions();
 
     // Save the Petri Net
     let string_representation_of_petri_net = petri.to_pnet(out_dir);
@@ -105,3 +141,7 @@ where
     // TODO: add optimization: if Constraints are empty (=FALSE) for the complement semilinear set, then
     // just return "FALSE". Currently the generated XML (e.g., simple_ser) is not parsed correctly
 }
+
+
+
+
