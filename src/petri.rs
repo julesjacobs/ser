@@ -263,6 +263,16 @@ impl<P: Clone + PartialEq + Eq + Hash> Petri<P> {
 
 impl<Place> Petri<Place>
 where
+    Place: Clone + PartialEq + Eq + Hash,
+{
+    /// Remove transitions where input places are exactly the same as output places
+    pub fn remove_identity_transitions(&mut self) {
+        self.transitions.retain(|(input, output)| input != output);
+    }
+}
+
+impl<Place> Petri<Place>
+where
     Place: ToString,
 {
     /// Produce a textual representation of this Petri net,

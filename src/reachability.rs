@@ -65,7 +65,7 @@ where
         .enumerate()
         .map(|(i, p)| (p, Var(i + constraints.num_vars)))
         .collect();
-    let petri: Petri<Var> = petri.rename(|place| match place {
+    let mut petri: Petri<Var> = petri.rename(|place| match place {
         Left(p) => renaming[&p],
         Right(v) => v,
     });
@@ -80,6 +80,10 @@ where
             constraint_type: EqualToZero,
         });
     }
+    petri.remove_identity_transitions();
+    // //todo Guy (March 31st) - START
+    // println!("hi");
+    // //todo Guy (March 31st) - END
 
     // Save the Petri Net
     let string_representation_of_petri_net = petri.to_pnet(out_dir);
