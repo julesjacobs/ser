@@ -409,7 +409,7 @@ impl<Place> Petri<Place>
 where
     Place: Clone + PartialEq + Eq + Hash + std::fmt::Display + From<Var> + std::fmt::Debug,  // Added Debug
 {
-    pub fn analyze_constraints_and_transitions(
+    pub fn deduce_transitions_that_are_locked(
         &self,
         clause: &[Constraint],
     ) -> (HashSet<usize>, HashSet<usize>) {
@@ -502,10 +502,86 @@ where
             println!("  t{}: {:?}", t_idx, self.transitions[t_idx]);
         }
 
+        println!("\nFinal potentially-firing transitions:");
+        for &t_idx in &potentially_firing {
+            println!("  t{}: {:?}", t_idx, self.transitions[t_idx]);
+        }
+
         (locked, potentially_firing)
     }
 }
 
+//
+//
+// impl<Place> Petri<Place>
+// where
+//     Place: Clone + PartialEq + Eq + Hash + std::fmt::Display + From<Var> + std::fmt::Debug,
+// {
+//     pub fn deduce_zero_places_from_constraints(
+//         &self,
+//         clause: &[Constraint],
+//     ) -> Vec<Var> {
+//         println!("Starting deduction of zero places...");
+//
+//         // 1. Get locked transitions
+//         println!("\nStep 1: Identifying locked transitions...");
+//         let (locked_transitions, _) = self.deduce_transitions_that_are_locked(clause);
+//         println!("Found {} locked transitions: {:?}", locked_transitions.len(), locked_transitions);
+//
+//         // 2. Create new net without locked transitions
+//         println!("\nStep 2: Creating filtered Petri net...");
+//         let filtered_net = Petri {
+//             initial_marking: self.initial_marking.clone(),
+//             transitions: self.transitions
+//                 .iter()
+//                 .enumerate()
+//                 .filter(|(i, _)| !locked_transitions.contains(i))
+//                 .map(|(_, (i, o))| (i.clone(), o.clone()))
+//                 .collect(),
+//         };
+//         println!("New net has {} transitions (original had {})",
+//                  filtered_net.transitions.len(), self.transitions.len());
+//
+//         // 3. Get places that are already constrained to zero
+//         println!("\nStep 3: Checking existing zero constraints...");
+//         let existing_zero_vars = Constraints::extract_zero_variables(clause);
+//         let existing_zero_places: HashSet<Place> = existing_zero_vars.iter()
+//             .map(|v| v.into())
+//             .collect();
+//         println!("Already constrained to zero: {:?}", existing_zero_vars);
+//
+//         // 4. Check each place in original net
+//         println!("\nStep 4: Analyzing place reachability...");
+//         let mut new_zero_vars = Vec::new();
+//
+//         for place in self.get_places() {
+//             // Skip places already constrained to zero
+//             if existing_zero_places.contains(&place) {
+//                 println!("- Place {}: Already constrained to zero", place);
+//                 continue;
+//             }
+//
+//             // Check reachability in filtered net
+//             if !filtered_net.can_reach_with_available_transitions(&place) {
+//                 if let Some(stripped) = place.to_string().strip_prefix("P") {
+//                     if let Ok(idx) = stripped.parse::<usize>() {
+//                         let var = Var(idx);
+//                         println!("- Place {}: UNREACHABLE, adding Var({}) to zero list", place, idx);
+//                         new_zero_vars.push(var);
+//                     }
+//                 }
+//             } else {
+//                 println!("- Place {}: reachable", place);
+//             }
+//         }
+//
+//         // Final output
+//         println!("\nStep 5: Final results");
+//         println!("New variables to constrain to zero: {:?}", new_zero_vars);
+//
+//         new_zero_vars
+//     }
+// }
 
 
 impl<Place> Petri<Place>
@@ -644,7 +720,7 @@ fn test_sink_places() {
 
 
     #[test]
-    fn test_analyze_constraints_with_petri_net_fred_arith_2() {
+    fn test_deduce_locked_transitions_with_petri_net_fred_arith_2() {
         // Create the Petri net with Var places
         let mut petri = Petri::new(vec![Var(16)]);  // P16
 
@@ -659,49 +735,26 @@ fn test_sink_places() {
         petri.add_transition(vec![Var(12), Var(17)], vec![Var(15), Var(18)]);  // t7
         petri.add_transition(vec![Var(6), Var(18)], vec![Var(9), Var(17)]);    // t8
 
-        // Create constraint1: P0 = 0 (Var(0) = 0)
-        let constraint1 = Constraint {
-            affine_formula: vec![(1, Var(0))],
-            offset: 0,
-            constraint_type: EqualToZero,
-        };
 
-        // Create constraint2: P14 = 0 (Var(14) = 0)
-        let constraint2 = Constraint {
+        // Create constraint1: P14 = 0 (Var(14) = 0)
+        let constraint1 = Constraint {
             affine_formula: vec![(1, Var(14))],
             offset: 0,
             constraint_type: EqualToZero,
         };
 
-        // Create constraint3: P5 = 0 (Var(5) = 0)
-        let constraint3 = Constraint {
-            affine_formula: vec![(1, Var(5))],
-            offset: 0,
-            constraint_type: EqualToZero,
-        };
 
         // Create a clause containing our constraint
-
-        // let clause = vec![constraint1, constraint2];
-        let clause = vec![constraint1, constraint2, constraint3];
+        let clause = vec![constraint1];
 
         // Analyze the Petri net with our constraint
-        let (locked, potentially_firing) = petri.analyze_constraints_and_transitions(&clause);
+        let (locked, potentially_firing) = petri.deduce_transitions_that_are_locked(&clause);
 
-        println!("booya"); // todo delete
         // Verify expected locked transitions
-        // assert!(locked.contains(&3), "t3 should be locked (outputs to P0=0)");
-        //
-        // // t5 should be locked because it outputs to P8 which is only reachable through t3 (locked)
-        // assert!(locked.contains(&5), "t5 should be locked (depends on P8 from locked t3)");
-        //
-        // // Verify some transitions that should remain potentially firing
-        // assert!(potentially_firing.contains(&0), "t0 should remain potentially firing");
-        // assert!(potentially_firing.contains(&1), "t1 should remain potentially firing");
-        //
-        // // Verify the total count makes sense
-        // assert_eq!(locked.len(), 2, "Expected 2 locked transitions");
-        // assert_eq!(potentially_firing.len(), 7, "Expected 7 potentially firing transitions");
+        assert_eq!(locked.len(), 2);
+        assert!(locked.contains(&3), "t3 should be locked (outputs to P0=0)");
+        assert!(locked.contains(&4), "t4 should be locked due to deduction");
+
     }
 
 }
