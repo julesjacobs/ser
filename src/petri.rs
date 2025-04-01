@@ -752,8 +752,8 @@ fn test_sink_places() {
 
         // Verify expected locked transitions
         assert_eq!(locked.len(), 2);
-        assert!(locked.contains(&3), "t3 should be locked (outputs to P0=0)");
-        assert!(locked.contains(&4), "t4 should be locked due to deduction");
+        assert!(locked.contains(&4), "t4 should be locked (outputs to sink P14=0)");
+        assert!(locked.contains(&8), "t8 should be locked due to deduction");
 
     }
 
