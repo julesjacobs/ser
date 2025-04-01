@@ -511,77 +511,76 @@ where
     }
 }
 
-//
-//
-// impl<Place> Petri<Place>
-// where
-//     Place: Clone + PartialEq + Eq + Hash + std::fmt::Display + From<Var> + std::fmt::Debug,
-// {
-//     pub fn deduce_zero_places_from_constraints(
-//         &self,
-//         clause: &[Constraint],
-//     ) -> Vec<Var> {
-//         println!("Starting deduction of zero places...");
-//
-//         // 1. Get locked transitions
-//         println!("\nStep 1: Identifying locked transitions...");
-//         let (locked_transitions, _) = self.deduce_transitions_that_are_locked(clause);
-//         println!("Found {} locked transitions: {:?}", locked_transitions.len(), locked_transitions);
-//
-//         // 2. Create new net without locked transitions
-//         println!("\nStep 2: Creating filtered Petri net...");
-//         let filtered_net = Petri {
-//             initial_marking: self.initial_marking.clone(),
-//             transitions: self.transitions
-//                 .iter()
-//                 .enumerate()
-//                 .filter(|(i, _)| !locked_transitions.contains(i))
-//                 .map(|(_, (i, o))| (i.clone(), o.clone()))
-//                 .collect(),
-//         };
-//         println!("New net has {} transitions (original had {})",
-//                  filtered_net.transitions.len(), self.transitions.len());
-//
-//         // 3. Get places that are already constrained to zero
-//         println!("\nStep 3: Checking existing zero constraints...");
-//         let existing_zero_vars = Constraints::extract_zero_variables(clause);
-//         let existing_zero_places: HashSet<Place> = existing_zero_vars.iter()
-//             .map(|v| v.into())
-//             .collect();
-//         println!("Already constrained to zero: {:?}", existing_zero_vars);
-//
-//         // 4. Check each place in original net
-//         println!("\nStep 4: Analyzing place reachability...");
-//         let mut new_zero_vars = Vec::new();
-//
-//         for place in self.get_places() {
-//             // Skip places already constrained to zero
-//             if existing_zero_places.contains(&place) {
-//                 println!("- Place {}: Already constrained to zero", place);
-//                 continue;
-//             }
-//
-//             // Check reachability in filtered net
-//             if !filtered_net.can_reach_with_available_transitions(&place) {
-//                 if let Some(stripped) = place.to_string().strip_prefix("P") {
-//                     if let Ok(idx) = stripped.parse::<usize>() {
-//                         let var = Var(idx);
-//                         println!("- Place {}: UNREACHABLE, adding Var({}) to zero list", place, idx);
-//                         new_zero_vars.push(var);
-//                     }
-//                 }
-//             } else {
-//                 println!("- Place {}: reachable", place);
-//             }
-//         }
-//
-//         // Final output
-//         println!("\nStep 5: Final results");
-//         println!("New variables to constrain to zero: {:?}", new_zero_vars);
-//
-//         new_zero_vars
-//     }
-// }
+
+impl<Place> Petri<Place>
+where
+    Place: Clone + PartialEq + Eq + Hash + std::fmt::Display + From<Var> + std::fmt::Debug,
+{
+    pub fn deduce_zero_places_from_constraints(
+        &self,
+        clause: &[Constraint],
+    ) -> Vec<Var> {
+        println!("Starting deduction of zero places...");
+
+        // 1. Get locked transitions
+        println!("\nStep 1: Identifying locked transitions...");
+        let (locked_transitions, _) = self.deduce_transitions_that_are_locked(clause);
+        println!("Found {} locked transitions: {:?}", locked_transitions.len(), locked_transitions);
+
+        // 2. Create new net without locked transitions
+        println!("\nStep 2: Creating filtered Petri net...");
+        let filtered_net = Petri {
+            initial_marking: self.initial_marking.clone(),
+            transitions: self.transitions
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| !locked_transitions.contains(i))
+                .map(|(_, (i, o))| (i.clone(), o.clone()))
+                .collect(),
+        };
+        println!("New net has {} transitions (original had {})",
+                 filtered_net.transitions.len(), self.transitions.len());
+
+        // 3. Get places that are already constrained to zero
+        println!("\nStep 3: Checking existing zero constraints...");
+        let existing_zero_vars = Constraints::extract_zero_variables(clause);
+        let existing_zero_places: HashSet<Place> = existing_zero_vars.iter()
+            .map(|v| (*v).into())  // Fixed: Dereference v before conversion
+            .collect();
+        println!("Already constrained to zero: {:?}", existing_zero_vars);
+
+        // 4. Check each place in original net
+        println!("\nStep 4: Analyzing place reachability...");
+        let mut new_zero_vars = Vec::new();
+
+        for place in self.get_places() {
+            // Skip places already constrained to zero
+            if existing_zero_places.contains(&place) {
+                println!("- Place {}: Already constrained to zero", place);
+                continue;
+            }
+
+            // Check reachability in filtered net
+            if !filtered_net.can_reach_with_available_transitions(&place) {
+                if let Some(stripped) = place.to_string().strip_prefix("P") {
+                    if let Ok(idx) = stripped.parse::<usize>() {
+                        let var = Var(idx);
+                        println!("- Place {}: UNREACHABLE, adding Var({}) to zero list", place, idx);
+                        new_zero_vars.push(var);
+                    }
+                }
+            } else {
+                println!("- Place {}: reachable", place);
+            }
+        }
+
+        // Final output
+        println!("\nStep 5: Final results");
+        println!("New variables to constrain to zero: {:?}", new_zero_vars);
+
+        new_zero_vars
+    }
+}
 
 
 impl<Place> Petri<Place>
@@ -755,6 +754,57 @@ fn test_sink_places() {
         assert!(locked.contains(&4), "t4 should be locked (outputs to sink P14=0)");
         assert!(locked.contains(&8), "t8 should be locked due to deduction");
 
+    }
+
+
+
+
+    #[test]
+    fn test_deduce_locked_places_with_petri_net_fred_arith_2() {
+        // Create the Petri net with Var places
+        let mut petri = Petri::new(vec![Var(16)]);  // P16
+
+        // Add transitions using Var directly
+        petri.add_transition(vec![], vec![Var(12)]);          // t0 (P12)
+        petri.add_transition(vec![], vec![Var(6)]);           // t1 (P6)
+        petri.add_transition(vec![Var(9)], vec![Var(1)]);     // t2 (P9->P1)
+        petri.add_transition(vec![Var(8)], vec![Var(0)]);     // t3 (P8->P0)
+        petri.add_transition(vec![Var(12), Var(16)], vec![Var(14), Var(17)]);  // t4
+        petri.add_transition(vec![Var(6), Var(17)], vec![Var(8), Var(16)]);    // t5
+        petri.add_transition(vec![Var(15)], vec![Var(5)]);    // t6 (P15->P5)
+        petri.add_transition(vec![Var(12), Var(17)], vec![Var(15), Var(18)]);  // t7
+        petri.add_transition(vec![Var(6), Var(18)], vec![Var(9), Var(17)]);    // t8
+
+
+        // Create constraint1: P14 = 0 (Var(14) = 0)
+        let constraint1 = Constraint {
+            affine_formula: vec![(1, Var(14))],
+            offset: 0,
+            constraint_type: EqualToZero,
+        };
+
+
+        // Create a clause containing our constraint
+        let clause = vec![constraint1];
+
+        let new_zero_vars = petri.deduce_zero_places_from_constraints(&clause);
+
+
+        // Places P0, P1, P5, P8, P9, P15, P17, P18 --- are new places with constraints P'=0 following our deduction procedure
+        assert!(new_zero_vars.contains(&Var(0)), "P0 cannot be reached");
+        assert!(new_zero_vars.contains(&Var(1)), "P1 cannot be reached");
+        assert!(new_zero_vars.contains(&Var(5)), "P5 cannot be reached");
+        assert!(new_zero_vars.contains(&Var(8)), "P8 cannot be reached");
+        assert!(new_zero_vars.contains(&Var(9)), "P9 cannot be reached");
+        assert!(new_zero_vars.contains(&Var(15)), "P15 cannot be reached");
+        assert!(new_zero_vars.contains(&Var(17)), "P17 cannot be reached");
+        assert!(new_zero_vars.contains(&Var(18)), "P18 cannot be reached");
+
+
+        // Places P6, P12, P16 --- cannot be reached
+        assert!(!new_zero_vars.contains(&Var(6)), "P6 is a spawning place and can be reached");
+        assert!(!new_zero_vars.contains(&Var(12)), "P12 is a spawning place and can be reached");
+        assert!(!new_zero_vars.contains(&Var(16)), "P16 has an initial marking and should be reached even though P17, leading to t5, cannot");
     }
 
 }
