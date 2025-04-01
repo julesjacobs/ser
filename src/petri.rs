@@ -336,6 +336,74 @@ where
 
 impl<Place> Petri<Place>
 where
+    Place: Clone + PartialEq + Eq + Hash,
+{
+    /// Returns a new Petri net with:
+    /// 1. The specified transitions removed
+    /// 2. Any transitions that directly use the given place as input removed
+    pub fn remove_transitions_and_dependents(
+        &self,
+        place_to_remove: &Place,
+        transitions_to_remove: &HashSet<usize>,
+    ) -> Petri<Place> {
+        Petri {
+            initial_marking: self.initial_marking.clone(),
+            transitions: self.transitions
+                .iter()
+                .enumerate()
+                .filter(|(i, (input, _))| {
+                    !transitions_to_remove.contains(i) &&
+                        !input.contains(place_to_remove)
+                })
+                .map(|(_, (input, output))| (input.clone(), output.clone()))
+                .collect(),
+        }
+    }
+}
+
+
+impl<Place> Petri<Place>
+where
+    Place: Clone + PartialEq + Eq + Hash,
+{
+    pub fn can_reach_with_available_transitions(&self, destination: &Place) -> bool {
+        let mut reachable_places: HashSet<Place> = self.initial_marking.iter().cloned().collect();
+
+        // Early exit if destination is already in initial marking
+        if reachable_places.contains(destination) {
+            return true;
+        }
+
+        let mut changed = true;
+        while changed {
+            changed = false;
+
+            // Check all transitions where ALL inputs are available
+            for (inputs, outputs) in &self.transitions {
+                // Verify we have ALL inputs for this transition
+                if inputs.iter().all(|input| reachable_places.contains(input)) {
+                    // Add all outputs if transition can fire
+                    for place in outputs {
+                        if !reachable_places.contains(place) {
+                            reachable_places.insert(place.clone());
+                            changed = true;
+
+                            // Early exit if we've found our destination
+                            if place == destination {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        reachable_places.contains(destination)
+    }
+}
+
+impl<Place> Petri<Place>
+where
     Place: ToString,
 {
     /// Produce a textual representation of this Petri net,
@@ -397,6 +465,10 @@ where
 }
 
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
 
 #[test]
 fn test_sink_places() {
@@ -407,4 +479,61 @@ fn test_sink_places() {
 
     let sinks = petri.get_sink_places();
     assert_eq!(sinks, vec!["P2"]);
+    }
+
+
+
+    #[test]
+    fn test_fred_arith_2_petri_net_filtering() {
+        // (1) Encode the given Petri net
+        let mut petri = Petri::new(vec!["P16"]);
+
+        // Add transitions (input places, output places)
+        petri.add_transition(vec![], vec!["P12"]);          // t0
+        petri.add_transition(vec![], vec!["P6"]);           // t1
+        petri.add_transition(vec!["P9"], vec!["P1"]);       // t2
+        petri.add_transition(vec!["P8"], vec!["P0"]);       // t3 (originally t4)
+        petri.add_transition(vec!["P12", "P16"], vec!["P14", "P17"]);  // t4 (originally t9)
+        petri.add_transition(vec!["P6", "P17"], vec!["P8", "P16"]);    // t5 (originally t19)
+        petri.add_transition(vec!["P15"], vec!["P5"]);      // t6
+        petri.add_transition(vec!["P12", "P17"], vec!["P15", "P18"]);  // t7 (originally t10)
+        petri.add_transition(vec!["P6", "P18"], vec!["P9", "P17"]);    // t8 (originally t18)
+
+
+        let mut to_remove = HashSet::new();
+        to_remove.insert(4);  // Remove t4
+
+        let mut petri_without_P17_and_t4 = petri.remove_transitions_and_dependents(
+            &"P17",  // Also remove any transitions that take P1 as input
+            &to_remove
+        );
+
+        let b1T = petri.can_reach_with_available_transitions(&"P17");
+        assert!(b1T);
+
+        let b2F = petri_without_P17_and_t4.can_reach_with_available_transitions(&"P17");
+        assert!(!b2F);
+
+        let b3T = petri_without_P17_and_t4.can_reach_with_available_transitions(&"P16");
+        assert!(b3T);
+
+        let b4F = petri_without_P17_and_t4.can_reach_with_available_transitions(&"P8");
+        assert!(!b4F);
+
+        petri_without_P17_and_t4.add_transition(vec!["P12"], vec!["P8"]);    // NEW-transition
+        let b5T = petri_without_P17_and_t4.can_reach_with_available_transitions(&"P8");
+        assert!(b5T);
+
+        let b6F = petri_without_P17_and_t4.can_reach_with_available_transitions(&"P17");
+        assert!(!b6F);
+
+        let b7T = petri_without_P17_and_t4.can_reach_with_available_transitions(&"P0");
+        assert!(b7T);
+
+        let b8F = petri_without_P17_and_t4.can_reach_with_available_transitions(&"P1");
+        assert!(!b8F);
+
+    }
+
 }
+

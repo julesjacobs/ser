@@ -81,9 +81,6 @@ where
         });
     }
 
-    // remove transitions with input places = output places
-    petri.remove_identity_transitions();
-
     // identify non-reachable places, and add a constraint that their marking is 0
     let unreachable = petri.find_unreachable_places();
     constraints.assert_places_zero(&unreachable);
@@ -128,6 +125,10 @@ where
     println!("*************************");
     println!("hi");
     // //todo Guy (March 31st) - END
+
+    // IMPORTANT: to do this after finding upstream paths
+    // remove transitions with input places = output places
+    petri.remove_identity_transitions();
 
     // Save the Petri Net
     let string_representation_of_petri_net = petri.to_pnet(out_dir);
