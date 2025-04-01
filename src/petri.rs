@@ -800,7 +800,6 @@ fn test_sink_places() {
         assert!(new_zero_vars.contains(&Var(17)), "P17 cannot be reached");
         assert!(new_zero_vars.contains(&Var(18)), "P18 cannot be reached");
 
-
         // Places P6, P12, P16 --- cannot be reached
         assert!(!new_zero_vars.contains(&Var(6)), "P6 is a spawning place and can be reached");
         assert!(!new_zero_vars.contains(&Var(12)), "P12 is a spawning place and can be reached");
