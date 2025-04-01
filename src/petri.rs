@@ -313,6 +313,29 @@ where
 
 impl<Place> Petri<Place>
 where
+    Place: Clone + PartialEq + Eq + Hash,
+{
+    /// Returns all sink places (places with no outgoing edges to any transition)
+    pub fn get_sink_places(&self) -> Vec<Place> {
+        // First collect all places that appear as inputs to any transition
+        let mut places_with_outputs = HashSet::new();
+        for (input_places, _) in &self.transitions {
+            for place in input_places {
+                places_with_outputs.insert(place.clone());
+            }
+        }
+
+        // Then find all places that don't appear in any transition's input
+        self.get_places()
+            .into_iter()
+            .filter(|place| !places_with_outputs.contains(place))
+            .collect()
+    }
+}
+
+
+impl<Place> Petri<Place>
+where
     Place: ToString,
 {
     /// Produce a textual representation of this Petri net,
@@ -371,4 +394,17 @@ where
 
         out
     }
+}
+
+
+
+#[test]
+fn test_sink_places() {
+    let mut petri = Petri::new(vec!["P0", "P1", "P2"]);
+    petri.add_transition(vec!["P0"], vec!["P1"]);  // P0 has outgoing edge
+    petri.add_transition(vec!["P1"], vec!["P2"]);  // P1 has outgoing edge
+    // P2 has no outgoing edges
+
+    let sinks = petri.get_sink_places();
+    assert_eq!(sinks, vec!["P2"]);
 }

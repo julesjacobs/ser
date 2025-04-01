@@ -107,6 +107,26 @@ impl Constraints {
     }
 }
 
+impl Constraints {
+    /// Extracts all variables from a clause that have constraints of the form "coeff*var = 0"
+    /// (EqualToZero with single variable and zero offset, any coefficient)
+    pub fn extract_zero_variables(clause: &[Constraint]) -> Vec<Var> {
+        let mut zero_vars = Vec::new();
+
+        for constraint in clause {
+            if constraint.constraint_type == EqualToZero &&
+                constraint.affine_formula.len() == 1 &&
+                constraint.offset == 0
+            {
+                zero_vars.push(constraint.affine_formula[0].1);
+            }
+        }
+
+        zero_vars
+    }
+}
+
+
 // Converts a full Constraints structure to XML with proper nesting
 pub fn constraints_to_xml(constraints: &Constraints, id: &str) -> String {
     let mut xml = format!(
@@ -284,4 +304,44 @@ pub fn test_to_xml_2() {
     assert!(xml.contains("<place>P1</place>"));
     assert!(xml.contains("<integer-constant>2</integer-constant>"));
     assert!(xml.contains("<integer-constant>4</integer-constant>"));
+}
+
+
+#[test]
+pub fn test_extract_zero_variables() {
+    let clause = vec![
+        Constraint {
+            affine_formula: vec![(1, Var(0))],  // 1*P0 = 0
+            offset: 0,
+            constraint_type: EqualToZero,
+        },
+        Constraint {
+            affine_formula: vec![(2, Var(1))],  // 2*P1 = 0
+            offset: 0,
+            constraint_type: EqualToZero,
+        },
+        Constraint {
+            affine_formula: vec![(-3, Var(2))],  // -3*P2 = 0
+            offset: 0,
+            constraint_type: EqualToZero,
+        },
+        Constraint {
+            affine_formula: vec![(1, Var(3)), (-1, Var(4))],  // P3 - P4 = 0
+            offset: 0,
+            constraint_type: EqualToZero,  // Doesn't match - multiple variables
+        },
+        Constraint {
+            affine_formula: vec![(1, Var(5))],
+            offset: 1,  // P5 + 1 = 0
+            constraint_type: EqualToZero,  // Doesn't match - non-zero offset
+        },
+        Constraint {
+            affine_formula: vec![(1, Var(6))],
+            offset: 0,
+            constraint_type: NonNegative,  // Doesn't match - wrong type
+        },
+    ];
+
+    let zero_vars = Constraints::extract_zero_variables(&clause);
+    assert_eq!(zero_vars, vec![Var(0), Var(1), Var(2)]);
 }
