@@ -81,16 +81,19 @@ where
         });
     }
 
-    // identify non-reachable places, and add a constraint that their marking is 0
-    let unreachable = petri.find_unreachable_places();
-    constraints.assert_places_zero(&unreachable);
+
 
     // //todo Guy (March 31st) - START
-
+    println!("hi");
+    println!("*************************");
 
     println!("*************************");
     println!("bye");
     // //todo Guy (March 31st) - END
+
+    // identify non-reachable places, and add a constraint that their marking is 0
+    let unreachable = petri.find_unreachable_places();
+    constraints.assert_places_zero(&unreachable);
 
     // IMPORTANT: to do this after finding upstream paths, as this changes the numbering of the transitions
     // remove transitions with input places = output places

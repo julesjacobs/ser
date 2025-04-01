@@ -1,6 +1,7 @@
-use crate::graphviz;
-use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use crate::graphviz;
+use crate::affine_constraints::*;
+use std::collections::{HashMap, HashSet};
 
 // Helper function to escape strings for use as node IDs in GraphViz DOT language
 fn escape_for_graphviz_id(s: &str) -> String {
@@ -402,6 +403,111 @@ where
     }
 }
 
+
+
+impl<Place> Petri<Place>
+where
+    Place: Clone + PartialEq + Eq + Hash + std::fmt::Display + From<Var> + std::fmt::Debug,  // Added Debug
+{
+    pub fn analyze_constraints_and_transitions(
+        &self,
+        clause: &[Constraint],
+    ) -> (HashSet<usize>, HashSet<usize>) {
+        // Step 1: Extract all variables with EqualToZero constraint
+        let zero_vars: HashSet<Place> = Constraints::extract_zero_variables(clause)
+            .into_iter()
+            .map(|v| v.into())
+            .collect();
+
+        println!("Zero variables: {:?}", zero_vars);
+
+        // Step 2: Identify all sink places
+        let sink_places = self.get_sink_places();
+        println!("Sink places: {:?}", sink_places);
+
+        // Initialize transition sets
+        let mut locked = HashSet::new();
+        let mut potentially_firing: HashSet<usize> = (0..self.transitions.len()).collect();
+
+        // Step 4: Check sink nodes with EqualToZero constraint
+        for sink in sink_places {
+            if zero_vars.contains(&sink) {
+                println!("Processing zero sink: {:?}", sink);
+
+                // Find transitions that output to this sink
+                for (i, (_, outputs)) in self.transitions.iter().enumerate() {
+                    if outputs.contains(&sink) && potentially_firing.contains(&i) {
+                        println!("  Locking transition {} (outputs to zero sink {:?})", i, sink);
+                        locked.insert(i);
+                        potentially_firing.remove(&i);
+                    }
+                }
+            }
+        }
+
+        // Step 5: Process places from locked transitions
+        let mut changed = true;
+        while changed {
+            changed = false;
+
+            // Collect all places output by locked transitions that aren't zero vars
+            let mut places_to_check = HashSet::new();
+            for &t_idx in &locked {
+                for place in &self.transitions[t_idx].1 {
+                    if !zero_vars.contains(place) {
+                        places_to_check.insert(place.clone());
+                    }
+                }
+            }
+
+            for place in places_to_check {
+                println!("Processing place: {:?}", place);
+
+                // Find all transitions that output to this place
+                let mut output_transitions = Vec::new();
+                for (i, (_, outputs)) in self.transitions.iter().enumerate() {
+                    if outputs.contains(&place) {
+                        output_transitions.push(i);
+                    }
+                }
+
+                // Count how many are potentially firing
+                let pf_count = output_transitions.iter()
+                    .filter(|&i| potentially_firing.contains(i))
+                    .count();
+
+                if pf_count <= 1 {
+                    // Create new Petri net without locked transitions
+                    let new_petri = self.remove_transitions_and_dependents(&place, &locked);
+
+                    // Check if we can reach the place with available transitions
+                    if !new_petri.can_reach_with_available_transitions(&place) {
+                        // Find the potentially firing transition (if any)
+                        if let Some(&t_idx) = output_transitions.iter()
+                            .find(|&i| potentially_firing.contains(i))
+                        {
+                            println!("  Locking transition {} (only path to {:?} is blocked)", t_idx, place);
+                            locked.insert(t_idx);
+                            potentially_firing.remove(&t_idx);
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Final printout
+        println!("Final locked transitions:");
+        for &t_idx in &locked {
+            println!("  t{}: {:?}", t_idx, self.transitions[t_idx]);
+        }
+
+        (locked, potentially_firing)
+    }
+}
+
+
+
 impl<Place> Petri<Place>
 where
     Place: ToString,
@@ -533,6 +639,69 @@ fn test_sink_places() {
         let b8F = petri_without_P17_and_t4.can_reach_with_available_transitions(&"P1");
         assert!(!b8F);
 
+    }
+
+
+
+    #[test]
+    fn test_analyze_constraints_with_petri_net_fred_arith_2() {
+        // Create the Petri net with Var places
+        let mut petri = Petri::new(vec![Var(16)]);  // P16
+
+        // Add transitions using Var directly
+        petri.add_transition(vec![], vec![Var(12)]);          // t0 (P12)
+        petri.add_transition(vec![], vec![Var(6)]);           // t1 (P6)
+        petri.add_transition(vec![Var(9)], vec![Var(1)]);     // t2 (P9->P1)
+        petri.add_transition(vec![Var(8)], vec![Var(0)]);     // t3 (P8->P0)
+        petri.add_transition(vec![Var(12), Var(16)], vec![Var(14), Var(17)]);  // t4
+        petri.add_transition(vec![Var(6), Var(17)], vec![Var(8), Var(16)]);    // t5
+        petri.add_transition(vec![Var(15)], vec![Var(5)]);    // t6 (P15->P5)
+        petri.add_transition(vec![Var(12), Var(17)], vec![Var(15), Var(18)]);  // t7
+        petri.add_transition(vec![Var(6), Var(18)], vec![Var(9), Var(17)]);    // t8
+
+        // Create constraint1: P0 = 0 (Var(0) = 0)
+        let constraint1 = Constraint {
+            affine_formula: vec![(1, Var(0))],
+            offset: 0,
+            constraint_type: EqualToZero,
+        };
+
+        // Create constraint2: P14 = 0 (Var(14) = 0)
+        let constraint2 = Constraint {
+            affine_formula: vec![(1, Var(14))],
+            offset: 0,
+            constraint_type: EqualToZero,
+        };
+
+        // Create constraint3: P5 = 0 (Var(5) = 0)
+        let constraint3 = Constraint {
+            affine_formula: vec![(1, Var(5))],
+            offset: 0,
+            constraint_type: EqualToZero,
+        };
+
+        // Create a clause containing our constraint
+
+        // let clause = vec![constraint1, constraint2];
+        let clause = vec![constraint1, constraint2, constraint3];
+
+        // Analyze the Petri net with our constraint
+        let (locked, potentially_firing) = petri.analyze_constraints_and_transitions(&clause);
+
+        println!("booya"); // todo delete
+        // Verify expected locked transitions
+        // assert!(locked.contains(&3), "t3 should be locked (outputs to P0=0)");
+        //
+        // // t5 should be locked because it outputs to P8 which is only reachable through t3 (locked)
+        // assert!(locked.contains(&5), "t5 should be locked (depends on P8 from locked t3)");
+        //
+        // // Verify some transitions that should remain potentially firing
+        // assert!(potentially_firing.contains(&0), "t0 should remain potentially firing");
+        // assert!(potentially_firing.contains(&1), "t1 should remain potentially firing");
+        //
+        // // Verify the total count makes sense
+        // assert_eq!(locked.len(), 2, "Expected 2 locked transitions");
+        // assert_eq!(potentially_firing.len(), 7, "Expected 7 potentially firing transitions");
     }
 
 }
