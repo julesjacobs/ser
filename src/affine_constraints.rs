@@ -343,5 +343,17 @@ pub fn test_extract_zero_variables() {
     ];
 
     let zero_vars = Constraints::extract_zero_variables(&clause);
-    assert_eq!(zero_vars, vec![Var(0), Var(1), Var(2)]);
+
+    // Should only contain P0, P1, P2 (Var(0), Var(1), Var(2))
+    assert_eq!(zero_vars.len(), 3);
+    assert!(zero_vars.contains(&Var(0)));
+    assert!(zero_vars.contains(&Var(1)));
+    assert!(zero_vars.contains(&Var(2)));
+
+    // Should not contain any other variables
+    assert!(!zero_vars.contains(&Var(3)));
+    assert!(!zero_vars.contains(&Var(4)));
+    assert!(!zero_vars.contains(&Var(5)));
+    assert!(!zero_vars.contains(&Var(6)));
+
 }

@@ -87,46 +87,12 @@ where
 
     // //todo Guy (March 31st) - START
 
-    let clause = vec![
-        Constraint {
-            affine_formula: vec![(1, Var(0))],  // 1*P0 = 0
-            offset: 0,
-            constraint_type: EqualToZero,
-        },
-        Constraint {
-            affine_formula: vec![(2, Var(1))],  // 2*P1 = 0
-            offset: 0,
-            constraint_type: EqualToZero,
-        },
-        Constraint {
-            affine_formula: vec![(-3, Var(2))],  // -3*P2 = 0
-            offset: 0,
-            constraint_type: EqualToZero,
-        },
-        Constraint {
-            affine_formula: vec![(1, Var(3)), (-1, Var(4))],  // P3 - P4 = 0
-            offset: 0,
-            constraint_type: EqualToZero,  // Doesn't match - multiple variables
-        },
-        Constraint {
-            affine_formula: vec![(1, Var(5))],
-            offset: 1,  // P5 + 1 = 0
-            constraint_type: EqualToZero,  // Doesn't match - non-zero offset
-        },
-        Constraint {
-            affine_formula: vec![(1, Var(6))],
-            offset: 0,
-            constraint_type: NonNegative,  // Doesn't match - wrong type
-        },
-    ];
-
-    let zero_vars = Constraints::extract_zero_variables(&clause);
 
     println!("*************************");
-    println!("hi");
+    println!("bye");
     // //todo Guy (March 31st) - END
 
-    // IMPORTANT: to do this after finding upstream paths
+    // IMPORTANT: to do this after finding upstream paths, as this changes the numbering of the transitions
     // remove transitions with input places = output places
     petri.remove_identity_transitions();
 
