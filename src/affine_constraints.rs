@@ -81,52 +81,6 @@ impl Constraints {
     }
 }
 
-impl Constraints {
-    /// Adds constraints that each specified place must equal zero,
-    /// but only if such a constraint doesn't already exist in each AND clause
-    pub fn assert_places_zero(&mut self, places: &[Var]) {
-        for and_clause in &mut self.constraints {
-            for place in places {
-                // Check if this exact zero constraint already exists in this AND clause
-                let already_constrained = and_clause.iter().any(|constraint| {
-                    // Exact match for "place = 0" constraint
-                        constraint.affine_formula == vec![(1, *place)] &&
-                        constraint.offset == 0 &&
-                         constraint.constraint_type == EqualToZero
-                });
-
-                if !already_constrained {
-                    and_clause.push(Constraint {
-                        affine_formula: vec![(1, *place)],
-                        offset: 0,
-                        constraint_type: EqualToZero,
-                    });
-                }
-            }
-        }
-    }
-}
-
-impl Constraints {
-    /// Extracts all variables from a clause that have constraints of the form "coeff*var = 0"
-    /// (EqualToZero with single variable and zero offset, any coefficient)
-    pub fn extract_zero_variables(clause: &[Constraint]) -> Vec<Var> {
-        let mut zero_vars = Vec::new();
-
-        for constraint in clause {
-            if constraint.constraint_type == EqualToZero &&
-                constraint.affine_formula.len() == 1 &&
-                constraint.offset == 0
-            {
-                zero_vars.push(constraint.affine_formula[0].1);
-            }
-        }
-
-        zero_vars
-    }
-}
-
-
 // Converts a full Constraints structure to XML with proper nesting
 pub fn constraints_to_xml(constraints: &Constraints, id: &str) -> String {
     let mut xml = format!(
@@ -304,56 +258,4 @@ pub fn test_to_xml_2() {
     assert!(xml.contains("<place>P1</place>"));
     assert!(xml.contains("<integer-constant>2</integer-constant>"));
     assert!(xml.contains("<integer-constant>4</integer-constant>"));
-}
-
-
-#[test]
-pub fn test_extract_zero_variables() {
-    let clause = vec![
-        Constraint {
-            affine_formula: vec![(1, Var(0))],  // 1*P0 = 0
-            offset: 0,
-            constraint_type: EqualToZero,
-        },
-        Constraint {
-            affine_formula: vec![(2, Var(1))],  // 2*P1 = 0
-            offset: 0,
-            constraint_type: EqualToZero,
-        },
-        Constraint {
-            affine_formula: vec![(-3, Var(2))],  // -3*P2 = 0
-            offset: 0,
-            constraint_type: EqualToZero,
-        },
-        Constraint {
-            affine_formula: vec![(1, Var(3)), (-1, Var(4))],  // P3 - P4 = 0
-            offset: 0,
-            constraint_type: EqualToZero,  // Doesn't match - multiple variables
-        },
-        Constraint {
-            affine_formula: vec![(1, Var(5))],
-            offset: 1,  // P5 + 1 = 0
-            constraint_type: EqualToZero,  // Doesn't match - non-zero offset
-        },
-        Constraint {
-            affine_formula: vec![(1, Var(6))],
-            offset: 0,
-            constraint_type: NonNegative,  // Doesn't match - wrong type
-        },
-    ];
-
-    let zero_vars = Constraints::extract_zero_variables(&clause);
-
-    // Should only contain P0, P1, P2 (Var(0), Var(1), Var(2))
-    assert_eq!(zero_vars.len(), 3);
-    assert!(zero_vars.contains(&Var(0)));
-    assert!(zero_vars.contains(&Var(1)));
-    assert!(zero_vars.contains(&Var(2)));
-
-    // Should not contain any other variables
-    assert!(!zero_vars.contains(&Var(3)));
-    assert!(!zero_vars.contains(&Var(4)));
-    assert!(!zero_vars.contains(&Var(5)));
-    assert!(!zero_vars.contains(&Var(6)));
-
 }
