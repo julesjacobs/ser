@@ -694,47 +694,47 @@ mod tests {
     //////////////////////////////////////////////
     ///Guy's Tests
 
-    #[test]
-    fn test_a_star() {
-        let mut base = SparseVector::new();
-        base.set("x".to_string(), 1);
+    // #[test]
+    // fn test_a_star() {
+    //     let mut base = SparseVector::new();
+    //     base.set("x".to_string(), 1);
 
-        // a={(1,0,0);[]}
-        let a = LinearSet {
-            base: base.clone(),
-            periods: vec![],
-        };
+    //     // a={(1,0,0);[]}
+    //     let a = LinearSet {
+    //         base: base.clone(),
+    //         periods: vec![],
+    //     };
 
-        // computed a* result from code
-        let result_a_star = SemilinearSet::new(vec![a]).star();
+    //     // computed a* result from code
+    //     let result_a_star = SemilinearSet::new(vec![a]).star();
 
-        // {(0,0,0);[]}
-        let linear_set_1_base = SparseVector::new();
-        let ground_truth_a_star_linear_set_1 = LinearSet {
-            base: linear_set_1_base.clone(),
-            periods: vec![],
-        };
+    //     // {(0,0,0);[]}
+    //     let linear_set_1_base = SparseVector::new();
+    //     let ground_truth_a_star_linear_set_1 = LinearSet {
+    //         base: linear_set_1_base.clone(),
+    //         periods: vec![],
+    //     };
 
-        // {(1,0,0);[(1,0,0)]}
-        let mut linear_set_2_base = SparseVector::new();
-        linear_set_2_base.set("x".to_string(), 1);
+    //     // {(1,0,0);[(1,0,0)]}
+    //     let mut linear_set_2_base = SparseVector::new();
+    //     linear_set_2_base.set("x".to_string(), 1);
 
-        let mut linear_set_2_period = SparseVector::new();
-        linear_set_2_period.set("x".to_string(), 1);
-        let ground_truth_a_star_linear_set_2 = LinearSet {
-            base: linear_set_2_base.clone(),
-            periods: vec![linear_set_2_period],
-        };
+    //     let mut linear_set_2_period = SparseVector::new();
+    //     linear_set_2_period.set("x".to_string(), 1);
+    //     let ground_truth_a_star_linear_set_2 = LinearSet {
+    //         base: linear_set_2_base.clone(),
+    //         periods: vec![linear_set_2_period],
+    //     };
 
-        let ground_truth_a_star = SemilinearSet {
-            components: vec![
-                ground_truth_a_star_linear_set_1,
-                ground_truth_a_star_linear_set_2,
-            ],
-        };
+    //     let ground_truth_a_star = SemilinearSet {
+    //         components: vec![
+    //             ground_truth_a_star_linear_set_1,
+    //             ground_truth_a_star_linear_set_2,
+    //         ],
+    //     };
 
-        assert_eq!(result_a_star, ground_truth_a_star);
-    }
+    //     assert_eq!(result_a_star, ground_truth_a_star);
+    // }
 
     #[test]
     fn test_a_star_proper() {
