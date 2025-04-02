@@ -334,6 +334,56 @@ where
     }
 }
 
+// Returns places that are (technically) not sinks, but effectively behave like ones.
+// This occurs when these places have a constraint of being equal to zero, and have outgoing
+// edges to (only) actual sinks AND all these output sinks have a constraint of being equal to zero.
+impl<Place> Petri<Place>
+where
+    Place: Clone + PartialEq + Eq + Hash + std::fmt::Display + From<Var> + std::fmt::Debug,
+{
+    /// Identify non-sink places that effectively behave like sinks because:
+    /// 1. They only point to sinks
+    /// 2. All sinks they point to are constrained to zero
+    /// 3. The place itself is constrained to zero
+    pub fn get_effective_sinks(&self, clause: &[Constraint]) -> HashSet<Place> {
+        // 1. Extract all zero-constrained places from the clause
+        let zero_places: HashSet<Place> = Constraints::extract_zero_variables(clause)
+            .into_iter()
+            .map(|v| v.into())
+            .collect();
+
+        // 2. Get all sink places
+        let sink_places = self.get_sink_places();
+        println!("All sink places: {:?}", sink_places);
+
+        // 3. Find non-sink places that effectively behave like sinks
+        let effective_sinks: HashSet<Place> = self.get_places()
+            .into_iter()
+            .filter(|place| {
+                // Skip actual sinks
+                if sink_places.contains(place) {
+                    return false;
+                }
+
+                // Must be zero-constrained
+                if !zero_places.contains(place) {
+                    return false;
+                }
+
+                // Check all transitions where this place is an input
+                self.transitions
+                    .iter()
+                    .filter(|(inputs, _)| inputs.contains(place))
+                    .flat_map(|(_, outputs)| outputs)
+                    .all(|output| sink_places.contains(output) && zero_places.contains(output))
+            })
+            .collect();
+
+        println!("Effective sinks found: {:?}", effective_sinks);
+        effective_sinks
+    }
+}
+
 
 impl<Place> Petri<Place>
 where
@@ -421,23 +471,28 @@ where
 
         println!("Zero variables: {:?}", zero_vars);
 
-        // Step 2: Identify all sink places
+        // Step 2: Identify all critical places (sinks + effective sinks)
         let sink_places = self.get_sink_places();
-        println!("Sink places: {:?}", sink_places);
+        let effective_sinks = self.get_effective_sinks(clause);
+
+        // Combine into a single set of critical places
+        let mut critical_places = sink_places;
+        critical_places.extend(effective_sinks);
+        println!("Critical places (sinks + effective sinks): {:?}", critical_places);
 
         // Initialize transition sets
         let mut locked = HashSet::new();
         let mut potentially_firing: HashSet<usize> = (0..self.transitions.len()).collect();
 
         // Step 4: Check sink nodes with EqualToZero constraint
-        for sink in sink_places {
-            if zero_vars.contains(&sink) {
-                println!("Processing zero sink: {:?}", sink);
+        for place in critical_places {
+            if zero_vars.contains(&place) {
+                println!("Processing zero critical place: {:?}", place);
 
                 // Find transitions that output to this sink
                 for (i, (_, outputs)) in self.transitions.iter().enumerate() {
-                    if outputs.contains(&sink) && potentially_firing.contains(&i) {
-                        println!("  Locking transition {} (outputs to zero sink {:?})", i, sink);
+                    if outputs.contains(&place) && potentially_firing.contains(&i) {
+                        println!("  Locking transition {} (outputs to zero critical place {:?})", i, place);
                         locked.insert(i);
                         potentially_firing.remove(&i);
                     }
@@ -807,4 +862,76 @@ fn test_sink_places() {
     }
 
 }
+
+
+#[test]
+fn test_effective_sinks_found_for_fred_arith_with_constraints() {
+    // Create the Petri net
+    let mut petri = Petri::new(vec!["P16"]);
+
+    // Add transitions (input places, output places)
+    petri.add_transition(vec![], vec!["P12"]);          // t0
+    petri.add_transition(vec![], vec!["P6"]);           // t1
+    petri.add_transition(vec!["P14"], vec!["P4"]);      // t2
+    petri.add_transition(vec!["P13"], vec!["P3"]);      // t3
+    petri.add_transition(vec!["P15"], vec!["P5"]);      // t4
+    petri.add_transition(vec!["P9"], vec!["P1"]);       // t5
+    petri.add_transition(vec!["P8"], vec!["P0"]);       // t6
+    petri.add_transition(vec!["P10"], vec!["P2"]);      // t7
+    petri.add_transition(vec!["P7", "P16"], vec!["P9", "P17"]);  // t8
+    petri.add_transition(vec!["P6", "P17"], vec!["P8", "P16"]);  // t9
+    petri.add_transition(vec!["P7", "P17"], vec!["P10", "P18"]); // t10
+    petri.add_transition(vec!["P6", "P18"], vec!["P9", "P17"]);  // t11
+    petri.add_transition(vec!["P12", "P16"], vec!["P14", "P17"]); // t12
+    petri.add_transition(vec!["P11", "P17"], vec!["P13", "P16"]); // t13
+    petri.add_transition(vec!["P12", "P17"], vec!["P15", "P18"]); // t14
+    petri.add_transition(vec!["P11", "P18"], vec!["P14", "P17"]); // t15
+
+    // Create the constraints clause
+    let clause = vec![
+        Constraint { affine_formula: vec![(-1, Var(1)), (1, Var(5))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(4))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(3))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(2))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(0))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(1))], offset: -1, constraint_type: NonNegative },
+        Constraint { affine_formula: vec![(1, Var(11))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(14))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(7))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(6))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(9))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(12))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(8))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(13))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(15))], offset: 0, constraint_type: EqualToZero },
+        Constraint { affine_formula: vec![(1, Var(10))], offset: 0, constraint_type: EqualToZero },
+    ];
+
+
+    // Convert the Petri net to use Var instead of strings for places
+    let var_petri = petri.rename(|s| {
+        let num = s.strip_prefix("P").unwrap().parse::<usize>().unwrap();
+        Var(num)
+    });
+
+    // Get the effective sinks
+    let effective_sinks = var_petri.get_effective_sinks(&clause);
+
+
+    // Verify we found all expected effective sinks
+    assert_eq!(effective_sinks.len(), 4);
+
+    // All the candidates are: P8, P9, P10, P13, P14, P15
+    assert!(effective_sinks.contains(&Var(8)));
+    assert!(effective_sinks.contains(&Var(10)));
+    assert!(effective_sinks.contains(&Var(13)));
+    assert!(effective_sinks.contains(&Var(14)));
+
+    // However,P9 and P15 won't be returned because the sinks they point to are not constrained to zero
+    assert!(!effective_sinks.contains(&Var(9)));
+    assert!(!effective_sinks.contains(&Var(15)));
+
+}
+
+
 

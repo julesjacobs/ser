@@ -82,14 +82,32 @@ where
     }
 
 
-
-    // //todo Guy (March 31st) - START
-    println!("hi");
     println!("*************************");
 
+    // per each (AND) clause constraint
+    for (i, and_clause) in constraints.constraints.iter_mut().enumerate() {
+        println!("\n#####");
+        println!("\nProcessing AND clause {}:", i);
+        println!("Current constraints:");
+        for constraint in &*and_clause {
+            println!("  {:?}", constraint);
+        }
+        // deduce invariant on places that must be zero
+        let deduced_new_zero_vars = petri.deduce_zero_places_from_constraints(&and_clause);
+
+        // add to the current (iterated) AND clause a new constraint of the deduced places that is 0
+        for var in deduced_new_zero_vars {
+            and_clause.push(Constraint {
+                affine_formula: vec![(1, var)],
+                offset: 0,
+                constraint_type: EqualToZero,
+            });
+        }
+
+    }
+
+
     println!("*************************");
-    println!("bye");
-    // //todo Guy (March 31st) - END
 
     // identify non-reachable places, and add a constraint that their marking is 0
     let unreachable = petri.find_unreachable_places();
@@ -123,3 +141,7 @@ where
     // TODO: add optimization: if Constraints are empty (=FALSE) for the complement semilinear set, then
     // just return "FALSE". Currently the generated XML (e.g., simple_ser) is not parsed correctly
 }
+
+
+
+
