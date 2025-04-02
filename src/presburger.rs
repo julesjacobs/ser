@@ -1,6 +1,7 @@
 use std::fmt;
 use std::hash::Hash;
 use crate::semilinear::{SemilinearSet, LinearSet};
+use crate::affine_constraints::{Constraints as AffineConstraints, Var, ConstraintType as AffineConstraintType};
 
 /// Represents a Presburger set, which is a union of existentially quantified conjunctions of linear constraints
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -212,6 +213,55 @@ impl<T: fmt::Display> fmt::Display for PresburgerSet<T> {
 }
  
 
+/// Convert affine constraints to a PresburgerSet<Var>
+pub fn from_affine_constraints(affine: &AffineConstraints) -> PresburgerSet<Var> {
+    // A set of affine constraints is a disjunction of conjunctions of constraints
+    // Convert each conjunction to a QuantifiedSet
+    let mut union = Vec::new();
+    
+    for conjunct in &affine.constraints {
+        let mut presburger_constraints = Vec::new();
+        
+        // Convert each affine constraint to a Presburger constraint
+        for affine_constraint in conjunct {
+            // Map the linear combination
+            let mut linear_combination = Vec::new();
+            
+            for (coeff, var) in &affine_constraint.affine_formula {
+                // Check if this is a real variable or an existential variable
+                if var.0 < affine.num_vars {
+                    // Real variable
+                    linear_combination.push((*coeff, Variable::Original(*var)));
+                } else {
+                    // Existential variable
+                    // Convert from the original format where existential variables start at num_vars
+                    let existential_idx = var.0 - affine.num_vars;
+                    linear_combination.push((*coeff, Variable::Existential(existential_idx)));
+                }
+            }
+            
+            // Map the constraint type
+            let constraint_type = match affine_constraint.constraint_type {
+                AffineConstraintType::NonNegative => ConstraintType::NonNegative,
+                AffineConstraintType::EqualToZero => ConstraintType::EqualToZero,
+            };
+            
+            // Create the Presburger constraint
+            presburger_constraints.push(Constraint {
+                linear_combination,
+                constant_term: affine_constraint.offset,
+                constraint_type,
+            });
+        }
+        
+        // Create a QuantifiedSet from this conjunction of constraints
+        union.push(QuantifiedSet::with_sorted_constraints(presburger_constraints));
+    }
+    
+    // Return with sorted components for consistent comparison
+    PresburgerSet::with_sorted_components(union)
+}
+
 impl<T: Hash + Clone + Ord + fmt::Display> PresburgerSet<T> {
     /// Convert a LinearSet<T> to a QuantifiedSet<T>
     /// A linear set base + n₁·period₁ + n₂·period₂ + ... (where n_i are natural numbers)
@@ -287,6 +337,7 @@ impl<T: Hash + Clone + Ord + fmt::Display> PresburgerSet<T> {
 mod tests {
     use super::*;
     use crate::semilinear::{SemilinearSet, LinearSet, SparseVector};
+    use crate::affine_constraints::{Constraints as AffineConstraints, Constraint as AffineConstraint, Var, ConstraintType as AffineConstraintType};
 
     // Helper function to create a sparse vector with a single key-value pair
     fn sparse_vector<T: Hash + Clone + Ord>(key: T, value: usize) -> SparseVector<T> {
@@ -591,5 +642,124 @@ mod tests {
         let result = PresburgerSet::from_semilinear_set(&ab_star);
         println!("{}", result);
         // assert_eq!(result.to_string(), "∃n0,n1. b - n0 = 0 ∧ a - n1 = 0");
+    }
+    
+    #[test]
+    fn test_from_affine_constraints_simple() {
+        // Create a simple constraint system
+        // (2P0 + P1 ≥ 4) OR (P0 = P1)
+        let affine_constraints = AffineConstraints {
+            num_vars: 2, // P0 (v0) and P1 (v1)
+            num_existential_vars: 0,
+            constraints: vec![
+                // First OR clause: 2P0 + P1 ≥ 4
+                vec![AffineConstraint {
+                    affine_formula: vec![(2, Var(0)), (1, Var(1))],
+                    offset: -4, // 2P0 + P1 - 4 ≥ 0
+                    constraint_type: AffineConstraintType::NonNegative,
+                }],
+                // Second OR clause: P0 = P1
+                vec![AffineConstraint {
+                    affine_formula: vec![(1, Var(0)), (-1, Var(1))],
+                    offset: 0,
+                    constraint_type: AffineConstraintType::EqualToZero,
+                }],
+            ],
+        };
+        
+        // Convert to a Presburger set
+        let presburger_set = from_affine_constraints(&affine_constraints);
+        println!("Presburger set from affine constraints: {}", presburger_set);
+        
+        // Manually construct the expected Presburger set
+        // First component: 2P0 + P1 - 4 ≥ 0
+        let constraint1 = Constraint {
+            linear_combination: vec![
+                (2, Variable::Original(Var(0))),
+                (1, Variable::Original(Var(1))),
+            ],
+            constant_term: -4,
+            constraint_type: ConstraintType::NonNegative,
+        };
+        
+        let quantified_set1 = QuantifiedSet::with_sorted_constraints(vec![constraint1]);
+        
+        // Second component: P0 - P1 = 0
+        let constraint2 = Constraint {
+            linear_combination: vec![
+                (1, Variable::Original(Var(0))),
+                (-1, Variable::Original(Var(1))),
+            ],
+            constant_term: 0,
+            constraint_type: ConstraintType::EqualToZero,
+        };
+        
+        let quantified_set2 = QuantifiedSet::with_sorted_constraints(vec![constraint2]);
+        
+        // Combined Presburger set
+        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![quantified_set1, quantified_set2]);
+        
+        assert_eq!(presburger_set, expected_presburger_set);
+    }
+    
+    #[test]
+    fn test_from_affine_constraints_with_existentials() {
+        // Create a constraint system with existential variables
+        // There exists P2, P3 such that:
+        // (P0 = 2*P2) AND (P1 = 2*P3 + 1)
+        // This represents the set where P0 is even and P1 is odd
+        let affine_constraints = AffineConstraints {
+            num_vars: 2,            // P0 (v0) and P1 (v1)
+            num_existential_vars: 2, // P2 (v2) and P3 (v3) are existential
+            constraints: vec![
+                vec![
+                    // P0 = 2*P2
+                    AffineConstraint {
+                        affine_formula: vec![(1, Var(0)), (-2, Var(2))],
+                        offset: 0,
+                        constraint_type: AffineConstraintType::EqualToZero,
+                    },
+                    // P1 = 2*P3 + 1
+                    AffineConstraint {
+                        affine_formula: vec![(1, Var(1)), (-2, Var(3))],
+                        offset: -1,
+                        constraint_type: AffineConstraintType::EqualToZero,
+                    },
+                ],
+            ],
+        };
+        
+        // Convert to a Presburger set
+        let presburger_set = from_affine_constraints(&affine_constraints);
+        println!("Presburger set from affine constraints with existentials: {}", presburger_set);
+        
+        // Manually construct the expected Presburger set
+        // ∃n0,n1. P0 - 2·n0 = 0 ∧ P1 - 2·n1 - 1 = 0
+        let mut constraints = Vec::new();
+        
+        // P0 - 2·n0 = 0
+        constraints.push(Constraint {
+            linear_combination: vec![
+                (1, Variable::Original(Var(0))),
+                (-2, Variable::Existential(0)),
+            ],
+            constant_term: 0,
+            constraint_type: ConstraintType::EqualToZero,
+        });
+        
+        // P1 - 2·n1 - 1 = 0
+        constraints.push(Constraint {
+            linear_combination: vec![
+                (1, Variable::Original(Var(1))),
+                (-2, Variable::Existential(1)),
+            ],
+            constant_term: -1,
+            constraint_type: ConstraintType::EqualToZero,
+        });
+        
+        let expected_quantified_set = QuantifiedSet::with_sorted_constraints(constraints);
+        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![expected_quantified_set]);
+        
+        assert_eq!(presburger_set, expected_presburger_set);
     }
 }
