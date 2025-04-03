@@ -412,8 +412,7 @@ impl<T: Display> Display for QuantifiedSet<T> {
 
 // Implement conversions between SemilinearSet and PresburgerSet
 
-use crate::semilinear::{LinearSet, SemilinearSet, SparseVector};
-use std::collections::HashMap;
+use crate::semilinear::{LinearSet, SemilinearSet};
 use std::hash::Hash;
 
 impl<T: Clone + Ord + Debug + ToString + Eq + Hash> PresburgerSet<T> {
