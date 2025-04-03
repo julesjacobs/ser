@@ -1,6 +1,6 @@
+use cc;
 use std::env;
 use std::path::PathBuf;
-use cc;
 
 fn main() {
     // ... (ISL_PREFIX, link-search, link-lib setup as before) ...
@@ -19,8 +19,8 @@ fn main() {
     // --- Compile C helper file ---
     cc::Build::new()
         .file("src/isl_helpers.c") // Your C helper file
-        .include(&include_path)   // Tell C compiler where ISL headers are
-        .compile("isl_helpers");  // Resulting static lib name (libisl_helpers.a)
+        .include(&include_path) // Tell C compiler where ISL headers are
+        .compile("isl_helpers"); // Resulting static lib name (libisl_helpers.a)
     // --- End C compilation ---
 
     let bindings = bindgen::Builder::default()
@@ -36,7 +36,7 @@ fn main() {
         .expect("Unable to generate bindings");
 
     // ... (write bindings file) ...
-     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
         .write_to_file(out_path.join("isl_bindings.rs"))
         .expect("Couldn't write bindings!");
