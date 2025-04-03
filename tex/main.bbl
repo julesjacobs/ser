@@ -1,3 +1,200 @@
-\begin{thebibliography}{}
+\begin{thebibliography}{10}
+
+\bibitem{AhNeBuKoHu95}
+M.~Ahamad, G.~Neiger, J.~Burns, P.~Kohli, and P.~Hutto.
+\newblock {Causal Memory: Definitions, Implementation, and Programming}.
+\newblock {\em Distributed Computing}, 9(1):37--49, 1995.
+
+\bibitem{AlMcPe96}
+R.~Alur, K.~McMillan, and D.~Peled.
+\newblock {Model-Checking of Correctness Conditions for Concurrent Objects}.
+\newblock In {\em Proc. 11th Annual IEEE Symposium on Logic in Computer
+  Science}, pages 219--228, 1996.
+
+\bibitem{AmBeDa21}
+N.~Amat, B.~Berthomieu, and S.~Dal~Zilio.
+\newblock {On the Combination of Polyhedral Abstraction and SMT-Based Model
+  Checking for Petri Nets}.
+\newblock In {\em Proc. 42nd Int. Conf. on Applications and Theory of Petri
+  Nets and Concurrency (PETRI NETS)}, pages 164--185, 2021.
+
+\bibitem{AmDa23}
+N.~Amat and S.~Dal~Zilio.
+\newblock {SMPT: A Testbed for Reachability Methods in Generalized Petri Nets}.
+\newblock In {\em Proc. 25th Int. Symposium on Formal Methods (FM)}, pages
+  445--453, 2023.
+
+\bibitem{AmDaHu22}
+N.~Amat, S.~Dal~Zilio, and T.~Hujsa.
+\newblock {Property Directed Reachability for Generalized Petri Nets}.
+\newblock In {\em Proc. 28th Int. Conf. on Tools and Algorithms for the
+  Construction and Analysis of Systems (TACAS),}, pages 505--523, 2022.
+
+\bibitem{BeHaGo87}
+P.~Bernstein, V.~Hadzilacos, and N.~Goodman.
+\newblock {\em {Concurrency Control and Recovery in Database Systems}}, volume
+  370.
+\newblock Addison-Wesley Reading, 1987.
+
+\bibitem{BoEmEnHa13}
+A.~Bouajjani, M.~Emmi, C.~Enea, and J.~Hamza.
+\newblock {Verifying Concurrent Programs Against Sequential Specifications}.
+\newblock In {\em Proc. 22nd European Symposium on Programming (ESOP)}, pages
+  290--309, 2013.
+
+\bibitem{BoEnGuHa17}
+A.~Bouajjani, C.~Enea, R.~Guerraoui, and J.~Hamza.
+\newblock {On Verifying Causal Consistency}.
+\newblock In {\em Proc. 44th ACM SIGPLAN Symposium on Principles of Programming
+  Languages (POPL)}, pages 626--638, 2017.
+
+\bibitem{BuMo06}
+B.~Burke and R.~Monson-Haefel.
+\newblock {\em {Enterprise JavaBeans 3.0}}.
+\newblock O'Reilly Media, Inc., 2006.
+\newblock Optimistic Locking.
+
+\bibitem{CzWo22}
+W.~Czerwi{\'n}ski and {\L}.~Orlikowski.
+\newblock {Reachability in Vector Addition Systems is Ackermann-Complete}.
+\newblock In {\em Proc. 62nd Annual Symposium on Foundations of Computer
+  Science (FOCS)}, pages 1229--1240. IEEE, 2021.
+
+\bibitem{DeBj08}
+L.~De~Moura and N.~Bj{\o}rner.
+\newblock {Z3: An Efficient SMT Solver}.
+\newblock In {\em Proc. 14th Int. Conf. on Tools and Algorithms for the
+  Construction and Analysis of Systems (TACAS)}, pages 337--340, 2008.
+
+\bibitem{DiLa20}
+A.~Dixon and R.~Lazi{\'c}.
+\newblock {KReach: A Tool for Reachability in Petri Nets}.
+\newblock In {\em Proc. 26th Int. Conf. on Tools and Algorithms for the
+  Construction and Analysis of Systems (TACAS)}, pages 405--412, 2020.
+
+\bibitem{EsNi94}
+J.~Esparza and M.~Nielsen.
+\newblock {Decidability Issues for Petri Nets --- A Survey}.
+\newblock {\em Journal of Information Processing and Cybernetics},
+  30(3):143--160, 1994.
+
+\bibitem{EsGrKoTr76}
+K.~Eswaran, J.~Gray, R.~Lorie, and I.~Traiger.
+\newblock {The Notions of Consistency and Predicate Locks in a Database
+  System}.
+\newblock {\em Communications of the ACM}, 19(11):624--633, 1976.
+
+\bibitem{Ha76}
+M.~Hack.
+\newblock {The Equality Problem for Vector Addition Systems is Undecidable}.
+\newblock {\em Theoretical Computer Science}, 2(1):77--95, 1976.
+
+\bibitem{Ho24}
+L.~Hochstein.
+\newblock {Serializability and {TLA+}}, Oct 2024.
+\newblock Accessed: [Insert Access Date Here].
+
+\bibitem{Ja95}
+P.~Jan{\v{c}}ar.
+\newblock {Undecidability of Bisimilarity for Petri Nets and Some Related
+  Problems}.
+\newblock {\em Theoretical Computer Science}, 148(2):281--301, 1995.
+
+\bibitem{KoKuTr19}
+I.~Konnov, J.~Kukovec, and T.-H. Tran.
+\newblock {{TLA+} Model Checking Made Symbolic}.
+\newblock In {\em Proc. Int. Conf. on Object-Oriented Programming Systems,
+  Languages, and Applications Proceedings of the ACM on Programming Languages
+  (OOPSLA)}.
+
+\bibitem{Ko82}
+S.~Kosaraju.
+\newblock {Decidability of Reachability in Vector Addition Systems}.
+\newblock In {\em Proc. 14th Annual ACM Symposium on Theory of Computing
+  (STOC)}, pages 267--281, 1982.
+
+\bibitem{KuRo81}
+H.-T. Kung and J.~T. Robinson.
+\newblock {On Optimistic Methods for Concurrency Control}.
+\newblock {\em ACM Transactions on Database Systems (TODS)}, 6(2):213--226,
+  1981.
+
+\bibitem{LaBo20}
+O.~Lahav and U.~Boker.
+\newblock {Decidable Verification Under a Causally Consistent Shared Memory}.
+\newblock In {\em Proc. 41st ACM SIGPLAN Conference on Programming Language
+  Design and Implementation (PLDI)}, pages 211--226, 2020.
+
+\bibitem{La92}
+J.-L. Lambert.
+\newblock {A Structure to Decide Reachability in Petri Nets}.
+\newblock {\em Theoretical Computer Science}, 99(1):79--104, 1992.
+
+\bibitem{La78}
+L.~Lamport.
+\newblock {Time, Clocks, and the Ordering of Events in a Distributed System}.
+\newblock {\em Communications of the ACM}, 21(7):558–565, 1978.
+
+\bibitem{La94}
+L.~Lamport.
+\newblock {The Temporal Logic of Actions}.
+\newblock Number~3, pages 872--923, 1994.
+
+\bibitem{LlFrKaAn11}
+W.~Lloyd, M.~Freedman, M.~Kaminsky, and D.~Andersen.
+\newblock {Don't Settle for Eventual: Scalable Causal Consistency for Wide-Area
+  Storage with COPS}.
+\newblock In {\em Proc. 23rd ACM Symposium on Operating Systems Principles
+  (SOSP)}, pages 401--416, 2011.
+
+\bibitem{Ma70}
+J.~Matijas{\'e}vi{\v{c}}.
+\newblock {Enumerable Sets are Diophantine}.
+\newblock {\em Soviet Math. Dokl.}, 11(2):354--357, 1970.
+
+\bibitem{Ma81}
+E.~Mayr.
+\newblock {An Algorithm for the General Petri Net Reachability Problem}.
+\newblock In {\em Proceedings of the thirteenth annual ACM symposium on Theory
+  of computing}, pages 238--246, 1981.
+
+\bibitem{Mi67}
+M.~Minsky.
+\newblock {\em {Computation: Finite and Infinite Machines}}.
+\newblock Prentice Hall.
+
+\bibitem{Mu89}
+T.~Murata.
+\newblock {Petri Nets: Properties, Analysis and Applications}.
+\newblock {\em Proceedings of the IEEE}, 77(4):541--580, 1989.
+
+\bibitem{Pa79}
+C.~Papadimitriou.
+\newblock {The Serializability of Concurrent Database Updates}.
+\newblock {\em Journal of the ACM (JACM)}, 26(4):631--653, 1979.
+
+\bibitem{Reisig12}
+W.~Reisig.
+\newblock {\em {Petri Nets: An Introduction}}, volume~4.
+\newblock Springer Science \& Business Media, 2012.
+
+\bibitem{SoVaVi20}
+T.~Soethout, T.~van~der Storm, and J.~J. Vinju.
+\newblock {Automated Validation of State-Based Client-Centric Isolation with
+  TLA\^{}+}.
+\newblock In {\em Proc. 18th Int. Conf. Software Engineering and Formal Methods
+  (SEFM)}, pages 43--57, 2020.
+
+\bibitem{YuMaLa99}
+Y.~Yu, P.~Manolios, and L.~Lamport.
+\newblock {Model Checking {TLA+} Specifications}.
+\newblock In {\em Proc. Int. Conf. Correct Hardware Design and Verification
+  Methods (CHARME)}, pages 54--66, 1999.
+
+\bibitem{ZeBiBoEnEr19}
+R.~Zennou, R.~Biswas, A.~Bouajjani, C.~Enea, and M.~Erradi.
+\newblock {Checking Causal Consistency of Distributed Databases}.
+\newblock In {\em Proc. Int. Conf. on Networked Systems (NETYS)}, pages 35--51,
+  2019.
 
 \end{thebibliography}

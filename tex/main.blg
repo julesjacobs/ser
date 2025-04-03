@@ -2,47 +2,68 @@ This is BibTeX, Version 0.99d (TeX Live 2024)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 The style file: abbrv.bst
-I found no \citation commands---while reading file main.aux
 Database file #1: references.bib
-You've used 0 entries,
+I was expecting a `,' or a `}'---line 591 of file references.bib
+ :  
+ :  pages={1--30},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Repeated entry---line 775 of file references.bib
+ : @inproceedings{LlFrKaAn11
+ :                          ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 793 of file references.bib
+ : @article{La78
+ :              ,
+I'm skipping whatever remains of this entry
+I was expecting a `,' or a `}'---line 983 of file references.bib
+ :  
+ :  year      = {1967}
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Warning--empty year in KoKuTr19
+Warning--empty booktitle in La94
+Warning--there's a number but no series in La94
+Warning--empty year in Mi67
+You've used 34 entries,
             2118 wiz_defined-function locations,
-            497 strings with 3707 characters,
-and the built_in function-call counts, 18 in all, are:
-= -- 0
-> -- 0
-< -- 0
-+ -- 0
-- -- 0
-* -- 2
-:= -- 7
-add.period$ -- 0
-call.type$ -- 0
-change.case$ -- 0
+            736 strings with 9484 characters,
+and the built_in function-call counts, 12992 in all, are:
+= -- 1311
+> -- 469
+< -- 20
++ -- 186
+- -- 152
+* -- 820
+:= -- 1957
+add.period$ -- 104
+call.type$ -- 34
+change.case$ -- 174
 chr.to.int$ -- 0
-cite$ -- 0
-duplicate$ -- 0
-empty$ -- 1
-format.name$ -- 0
-if$ -- 1
+cite$ -- 38
+duplicate$ -- 576
+empty$ -- 1122
+format.name$ -- 152
+if$ -- 2869
 int.to.chr$ -- 0
-int.to.str$ -- 0
-missing$ -- 0
-newline$ -- 3
-num.names$ -- 0
-pop$ -- 0
+int.to.str$ -- 34
+missing$ -- 37
+newline$ -- 174
+num.names$ -- 68
+pop$ -- 232
 preamble$ -- 1
-purify$ -- 0
+purify$ -- 144
 quote$ -- 0
-skip$ -- 1
+skip$ -- 454
 stack$ -- 0
-substring$ -- 0
-swap$ -- 0
-text.length$ -- 0
+substring$ -- 960
+swap$ -- 203
+text.length$ -- 20
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 0
-warning$ -- 0
-while$ -- 0
-width$ -- 0
-write$ -- 2
-(There was 1 error message)
+type$ -- 128
+warning$ -- 4
+while$ -- 140
+width$ -- 36
+write$ -- 373
+(There were 4 error messages)

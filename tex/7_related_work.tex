@@ -2,3 +2,67 @@
 \label{sec:relatedWork}
 
 Related Work includes...
+
+
+Serializability first introduced by Eswaran et al.~\cite{EsGrKoTr76}.  It is the first to put forth serializability as a correctness condition for concurrent transaction execution.
+The paper also covers conflict serializability. 
+%
+Papadimitriou~\cite{Pa79} proved that even deciding the history of a single interleaving is serializable is NP-hard.
+
+conflict serializability is enforced during runtime in 
+with with pessimistic locking approaches (e.g, 2-Phase locking~\cite{BeHaGo87}), or with optimistic locking approaches (e.g., Optimistic Concurrency Control (OCC))~\cite{KuRo81, BuMo06}
+
+
+Alur et al.~\cite{AlMcPe96}... 
+cover conflict serializability (not "regular" serializability, which is what we do). Furthermore, a main caveat is that they focus on a bounded number of transactions
+
+
+
+continued by~\cite{BoEmEnHa13}.
+In the followup paper (Boujjani et al.) - they also cover conflict serializability, but find a stronger result than Alur, based on unbounded transactions. They find an interesting result that although you can have an infinite conflict graph (when having infinite transactions), then you can still decide conflict serializability in the unbounded case by finding a cycle in the graph when it's non (conflict) serializable, and the cycle length surprisingly does not depend on the number of transactions, which is pretty cool. Another point is that they define a VASS (=Petri Net) that represents the interleaving, and their definition for it is similar to our PN. They then modify it to include a conflict cycle. The most relevant part to us in this paper is that it's on an unbounded number of transactions and also, that they represent Int(S) with a VASS that is similar to us. Still, it's not our notion of serializability (and indeed, they have EXPTIME complexity, while we're probably Ackermann complete?).
+
+
+
+Another line of work leverages the highly expressive \textit{Logic of Temporal Actions} (TLA)~\cite{La94}. 
+%
+These work encode
+serializability in TLA+~\cite{SoVaVi20, Ho24},...model checkers (such as TLC and Apalache)~\cite{YuMaLa99, KoKuTr19}.
+%
+TLA+ can indeed encode an infinite number of transactions. For example, here is the TLA+ spec for encoding serializability.
+However, for doing model checking on a TLA spec (with the TLC model checker) --- the model checker takes a .cfg file as additional input, in in the .cfg you explicitly specify all of the sets in the model, and these have to be finite. You can see this here where the model checking file needs to encode in advance the number of transactions (see attached figure)
+
+
+
+\todo{go over the paper and its citing papers}
+Me:
+1992 paper today, they seem to model a concurrent execution with petri nets but they don't ask if all executions are serializable which is our subject matter
+
+Furthermore, other work cover additional consistency models, such as causal consistency, which was put forth by Lamport~\cite{La78}, en extended to shared memory systems as \textit{causal memory}~\cite{AhNeBuKoHu95}. (include causal + consistency, designed in COPS~\cite{LlFrKaAn11}). The have been a plethora of works on model checking systems that adhere to causal consistency, and hence the complexity of such procedures~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}
+
+\todo{go over Mark's notes}
+
+
+
+\todo{go over Espinoza complexity results}
+
+Our work also builds upon both theoretical literature, as well as practical results, pertaining to Petri Nets~\cite{Reisig12,Mu89}.
+%
+In terms of theory, our undecidability result is based on a classic result by Hack~\cite{Ha76}, showing that, given two Petri Nets, it is undecdiable to answer whether they have equivalent reachbility sets. Hack based his result on the work of Rabin (which was never published). These undecdiability results follow from a series of reductions, originating from Hilbert's 10th problem, i.e., deciding if a Diophantine polynomial has an integer root (a problem that was proved undecidable by Matijas{\'e}vi{\v{c}}~\cite{Ma70}).
+%
+Later, Jan{\v{c}}ar~\cite{Ja95} simplified this proof by using Petri Nets to simulate 2-counter Minsky Machines, which are univerally comptuable and hence undecidable~\cite{Mi67}. Moreover, Jan{\v{c}}ar's result is stronger as it shows that this equality is undecidable even for Petri Nets with five unbounded places~\cite{Ja95}.
+%
+We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} for a comprehensive summary on additional decidability results pertaining to Petri Nets.
+
+
+Deciding reachaility for Petri Nets:
+
+- Mayr~\cite{Ma81} was the first to put forth an algorithm for deciding reachability for Petri Nets in the unbounded case (note that for a bounded net this is trivial as you can enumerate all reachable markings.)
+
+- This algorithm was later improved and simplified by Kosaraju~\cite{Ko82}, and then by Lambert~\cite{La92}.
+
+- Very recently, the Complexity was recently proven to be Ackermann complete~\cite{CzWo22}, indicating it inherently infeasible in practice to solve on large problems.
+
+These algorithms have inspired various Petri Net reachability tools, such as K-Reach~\cite{DiLa20} and SMPT~\cite{AmDa23}, which employs an SMT-based approach~\cite{AmBeDa21, AmDaHu22} which reduces the reachability problem to a satisfiability query (that is subsequently dispatched to the state-of-the-art Z3 solver~\cite{DeBj08}).
+
+ 
+
