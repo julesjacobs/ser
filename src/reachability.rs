@@ -4,10 +4,10 @@ use crate::petri::*;
 use crate::semilinear::*;
 use either::*;
 use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 use std::fs;
 use std::hash::Hash;
 use std::io::Write;
-use std::fmt::Display;
 
 pub fn is_petri_reachability_set_subset_of_semilinear<P, Q>(
     petri: Petri<Either<P, Q>>,
@@ -84,10 +84,15 @@ where
     // Save the Petri Net
     let string_representation_of_petri_net = petri.to_pnet(out_dir);
     let petri_net_file_output_path = format!("{}/temp_interleaving_petri_net.net", out_dir);
-    fs::write(&petri_net_file_output_path, string_representation_of_petri_net).expect("Failed to write final Petri Net to output path");
+    fs::write(
+        &petri_net_file_output_path,
+        string_representation_of_petri_net,
+    )
+    .expect("Failed to write final Petri Net to output path");
 
     // Save the renaming
-    fs::write(&format!("{out_dir}/temp_renaming.txt"), renaming_readable).expect("Failed to write human-readable renaming");
+    fs::write(&format!("{out_dir}/temp_renaming.txt"), renaming_readable)
+        .expect("Failed to write human-readable renaming");
 
     // Encode the constraints in XML for the SMPT tool
     let xml = constraints_to_xml(&constraints, "XML-file");

@@ -9,9 +9,9 @@ mod ns;
 mod ns_to_petri;
 mod parser;
 mod petri;
+mod presburger;
 mod reachability;
 mod semilinear;
-mod presburger;
 
 use colored::*;
 use parser::Program;
@@ -419,10 +419,7 @@ fn process_ser_file(file_path: &str, open_files: bool) {
 
     // Get the file name without extension to use as the base name for output files
     let path = Path::new(file_path);
-    let file_stem = path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("expr");
+    let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("expr");
     let out_dir = format!("out/{}", file_stem);
 
     // Process the Network System

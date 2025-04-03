@@ -11,7 +11,7 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::hash::Hash;
 
-use crate::kleene::{nfa_to_kleene, Kleene, Regex};
+use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
 
 // Helper function to escape strings for use as node IDs in GraphViz DOT language

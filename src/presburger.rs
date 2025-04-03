@@ -1,82 +1,373 @@
-use std::fmt;
-use std::hash::Hash;
-use crate::semilinear::{SemilinearSet, LinearSet};
-use crate::affine_constraints::{Constraints as AffineConstraints, Var, ConstraintType as AffineConstraintType};
+/// Based on https://rust-lang.github.io/rust-bindgen/tutorial-4.html
+#[allow(non_upper_case_globals)]
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+pub mod bindings {
+    include!(concat!(env!("OUT_DIR"), "/isl_bindings.rs"));
+}
+use std::collections::BTreeSet;
+use std::fmt::Debug;
+use std::{
+    ffi::{CStr, c_uint},
+    fmt::{self, Display},
+    ptr,
+};
 
-/// Represents a Presburger set, which is a union of existentially quantified conjunctions of linear constraints
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct PresburgerSet<T> {
-   union: Vec<QuantifiedSet<T>>
+    isl_set: *mut bindings::isl_set, // raw pointer to the underlying ISL set
+    mapping: Vec<T>,                 // mapping of dimensions to atoms of type T
 }
 
-impl<T: Hash + Clone + Ord> PresburgerSet<T> {
-    /// Create a new PresburgerSet with the given union of QuantifiedSet components
-    pub fn new(union: Vec<QuantifiedSet<T>>) -> Self {
-        PresburgerSet { union }
-    }
-    
-    /// Create a new PresburgerSet with consistently sorted components for equality comparison
-    pub fn with_sorted_components(mut union: Vec<QuantifiedSet<T>>) -> Self {
-        // We don't have a good way to order QuantifiedSet components consistently,
-        // but we can ensure the order is deterministic by length of constraints
-        union.sort_by_key(|qs| qs.constraints.len());
-        PresburgerSet { union }
+// Ensure the ISL set is freed when PresburgerSet goes out of scope
+impl<T> Drop for PresburgerSet<T> {
+    fn drop(&mut self) {
+        if !self.isl_set.is_null() {
+            unsafe { bindings::isl_set_free(self.isl_set) }; // free the ISL set pointer
+        }
     }
 }
+
+impl<T: Clone> Clone for PresburgerSet<T> {
+    fn clone(&self) -> Self {
+        let new_ptr = unsafe { bindings::isl_set_copy(self.isl_set) }; // increment refcount or duplicate&#8203;:contentReference[oaicite:1]{index=1}
+        PresburgerSet {
+            isl_set: new_ptr,
+            mapping: self.mapping.clone(),
+        }
+    }
+}
+
+impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
+    pub fn harmonize(&mut self, other: &mut PresburgerSet<T>) {
+        // 1. Determine the combined, sorted mapping (same as before)
+        let mut combined_atoms: BTreeSet<T> = BTreeSet::new();
+        for atom in self.mapping.iter().chain(other.mapping.iter()) {
+            combined_atoms.insert(atom.clone());
+        }
+        let combined_mapping: Vec<T> = combined_atoms.into_iter().collect();
+
+        // 2. Early exit
+        if self.mapping == combined_mapping && other.mapping == combined_mapping {
+            // Optional space check
+            let space1 = unsafe { bindings::isl_set_get_space(self.isl_set) };
+            let space2 = unsafe { bindings::isl_set_get_space(other.isl_set) };
+            let spaces_equal = unsafe { bindings::isl_space_is_equal(space1, space2) == 1 };
+            unsafe {
+                bindings::isl_space_free(space1);
+                bindings::isl_space_free(space2);
+            }
+            if spaces_equal { return; }
+        }
+
+
+        let ctx = unsafe { bindings::isl_set_get_ctx(self.isl_set) };
+
+        // 3. Create the target space (positional, no names needed here)
+        let n_params = 0; // Adapt if needed
+        let n_dims = combined_mapping.len() as c_uint;
+        let target_space = unsafe { bindings::isl_space_set_alloc(ctx, n_params, n_dims) };
+        // Optionally set tuple name if consistent:
+        // target_space = unsafe { bindings::isl_space_set_tuple_name(...) };
+
+        // 4. Call the C wrapper function
+        // Temporarily take ownership of pointers to pass to C function which consumes them
+        let set1_ptr = std::mem::replace(&mut self.isl_set, ptr::null_mut());
+        let set2_ptr = std::mem::replace(&mut other.isl_set, ptr::null_mut());
+
+        let result = unsafe { bindings::rust_harmonize_sets(set1_ptr, set2_ptr, target_space) };
+
+        // 5. Update self and other from the result, handle errors
+        if result.error != 0 || result.set1.is_null() || result.set2.is_null() {
+            // Restore original pointers if C function failed, to allow safe drop
+             self.isl_set = set1_ptr;
+             other.isl_set = set2_ptr;
+             unsafe { bindings::isl_space_free(target_space); } // Free space if error
+            panic!("ISL harmonization failed in C wrapper");
+        }
+
+        self.isl_set = result.set1; // Take ownership of returned pointer
+        self.mapping = combined_mapping.clone();
+        other.isl_set = result.set2; // Take ownership of returned pointer
+        other.mapping = combined_mapping;
+
+        // 6. Cleanup
+        unsafe {
+            bindings::isl_space_free(target_space);
+        }
+    }
+}
+
+impl<T: Clone> PresburgerSet<T> {
+    pub fn atom(atom: T) -> Self {
+        // Create a 1-dimensional integer space (no parameters, 1 set dim)
+        let space = unsafe { bindings::isl_space_set_alloc(bindings::isl_ctx_alloc(), 0, 1) };
+        // Start with the universe of that 1D space (all integer points)
+        let mut set_ptr = unsafe { bindings::isl_set_universe(space) };
+        // Constrain the single dimension (dim 0) to be exactly 1
+        set_ptr =
+            unsafe { bindings::isl_set_fix_si(set_ptr, bindings::isl_dim_type_isl_dim_set, 0, 1) };
+        // (Optionally ensure non-negativity: not needed since it's fixed at 1)
+        PresburgerSet {
+            isl_set: set_ptr,
+            mapping: vec![atom], // one dimension corresponding to the single atom
+        }
+    }
+}
+
+impl<T: Clone> PresburgerSet<T> {
+    pub fn universe(atoms: Vec<T>) -> Self {
+        let n = atoms.len();
+        // Allocate an n-dimensional space for the set (0 parameters, n set dims)
+        let space =
+            unsafe { bindings::isl_space_set_alloc(bindings::isl_ctx_alloc(), 0, n as c_uint) };
+        // Start with the universe set of that space (all integer points in Z^n)
+        let mut set_ptr = unsafe { bindings::isl_set_universe(space) };
+        // Constrain each dimension to be >= 0 (non-negative)
+        for dim_index in 0..n {
+            set_ptr = unsafe {
+                bindings::isl_set_lower_bound_si(
+                    set_ptr,
+                    bindings::isl_dim_type_isl_dim_set,
+                    dim_index as c_uint,
+                    0,
+                )
+            };
+        }
+        PresburgerSet {
+            isl_set: set_ptr,
+            mapping: atoms,
+        }
+    }
+}
+
+impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
+    pub fn union(&self, other: &Self) -> Self {
+        // Clone self and other so we can mutate/harmonize freely
+        let mut a = self.clone();
+        let mut b = other.clone();
+        a.harmonize(&mut b);
+        // Both a.mapping and b.mapping are now the same (harmonized)
+        let unified_mapping = a.mapping.clone();
+        // Perform the union operation on the underlying isl_set pointers.
+        // We pass ownership of a.isl_set and b.isl_set to isl_set_union (so they will be used and freed inside).
+        let result_ptr = unsafe { bindings::isl_set_union(a.isl_set, b.isl_set) };
+        // Prevent a and b from freeing the now-consumed pointers in their Drop
+        a.isl_set = ptr::null_mut();
+        b.isl_set = ptr::null_mut();
+        // Wrap the result pointer in a new PresburgerSet
+        PresburgerSet {
+            isl_set: result_ptr,
+            mapping: unified_mapping,
+        }
+    }
+
+    pub fn intersection(&self, other: &Self) -> Self {
+        let mut a = self.clone();
+        let mut b = other.clone();
+        a.harmonize(&mut b);
+        let unified_mapping = a.mapping.clone();
+        let result_ptr = unsafe { bindings::isl_set_intersect(a.isl_set, b.isl_set) };
+        a.isl_set = ptr::null_mut();
+        b.isl_set = ptr::null_mut();
+        PresburgerSet {
+            isl_set: result_ptr,
+            mapping: unified_mapping,
+        }
+    }
+
+    pub fn difference(&self, other: &Self) -> Self {
+        let mut a = self.clone();
+        let mut b = other.clone();
+        a.harmonize(&mut b);
+        let unified_mapping = a.mapping.clone();
+        let result_ptr = unsafe { bindings::isl_set_subtract(a.isl_set, b.isl_set) };
+        a.isl_set = ptr::null_mut();
+        b.isl_set = ptr::null_mut();
+        PresburgerSet {
+            isl_set: result_ptr,
+            mapping: unified_mapping,
+        }
+    }
+}
+
+impl<T: Eq + Clone + Ord + Debug + ToString> PartialEq for PresburgerSet<T> {
+    fn eq(&self, other: &Self) -> bool {
+        let mut a = self.clone();
+        let mut b = other.clone();
+        a.harmonize(&mut b);
+        // isl_set_is_equal returns isl_bool (1 = true, 0 = false, -1 = error)
+        let result_bool = unsafe { bindings::isl_set_is_equal(a.isl_set, b.isl_set) };
+        // No need to null out a.isl_set and b.isl_set here, because is_equal does not consume (it uses __isl_keep).
+        // We can directly drop a and b, which will free their pointers.
+        result_bool == 1 // return true if ISL indicated equality (isl_bool_true)
+    }
+}
+
+impl<T: Eq + Clone + Ord + Debug + ToString> Eq for PresburgerSet<T> {}
+
+// Implement .is_empty() for PresburgerSet<T>
+impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
+    pub fn is_empty(&self) -> bool {
+        unsafe { bindings::isl_set_is_empty(self.isl_set) == 1 }
+    }
+}
+
+// Implementing display for PresburgerSet<T> using ISL's to_str function
+impl<T: Display> Display for PresburgerSet<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let str: *mut i8 = unsafe { bindings::isl_set_to_str(self.isl_set) };
+        let mapping_str = self
+            .mapping
+            .iter()
+            .map(|a| a.to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+        write!(
+            f,
+            "{} (mapping: {})",
+            unsafe { CStr::from_ptr(str).to_string_lossy() },
+            mapping_str
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_presburger() {
+        let a = PresburgerSet::atom('a');
+        let b = PresburgerSet::atom('b');
+        let ab = a.union(&b);
+        println!("ab: {:}", ab);
+        let universe = PresburgerSet::universe(vec!['a', 'b', 'c']);
+        println!("universe: {:}", universe);
+        let ab_union_universe = ab.union(&universe);
+        println!("ab_union_universe: {:}", ab_union_universe);
+        let universe_complement = universe.difference(&ab);
+        println!("universe_complement: {:}", universe_complement);
+        let universe2 = PresburgerSet::universe(vec!['c', 'b', 'a']);
+        println!("universe2: {:}", universe2);
+    }
+
+    #[test]
+    fn test_universe_reorder() {
+        let mut u1 = PresburgerSet::universe(vec!['a', 'b']);
+        let mut u2 = PresburgerSet::universe(vec!['b', 'a']);
+        // print both
+        println!("u1: {:}", u1);
+        println!("u2: {:}", u2);
+        u1.harmonize(&mut u2);
+        // print both again
+        println!("u1: {:}", u1);
+        println!("u2: {:}", u2);
+
+        u1 = PresburgerSet::universe(vec!['a', 'b', 'c']);
+        u2 = PresburgerSet::universe(vec!['c', 'b']);
+        u1.harmonize(&mut u2);
+        println!("u1: {:}", u1);
+        println!("u2: {:}", u2);
+    }
+
+    #[test]
+    fn test_union_commutative() {
+        let a = PresburgerSet::atom('a');
+        let b = PresburgerSet::atom('b');
+        let a_union_b = a.clone().union(&b);
+        let b_union_a = b.clone().union(&a);
+        assert_eq!(a_union_b, b_union_a);
+    }
+
+    #[test]
+    fn test_union_associative() {
+        let a = PresburgerSet::atom('a');
+        let b = PresburgerSet::atom('b');
+        let c = PresburgerSet::atom('c');
+        let ab_union_c = a.clone().union(&b).union(&c);
+        let a_union_bc = a.union(&b.union(&c));
+        assert_eq!(ab_union_c, a_union_bc);
+    }
+
+    #[test]
+    fn test_intersection_distributes_over_union() {
+        let a = PresburgerSet::atom('a');
+        let b = PresburgerSet::atom('b');
+        let d = PresburgerSet::atom('d');
+        let a_union_b = a.clone().union(&b);
+        let a_intersect_d = a.clone().intersection(&d);
+        let b_intersect_d = b.clone().intersection(&d);
+        let distribute_left = a_union_b.intersection(&d);
+        let distribute_right = a_intersect_d.union(&b_intersect_d);
+        assert_eq!(distribute_left, distribute_right);
+    }
+
+    #[test]
+    fn test_universe_difference_empty() {
+        let universe = PresburgerSet::universe(vec!['a', 'b', 'c']);
+        let empty = universe.clone().difference(&universe);
+        assert!(empty.is_empty());
+    }
+
+    #[test]
+    fn test_union_with_universe() {
+        let universe = PresburgerSet::universe(vec!['a', 'b', 'c']);
+        let universe2 = PresburgerSet::universe(vec!['c', 'b', 'a']);
+        let union_universe = universe.union(&universe2);
+        assert_eq!(union_universe, universe);
+    }
+
+    #[test]
+    fn test_demorgans_laws() {
+        let universe = PresburgerSet::universe(vec!['a', 'b', 'c']);
+        let a = PresburgerSet::atom('a');
+        let b = PresburgerSet::atom('b');
+
+        // Test De Morgan's Law: !(A ∪ B) = !A ∩ !B
+        let a_union_b = a.clone().union(&b);
+        let not_a_union_b = universe.clone().difference(&a_union_b);
+        
+        let not_a = universe.clone().difference(&a);
+        let not_b = universe.clone().difference(&b); 
+        let not_a_intersect_not_b = not_a.intersection(&not_b);
+
+        assert_eq!(not_a_union_b, not_a_intersect_not_b);
+
+        // Test De Morgan's Law: !(A ∩ B) = !A ∪ !B
+        let a_intersect_b = a.clone().intersection(&b);
+        let not_a_intersect_b = universe.clone().difference(&a_intersect_b);
+
+        let not_a = universe.clone().difference(&a);
+        let not_b = universe.clone().difference(&b);
+        let not_a_union_not_b = not_a.union(&not_b);
+
+        assert_eq!(not_a_intersect_b, not_a_union_not_b);
+    }
+}
+
+// The types below are to convert an ISL to a Rust type that can be consumed by Rust code
 
 /// Represents an existentially quantified conjunction of linear constraints
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QuantifiedSet<T> {
     // The variables T are from the original set, and the variables usize are the existential variables
     // The existential quantification is over *natural numbers* not integers
-    constraints: Vec<Constraint<Variable<T>>>
+    // Note: the existential quantification is at the top-level: it's an existential of conjunctions,
+    // not a conjunction of existentials.
+    constraints: Vec<Constraint<Variable<T>>>,
 }
 
-// Helper method to get a sorted set of constraints for comparison
-impl<T: Hash + Clone + Ord> QuantifiedSet<T> {
-    // Creates a new QuantifiedSet with sorted constraints for easier equality comparison
-    pub fn with_sorted_constraints(mut constraints: Vec<Constraint<Variable<T>>>) -> Self {
-        // Sort constraints by a stable order to make comparison consistent
-        constraints.sort_by_key(|c| {
-            // Create a canonical representation for sorting
-            // First by constraint type, then variables
-            let mut key = Vec::new();
-            
-            // Add constraint type
-            key.push(match c.constraint_type {
-                ConstraintType::EqualToZero => 0,
-                ConstraintType::NonNegative => 1,
-            });
-            
-            // Add variables and coefficients, sorted by variable
-            let mut terms: Vec<_> = c.linear_combination.clone();
-            terms.sort_by(|(_, a), (_, b)| a.cmp(b));
-            for (coef, var) in terms {
-                match &var {
-                    Variable::Original(_) => key.push(0),
-                    Variable::Existential(idx) => key.push(1 + *idx as i32),
-                }
-                key.push(coef);
-            }
-            
-            // Add constant term
-            key.push(c.constant_term);
-            
-            key
-        });
-        
-        QuantifiedSet { constraints }
-    }
-}
-
-/// A variable in a Presburger formula: either an original variable or an existentially quantified variable
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Variable<T> {
-    Original(T),
+    Var(T),
     Existential(usize),
 }
 
-/// Represents a linear constraint
+// Implement pretty printing for Variable<T>: Var(T) is printed as V{T} and Existential(n) is printed as E{n} (without the curlies)
+
+
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Constraint<T> {
     linear_combination: Vec<(i32, T)>,
@@ -90,676 +381,11 @@ pub enum ConstraintType {
     EqualToZero,
 }
 
-// Display implementation for Variable
-impl<T: fmt::Display> fmt::Display for Variable<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Variable::Original(t) => write!(f, "{}", t),
-            Variable::Existential(idx) => write!(f, "n{}", idx),
-        }
-    }
-}
+// Add pretty printing for Constraint and QuantifiedSet
 
-// Display implementation for constraints
-impl<T: fmt::Display> fmt::Display for Constraint<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Format the linear combination
-        let mut terms = Vec::new();
-        for (coef, var) in &self.linear_combination {
-            if *coef == 0 {
-                continue;
-            }
-            
-            if *coef == 1 {
-                terms.push(format!("{}", var));
-            } else if *coef == -1 {
-                terms.push(format!("-{}", var));
-            } else {
-                terms.push(format!("{}·{}", coef, var));
-            }
-        }
-        
-        // Add the constant term if non-zero
-        if self.constant_term != 0 {
-            terms.push(format!("{}", self.constant_term));
-        }
-        
-        // Join terms with plus signs, being careful about negative terms
-        let mut result = String::new();
-        for (i, term) in terms.iter().enumerate() {
-            if i > 0 {
-                // Add a space, and a plus sign if the next term is positive
-                if term.starts_with('-') {
-                    result.push_str(" - ");
-                    result.push_str(&term[1..]);
-                } else {
-                    result.push_str(" + ");
-                    result.push_str(term);
-                }
-            } else {
-                // First term
-                result.push_str(term);
-            }
-        }
-        
-        // If no terms, just show 0
-        if result.is_empty() {
-            result = "0".to_string();
-        }
-        
-        // Add the constraint type
-        match self.constraint_type {
-            ConstraintType::NonNegative => write!(f, "{} ≥ 0", result),
-            ConstraintType::EqualToZero => write!(f, "{} = 0", result),
-        }
-    }
-}
 
-// Display implementation for QuantifiedSet
-impl<T: fmt::Display> fmt::Display for QuantifiedSet<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Count how many existential variables are used
-        let mut max_var = 0;
-        for constraint in &self.constraints {
-            for (_, var) in &constraint.linear_combination {
-                if let Variable::Existential(idx) = var {
-                    max_var = max_var.max(*idx + 1);
-                }
-            }
-        }
-        
-        // Format the existential quantifier prefix
-        if max_var > 0 {
-            write!(f, "∃")?;
-            for i in 0..max_var {
-                if i > 0 {
-                    write!(f, ",")?;
-                }
-                write!(f, "n{}", i)?;
-            }
-            write!(f, ". ")?;
-        }
-        
-        // Format the constraints
-        for (i, constraint) in self.constraints.iter().enumerate() {
-            if i > 0 {
-                write!(f, " ∧ ")?;
-            }
-            write!(f, "{}", constraint)?;
-        }
-        
-        Ok(())
-    }
-}
 
-// Display implementation for PresburgerSet
-impl<T: fmt::Display> fmt::Display for PresburgerSet<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (i, set) in self.union.iter().enumerate() {
-            if i > 0 {
-                write!(f, " ∨ ")?;
-            }
-            
-            // Add parentheses if there are multiple components
-            if self.union.len() > 1 {
-                write!(f, "({})", set)?;
-            } else {
-                write!(f, "{}", set)?;
-            }
-        }
-        
-        Ok(())
-    }
-}
- 
+// implement the conversion from PresburgerSet<T> to Vec<QuantifiedSet<T>>
+// implement the inverse conversion as well
 
-/// Convert affine constraints to a PresburgerSet<Var>
-pub fn from_affine_constraints(affine: &AffineConstraints) -> PresburgerSet<Var> {
-    // A set of affine constraints is a disjunction of conjunctions of constraints
-    // Convert each conjunction to a QuantifiedSet
-    let mut union = Vec::new();
-    
-    for conjunct in &affine.constraints {
-        let mut presburger_constraints = Vec::new();
-        
-        // Convert each affine constraint to a Presburger constraint
-        for affine_constraint in conjunct {
-            // Map the linear combination
-            let mut linear_combination = Vec::new();
-            
-            for (coeff, var) in &affine_constraint.affine_formula {
-                // Check if this is a real variable or an existential variable
-                if var.0 < affine.num_vars {
-                    // Real variable
-                    linear_combination.push((*coeff, Variable::Original(*var)));
-                } else {
-                    // Existential variable
-                    // Convert from the original format where existential variables start at num_vars
-                    let existential_idx = var.0 - affine.num_vars;
-                    linear_combination.push((*coeff, Variable::Existential(existential_idx)));
-                }
-            }
-            
-            // Map the constraint type
-            let constraint_type = match affine_constraint.constraint_type {
-                AffineConstraintType::NonNegative => ConstraintType::NonNegative,
-                AffineConstraintType::EqualToZero => ConstraintType::EqualToZero,
-            };
-            
-            // Create the Presburger constraint
-            presburger_constraints.push(Constraint {
-                linear_combination,
-                constant_term: affine_constraint.offset,
-                constraint_type,
-            });
-        }
-        
-        // Create a QuantifiedSet from this conjunction of constraints
-        union.push(QuantifiedSet::with_sorted_constraints(presburger_constraints));
-    }
-    
-    // Return with sorted components for consistent comparison
-    PresburgerSet::with_sorted_components(union)
-}
 
-impl<T: Hash + Clone + Ord + fmt::Display> PresburgerSet<T> {
-    /// Convert a LinearSet<T> to a QuantifiedSet<T>
-    /// A linear set base + n₁·period₁ + n₂·period₂ + ... (where n_i are natural numbers)
-    /// becomes a quantified set with existential variables for the coefficients
-    // Make this public to allow testing
-    pub fn from_linear_set(linear_set: &LinearSet<T>) -> QuantifiedSet<T> {
-        let mut constraints = Vec::new();
-        
-        // For a linear set with base vector (b₁, b₂, ...) and period vectors
-        // (p₁₁, p₁₂, ...), (p₂₁, p₂₂, ...), etc.,
-        // we create constraints:
-        // 1. For each dimension, x = b + n₁·p₁ + n₂·p₂ + ...
-        //    where x is the original variable, b is the base value, and n_i are the existential variables
-        
-        // Collect all unique dimensions from base and periods
-        let mut all_dimensions = std::collections::HashSet::new();
-        linear_set.for_each_key(|key| { all_dimensions.insert(key.clone()); });
-        
-        // For each dimension, create a constraint x = b + n₁·p₁ + n₂·p₂ + ...
-        for dim in all_dimensions {
-            let mut linear_combination = Vec::new();
-            
-            // Original variable with coefficient 1
-            linear_combination.push((1, Variable::Original(dim.clone())));
-            
-            // Base with coefficient -1
-            let base_val = linear_set.base.get(&dim) as i32;
-            let constant_term = -base_val;
-            
-            // Each period contributes -p*n to the constraint
-            for (i, period) in linear_set.periods.iter().enumerate() {
-                let period_val = period.get(&dim) as i32;
-                if period_val > 0 {
-                    linear_combination.push((-period_val, Variable::Existential(i)));
-                }
-            }
-            
-            // Create the equality constraint: x - b - Σ(p_i * n_i) = 0
-            constraints.push(Constraint {
-                linear_combination,
-                constant_term,
-                constraint_type: ConstraintType::EqualToZero,
-            });
-        }
-        
-        // Note: We don't need to add non-negativity constraints for existential variables
-        // since they are already understood to range over natural numbers (non-negative integers)
-        
-        // Sort the constraints for consistent comparison
-        QuantifiedSet::with_sorted_constraints(constraints)
-    }
-
-    /// Convert a SemilinearSet<T> to a PresburgerSet<T>
-    pub fn from_semilinear_set(semilinear_set: &SemilinearSet<T>) -> Self {
-        // A semilinear set is a union of linear sets
-        // Convert each linear set to a quantified set and collect them
-        let union = semilinear_set.components
-            .iter()
-            .map(|linear_set| Self::from_linear_set(linear_set))
-            .collect();
-        
-        // Return with sorted components for consistent comparison
-        Self::with_sorted_components(union)
-    }
-
-    /// Compute the complement of this PresburgerSet<T> using ISL
-    pub fn complement(&self) -> Self {
-        todo!("Compute complement using ISL") 
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::semilinear::{SemilinearSet, LinearSet, SparseVector};
-    use crate::affine_constraints::{Constraints as AffineConstraints, Constraint as AffineConstraint, Var, ConstraintType as AffineConstraintType};
-
-    // Helper function to create a sparse vector with a single key-value pair
-    fn sparse_vector<T: Hash + Clone + Ord>(key: T, value: usize) -> SparseVector<T> {
-        let mut vec = SparseVector::new();
-        vec.set(key, value);
-        vec
-    }
-
-    #[test]
-    fn test_constraint_display() {
-        // Test a simple constraint: 2·x + 3·y - 4 = 0
-        let constraint = Constraint {
-            linear_combination: vec![
-                (2, Variable::Original("x".to_string())),
-                (3, Variable::Original("y".to_string())),
-            ],
-            constant_term: -4,
-            constraint_type: ConstraintType::EqualToZero,
-        };
-        
-        assert_eq!(constraint.to_string(), "2·x + 3·y - 4 = 0");
-        
-        // Test a non-negative constraint: n0 - 5 ≥ 0
-        let constraint = Constraint {
-            linear_combination: vec![(1, Variable::<String>::Existential(0))],
-            constant_term: -5,
-            constraint_type: ConstraintType::NonNegative,
-        };
-        
-        assert_eq!(constraint.to_string(), "n0 - 5 ≥ 0");
-    }
-
-    #[test]
-    fn test_simple_linear_set_conversion() {
-        // Create a linear set: base = (x=1) with period (x=1)
-        // This represents {x=1, x=2, x=3, ...}
-        let base = sparse_vector("x".to_string(), 1);
-        let period = sparse_vector("x".to_string(), 1);
-        let linear_set = LinearSet {
-            base,
-            periods: vec![period],
-        };
-        
-        // Convert to a Presburger set
-        let presburger_set = PresburgerSet::from_semilinear_set(&SemilinearSet {
-            components: vec![linear_set],
-        });
-        
-        // Manually construct the expected Presburger set: ∃n0. x - n0 - 1 = 0
-        let constraint = Constraint {
-            linear_combination: vec![
-                (1, Variable::Original("x".to_string())),
-                (-1, Variable::Existential(0)),
-            ],
-            constant_term: -1,
-            constraint_type: ConstraintType::EqualToZero,
-        };
-        
-        // Use sorted constraints for consistent comparison
-        let expected_quantified_set = QuantifiedSet::with_sorted_constraints(vec![constraint]);
-        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![expected_quantified_set]);
-        
-        // Check the result with display
-        println!("Presburger set: {}", presburger_set);
-        
-        // Compare with expected set
-        assert_eq!(presburger_set, expected_presburger_set);
-    }
-
-    #[test]
-    fn test_multi_dimension_linear_set() {
-        // Create a linear set: base = (x=1, y=2) with periods (x=1, y=0) and (x=0, y=1)
-        // This represents {(x,y) | x ≥ 1, y ≥ 2}
-        let mut base = SparseVector::new();
-        base.set("x".to_string(), 1);
-        base.set("y".to_string(), 2);
-        
-        let mut period1 = SparseVector::new();
-        period1.set("x".to_string(), 1);
-        
-        let mut period2 = SparseVector::new();
-        period2.set("y".to_string(), 1);
-        
-        let linear_set = LinearSet {
-            base,
-            periods: vec![period1, period2],
-        };
-        
-        // Convert to a Presburger set
-        let presburger_set = PresburgerSet::from_semilinear_set(&SemilinearSet {
-            components: vec![linear_set],
-        });
-        
-        // Print the actual result to understand the constraint order
-        println!("Presburger set: {}", presburger_set);
-        
-        // Manually construct the expected Presburger set with sorted constraints
-        // for consistent equality comparison
-        let x_constraint = Constraint {
-            linear_combination: vec![
-                (1, Variable::Original("x".to_string())),
-                (-1, Variable::Existential(0)),
-            ],
-            constant_term: -1,
-            constraint_type: ConstraintType::EqualToZero,
-        };
-        
-        let y_constraint = Constraint {
-            linear_combination: vec![
-                (1, Variable::Original("y".to_string())),
-                (-1, Variable::Existential(1)),
-            ],
-            constant_term: -2,
-            constraint_type: ConstraintType::EqualToZero,
-        };
-        
-        // Using QuantifiedSet::with_sorted_constraints to make the comparison order consistent
-        let constraints = vec![x_constraint, y_constraint];
-        let expected_quantified_set = QuantifiedSet::with_sorted_constraints(constraints);
-        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![expected_quantified_set]);
-        
-        // Check the result with display
-        println!("Presburger set: {}", presburger_set);
-        
-        // Compare with expected set
-        assert_eq!(presburger_set, expected_presburger_set);
-    }
-
-    #[test]
-    fn test_union_of_linear_sets() {
-        // Create two linear sets and their union
-        // Linear set 1: x = 1 + n0 where n0 ≥ 0, representing {1, 2, 3, ...}
-        let base1 = sparse_vector("x".to_string(), 1);
-        let period1 = sparse_vector("x".to_string(), 1);
-        let linear_set1 = LinearSet {
-            base: base1,
-            periods: vec![period1],
-        };
-        
-        // Linear set 2: x = 0, representing {0}
-        let base2 = sparse_vector("x".to_string(), 0);
-        let linear_set2 = LinearSet {
-            base: base2,
-            periods: vec![],
-        };
-        
-        // Combine them into a semilinear set
-        let semilinear_set = SemilinearSet {
-            components: vec![linear_set1, linear_set2],
-        };
-        
-        // Convert to a Presburger set
-        let presburger_set = PresburgerSet::from_semilinear_set(&semilinear_set);
-        
-        // Print the actual result to understand it
-        println!("Presburger set: {}", presburger_set);
-        
-        // Manually construct the expected Presburger set based on the actual output: (∃n0. x - n0 - 1 = 0) ∨ ()
-        
-        // First component: ∃n0. x - n0 - 1 = 0
-        let constraint1 = Constraint {
-            linear_combination: vec![
-                (1, Variable::Original("x".to_string())),
-                (-1, Variable::Existential(0)),
-            ],
-            constant_term: -1,
-            constraint_type: ConstraintType::EqualToZero,
-        };
-        
-        let quantified_set1 = QuantifiedSet::with_sorted_constraints(vec![constraint1]);
-        
-        // Second component: empty constraints
-        // Note: This is the way our implementation represents base vectors with all zeros (empty string)
-        let quantified_set2 = QuantifiedSet::with_sorted_constraints(vec![]);
-        
-        // Combined Presburger set with two components
-        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![quantified_set1, quantified_set2]);
-        
-        // Check the result with display
-        println!("Presburger set: {}", presburger_set);
-        
-        // Compare with expected set
-        assert_eq!(presburger_set, expected_presburger_set);
-    }
-    
-    #[test]
-    fn test_kleene_star_conversion() {
-        // Test conversion of a* to Presburger formula
-        // a* represents {ε, a, aa, aaa, ...}
-        // As a semilinear set: {0} + {1}(1)*
-        let zero_base = SparseVector::new();
-        let linear_set_empty = LinearSet {
-            base: zero_base,
-            periods: vec![],
-        };
-        
-        let a_base = sparse_vector("a".to_string(), 1);
-        let a_period = sparse_vector("a".to_string(), 1);
-        let linear_set_a_star = LinearSet {
-            base: a_base,
-            periods: vec![a_period],
-        };
-        
-        let a_star = SemilinearSet {
-            components: vec![linear_set_empty, linear_set_a_star],
-        };
-        
-        // Convert to a Presburger set
-        let presburger_set = PresburgerSet::from_semilinear_set(&a_star);
-        
-        // Manually construct the expected Presburger set
-        
-        // First component: empty set of constraints (representing a = 0)
-        let empty_constraints = Vec::new();
-        let quantified_set1 = QuantifiedSet::with_sorted_constraints(empty_constraints);
-        
-        // Second component: ∃n0. a - n0 - 1 = 0
-        let constraint = Constraint {
-            linear_combination: vec![
-                (1, Variable::Original("a".to_string())),
-                (-1, Variable::Existential(0)),
-            ],
-            constant_term: -1,
-            constraint_type: ConstraintType::EqualToZero,
-        };
-        
-        let quantified_set2 = QuantifiedSet::with_sorted_constraints(vec![constraint]);
-        
-        // Combined Presburger set
-        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![quantified_set1, quantified_set2]);
-        
-        // Check the result with display
-        println!("a* as Presburger set: {}", presburger_set);
-        
-        // Compare with expected set
-        assert_eq!(presburger_set, expected_presburger_set);
-    }
-    
-    #[test]
-    fn test_direct_construction() {
-        // Test manually constructing a Presburger set and comparing with the one generated from a linear set
-        
-        // Create a linear set: x=1 + n·1 (representing x ≥ 1)
-        let base = sparse_vector("x".to_string(), 1);
-        let period = sparse_vector("x".to_string(), 1);
-        let linear_set = LinearSet {
-            base,
-            periods: vec![period],
-        };
-        
-        // Convert to a Presburger set using our function
-        let presburger_set = PresburgerSet::from_semilinear_set(&SemilinearSet {
-            components: vec![linear_set],
-        });
-        
-        // Manually construct the expected Presburger set: ∃n0. x - n0 - 1 = 0
-        let mut constraints = Vec::new();
-        
-        // x - n0 - 1 = 0
-        constraints.push(Constraint {
-            linear_combination: vec![
-                (1, Variable::Original("x".to_string())),
-                (-1, Variable::Existential(0)),
-            ],
-            constant_term: -1,
-            constraint_type: ConstraintType::EqualToZero,
-        });
-        
-        // Note: no non-negativity constraint for n0 since existentials already range over natural numbers
-        
-        let expected_quantified_set = QuantifiedSet::with_sorted_constraints(constraints);
-        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![expected_quantified_set]);
-        
-        // Compare the generated and expected Presburger sets
-        assert_eq!(presburger_set, expected_presburger_set);
-        
-        // Print both for visual inspection
-        println!("Generated: {}", presburger_set);
-        println!("Expected: {}", expected_presburger_set);
-    }
-
-    use crate::kleene::Kleene;
-
-    #[test]
-    fn test_two_letters() {
-        // Construct SemilinearSet using Kleene operations directly
-        // We want to construct (ab)* here
-        let a = SemilinearSet::atom("a".to_string());
-        let b = SemilinearSet::atom("b".to_string());
-        let ab = a.times(b);
-        let ab_star = ab.star();
-        let result = PresburgerSet::from_semilinear_set(&ab_star);
-        println!("{}", result);
-        // assert_eq!(result.to_string(), "∃n0. a - n0 = 0 ∧ b - n0 = 0");
-
-        // Now let's construct a* b*
-        let a = SemilinearSet::atom("a".to_string());
-        let b = SemilinearSet::atom("b".to_string());
-        let a_star = a.star();
-        let b_star = b.star();
-        let ab_star = a_star.times(b_star);
-        let result = PresburgerSet::from_semilinear_set(&ab_star);
-        println!("{}", result);
-        // assert_eq!(result.to_string(), "∃n0,n1. b - n0 = 0 ∧ a - n1 = 0");
-    }
-    
-    #[test]
-    fn test_from_affine_constraints_simple() {
-        // Create a simple constraint system
-        // (2P0 + P1 ≥ 4) OR (P0 = P1)
-        let affine_constraints = AffineConstraints {
-            num_vars: 2, // P0 (v0) and P1 (v1)
-            num_existential_vars: 0,
-            constraints: vec![
-                // First OR clause: 2P0 + P1 ≥ 4
-                vec![AffineConstraint {
-                    affine_formula: vec![(2, Var(0)), (1, Var(1))],
-                    offset: -4, // 2P0 + P1 - 4 ≥ 0
-                    constraint_type: AffineConstraintType::NonNegative,
-                }],
-                // Second OR clause: P0 = P1
-                vec![AffineConstraint {
-                    affine_formula: vec![(1, Var(0)), (-1, Var(1))],
-                    offset: 0,
-                    constraint_type: AffineConstraintType::EqualToZero,
-                }],
-            ],
-        };
-        
-        // Convert to a Presburger set
-        let presburger_set = from_affine_constraints(&affine_constraints);
-        println!("Presburger set from affine constraints: {}", presburger_set);
-        
-        // Manually construct the expected Presburger set
-        // First component: 2P0 + P1 - 4 ≥ 0
-        let constraint1 = Constraint {
-            linear_combination: vec![
-                (2, Variable::Original(Var(0))),
-                (1, Variable::Original(Var(1))),
-            ],
-            constant_term: -4,
-            constraint_type: ConstraintType::NonNegative,
-        };
-        
-        let quantified_set1 = QuantifiedSet::with_sorted_constraints(vec![constraint1]);
-        
-        // Second component: P0 - P1 = 0
-        let constraint2 = Constraint {
-            linear_combination: vec![
-                (1, Variable::Original(Var(0))),
-                (-1, Variable::Original(Var(1))),
-            ],
-            constant_term: 0,
-            constraint_type: ConstraintType::EqualToZero,
-        };
-        
-        let quantified_set2 = QuantifiedSet::with_sorted_constraints(vec![constraint2]);
-        
-        // Combined Presburger set
-        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![quantified_set1, quantified_set2]);
-        
-        assert_eq!(presburger_set, expected_presburger_set);
-    }
-    
-    #[test]
-    fn test_from_affine_constraints_with_existentials() {
-        // Create a constraint system with existential variables
-        // There exists P2, P3 such that:
-        // (P0 = 2*P2) AND (P1 = 2*P3 + 1)
-        // This represents the set where P0 is even and P1 is odd
-        let affine_constraints = AffineConstraints {
-            num_vars: 2,            // P0 (v0) and P1 (v1)
-            num_existential_vars: 2, // P2 (v2) and P3 (v3) are existential
-            constraints: vec![
-                vec![
-                    // P0 = 2*P2
-                    AffineConstraint {
-                        affine_formula: vec![(1, Var(0)), (-2, Var(2))],
-                        offset: 0,
-                        constraint_type: AffineConstraintType::EqualToZero,
-                    },
-                    // P1 = 2*P3 + 1
-                    AffineConstraint {
-                        affine_formula: vec![(1, Var(1)), (-2, Var(3))],
-                        offset: -1,
-                        constraint_type: AffineConstraintType::EqualToZero,
-                    },
-                ],
-            ],
-        };
-        
-        // Convert to a Presburger set
-        let presburger_set = from_affine_constraints(&affine_constraints);
-        println!("Presburger set from affine constraints with existentials: {}", presburger_set);
-        
-        // Manually construct the expected Presburger set
-        // ∃n0,n1. P0 - 2·n0 = 0 ∧ P1 - 2·n1 - 1 = 0
-        let mut constraints = Vec::new();
-        
-        // P0 - 2·n0 = 0
-        constraints.push(Constraint {
-            linear_combination: vec![
-                (1, Variable::Original(Var(0))),
-                (-2, Variable::Existential(0)),
-            ],
-            constant_term: 0,
-            constraint_type: ConstraintType::EqualToZero,
-        });
-        
-        // P1 - 2·n1 - 1 = 0
-        constraints.push(Constraint {
-            linear_combination: vec![
-                (1, Variable::Original(Var(1))),
-                (-2, Variable::Existential(1)),
-            ],
-            constant_term: -1,
-            constraint_type: ConstraintType::EqualToZero,
-        });
-        
-        let expected_quantified_set = QuantifiedSet::with_sorted_constraints(constraints);
-        let expected_presburger_set = PresburgerSet::with_sorted_components(vec![expected_quantified_set]);
-        
-        assert_eq!(presburger_set, expected_presburger_set);
-    }
-}
