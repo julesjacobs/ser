@@ -1,0 +1,229 @@
+%% Set to false for submission!
+\newif\iftodo\todofalse
+
+\documentclass[noacm,acmsmall,anonymous]{acmart}
+%\documentclass{article}
+\settopmatter{printfolios=false,printccs=false,printacmref=false}
+\raggedbottom
+\renewcommand\footnotetextcopyrightpermission[1]{} % removes footnote with DOI
+\renewcommand{\keywords}[1]{}  % removes "Additional keywords and phrases"
+\renewcommand{\acmSubmissionID}[1]{} % removes SUBMISSION ID
+\let\oldmaketitle\maketitle
+\renewcommand{\maketitle}{
+	\oldmaketitle
+	\pagestyle{plain}  % empty headers and footers on all pages
+	\thispagestyle{plain}  % empty header and footer on the first page
+}
+
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{float}
+\usepackage{fancybox}
+\usepackage{tcolorbox}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{arydshln} % Package for dashed lines
+% Disable \Bbbk redefinition if it exists
+\let\Bbbk\relax
+\usepackage{amssymb}  % for loaner compilation
+\usepackage{mathpartir}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{ulem}
+\usepackage{cancel} % For middle strikethrough
+\usepackage{stmaryrd}
+\usepackage{graphicx}    % To include PDF files
+\usepackage{subfig}  % To create subfigures
+\usepackage{listings}
+\usetikzlibrary{petri, positioning}
+
+
+\newcommand{\jj}[1]{\textcolor{orange}{\textbf{Jules:} #1}}
+
+%\definecolor{ForestGreen}{rgb}{0.13, 0.55, 0.13} % Optional manual definition
+%\definecolor{forestgreen}{RGB}{0, 128, 0} produces a darker green.
+
+
+\definecolor{lightgray}{rgb}{0.9,0.9,0.9}
+
+
+\geometry{a4paper, margin=1in}
+
+\title{Serializability in Programmable Networking Services}
+\author{}
+\date{\today}
+
+\definecolor{ForestGreen}{RGB}{34, 139, 34}
+
+% Define the \INITNETWORK command
+\newcommand{\INITNETWORK}{\textcolor{ForestGreen}{\textbf{\textsc{INITIALIZE\_NETWORK}}}}
+\newcommand{\TERMINATE}{\textcolor{ForestGreen}{\textbf{\textsc{TERMINATE}}}}
+\newcommand{\FIRING}{\textcolor{ForestGreen}{\textbf{\textsc{FIRING}}}}
+\newcommand{\TOKENPi}{\textcolor{ForestGreen}{\textbf{\textsc{TOKEN}}\_$p_i${}}}
+\newcommand{\ADDTOKENPi}{\textcolor{ForestGreen}{\textbf{\textsc{ADD\_TOKEN\_}}$p_i${}}}
+\newcommand{\REMOVETOKENPi}{\textcolor{ForestGreen}{\textbf{\textsc{REMOVE\_TOKEN\_}}$p_i{}$}}
+\newcommand{\REMAININGINITIALTOKENPi}{\textcolor{ForestGreen}{\textbf{\textsc{REMAINING\_INITIAL\_TOKEN\_}}$p_i${}}}
+
+
+\newcommand{\SPAWN}{\textcolor{blue}{\texttt{SPAWN}}}
+\newcommand{\DONE}{\textcolor{blue}{\texttt{DONE}}}
+\newcommand{\DROP}{\textcolor{red}{\texttt{DROP}}}
+\newcommand{\observation}{Observation}
+\newcommand{\HB}{\sqsubset}
+\newcommand{\heapAfterTick}{\mathsf{tick\_clock}}
+\newcommand{\sendEvent}{\mathsf{SEND}}
+\newcommand{\receiveEvent}{\mathsf{RECEIVE}}
+\newcommand{\readEvent}{\mathsf{R}}
+\newcommand{\writeEvent}{\mathsf{W}}
+\newcommand{\F}{\mathsf{F}}
+\newcommand{\Sw}{\mathsf{Sw}}
+\newcommand{\yield}{\mathsf{yield}}
+\newcommand{\p}{\mathsf{p}}
+\newcommand{\s}{\mathsf{s}}
+\let\C\relax  % Undefine the existing \C command
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\before}{\mathsf{before}}
+\newcommand{\after}{\mathsf{after}}
+\newcommand{\packetMatch}{\mathsf{packet\_match}}
+\newcommand{\switch}{\mathsf{switch}}
+\newcommand{\switches}{\mathsf{switches}}
+\newcommand{\spawn}{\mathsf{spawn}}
+\newcommand{\send}{\mathsf{send}}
+\newcommand{\receive}{\mathsf{receive}}
+\newcommand{\receiveAndReconcile}{\mathsf{receive\_and\_reconcile}}
+\newcommand{\reconcile}{\mathsf{reconcile}}
+\newcommand{\append}{\mathsf{append}}
+\newcommand{\Actions}{\mathsf{Actions}}
+\newcommand{\LocalState}{\mathsf{LocalState}}
+\newcommand{\EventDomain}{\mathsf{Event}}
+\newcommand{\event}{\mathsf{event}}
+\newcommand{\idx}{\mathsf{idx}}
+\newcommand{\cur}{\mathsf{cur}}
+\newcommand{\src}{\mathsf{src}}
+\newcommand{\Clock}{\mathsf{Clock}}
+\newcommand{\Variable}{\mathsf{Variable}}
+\newcommand{\timeField}{\mathsf{current\_clock}}
+\newcommand{\srcField}{\mathsf{src}}
+\newcommand{\dstField}{\mathsf{dst}}
+\newcommand{\srcClock}{\mathsf{src\_clock}}
+\newcommand{\dstClock}{\mathsf{dst\_clock}}
+\newcommand{\variableField}{\mathsf{var}}
+\newcommand{\valueField}{\mathsf{val}}
+\newcommand{\BooleanExp}{\mathsf{Boolean\_Exp}}
+\newcommand{\Event}{\mathsf{Event}}
+\newcommand{\Exp}{\mathsf{Exp}}
+\newcommand{\Thread}{\mathsf{Thread}}
+\newcommand{\Heap}{\mathsf{Global\_Heap}}
+\newcommand{\State}{\mathsf{State}}
+\newcommand{\Pk}{\mathsf{Pk}}
+\newcommand{\M}{\mathsf{M}}
+\newcommand{\Bag}[1]{\mathsf{Bag}(#1)}
+\newcommand{\N}{\mathbb{N}}
+\newtheorem{lemma}{Lemma}
+% Define corollary environment
+\newtheorem{corollary}{Corollary}
+%\newtheorem{definition}{Definition}
+
+
+
+% Define the lemma and proof environment
+%\newtheorem{lemma}{Lemma}[section] % Numbering by section
+%\newenvironment{proof}[1][Proof]{\noindent \textbf{#1.} }{\hfill$\square$}
+
+\renewcommand{\paragraph}[1]{\vspace{1mm}\noindent{\bf #1}\ }
+
+\newcommand{\todo}[1]{{\color{red}{\textbf{[TODO]} #1}}}
+
+\newcommand{\nate}[1]{\marginpar{\textcolor{red}{Nate: #1}}}
+\newcommand{\jules}[1]{\marginpar{\textcolor{green}{Jules: #1}}}
+\newcommand{\guy}[1]{\marginpar{\textcolor{blue}{Guy: #1}}}
+
+\newcommand{\definition}[1]{%
+	\vspace{2mm}%
+	\noindent%
+	\textbf{Definition:} \textit{#1}%
+	\vspace{2mm}%
+}
+
+%\newtheorem{definition}{Definition}[section] % This creates a definition 
+%%environment with numbering by section
+
+%% Disable \Bbbk redefinition if it exists
+%\let\Bbbk\relax
+%\usepackage{amssymb}    % Load after to avoid conflicts
+
+
+% Python style for code
+\lstdefinestyle{pythonStyle}{
+	language=Python,                           % Set language to Python
+	backgroundcolor=\color{white},             % Set background color
+	basicstyle=\ttfamily\footnotesize,         % Set font to typewriter 
+	%(monospace) and size
+	keywordstyle=\color{blue}\bfseries,        % Keywords in blue and bold
+	commentstyle=\color{purple},               % Comments in purple
+	stringstyle=\color{red},                   % Strings in red
+	numbers=left,                              % Line numbers on the left
+	numberstyle=\tiny\color{gray},             % Line numbers style
+	stepnumber=1,                              % Number every line
+	numbersep=5pt,                             % Distance between line numbers 
+	%and code
+	showstringspaces=false,                    % Don't show space characters
+	breaklines=true,                           % Wrap long lines of code
+	frame=single,                              % Draw a frame around the code
+	rulecolor=\color{black},                   % Frame color
+	captionpos=b,                              % Set caption position to bottom
+	escapeinside={\%*}{*)},                    % Allow LaTeX comments inside 
+	%code
+	xleftmargin=1em, 
+	% Left margin for code 
+	%indentation
+	% Left margin for code indentation
+	keepspaces=true                            % This ensures spaces are kept 
+	%in the code block
+}
+
+\begin{document}
+	
+
+
+\begin{abstract}
+        Add abstract here
+\end{abstract}
+
+\maketitle
+
+\input{1_introduction.tex}
+\input{2_problem_definition.tex}
+\input{3_netkat_with_global_variables.tex}
+\input{4_formulations.tex}
+\input{5_proofs.tex}
+\input{6_implementation.tex}
+\input{7_related_work.tex}
+\input{8_discussion.tex}
+
+
+
+
+\newpage
+
+{
+	\bibliographystyle{abbrv}
+	\bibliography{references}
+}
+
+\newpage
+\appendix
+\renewcommand{\thesection}{\Alph{section}}
+
+%\section*{Appendix}
+%
+%\input{ADD_APPENDIX_FILE_HERE.tex}
+
+\end{document}
+
