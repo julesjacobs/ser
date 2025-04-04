@@ -1,7 +1,6 @@
 \section{Related Work}
 \label{sec:relatedWork}
 
-Related Work includes...
 
 
 Serializability first introduced by Eswaran et al.~\cite{EsGrKoTr76}.  It is the first to put forth serializability as a correctness condition for concurrent transaction execution.
@@ -10,8 +9,9 @@ The paper also covers conflict serializability.
 Papadimitriou~\cite{Pa79} proved that even deciding the history of a single interleaving is serializable is NP-hard.
 
 conflict serializability is enforced during runtime in 
-with with pessimistic locking approaches (e.g, 2-Phase locking~\cite{BeHaGo87}), or with optimistic locking approaches (e.g., Optimistic Concurrency Control (OCC))~\cite{KuRo81, BuMo06}
+with with pessimistic locking approaches (e.g, 2-Phase locking~\cite{BeHaGo87}), or with optimistic locking approaches, e.g., Optimistic Concurrency Control (OCC)~\cite{KuRo81, BuMo06}
 
+\todo{start}
 
 Alur et al.~\cite{AlMcPe96}... 
 cover conflict serializability (not "regular" serializability, which is what we do). Furthermore, a main caveat is that they focus on a bounded number of transactions
@@ -31,38 +31,43 @@ serializability in TLA+~\cite{SoVaVi20, Ho24},...model checkers (such as TLC and
 TLA+ can indeed encode an infinite number of transactions. For example, here is the TLA+ spec for encoding serializability.
 However, for doing model checking on a TLA spec (with the TLC model checker) --- the model checker takes a .cfg file as additional input, in in the .cfg you explicitly specify all of the sets in the model, and these have to be finite. You can see this here where the model checking file needs to encode in advance the number of transactions (see attached figure)
 
-
+\todo{end}
 
 \todo{go over the paper and its citing papers}
 Me:
 1992 paper today, they seem to model a concurrent execution with petri nets but they don't ask if all executions are serializable which is our subject matter
-
-Furthermore, other work cover additional consistency models, such as causal consistency, which was put forth by Lamport~\cite{La78}, en extended to shared memory systems as \textit{causal memory}~\cite{AhNeBuKoHu95}. (include causal + consistency, designed in COPS~\cite{LlFrKaAn11}). The have been a plethora of works on model checking systems that adhere to causal consistency, and hence the complexity of such procedures~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}
-
-\todo{go over Mark's notes}
-
-
-
-\todo{go over Espinoza complexity results}
-
-Our work also builds upon both theoretical literature, as well as practical results, pertaining to Petri Nets~\cite{Reisig12,Mu89}.
 %
-In terms of theory, our undecidability result is based on a classic result by Hack~\cite{Ha76}, showing that, given two Petri Nets, it is undecdiable to answer whether they have equivalent reachbility sets. Hack based his result on the work of Rabin (which was never published). These undecdiability results follow from a series of reductions, originating from Hilbert's 10th problem, i.e., deciding if a Diophantine polynomial has an integer root (a problem that was proved undecidable by Matijas{\'e}vi{\v{c}}~\cite{Ma70}).
+
+Some work relaxes the (strong) consistency notion of serializability and allows weaker consistency notions. For example, Rastogi et al.~\cite{RaMeBrKoSi93}
+introduce \textit{predicate-wise serializability} (PDSR) --- a relaxation of serializability in which transactions might not be atomic, but are still required to maintain some desired database consistency predicate
 %
-Later, Jan{\v{c}}ar~\cite{Ja95} simplified this proof by using Petri Nets to simulate 2-counter Minsky Machines, which are univerally comptuable and hence undecidable~\cite{Mi67}. Moreover, Jan{\v{c}}ar's result is stronger as it shows that this equality is undecidable even for Petri Nets with five unbounded places~\cite{Ja95}.
+Furthermore, other relaxations focus on weaker consistency models. One such model is causal consistency, which was put forth by Lamport~\cite{La78}, en extended to shared memory systems as \textit{causal memory}~\cite{AhNeBuKoHu95}. (include causal + consistency, designed in COPS~\cite{LlFrKaAn11}). The have been a plethora of works on model checking systems that adhere to causal consistency, and hence the complexity of such procedures~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
 %
-We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} for a comprehensive summary on additional decidability results pertaining to Petri Nets.
+We also note that some work combine various consistency notions. These include the recent work by Brutschy et al.~\cite{BrDiMuVe18}, who put form a method to statically detect non-serializable executions on top of
+causally-consistent databases.
 
 
-Deciding reachaility for Petri Nets:
 
-- Mayr~\cite{Ma81} was the first to put forth an algorithm for deciding reachability for Petri Nets in the unbounded case (note that for a bounded net this is trivial as you can enumerate all reachable markings.)
 
-- This algorithm was later improved and simplified by Kosaraju~\cite{Ko82}, and then by Lambert~\cite{La92}.
+Our work also builds upon both theoretical literature, as well as practical results, pertaining to Petri Nets~\cite{Mu89, Es96, Reisig12}.
+%
+Firstly, our undecidability result is based on a classic result by Hack~\cite{Ha76, HaThesis76}, showing that, given two Petri Nets, it is undecidable to answer whether they have equivalent reachability sets. Hack based his result on the work of Rabin (which was never published). These undecidability results follow from a series of reductions, originating from Hilbert's 10th problem, i.e., deciding if a Diophantine polynomial has an integer root (a problem that was proved undecidable by Matijas{\'e}vi{\v{c}}~\cite{Ma70}).
+%
+Later, Jan{\v{c}}ar~\cite{Ja95} proved this result by demonstrating that Petri Nets can simulate 2-counter Minsky Machines~\cite{Mi67}, which are universally computable and hence undecidable. Moreover, Jan{\v{c}}ar strengthened the original result and proved that reachability equivalence is undecidable even for Petri Nets with five unbounded places~\cite{Ja95}.
+%
 
-- Very recently, the Complexity was recently proven to be Ackermann complete~\cite{CzWo22}, indicating it inherently infeasible in practice to solve on large problems.
-
-These algorithms have inspired various Petri Net reachability tools, such as K-Reach~\cite{DiLa20} and SMPT~\cite{AmDa23}, which employs an SMT-based approach~\cite{AmBeDa21, AmDaHu22} which reduces the reachability problem to a satisfiability query (that is subsequently dispatched to the state-of-the-art Z3 solver~\cite{DeBj08}).
-
+Our decision procedure itself is based on an algorithm for deciding whether a given marking is reachable, for a Petri Net.
+%
+Mayr~\cite{Ma81} was the first to put forth an algorithm for this problem given a (potentially, unbounded) Petri Net (note that for a bounded case this is straightforward, as you can enumerate all reachable markings.)
+%
+Mayr's reachability algorithm was later improved and simplified by Kosaraju~\cite{Ko82}, and then again by Lambert~\cite{La92}.
+%
+Very recently, this problem was also proven to be Ackermann complete~\cite{CzWo22}, implying that, although decidable, it is practically infeasible to solve on large nets.
+%
+Furthermore, these theoretical algorithms have inspired various tools, such as K-Reach~\cite{DiLa20}, DICER~\cite{XiZhLi21}, MARCIE~\cite{HeRoSc13}, and others. 
+%
+Specifically, our tool employs SMPT~\cite{AmDa23}, a state-of-the-art Petri Net reachability tool, which employs an SMT-based approach~\cite{AmBeDa21, AmDaHu22}. SMPT curtails the search space by reducing the reachability problem to a satisfiability query (that is subsequently dispatched to the Z3 solver~\cite{DeBj08}) and inferring invariants on the net's structure.
+%
+We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary on additional decidability results pertaining to Petri Nets.
  
 

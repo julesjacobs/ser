@@ -48,6 +48,12 @@ A.~Bouajjani, C.~Enea, R.~Guerraoui, and J.~Hamza.
 \newblock In {\em Proc. 44th ACM SIGPLAN Symposium on Principles of Programming
   Languages (POPL)}, pages 626--638, 2017.
 
+\bibitem{BrDiMuVe18}
+L.~Brutschy, D.~Dimitrov, P.~M\"{u}ller, and M.~Vechev.
+\newblock {Static Serializability Analysis for Causal Consistency}.
+\newblock In {\em Proc. 39th ACM SIGPLAN Conference on Programming Language
+  Design and Implementation (PLDI)}, pages 90--104, 2018.
+
 \bibitem{BuMo06}
 B.~Burke and R.~Monson-Haefel.
 \newblock {\em {Enterprise JavaBeans 3.0}}.
@@ -72,11 +78,23 @@ A.~Dixon and R.~Lazi{\'c}.
 \newblock In {\em Proc. 26th Int. Conf. on Tools and Algorithms for the
   Construction and Analysis of Systems (TACAS)}, pages 405--412, 2020.
 
+\bibitem{Es96}
+J.~Esparza.
+\newblock {Decidability and Complexity of {Petri} Net Problems --- An
+  Introduction}.
+\newblock In {\em Advanced Course on {Petri} Nets}, volume 1491 of {\em Lecture
+  Notes in Computer Science}, pages 374--428. Springer, 1996.
+
 \bibitem{EsNi94}
 J.~Esparza and M.~Nielsen.
 \newblock {Decidability Issues for Petri Nets --- A Survey}.
 \newblock {\em Journal of Information Processing and Cybernetics},
   30(3):143--160, 1994.
+
+\bibitem{EsNi24}
+J.~Esparza and M.~Nielsen.
+\newblock {Decidability Issues for Petri Nets --- A Survey}, 2024.
+\newblock Technical Report. \url{http://arxiv.org/abs/2411.01592}.
 
 \bibitem{EsGrKoTr76}
 K.~Eswaran, J.~Gray, R.~Lorie, and I.~Traiger.
@@ -84,15 +102,26 @@ K.~Eswaran, J.~Gray, R.~Lorie, and I.~Traiger.
   System}.
 \newblock {\em Communications of the ACM}, 19(11):624--633, 1976.
 
+\bibitem{HaThesis76}
+M.~Hack.
+\newblock {\em {Decidability Questions for Petri Nets}}.
+\newblock PhD thesis, Massachusetts Institute of Technology, 1976.
+
 \bibitem{Ha76}
 M.~Hack.
 \newblock {The Equality Problem for Vector Addition Systems is Undecidable}.
 \newblock {\em Theoretical Computer Science}, 2(1):77--95, 1976.
 
+\bibitem{HeRoSc13}
+M.~Heiner, C.~Rohr, and M.~Schwarick.
+\newblock {MARCIE --- Model Checking and Reachability Analysis Done
+  Efficiently}.
+\newblock In {\em Proc. 34th Int. Conf. on Applications and Theory of Petri
+  Nets and Concurrency (PETRI NETS)}, pages 389--399, 2013.
+
 \bibitem{Ho24}
 L.~Hochstein.
 \newblock {Serializability and {TLA+}}, Oct 2024.
-\newblock Accessed: [Insert Access Date Here].
 
 \bibitem{Ja95}
 P.~Jan{\v{c}}ar.
@@ -155,8 +184,8 @@ J.~Matijas{\'e}vi{\v{c}}.
 \bibitem{Ma81}
 E.~Mayr.
 \newblock {An Algorithm for the General Petri Net Reachability Problem}.
-\newblock In {\em Proceedings of the thirteenth annual ACM symposium on Theory
-  of computing}, pages 238--246, 1981.
+\newblock In {\em Proc. 13th Annual ACM Symposium on Theory of Computing
+  (STOC)}, pages 238--246, 1981.
 
 \bibitem{Mi67}
 M.~Minsky.
@@ -166,12 +195,18 @@ M.~Minsky.
 \bibitem{Mu89}
 T.~Murata.
 \newblock {Petri Nets: Properties, Analysis and Applications}.
-\newblock {\em Proceedings of the IEEE}, 77(4):541--580, 1989.
+\newblock {\em Proc. of the IEEE}, 77(4):541--580, 1989.
 
 \bibitem{Pa79}
 C.~Papadimitriou.
 \newblock {The Serializability of Concurrent Database Updates}.
 \newblock {\em Journal of the ACM (JACM)}, 26(4):631--653, 1979.
+
+\bibitem{RaMeBrKoSi93}
+R.~Rastogi, S.~Mehrotra, Y.~Breitbart, H.~Korth, and A.~Silberschatz.
+\newblock {On Correctness of Non-Serializable Executions}.
+\newblock In {\em Proc. 12th ACM SIGACT-SIGMOD-SIGART Symposium on Principles
+  of Database Aystems (PODS)}, pages 97--108, 1993.
 
 \bibitem{Reisig12}
 W.~Reisig.
@@ -184,6 +219,12 @@ T.~Soethout, T.~van~der Storm, and J.~J. Vinju.
   TLA\^{}+}.
 \newblock In {\em Proc. 18th Int. Conf. Software Engineering and Formal Methods
   (SEFM)}, pages 43--57, 2020.
+
+\bibitem{XiZhLi21}
+D.~Xiang, F.~Zhao, and Y.~Liu.
+\newblock {DICER 2.0: A New Model Checker for Data-Flow Errors of Concurrent
+  Software Systems}.
+\newblock {\em Mathematics}, 9(9):966, 2021.
 
 \bibitem{YuMaLa99}
 Y.~Yu, P.~Manolios, and L.~Lamport.

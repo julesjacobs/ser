@@ -3,67 +3,72 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 The style file: abbrv.bst
 Database file #1: references.bib
-I was expecting a `,' or a `}'---line 591 of file references.bib
+I was expecting a `,' or a `}'---line 605 of file references.bib
  :  
  :  pages={1--30},
 (Error may have been on previous line)
 I'm skipping whatever remains of this entry
-Repeated entry---line 775 of file references.bib
+Repeated entry---line 789 of file references.bib
  : @inproceedings{LlFrKaAn11
  :                          ,
 I'm skipping whatever remains of this entry
-Repeated entry---line 793 of file references.bib
+Repeated entry---line 807 of file references.bib
  : @article{La78
  :              ,
 I'm skipping whatever remains of this entry
-I was expecting a `,' or a `}'---line 983 of file references.bib
+I was expecting a `,' or a `}'---line 997 of file references.bib
  :  
  :  year      = {1967}
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+I was expecting a `,' or a `}'---line 1217 of file references.bib
+ : 
+ : @inproceedings{AmDa23,
 (Error may have been on previous line)
 I'm skipping whatever remains of this entry
 Warning--empty year in KoKuTr19
 Warning--empty booktitle in La94
 Warning--there's a number but no series in La94
 Warning--empty year in Mi67
-You've used 34 entries,
+You've used 41 entries,
             2118 wiz_defined-function locations,
-            736 strings with 9484 characters,
-and the built_in function-call counts, 12992 in all, are:
-= -- 1311
-> -- 469
-< -- 20
-+ -- 186
-- -- 152
-* -- 820
-:= -- 1957
-add.period$ -- 104
-call.type$ -- 34
-change.case$ -- 174
+            778 strings with 10696 characters,
+and the built_in function-call counts, 15665 in all, are:
+= -- 1576
+> -- 583
+< -- 25
++ -- 231
+- -- 190
+* -- 990
+:= -- 2365
+add.period$ -- 125
+call.type$ -- 41
+change.case$ -- 213
 chr.to.int$ -- 0
-cite$ -- 38
-duplicate$ -- 576
-empty$ -- 1122
-format.name$ -- 152
-if$ -- 2869
+cite$ -- 45
+duplicate$ -- 692
+empty$ -- 1342
+format.name$ -- 190
+if$ -- 3459
 int.to.chr$ -- 0
-int.to.str$ -- 34
-missing$ -- 37
-newline$ -- 174
-num.names$ -- 68
-pop$ -- 232
+int.to.str$ -- 41
+missing$ -- 42
+newline$ -- 208
+num.names$ -- 82
+pop$ -- 284
 preamble$ -- 1
-purify$ -- 144
+purify$ -- 177
 quote$ -- 0
-skip$ -- 454
+skip$ -- 549
 stack$ -- 0
-substring$ -- 960
-swap$ -- 203
-text.length$ -- 20
+substring$ -- 1122
+swap$ -- 248
+text.length$ -- 25
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 128
+type$ -- 156
 warning$ -- 4
-while$ -- 140
-width$ -- 36
-write$ -- 373
-(There were 4 error messages)
+while$ -- 167
+width$ -- 43
+write$ -- 449
+(There were 5 error messages)
