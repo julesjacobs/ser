@@ -23,7 +23,7 @@ of reasoning about serializability.
 \begin{itemize}
 	\item \( n \in \N \) denotes a numerical constant.
 	\item \( f \in \F \) denotes a packet field identifier.
-	\item \( X \in \Variable \) denotes a global variable.
+	\item \( X \in \VAR \) denotes a global variable.
 	\item \( p \in \Pk \triangleq \F \to \N \) denotes a packet.
 	\item \( s \in \Sw \) denotes a switch identifier.
 	%    \item \( t \in \Thread \) denotes a thread.
@@ -36,17 +36,21 @@ of reasoning about serializability.
 The syntax of the extended NetKAT-like language is defined as follows:
 
 \begin{align*}
-	\textbf{Expression } \quad e \quad ::&\!=\! \quad 0 &&\text{(zero 
-		expression, failure)} \\
-	&\mid\quad 1 &&\text{(identity, no change, continue)} \\
-	&\mid\quad \yield &&\text{(output result)} \\
-	&\mid\quad e_1 + e_2 &&\text{(nondeterministic choice)} \\
-	&\mid\quad e_1 \cdot e_2 &&\text{(sequential composition)} \\
-	&\mid\quad f = n &&\text{(test packet field)} \\
-	&\mid\quad f \leftarrow n &&\text{(mutate packet field)} \\
-	&\mid\quad X = n &&\text{(test global variable)} \\
-	&\mid\quad X \leftarrow n &&\text{(mutate global variable)} \\
-	&\mid\quad e^* &&\text{(Kleene star iteration)} \\
+	\textbf{Expression } \quad e \quad ::
+	&\!=\! \quad n \in \N
+	&&\text{(value)} \\
+	&\mid\quad X \in \VAR &&\text{(global variable)} \\
+	&\mid\quad x \in \var
+	&&\text{(local variable)} \\
+	&\mid\quad \{e\}=\{e\} &&\text{(test variable)} \\
+	&\mid\quad \{e\}\leftarrow\{e\} &&\text{(assign variable)} \\
+	&\mid\quad \{e\} \cdot \{e\} &&\text{(sequential composition)} \\
+	&\mid\quad \ifExp \{e\}:\{e\} \elseExp \{e\} 
+	&&\text{(branching)} \\
+	&\mid\quad \whileExp \{e\}:\{e\} 
+	&&\text{(iteration)} \\
+	&\mid\quad \exit &&\text{(exit)} \\
+	&\mid\quad {?} &&\text{(random)}
 \end{align*}
 
 \textcolor{red}{We note that the $\spawn$ command is not inherently part of the NetKAT 
