@@ -1,22 +1,27 @@
 \section{Problem Definition}
 \label{sec:problemDefinition}
 
+\newcommand{\grammartag}[1]{\emph{#1}}
 \begin{figure}[t]
     \begin{align*}
-    e ::= &&&\\
-       | & \; 0 \mid 1 \mid 2 \mid \ldots                                && \text{(numeric constants)} \\
-       | & \; \nondet                                 && \text{(nondeterministic value: 0 or 1)}\\
-       | & \; x := e                            && \text{(write to local variable / packet field)} \\
-       | & \; x                                 && \text{(read from local variable / packet field)} \\
-       | & \; X := e                            && \text{(write to global variable / switch variable)} \\
-       | & \; X                                 && \text{(read from global variable / switch variable)} \\
-       | & \; e_1 == e_2                        && \text{(equality test)} \\
-       | & \; e_1 ; e_2                         && \text{(sequencing)} \\
-       | & \; \ifkw(e_1)\{e_2\}\elsekw\{e_3\} && \text{(conditional)} \\
-       | & \; \whilekw(e_1)\{e_2\}              && \text{(loop)} \\
-       | & \; \yieldkw                      && \text{(yields to scheduler)}
+    e ::= &&& \grammartag{Single expression}\\
+       | & \quad 0 \mid 1 \mid 2 \mid \ldots                                && \grammartag{Numeric constants} \\
+       | & \quad \nondet                                 && \grammartag{Nondeterministic value: 0 or 1}\\
+       | & \quad x := e                            && \grammartag{Write to local variable (packet field)} \\
+       | & \quad x                                 && \grammartag{Read from local variable (packet field)} \\
+       | & \quad X := e                            && \grammartag{Write to global variable (switch variable)} \\
+       | & \quad X                                 && \grammartag{Read from global variable (switch variable)} \\
+       | & \quad e_1 == e_2                        && \grammartag{Equality test} \\
+       | & \quad e_1 ; e_2                         && \grammartag{Sequencing} \\
+       | & \quad \ifkw(e_1)\{\ e_2\ \}\elsekw\{\ e_3\ \} && \grammartag{Conditional} \\
+       | & \quad \whilekw(e_1)\{\ e_2\ \}              && \grammartag{While loop} \\
+       | & \quad \yieldkw                      && \grammartag{Yields to scheduler}\\[1em]
+    p ::=
+        & \quad \requestkw\ name_1\ \{\ e_1\ \}&&\grammartag{Whole program:}\\[-0.5em]
+        & \quad \qquad \vdots &&\grammartag{set of request handlers}\\
+        & \quad \requestkw\ name_n\ \{\ e_n\ \}\ 
     \end{align*}
-    \caption{Syntax of expressions}
+    \caption{Syntax of expressians and programs}
     \label{fig:syntax}
 \end{figure}
     
