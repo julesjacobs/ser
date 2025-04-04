@@ -4,41 +4,29 @@
 
 
 Serializability first introduced by Eswaran et al.~\cite{EsGrKoTr76}.  It is the first to put forth serializability as a correctness condition for concurrent transaction execution.
-The paper also covers conflict serializability. 
+The paper also covers conflict serializability --- a strictly stronger consistency property than serializability, that does not only require that the final state of the system be attained by an equivalent serial execution, but also, that this equivalence be attained by allowing only specific (``non-conflicting'') operations to be reordered.
 %
-Papadimitriou~\cite{Pa79} proved that even deciding the history of a single interleaving is serializable is NP-hard.
-
-conflict serializability is enforced during runtime in 
-with with pessimistic locking approaches (e.g, 2-Phase locking~\cite{BeHaGo87}), or with optimistic locking approaches, e.g., Optimistic Concurrency Control (OCC)~\cite{KuRo81, BuMo06}
-
-\todo{start}
-
-Alur et al.~\cite{AlMcPe96}... 
-cover conflict serializability (not "regular" serializability, which is what we do). Furthermore, a main caveat is that they focus on a bounded number of transactions
-
-
-
-continued by~\cite{BoEmEnHa13}.
-In the followup paper (Boujjani et al.) - they also cover conflict serializability, but find a stronger result than Alur, based on unbounded transactions. They find an interesting result that although you can have an infinite conflict graph (when having infinite transactions), then you can still decide conflict serializability in the unbounded case by finding a cycle in the graph when it's non (conflict) serializable, and the cycle length surprisingly does not depend on the number of transactions, which is pretty cool. Another point is that they define a VASS (=Petri Net) that represents the interleaving, and their definition for it is similar to our PN. They then modify it to include a conflict cycle. The most relevant part to us in this paper is that it's on an unbounded number of transactions and also, that they represent Int(S) with a VASS that is similar to us. Still, it's not our notion of serializability (and indeed, they have EXPTIME complexity, while we're probably Ackermann complete?).
-
-
-
-Another line of work leverages the highly expressive \textit{Logic of Temporal Actions} (TLA)~\cite{La94}. 
+Papadimitriou~\cite{Pa79} proved that it is NP-hard to decide whether even the history of a single interleaving is serializable. 
 %
-These work encode
-serializability in TLA+~\cite{SoVaVi20, Ho24},...model checkers (such as TLC and Apalache)~\cite{YuMaLa99, KoKuTr19}.
+Moreover, although conflict serializability is more conservative measure than serializability, it is easier to enforce during runtime by various approaches. 
 %
-TLA+ can indeed encode an infinite number of transactions. For example, here is the TLA+ spec for encoding serializability.
-However, for doing model checking on a TLA spec (with the TLC model checker) --- the model checker takes a .cfg file as additional input, in in the .cfg you explicitly specify all of the sets in the model, and these have to be finite. You can see this here where the model checking file needs to encode in advance the number of transactions (see attached figure)
-
-\todo{end}
-
-\todo{go over the paper and its citing papers}
-Me:
-1992 paper today, they seem to model a concurrent execution with petri nets but they don't ask if all executions are serializable which is our subject matter
+These approaches are typically categorized as either \textit{pessimistic} locking approaches, e.g, 2-Phase Locking~\cite{BeHaGo87}, or alternatively --- \textit{optimistic} locking approaches, e.g., Optimistic Concurrency Control (OCC)~\cite{KuRo81, BuMo06}.
 %
 
-Some work relaxes the (strong) consistency notion of serializability and allows weaker consistency notions. For example, Rastogi et al.~\cite{RaMeBrKoSi93}
+Furthermore, most work, both in theory and in practice, focuses on proving theorems on conflict serializability, due to is being more straightforward, and corresponding to the programs dependency graph, and \textit{without taking the actual semantics into account}.
+%
+Alur et al.~\cite{AlMcPe96} cover the complexity for deciding conflict serializability, given a bound on the number of transactions. 
+%
+This work was later continued by Bouajjaniet al.~\cite{BoEmEnHa13}, which demonstrate that the problem of deciding whether a program with an \textit{unbounded} number of transaction is conflict serializable, is also decidable and is EXPTIME-complete. The authors show that although the conflict graph in such a case is infinite (and hence, infeasible to traverse) --- conflict serializability can still be decided as the size of the cycle (if it exists), surprisingly, does not depend on the number of transactions. The authors also emulate multiple transactions in a shared memory system with a Vector addition system, and equivalent object to a Petri Net. We took inspiration by defining a Petri Net to capture Int(S). 
+
+In another line of work, there is an attempt to \textit{directly} validate (regular, non-conflicting) serializability by encoding this specification in the highly expressive \textit{Logic of Temporal Actions} (TLA)~\cite{La94}. 
+%
+Although, unlike the aforementioned works, TLA itself allows encoding serializability in the original form (focusing on the final state of the variables), such works~\cite{SoVaVi20, Ho24} cannot validate this behavior for an \textit{unbounded} number of transactions. This is because, although TLA/TLA+ allow encoding the properties of interest, their model checkers (such as TLC and Apalache)~\cite{YuMaLa99, KoKuTr19} can only operate on a finite and predefined number of transactions.
+%
+Although these works present important progress, as far as we are aware, our work is the first to decide serializability for all executions, based solely on the program semantics and final state, regardless of read/write conflicts. Furthermore, ours is the first to handle the unbounded case; and to supply an actual end-to-end implementation.
+
+
+Other work relaxes the (strong) consistency notion of serializability and allows weaker consistency notions. For example, Rastogi et al.~\cite{RaMeBrKoSi93}
 introduce \textit{predicate-wise serializability} (PDSR) --- a relaxation of serializability in which transactions might not be atomic, but are still required to maintain some desired database consistency predicate
 %
 Furthermore, other relaxations focus on weaker consistency models. One such model is causal consistency, which was put forth by Lamport~\cite{La78}, en extended to shared memory systems as \textit{causal memory}~\cite{AhNeBuKoHu95}. (include causal + consistency, designed in COPS~\cite{LlFrKaAn11}). The have been a plethora of works on model checking systems that adhere to causal consistency, and hence the complexity of such procedures~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
@@ -70,4 +58,6 @@ Specifically, our tool employs SMPT~\cite{AmDa23}, a state-of-the-art Petri Net 
 %
 We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary on additional decidability results pertaining to Petri Nets.
  
+ 
+ \todo{decide over 1992 paper: Modeling Serializability via Process Equivalence in Petri Nets}
 
