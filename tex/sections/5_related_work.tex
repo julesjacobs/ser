@@ -1,7 +1,8 @@
 \section{Related Work}
 \label{sec:relatedWork}
 
-\paragraph{Notions of serializability.}
+\subsection{Notions of serializability.}
+\label{sec:related:notions-of-serializability}
 
 \jules{Main goal of this section is to place our notion of serializability in context of the literature. If our notion matches some existing, then we should say so. If it does not, we should somehow argue that it is novel but reasonable.}
 \todo{Describe the differences between our notion and the others}
@@ -22,7 +23,8 @@ Other relaxations focus on weaker consistency models: Lamport’s causal consist
 %
 Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-serializable behaviors in causally consistent databases.
 
-\paragraph{Deciding serializability.}
+\subsection{Deciding serializability.}
+\label{sec:related:deciding-serializability}
 
 \jules{Main goal of this section is to describe all the related work on deciding serializability, from deciding it on traces, to bounded model checking, to unbounded ones. Key distinction is on two axes: (1) the notion of serializability used (2) whether they \emph{prove} serializability of unbounded systems or whether they just model check.}
 
@@ -36,7 +38,8 @@ While these contributions represent significant advances, to our knowledge, our 
 (ii) Support \textit{unbounded} transaction systems; and
 (iii) Provide a complete end-to-end implementation.
 
-\paragraph{Petri Nets, VAS(S) \& Semilinear sets, Presburger arithmetic.}
+\subsection{Petri Nets, VAS(S) \& Semilinear sets, Presburger arithmetic.}
+\label{sec:related:petri}
 
 \jules{The main goal of this section is to place our technical methods in context. Should include stuff on petri reachability as well as semilinear sets / presburger. We should contrast our implementation methods with existing stuff as far as we want to claim novelty (e.g., of the semilinear set implementation and heuristics or of the Petri net reduction heuristics)}
 

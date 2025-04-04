@@ -50,6 +50,16 @@
   {\normalfont\normalsize\bfseries}}
 \makeatother
 
+% Redefine sections to display with § symbol
+\crefformat{section}{\S#2#1#3}
+\Crefformat{section}{\S#2#1#3}
+
+% Ensure subsections/subsubsections behave the same way (optional)
+\crefformat{subsection}{\S#2#1#3}
+\Crefformat{subsection}{\S#2#1#3}
+\crefformat{subsubsection}{\S#2#1#3}
+\Crefformat{subsubsection}{\S#2#1#3}
+
 
 \begin{document}
 
@@ -63,12 +73,10 @@
 
 \input{sections/1_introduction}
 \input{sections/2_problem_definition}
-\input{sections/3_netkat_with_global_variables}
-\input{sections/4_formulations}
-\input{sections/5_proofs}
-\input{sections/6_implementation}
-\input{sections/7_related_work}
-\input{sections/8_discussion}
+\input{sections/3_formal_results}
+\input{sections/4_implementation}
+\input{sections/5_related_work}
+\input{sections/6_discussion}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
