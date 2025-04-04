@@ -1,0 +1,172 @@
+\section{Problem Definition}
+\label{sec:problemDefinition}
+
+\begin{figure}[t]
+    \begin{align*}
+    e ::= &&&\\
+       | & \; 0 \mid 1 \mid 2 \mid \ldots                                && \text{(numeric constants)} \\
+       | & \; \nondet                                 && \text{(nondeterministic value: 0 or 1)}\\
+       | & \; x := e                            && \text{(write to local variable / packet field)} \\
+       | & \; x                                 && \text{(read from local variable / packet field)} \\
+       | & \; X := e                            && \text{(write to global variable / switch variable)} \\
+       | & \; X                                 && \text{(read from global variable / switch variable)} \\
+       | & \; e_1 == e_2                        && \text{(equality test)} \\
+       | & \; e_1 ; e_2                         && \text{(sequencing)} \\
+       | & \; \ifkw(e_1)\{e_2\}\elsekw\{e_3\} && \text{(conditional)} \\
+       | & \; \whilekw(e_1)\{e_2\}              && \text{(loop)} \\
+       | & \; \yieldkw                      && \text{(yields to scheduler)}
+    \end{align*}
+    \caption{Syntax of expressions}
+    \label{fig:syntax}
+\end{figure}
+    
+A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{Req}, \mathit{Res}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
+\begin{itemize}
+\item $G$ is a set of global states representing switch state
+\item $L$ is a set of local states representing packet contents
+\item $\mathit{Req}$ is a set of request events
+\item $\mathit{Res}$ is a set of response events
+\item $g_0 \in G$ is the initial global state
+\item $\mathit{req} \subseteq \mathit{Req} \times L$ is a request transition relation, which describes which requests turn into which packets
+\item $\mathit{resp} \subseteq L \times \mathit{Res}$ is a response transition relation, which describes which packets turn into which responses
+\item $\delta \subseteq (G \times L) \times (G \times L)$ is a transition relation for packet processing, which describes an atomic step of packet processing that may change the global state.
+\end{itemize}
+
+\begin{figure}[t]
+    \centering
+    \renewcommand{\arraystretch}{1.6}
+    \[
+    \begin{array}{c}
+    \textbf{States and Transitions:}
+    \\
+    \quad
+    \text{A (global) \emph{network state} is a triple }(g,\mathcal{P},M)\text{ where:}
+    \\
+    \quad
+    g \in G \text{ is the current global switch state,}
+    \\
+    \quad
+    \mathcal{P} \in \text{Multiset}(L \times \mathit{Req}) \text{ is a multiset of in-flight packets,}
+    \\
+    \quad
+    M \in \text{Multiset}(\mathit{Req} \times \mathit{Res}) \text{ is a multiset of request--response pairs already completed.}
+    \end{array}
+    \]
+
+    \[
+    \begin{array}{c}
+    \textbf{Initial state:}
+    \\
+    \quad (g_0,\,\varnothing,\,\varnothing)
+    \end{array}
+    \]
+
+    \[
+    \begin{array}{c}
+    \textbf{Transition rules:}
+    \\[1em]
+    \text{(New Request)}\quad\infer{
+    (r,\ell)\,\in\,\mathit{req}
+    }
+    {(g,\;\mathcal{P},\;M) \;\longrightarrow\; (g,\;\mathcal{P} \uplus \{(\ell,r)\},\;M)}
+    \\[2em]
+    \text{(Packet Step)}\quad\infer{
+    ((g,\ell),\,(g',\ell')) \,\in\, \delta
+    }
+    {(g,\;\mathcal{P} \uplus \{(\ell,r)\},\;M) \;\longrightarrow\; (g',\;\mathcal{P} \uplus \{(\ell',r)\},\;M)}
+    \\[2em]
+    \text{(Response)}\quad\infer{
+    (\ell,s)\,\in\,\mathit{resp}
+    }
+    {(g,\;\mathcal{P} \uplus \{(\ell,r)\},\;M) \;\longrightarrow\; (g,\;\mathcal{P},\;M \uplus \{(r,s)\})}
+    \end{array}
+    \]
+
+    \[
+    \begin{array}{c}
+    \textbf{Complete runs:}
+    \\
+    \quad (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow\; (g_1,\,\mathcal{P}_1,\,M_1) \;\longrightarrow\; \cdots \;\longrightarrow\; (g_n,\,\mathcal{P}_{n-1},\,M_{n-1}) \;\longrightarrow\; (g_n,\,\varnothing,\,M_n)
+    \\[1em]
+    \textbf{Interleaved run: } \text{the } \mathcal{P}_i \text{ can have more than one packet, and } \mathcal{P}_n = \varnothing \\
+    \textbf{Serial run: } \text{ each } \mathcal{P}_i \text{ has at most one packet, and } \mathcal{P}_n = \varnothing\\
+    \text{Int}(\mathcal{N}) = \{ M \in \text{Multiset}(\mathit{Req} \times \mathit{Res}) \mid \exists \text{ interleaved run } (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow^*\; (g_n,\,\varnothing,\,M) \}\\
+    \text{Ser}(\mathcal{N}) = \{ M \in \text{Multiset}(\mathit{Req} \times \mathit{Res}) \mid \exists \text{ serial run } (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow^*\; (g_n,\,\varnothing,\,M) \}\\
+    \end{array}
+    \]
+
+    \caption{State-transition rules for executions of
+    \(\mathcal{N} = (G, L, \mathit{Req}, \mathit{Res}, g_0, \delta, \mathit{req}, \mathit{resp})\).
+    A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P},M)\) by either (1) introducing a new request, (2) processing a packet step via \(\delta\), or (3) consuming a packet to produce its response.  When no more steps are possible, the result set \(M\) is the final multiset of request--response pairs that arose during the run.
+    Runs are called \emph{serial} if there is at most one packet in flight at any time, whereas \emph{interleaved} runs may have multiple packets in flight at once.}
+    \label{fig:network-transitions}
+\end{figure}
+
+\begin{definition}[Interleaved executions \(\mathrm{Int}(\mathcal{N})\)]
+    Let \(\mathcal{N} = (G, L, \mathit{Req}, \mathit{Res}, g_0, \delta, \mathit{req}, \mathit{resp})\).
+    An \emph{interleaved execution} begins in global state \(g = g_0\) with no packets in flight.
+    At any point, one may:
+    \begin{itemize}
+        \item introduce a new request \(r \in \mathit{Req}\), producing an in-flight packet \(\ell \in L\) if \((r,\ell) \in \mathit{req}\);
+        \item take an in-flight packet \(\ell\) and transition \(\ell \mapsto \ell'\) and \(g \mapsto g'\) if \(((g,\ell),(g',\ell'))\in\delta\);
+        \item consume an in-flight packet \(\ell\) to produce a response \(s\) if \((\ell,s)\in \mathit{resp}\).
+    \end{itemize}
+    Each request \(r\) must eventually yield exactly one corresponding response \(s\) in a valid execution.
+    The set of all finite multisets of \((r,s)\) pairs realizable by such interleavings is:
+    \[
+        \mathrm{Int}(\mathcal{N})
+        \;=\;
+        \bigl\{
+        M \;\in\; \text{Multiset}(\mathit{Req}\times \mathit{Res})
+        \;\mid\;
+        M \text{ is realized by some interleaved run of }\mathcal{N}
+        \bigr\}.
+    \]
+\end{definition}
+
+\begin{definition}[Serial executions \(\mathrm{Ser}(\mathcal{N})\)]
+In a \emph{serial} execution, requests are processed one at a time:
+\begin{enumerate}
+    \item Start in \(\,g_0\).
+    \item Take a single request \(r\in \mathit{Req}\), convert it to a packet, process that packet until a response \(s\in \mathit{Res}\) is produced.
+    \item Update the global state accordingly and repeat with the next request.
+\end{enumerate}
+No two requests overlap in processing.
+The set of all finite multisets of \((r,s)\) pairs realizable by such one-at-a-time runs is:
+\[
+    \mathrm{Ser}(\mathcal{N})
+    \;=\;
+    \bigl\{
+    M \;\in\; \text{Multiset}(\mathit{Req}\times \mathit{Res})
+    \;\mid\;
+    M \text{ is realized by some serial run of }\mathcal{N}
+    \bigr\}.
+\]
+\end{definition}
+
+\begin{theorem}[Serializability]
+\label{thm:int-eq-ser}
+Whether
+\(
+    \mathrm{Int}(\mathcal{N}) \;=\; \mathrm{Ser}(\mathcal{N})
+\)
+holds is decidable.
+\end{theorem}
+
+\begin{theorem}[Serial Equivalence]
+\label{thm:ser-eq-ser}
+Whether
+\(
+    \mathrm{Ser}(\mathcal{N}) \;=\; \mathrm{Ser}(\mathcal{N})
+\)
+holds is decidable.
+\end{theorem}
+
+\begin{theorem}[Interleaved Equivalence]
+\label{thm:int-eq-int}
+Whether
+\(
+    \mathrm{Int}(\mathcal{N}) \;=\; \mathrm{Int}(\mathcal{N})
+\)
+holds is undecidable.
+\end{theorem}
