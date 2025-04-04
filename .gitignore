@@ -24,3 +24,11 @@ test_graphviz/network.dot
 test_graphviz/network.pdf
 test_graphviz/network.png
 test_graphviz/network.svg
+
+
+tex/*.gz  
+tex/*.pdf 
+tex/*.out 
+tex/*.log 
+tex/*.blg 
+tex/*.aux
