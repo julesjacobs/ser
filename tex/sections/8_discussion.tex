@@ -8,3 +8,11 @@ To conclude..
 
 \subsection{Future Work}
 Next..
+
+\todo{Different notions of serializability}
+\begin{itemize}
+    \item \todo{Current notion: clients independently submit a request and get a response, and later they all get together and see if what they got was serializable}
+    \item \todo{Stronger: clients are not independent, or sequentially execute some parts. General: we have some happens-before on the requests/responses}
+    \item \todo{Weaker: the clients cannot communicate with each other afterwards to determine whether what they got was serializable, or they can only communicate in a limited way}
+    \item \todo{Infinite / unbounded executions}
+\end{itemize}
