@@ -1,18 +1,18 @@
 \section{Related Work}
 \label{sec:relatedWork}
 
-Serializability was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for concurrent transaction execution. Their work also introduced conflict serializability, a stricter variant that requires equivalence to a serial schedule through solely reordering non-conflicting operations. Papadimitriou~\cite{Pa79} later proved that determining serializability even for a given, single interleaving is NP-hard. 
+Serializability was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for concurrent transaction execution. Their work also introduced conflict serializability, a stricter variant that requires equivalence to a serial schedule solely by reordering non-conflicting operations. Papadimitriou~\cite{Pa79} later proved that determining serializability even for a given, single interleaving is NP-hard. 
 %
 Moreover, although conflict serializability is more conservative measure than serializability, it is easier to enforce during runtime by various approaches. 
 %
-These approaches are typically categorized as either \textit{pessimistic} locking approaches, e.g, 2-Phase Locking~\cite{BeHaGo87}, or alternatively --- \textit{optimistic} locking approaches, e.g., Optimistic Concurrency Control (OCC)~\cite{KuRo81, BuMo06}.
+These approaches are typically categorized as either \textit{pessimistic} locking approaches, e.g, Two-Phase Locking~\cite{BeHaGo87}, or alternatively --- \textit{optimistic} locking approaches, e.g., Optimistic Concurrency Control (OCC)~\cite{KuRo81, BuMo06}.
 %
-Both approaches ensure acyclicity in the conflict graph --- a necessary and sufficient  condition for conflict serializability. However, because these approaches \textit{ignore program semantics}, these may incorrectly reject executions that, although are not conflict-serializable, they are still valid serializable executions, i.e., execution equivalent to a serial execution.
+Both approaches ensure acyclicity in the conflict graph --- a necessary and sufficient condition for conflict serializability. However, because these approaches \textit{ignore program semantics}, these may incorrectly reject executions that, although not conflict-serializable, are still valid serializable executions, i.e., have the same result as a serial execution.
 %
 
-Alur et al.~\cite{AlMcPe96} established the complexity of deciding conflict serializability for bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later extended this result to unbounded systems, proving the problem remains decidable and EXPTIME-complete. Their key insight reveals that while the conflict graph becomes infinite, cycle detection, and thus conflict serializability, is independent of transaction count. By modeling transactions via vector addition systems (equivalent to Petri Nets), they provide a finite framework for analyzing infinite behaviors. This approach inspired our use of Petri Nets to capture Int(S). 
+Alur et al.~\cite{AlMcPe96} established the complexity of deciding conflict serializability for bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later extended this result to unbounded systems, proving the problem remains decidable and EXPTIME-complete. Their key insight reveals that while the conflict graph becomes infinite, cycle detection, and thus conflict serializability, is independent of transaction count. By modeling transactions via Vector Addition Systems (equivalent to Petri Nets), they provide a finite framework for analyzing infinite behaviors. This approach inspired our use of Petri Nets to capture Int(S). 
 
-A separate research direction attempts to \textit{directly} verify serializability, without limiting it to conflict restrictions, as done in other works. Towards this end, the expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a formal specification that validates that only serializable executions occur. While TLA can naturally encode serializabilityn (based on final-state equivalence), existing approaches~\cite{SoVaVi20, Ho24} remain limited to bounded transaction systems. This limitation stems from TLA/TlA+ model checkers like TLC and Apalache~\cite{YuMaLa99, KoKuTr19}, which require finite-state verification and cannot handle unbounded transaction counts.
+A separate research direction attempts to \textit{directly} verify serializability, without limiting it to conflict restrictions, as done in other works. Towards this end, the expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a formal specification that validates whether only serializable executions occur. While TLA can naturally encode ``real'' serializability (based on final-state equivalence), existing TLA-based approaches~\cite{SoVaVi20, Ho24} remain limited to bounded transaction systems. This limitation stems from TLA/TLA+ model checkers like TLC and Apalache~\cite{YuMaLa99, KoKuTr19}, which require finite-state verification and cannot handle unbounded transaction counts.
 
 %
 While these contributions represent significant advances, to our knowledge, our work is the first to:
@@ -23,25 +23,27 @@ While these contributions represent significant advances, to our knowledge, our 
 
 Several works have proposed relaxations of the (strong) consistency notion of serializability guarantees. Rastogi et al.~\cite{RaMeBrKoSi93} introduced predicate-wise serializability (PWSR), which preserves database invariants while permitting non-atomic transactions. 
 %
-Other approaches focus on weaker consistency models: Lamport’s causal consistency~\cite{La78}, later generalized to shared memory as causal memory~\cite{AhNeBuKoHu95} and implemented in systems like COPS~\cite{LlFrKaAn11}, has inspired extensive research on model checking and complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-serializable behaviors in causally consistent databases.
-
-
-Furthermore, our work builds on both theoretical and practical advances in Petri net research~\cite{Mu89, Es96, Re12, EsNi24}. The undecidability we prove for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, HaThesis76} showing the undecidability of reachability set equivalence for Petri Nets --- a result inspired by similar (unpublished) work by M. Rabin. This undecidability originates in a series of reductions from Hilbert’s 10th problem, specifically the impossibility of determining integer roots for Diophantine equations, a problem that was later proven undecidable by Matijasēvič~\cite{Ma70}.
+Other relaxations focus on weaker consistency models: Lamport’s causal consistency~\cite{La78}, later generalized to shared memory as causal memory~\cite{AhNeBuKoHu95} and implemented in systems like COPS~\cite{LlFrKaAn11}, has inspired extensive research on model checking and complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. 
 %
-Jančar~\cite{Ja95} later provided an alternative proof by showing Petri nets can simulate universal (and thus undecidable) 2-counter Minsky machines~\cite{Mi67}. In addition, Jančar further strengthened this result by proving undecidability holds even for Petri nets with just five unbounded places.
+Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-serializable behaviors in causally consistent databases.
 
-Our approach also builds on Petri net reachability algorithms, which determine whether a given marking is attainable. While straightforward for bounded nets (through exhaustive enumeration), the unbounded case was first solved by Mayr~\cite{Ma81}, with subsequent improvements by Kosaraju~\cite{Ko82} and Lambert~\cite{La92}. Recent work~\cite{CzWo22} has also established this problem is Ackermann-complete, implying that, although decidable, it is practically infeasible to solve on large nets.
+
+In addition, our work builds on both theoretical and practical advances in Petri net research~\cite{Mu89, Es96, Re12, EsNi24}. The undecidability we prove for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, HaThesis76} showing the undecidability of reachability set equivalence for Petri Nets \textcolor{red}{--- a result inspired by similar (unpublished) work by M. Rabin}.\guy{remove part in red?} This undecidability originates in a series of reductions from Hilbert’s 10th problem, specifically the possibility of determining whether there exists an integer root for Diophantine equations, a problem that was later proven undecidable by Matijasēvič~\cite{Ma70}.
+%
+Jančar~\cite{Ja95} later provided an alternative proof to this undecidability result, by showing that Petri nets can simulate universal (and thus undecidable) 2-counter Minsky machines~\cite{Mi67}. In addition, Jančar further strengthened the original result by proving that undecidability holds even for Petri nets with just five unbounded places.
+
+Furthermore, our approach also builds on Petri net reachability algorithms, which determine whether a given marking is attainable. While the solution is straightforward for bounded nets (through exhaustive enumeration), the solution for the unbounded case is highly nontrivial, and was first solved by Mayr~\cite{Ma81}, with subsequent improvements by Kosaraju~\cite{Ko82} and Lambert~\cite{La92}. Recent work~\cite{CzWo22} has also established this problem is Ackermann-complete, implying that, although decidable, it is practically infeasible to solve on large nets.
 
 These theoretical advances in Petri Net reachability have given rise to a plethora of practical tools, including K-Reach~\cite{DiLa20}, DICER~\cite{XiZhLi21}, MARCIE~\cite{HeRoSc13}, and others. 
 %
-Specifically, our implementation leverages SMPT~\cite{AmDa23}, a state-of-the-art Petri Net reachability tool that combines SMT-solving~\cite{AmBeDa21, AmDaHu22} with structural invariants. At a high level, SMPT formulates reachability as satisfiability queries (resolved via Z3~\cite{DeBj08}) while curtailing the search space by proactively inferring invariants on the net's structure.
+Specifically, our implementation leverages SMPT~\cite{AmDa23}, a state-of-the-art Petri Net reachability tool that combines SMT-solving with structural invariants~\cite{AmBeDa21, AmDaHu22}. At a high level, SMPT formulates reachability as satisfiability queries (dispatched to the Z3 solver~\cite{DeBj08}) while curtailing the search space by proactively inferring invariants on the net's structure.
 %
-%We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary on additional decidability results pertaining to Petri Nets.
+%We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary of additional decidability results pertaining to Petri Nets.
 
 
  
  
-\todo{decide over 1992 paper: Modeling Serializability via Process Equivalence in Petri Nets}
+\todo{decide about 1992 paper: Modeling Serializability via Process Equivalence in Petri Nets}
 
 
 
@@ -49,7 +51,7 @@ Specifically, our implementation leverages SMPT~\cite{AmDa23}, a state-of-the-ar
 
 
 
-%Serializability first introduced by Eswaran et al.~\cite{EsGrKoTr76}.  It is the first to put forth serializability as a correctness condition for concurrent transaction execution.
+%Serializability first introduced by Eswaran et al.~\cite{EsGrKoTr76}. It is the first to put forth serializability as a correctness condition for concurrent transaction execution.
 %The paper also covers conflict serializability --- a strictly stronger consistency property than serializability, that does not only require that the final state of the system be attained by an equivalent serial execution, but also, that this equivalence be attained by allowing only specific (``non-conflicting'') operations to be reordered.
 %%
 %Papadimitriou~\cite{Pa79} proved that it is NP-hard to decide whether even the history of a single interleaving is serializable. 
