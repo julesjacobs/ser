@@ -41,14 +41,13 @@
   \thispagestyle{plain}  % empty header and footer on the first page
 }
 
-% Make paragraphs bold
+% Make paragraph headings bold
 \makeatletter
 \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
-  {-3.25ex\@plus -1ex \@minus -.2ex}%
-  {1.5ex \@plus .2ex}%
-  {\normalfont\bfseries}}
+  {1.5ex \@plus1ex \@minus.2ex}%
+  {-1em}%
+  {\normalfont\normalsize\bfseries}}
 \makeatother
-
 
 
 \begin{document}

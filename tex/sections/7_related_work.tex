@@ -1,6 +1,8 @@
 \section{Related Work}
 \label{sec:relatedWork}
 
+\paragraph{Notions of serializability.}
+
 Serializability was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for concurrent transaction execution. Their work also introduced conflict serializability, a stricter variant that requires equivalence to a serial schedule solely by reordering non-conflicting operations. Papadimitriou~\cite{Pa79} later proved that determining serializability even for a given, single interleaving is NP-hard. 
 %
 Moreover, although conflict serializability is more conservative measure than serializability, it is easier to enforce during runtime by various approaches. 
@@ -9,6 +11,14 @@ These approaches are typically categorized as either \textit{pessimistic} lockin
 %
 Both approaches ensure acyclicity in the conflict graph --- a necessary and sufficient condition for conflict serializability. However, because these approaches \textit{ignore program semantics}, these may incorrectly reject executions that, although not conflict-serializable, are still valid serializable executions, i.e., have the same result as a serial execution.
 %
+
+Several works have proposed relaxations of the (strong) consistency notion of serializability guarantees. Rastogi et al.~\cite{RaMeBrKoSi93} introduced predicate-wise serializability (PWSR), which preserves database invariants while permitting non-atomic transactions. 
+%
+Other relaxations focus on weaker consistency models: Lamport’s causal consistency~\cite{La78}, later generalized to shared memory as causal memory~\cite{AhNeBuKoHu95} and implemented in systems like COPS~\cite{LlFrKaAn11}, has inspired extensive research on model checking and complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. 
+%
+Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-serializable behaviors in causally consistent databases.
+
+\paragraph{Deciding serializability.}
 
 Alur et al.~\cite{AlMcPe96} established the complexity of deciding conflict serializability for bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later extended this result to unbounded systems, proving the problem remains decidable and EXPTIME-complete. Their key insight reveals that while the conflict graph becomes infinite, cycle detection, and thus conflict serializability, is independent of transaction count. By modeling transactions via Vector Addition Systems (equivalent to Petri Nets), they provide a finite framework for analyzing infinite behaviors. This approach inspired our use of Petri Nets to capture Int(S). 
 
@@ -20,13 +30,7 @@ While these contributions represent significant advances, to our knowledge, our 
 (ii) Support \textit{unbounded} transaction systems; and
 (iii) Provide a complete end-to-end implementation.
 
-
-Several works have proposed relaxations of the (strong) consistency notion of serializability guarantees. Rastogi et al.~\cite{RaMeBrKoSi93} introduced predicate-wise serializability (PWSR), which preserves database invariants while permitting non-atomic transactions. 
-%
-Other relaxations focus on weaker consistency models: Lamport’s causal consistency~\cite{La78}, later generalized to shared memory as causal memory~\cite{AhNeBuKoHu95} and implemented in systems like COPS~\cite{LlFrKaAn11}, has inspired extensive research on model checking and complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. 
-%
-Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-serializable behaviors in causally consistent databases.
-
+\paragraph{Petri Nets and VAS(S).}
 
 In addition, our work builds on both theoretical and practical advances in Petri net research~\cite{Mu89, Es96, Re12, EsNi24}. The undecidability we prove for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, HaThesis76} showing the undecidability of reachability set equivalence for Petri Nets \textcolor{red}{--- a result inspired by similar (unpublished) work by M. Rabin}.\guy{remove part in red?} This undecidability originates in a series of reductions from Hilbert’s 10th problem, specifically the possibility of determining whether there exists an integer root for Diophantine equations, a problem that was later proven undecidable by Matijasēvič~\cite{Ma70}.
 %
