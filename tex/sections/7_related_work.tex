@@ -3,6 +3,10 @@
 
 \paragraph{Notions of serializability.}
 
+\jules{Main goal of this section is to place our notion of serializability in context of the literature. If our notion matches some existing, then we should say so. If it does not, we should somehow argue that it is novel but reasonable.}
+\todo{Describe the differences between our notion and the others}
+\todo{Find the notion(s) most closely related to ours.}
+
 Serializability was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for concurrent transaction execution. Their work also introduced conflict serializability, a stricter variant that requires equivalence to a serial schedule solely by reordering non-conflicting operations. Papadimitriou~\cite{Pa79} later proved that determining serializability even for a given, single interleaving is NP-hard. 
 %
 Moreover, although conflict serializability is more conservative measure than serializability, it is easier to enforce during runtime by various approaches. 
@@ -20,6 +24,8 @@ Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts 
 
 \paragraph{Deciding serializability.}
 
+\jules{Main goal of this section is to describe all the related work on deciding serializability, from deciding it on traces, to bounded model checking, to unbounded ones. Key distinction is on two axes: (1) the notion of serializability used (2) whether they \emph{prove} serializability of unbounded systems or whether they just model check.}
+
 Alur et al.~\cite{AlMcPe96} established the complexity of deciding conflict serializability for bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later extended this result to unbounded systems, proving the problem remains decidable and EXPTIME-complete. Their key insight reveals that while the conflict graph becomes infinite, cycle detection, and thus conflict serializability, is independent of transaction count. By modeling transactions via Vector Addition Systems (equivalent to Petri Nets), they provide a finite framework for analyzing infinite behaviors. This approach inspired our use of Petri Nets to capture Int(S). 
 
 A separate research direction attempts to \textit{directly} verify serializability, without limiting it to conflict restrictions, as done in other works. Towards this end, the expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a formal specification that validates whether only serializable executions occur. While TLA can naturally encode ``real'' serializability (based on final-state equivalence), existing TLA-based approaches~\cite{SoVaVi20, Ho24} remain limited to bounded transaction systems. This limitation stems from TLA/TLA+ model checkers like TLC and Apalache~\cite{YuMaLa99, KoKuTr19}, which require finite-state verification and cannot handle unbounded transaction counts.
@@ -30,7 +36,9 @@ While these contributions represent significant advances, to our knowledge, our 
 (ii) Support \textit{unbounded} transaction systems; and
 (iii) Provide a complete end-to-end implementation.
 
-\paragraph{Petri Nets and VAS(S).}
+\paragraph{Petri Nets, VAS(S) \& Semilinear sets, Presburger arithmetic.}
+
+\jules{The main goal of this section is to place our technical methods in context. Should include stuff on petri reachability as well as semilinear sets / presburger. We should contrast our implementation methods with existing stuff as far as we want to claim novelty (e.g., of the semilinear set implementation and heuristics or of the Petri net reduction heuristics)}
 
 In addition, our work builds on both theoretical and practical advances in Petri net research~\cite{Mu89, Es96, Re12, EsNi24}. The undecidability we prove for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, HaThesis76} showing the undecidability of reachability set equivalence for Petri Nets. This undecidability originates in a series of reductions from Hilbert’s 10th problem, specifically the possibility of determining whether there exists an integer root for Diophantine equations, a problem that was later proven undecidable by Matijasēvič~\cite{Ma70}.
 %
