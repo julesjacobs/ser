@@ -1,4 +1,410 @@
 \section{Example: NetKAT + Global Variables + Yields}
 \label{sec:exampleNetKat}
 
-NetKAT... 
+\section{Example: Concurrent NetKAT}
+
+One such realization of our abstract network service can be a concurrent NetKAT 
+program. 
+%
+NetKAT~\cite{AnDoGuJeKoScWa14} is a domain-specific language tailored for 
+programming and reasoning 
+about network packet processing. 
+%
+To match our setting, we extend NetKAT with additional 
+constructs to manage both switch-local and program-global state, with the aim 
+of reasoning about serializability.
+
+
+
+\subsection{Syntax}
+
+\subsubsection{Definitions}
+
+\begin{itemize}
+	\item \( n \in \N \) denotes a numerical constant.
+	\item \( f \in \F \) denotes a packet field identifier.
+	\item \( X \in \Variable \) denotes a global variable.
+	\item \( p \in \Pk \triangleq \F \to \N \) denotes a packet.
+	\item \( s \in \Sw \) denotes a switch identifier.
+	%    \item \( t \in \Thread \) denotes a thread.
+	
+	\guy{decide on 0 and/or DROP}
+	
+\end{itemize}
+
+
+The syntax of the extended NetKAT-like language is defined as follows:
+
+\begin{align*}
+	\textbf{Expression } \quad e \quad ::&\!=\! \quad 0 &&\text{(zero 
+		expression, failure)} \\
+	&\mid\quad 1 &&\text{(identity, no change, continue)} \\
+	&\mid\quad \yield &&\text{(output result)} \\
+	&\mid\quad e_1 + e_2 &&\text{(nondeterministic choice)} \\
+	&\mid\quad e_1 \cdot e_2 &&\text{(sequential composition)} \\
+	&\mid\quad f = n &&\text{(test packet field)} \\
+	&\mid\quad f \leftarrow n &&\text{(mutate packet field)} \\
+	&\mid\quad X = n &&\text{(test global variable)} \\
+	&\mid\quad X \leftarrow n &&\text{(mutate global variable)} \\
+	&\mid\quad e^* &&\text{(Kleene star iteration)} \\
+\end{align*}
+
+\textcolor{red}{We note that the $\spawn$ command is not inherently part of the NetKAT 
+	program in our setting, but rather is used by an external user to spawn packets 
+	to various ingress nodes.}
+
+
+
+
+\subsection{Operational Semantics}
+
+
+	
+	%\subsection{Transitions: Packet Processing}
+	\subsubsection{Global \& Local State}
+	Each global state \( g \in G \) represents an assignment to all global 
+	variables: \( g \triangleq X \to \N \). The initial global state \( g_0 \in G 
+	\) is the initial assignment to all global variables. Each local state \( l \in 
+	L \) is a thread representing a pair \( l \triangleq (p, e) \in (\Pk, 
+	\Exp) \). The set \( L \) is the set of all threads, i.e., pairs \( l = (p, e) 
+	\) with \( p \in \Pk \) being a packet (a mapping between header fields and 
+	values) and \( e \in \Exp \) being a NetKAT program. We note that although 
+	there are finitely many packet states, there are still infinitely many NetKAT 
+	programs. Hence, we limit the expressions \( e \in \Exp \) to the finitely many 
+	potentially reachable by our main program, and hence $L$ (and $G$) are indeed 
+	finite. 
+	%
+	Furthermore, the multisets \( m_{flight} 
+	\) and \( m_{fin} \) are respectively of 
+	type \( \mathsf{Multiset}(REQ, L) = \mathsf{Multiset}(REQ, \Pk, \Exp) \) and \( 
+	\mathsf{Multiset}(REQ, RESP) \).
+	
+	\subsubsection{User Interface}
+	The set \( REQ \) includes the \SPAWN{} string, which \( \delta_{REQ} \) 
+	maps to the thread (local state) \( l = (p_0, e_{main}) \) with \( e \in \Exp 
+	\) being the main program and \( p_0 \in \Pk \) being a packet with initial 
+	header field values. The set \( RESP \) includes the \DONE{} string and 
+	the \DROP{} string. The \( \delta_{RESP} \) maps a thread (local state) \( 
+	l = (p, e) \) with \( e = 1 \) to \DONE, and a thread with \( e = 0 \) 
+	to \DROP.
+	
+	
+	\subsubsection{Transitions}
+	The transition \( \delta \subseteq (G, L) \times (G, L) \) is based on the 
+	following small-step semantics.
+	We denote by \( (\rightarrow) \) a single step updating a packet transition 
+	\(\langle G,L \rangle \rightarrow \langle G,L \rangle\), i.e., 
+	\(\langle G,\Pk, \Exp \rangle \rightarrow \langle G,\Pk, \Exp \rangle\):
+	
+
+	\guy{decide on the IDENTITY rule}
+	\begin{mathpar}
+		\inferrule[Identity]
+		{
+			e=1 \lor e=0
+		}
+		{
+			\langle g, p, e \rangle \rightarrow \langle g, p, e
+			\rangle
+		}
+
+		\and
+		\inferrule[Choice-Left]
+		{
+		}
+		{
+			\langle g, p, e_1 + e_2 \rangle \rightarrow 
+			\langle g, p, e_1 \rangle
+		}
+		\and
+		\inferrule[Choice-Right]
+		{
+		}
+		{
+			\langle g, p, e_1 + e_2 \rangle \rightarrow 
+			\langle g, p, e_2 \rangle
+		}
+		\and\\
+		\inferrule[Packet-Test-True]
+		{
+			p(f) = n
+		}
+		{
+			\langle g, p, f = n \rangle \rightarrow \langle g, p, 1 
+			\rangle
+		}
+		\and
+		\inferrule[Packet-Test-False]
+		{
+			p(f) \neq n
+		}
+		{
+			\langle g, p, f \neq n \rangle \rightarrow \langle g, p, 
+			1 \rangle
+		}
+		\and
+		\inferrule[Packet-Mutation]
+		{
+			p' = p[f \mapsto n]
+		}
+		{
+			\langle g, p, f \leftarrow n \rangle \rightarrow \langle g, p', 
+			1 \rangle
+		}\\
+		\inferrule[Global-Test-Pass]
+		{
+			g(X) = n
+		}
+		{
+			\langle g, p, X = n \rangle \rightarrow
+			\langle g, p, 1 \rangle
+		}
+		\and
+		\inferrule[Global-Test-Fail]
+		{
+			g(X) \neq n
+		}
+		{
+			\langle g, p, X \neq n \rangle \rightarrow 
+			\langle g, p, 1 \rangle
+		}
+		\and
+		\inferrule[Variable-Mutation]
+		{
+			g' = g[X \mapsto n]
+		}
+		{
+			\langle g, p, X \leftarrow n \rangle 
+			\rightarrow \langle 
+			g', p, 
+			1 \rangle
+		} %\xrightarrow[\text{world}]{\text{hello}}
+		\\ %\and
+		\inferrule[Iteration-Base]
+		{
+		}
+		{
+			\langle g, p, e^* \rangle \rightarrow \langle g, p, 
+			1 \rangle
+		}
+		\and
+		\inferrule[Iteration-Step]
+		{
+		}
+		{
+			\langle g, p, e^* \rangle \rightarrow \langle g, p, e \cdot e^*
+			\rangle
+		}\\
+	
+		\inferrule[Sequence-Base-True]
+		{
+		}
+		{
+			\langle g, p, 1 \cdot e \rangle 
+			\rightarrow \langle g, 
+			p, e \rangle
+		}
+		\and
+		\inferrule[Sequence-Base-False]
+		{
+		}
+		{
+			\langle g, p, 0 \cdot e \rangle 
+			\rightarrow \langle g, 
+			p, 0 \rangle
+		}
+		\and
+		\inferrule[Sequence-General]
+		{
+			\langle g, p, e_1 \rangle \rightarrow
+			\langle g', p', e_1' \rangle 
+		}
+		{
+			\langle g, p, e_1 \cdot e_2 \rangle 
+			\rightarrow \langle g', 
+			p', e_1' \cdot e_2 \rangle
+		}\\
+		\and
+		\inferrule[Yield]
+		{
+		}
+		{
+			\langle g, p, \yield \cdot e \rangle 
+			\xrightarrow{\yield} \langle g', 
+			p', e' \rangle
+		}
+
+		
+	\end{mathpar}
+	
+	
+	
+	\subsection{Example}
+	We will now give examples for concurrent NetKAT programs, and analyze them.
+	%
+	In each of the following two programs, there is a single global variable $X$ 
+	(with 
+	$G=\{[X=0],[X=1]\}$) and three local packet 
+	header fields: $\texttt{[p.sw]} \in \{sw_A,sw_B\}$ (indicating the current 
+	switch), $\texttt{[p.a]} \in 
+	\{0,1\}$, and $\texttt{[p.b]} \in \{0,1\}$, i.e., $L=\{(sw,a,b)\vert sw\in 
+	\{sw_A,sw_B\}, \texttt{a}\in 
+	\{0,1\},\texttt{b}\in \{0,1\}\}$.
+	%
+	We assume that the initial global state is $g_0=[X=0]$, and that the single 
+	iput string is 
+	$REQ=\SPAWN$. When this single input string $req=\SPAWN$ is used to spawn a 
+	new 
+	packet, then a packet is spawned on switch $sw_A$ with the fields 
+	$\texttt{p.a}$ and $\texttt{p.b}$ 
+	initialized to 0. More formally, $(\SPAWN,p_0) \in \delta_{REQ}$ for 
+	$p_0=\{\texttt{[p.a=0]},\texttt{[p.b=0]},[p.sw=sw_A]\}$.
+	%
+	Futhermore, the output strings are 
+	$RESP=
+	\{\DROP\}
+	\uplus
+	\{
+	\textcolor{ForestGreen}{(\texttt{[p.a]},\texttt{[p.b]})} 
+	\vert
+	p \in \Pk
+	\}$, 
+	with the first 
+	four strings corresponding the the final values of header fields 
+	$\texttt{[p.a]},\texttt{[p.b]}$ when thread $(p,e) 
+	\in (\Pk, \Exp)$ is sent to $m_{final}$. The final string $\DROP$ corresponds 
+	to the packet being 
+	dropped (which does not occur in any reachable local state).
+	%
+	\[
+	\delta_{RES} = 
+	\{
+	\langle (p,1),\textcolor{ForestGreen}{(\texttt{[p.a]},\texttt{[p.b]})} \rangle 
+	\vert
+	p \in \Pk
+	\}
+	\uplus
+	\{
+	\langle (p,0),\DROP \rangle 
+	\vert
+	p \in \Pk
+	\}
+	\]
+	%
+	We will now observe two programs, $S_1$ and $S_2$, and derive their 
+	corresponding transitions 
+	$\delta_{G,T}$, and their serializability.
+	
+	
+	\subsubsection{Non Always-Serializable Program}
+	Let us observe program $S_1$: 
+	
+	\begin{lstlisting}[style=pythonStyle]
+		# S_1: not always-serializable
+		e := 
+		(e%*$_a$*)) %*$\cdot$*) (e%*$_b$*))	%*$\cdot$*)
+		yield
+	\end{lstlisting}
+	% 	sw%*$\leftarrow$*)done
+	
+	\begin{lstlisting}[style=pythonStyle]
+		e%*$_a$*) := 
+		if p.sw=sw_A: 
+		if X=0:
+		X %*$\leftarrow$*) 1		
+		p.a %*$\leftarrow$*) 1
+		p.sw %*$\leftarrow$*) sw_B	
+	\end{lstlisting}
+	
+	\begin{lstlisting}[style=pythonStyle]
+		e%*$_b$*) := 	
+		if p.sw=sw_B: 
+		if X=1:
+		p.b %*$\leftarrow$*) 1
+		X %*$\leftarrow$*) 0		
+	\end{lstlisting}
+	
+	
+	We observe that the transition $\delta_{G,L}$ is as follows (for simplicity we 
+	cover only 
+	reachable state) in Table~\ref{table:deltaForS1}:
+	
+	
+	
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|c|c:c:c|c|c|c|c:c:c|c|}
+			\hline
+			G & \multicolumn{4}{c|}{L} & \cellcolor{gray!30}  & G & 
+			\multicolumn{4}{c|}{L} \\
+			\hline
+			G & \multicolumn{3}{c:}{$\Pk$} & $\Exp$ & \cellcolor{gray!30} & G & 
+			\multicolumn{3}{c:}{$\Pk$} & 
+			$\Exp$ \\
+			\hline
+			X & sw & a & b & exp & \cellcolor{gray!30} & X & sw & a & b & exp \\
+			\hline
+			0 & $sw_A$ & 0 & 0 & $e_A \cdot e_B$ & $\rightarrow$  & 1 & $sw_B$ & 1 
+			& 0 & $e_B$ \\
+			1 & $sw_A$ & 0 & 0 & $e_A \cdot e_B$ & $\rightarrow$ & 1 & $sw_B$ & 0 & 
+			0 & $e_B$ \\
+			1 & $sw_B$ & 1 & 0 & $e_B$ & $\rightarrow$ & 0 & $sw_B$ & 1 & 1 & $1$ \\
+			1 & $sw_B$ & 0 & 0 & $e_B$ & $\rightarrow$ & 0 & $sw_B$ & 0 & 1 & $1$ \\
+			\hline
+		\end{tabular}
+		\caption{The transition function $\delta_{G,L}$ for service $S_1$.}
+		\label{table:deltaForS1}
+	\end{table}
+	
+	
+	
+	
+	We observe that program, $S_1$, is not always serializable, as for the global 
+	state $g_0=g'=[X=0] \in G$ and the output multiset 
+	$m_{fin}=\{(\SPAWN,\textcolor{ForestGreen}{(\texttt{[p.a=1]},\texttt{[p.b=0]})}),
+	(\SPAWN,\textcolor{ForestGreen}{(\texttt{[p.a=0]},\texttt{[p.b=1]})})\}$
+	(corresponding to outputting the 
+	packet multiset 
+	\(
+	\{(\texttt{[sw=$sw_B$]}, \texttt{[a=1]}, \texttt{[b=0]}), 
+	(\texttt{[sw=$sw_B$]}, \texttt{[a=0]}, \texttt{[b=1]})\}.
+	\). We observe that $m_{fin} \notin Ser_{g_0,g'}(S_1)$ --- 
+	%
+	as any serial execution (i.e., with one packet processed in the 
+	network in the given moment) it holds that for every packet $p \in m_{fin}$ 
+	that $[p.a=1]$.
+	%
+	However, as $m_{fin}$ is a valid output multiset for an interleaving execution,  $m_{fin} \in Int_{g_0,g'}(S_1)$.
+
+	Hence, $S_1$ is not always serializable: $Ser_{g_0,g'}(S_1) \neq Int_{g_0,g'}(S_1)$
+	
+	
+	We will now update the program as follows --- we replace the module $(e_b)$ 
+	with $(e_b')$:
+	
+	\begin{lstlisting}[style=pythonStyle]
+		# S_2: always-serializable
+		e := 
+		((e%*$_a$*)) %*$+$*) (e%*$_{b}'$*)) yield)*
+		
+	\end{lstlisting}
+	%% 	sw%*$\leftarrow$*)done
+	
+	
+	
+	\begin{lstlisting}[style=pythonStyle]
+		e%*$_b'$*) := 	
+		if p.sw=sw_B:
+		if p.a=0:
+		p.sw %*$\leftarrow$*) sw_A	
+		else:
+		if X=1:
+		p.b %*$\leftarrow$*) 1
+		X %*$\leftarrow$*) 0		
+	\end{lstlisting}
+	
+	We will refer to the new program as $S_2$ and observe that any output multiset 
+	that can be attained by an interleaving execution could also be attained by a 
+	serializable execution. More formally, $S_2$ is always-serializable, i.e., 
+	$Ser(S_2)=Int(S_2)$.
+	

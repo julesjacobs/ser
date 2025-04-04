@@ -1,4 +1,286 @@
 \section{Problem Definition}
 \label{sec:problemDefinition}
 
-The problem.. 
+
+
+%\section{Abstract Networking Service}
+Next, we define an abstract Networking Service, in which that are threads with 
+\textit{local state} (e.g., packets with header fields) and a \textit{global 
+	heap} that is accessible to all threads in the program.
+
+%\subsection{Definition}
+\definition{Abstract Network Service.}
+We define a finite-state machine (FSM) $S=\langle 
+G,L,g_0,REQ,RESP, \delta_{G,L} , \delta_{REQ}, \delta_{RESP}
+\rangle$, such that:
+
+\subsubsection{Global and Local States}
+
+\begin{itemize}
+	
+	\item
+	$G$ is a (finite) set, with each element representing a \textit{global 
+		heap} state, 
+	i.e., the assignment of specific values to the global variables of the 
+	program.
+	
+	\item
+	$L$ is a (finite) set, with each element representing a \textit{local 
+		heap}. 
+	Each 
+	element is a multiset of threads.
+	
+	\item
+	$g_0$ is the \textit{initial global state}, i.e., the original assignment 
+	to 
+	all global variables before any thread is spawned to the network.
+	
+\end{itemize}
+
+\subsubsection{User Interface}
+
+\begin{itemize}
+	
+	\item 
+	$REQ$ is a (finite) set of strings, representing the \textit{input 
+		interface} of our program to the user. The set include at least one 
+	\SPAWN{} string, indicating the generation of a new thread in the 
+	network.
+	
+	\item 
+	$RESP$ is a (finite) set of strings, representing the \textit{output 
+		interface} of our program to the user.
+	The set always includes the string \DROP --- indicating an error and 
+	that the current packet should be dropped.
+	
+\end{itemize}
+
+
+\subsubsection{Transitions}	
+
+\begin{itemize}
+	\item 
+	$\delta_{G,L} \subseteq (G , L) \times (G , L)$ is a defined transition 
+	between a 
+	global state (of the network) and a local state (of a single thread) to a 
+	new 
+	global state and local state.
+	For example, a transition can correspond to a single processing step of a 
+	packet thread, i.e. a hop on one of the switches. 
+	
+	\item 
+	$\delta_{REQ} \subseteq REQ \times L$ maps a single user input string 
+	(from $REQ$) to a new packet thread.
+	
+	
+	\item 
+	$\delta_{RESP} \subseteq L \times RESP$ maps a local packet thread state to 
+	a 
+	single user output string representing the result of the computation.
+	
+	
+\end{itemize}
+
+\subsection{Serializability}
+
+
+
+
+\subsubsection{Interleaving Executions}
+
+Next, we define a transition $\delta_{int} \subseteq \langle 
+g,m_{flight},m_{fin} \rangle \times \langle g',m'_{flight},m'_{fin} \rangle $ 
+such that:
+
+\begin{itemize}
+	
+	\item 
+	$g,g' \in G$ are global states;
+	
+	\item
+	$m_{flight},m'_{flight}$ are multisets of pairs $(req,l) \in (REQ, 
+	L)$ representing in-flight packets. 
+	
+	\item
+	$m_{fin}, m'_{fin}$ are multisets of pairs $(req,resp) \in (REQ, 
+	RESP)$, representing packets that left the network --- with $req$ being 
+	the user's inputs that generated the packet, and $resp$ 
+	being the output corresponding to the packet after processing it through+ 
+	the 
+	network.
+\end{itemize}
+
+We now define $\delta_{int} \subseteq \langle g,m_{flight},m_{fin} 
+\rangle \times \langle g',m'_{flight},m'_{fin} \rangle$ to represent the 
+actions that could be done in each step: 
+\begin{itemize}
+	
+	\item
+	\textbf{[SPAWN]}:
+	send a request $req\in REQ$ for generating a new thread (packet) in our 
+	network --- which is the only step allowing the generation of new 
+	packets;
+	
+	\item 
+	\textbf{[PROCESS-SINGLE-STEP]}:
+	select a thread from the multiset of in-flight packets and process it; 
+	
+	\item 
+	\textbf{[EXIT-SUCCESS]}:
+	select a successfully-processed thread (one with a local state 
+	corresponding to a $resp \in RESP$, with $resp\neq \DROP$) and move it 
+	from the multiset of in-flight threads $m_{flight}$ to the multiset of 
+	finished threads $m_{fin}$.
+	
+	\item 
+	\textbf{[EXIT-FAIL]}:
+	select a processed thread (one with a local state corresponding to a $resp 
+	\in RESP$) that needs to be dropped, i.e., $resp= \DROP$ --- and 
+	delete it from the multiset of in-flight threads $m_{flight}$.
+\end{itemize}
+
+
+
+
+\begin{mathpar}
+	\inferrule[Spawn]
+	{
+		\langle req , l\rangle \in \delta_{REQ} \quad req=\SPAWN
+	}
+	{
+		\langle g, m_{flight}, m_{fin} \rangle 
+		\xrightarrow{\delta_{int}}
+		\langle g, m_{flight}\uplus \{(req,l)\}, m_{fin} \rangle 
+	}
+	\and
+	\inferrule[Process-Single-Step]
+	{ 
+		\langle (g, l) ,  (g' , l') \rangle \in \delta_{G,L} 
+	}
+	{
+		\langle g, m_{flight}\uplus \{(req,l)\}, m_{fin} \rangle 
+		\xrightarrow{\delta_{int}}
+		\langle g', m_{flight}\uplus \{(req,l')\}, m_{fin} \rangle 
+	}
+	\and
+	% transitivity
+	\inferrule[Exit-Success]
+	{ 
+		\langle l , resp\rangle \in \delta_{RESP} \quad resp \neq \DROP
+	}
+	{
+		\langle g, m_{flight}\uplus \{(req,l)\}, m_{fin} \rangle 
+		\xrightarrow{\delta_{int}}
+		\langle g', m_{flight}, m_{fin}\uplus \{(req, resp)\} \rangle 
+	}
+	\and
+	% transitivity
+	\inferrule[Exit-Fail]
+	{ 
+		\langle l , resp\rangle \in \delta_{RESP} \quad resp = \DROP
+	}
+	{
+		\langle g, m_{flight}\uplus \{(req,l)\}, m_{fin} \rangle 
+		\xrightarrow{\delta_{int}}
+		\langle g', m_{flight}, m_{fin} \rangle 
+	}
+\end{mathpar}
+
+
+The $\delta_{int}$ function represents a single transition in our NetKAT 
+system, by allowing arbitrary interleavings between packets. Each transition 
+updates the global and local states, and updates the multisets (when 
+appropriate).
+%
+Now, given a NetKAT service $S$, we represent by $Int(S) = Set(Multiset(REQ 
+\times RESP))$ the (infinite) set of all possible output multisets, 
+attained via an interleaving execution, as defined by $\delta_{int}$.
+%
+Formally, this can be expressed as all output multisets $m_{finish}$ attained 
+by $(\delta_{int})^*$, which is the transitive closure of 
+$\delta_{int}$:
+
+
+\[
+m_{fin} \in Int_{g_0,g'}(S)
+\quad \iff \quad
+\langle g_0,\emptyset, \emptyset \rangle 
+\xrightarrow{(\delta_{int})^*} \langle g', 
+\emptyset, m_{fin} \rangle
+\]
+
+
+\subsubsection{Serializable Executions}
+
+Next, we define a function $\delta_{ser} \subseteq \langle 
+g,m_{flight},m_{fin} \rangle \times \langle g',m'_{flight},m'_{fin} \rangle $ 
+to represent transition \text{when limited to only serializable executions}. 
+In this case, the $[SPAWN]$ rule is updated (in \textcolor{red}{red}) to allow 
+spawning new packets only when there are no other in-flight packets. The 
+remaining rules remain similar to the case with $\delta_{int}$:
+
+
+\begin{mathpar}
+	\inferrule[Spawn]
+	{
+		\langle req , l\rangle \in \delta_{REQ} 
+	}
+	{
+		\langle g, \textcolor{red}{\emptyset}, m_{fin} \rangle 
+		\xrightarrow{\delta_{ser}}
+		\langle g, \textcolor{red}{\{(req,l)\}}, m_{fin} \rangle 
+	}
+\end{mathpar}
+
+
+Given a NetKAT service $S$, we represent by $Ser(S) \subseteq 
+Set(Multiset(REQ , RESP))$ the set of all input-output multisets, 
+which are attained by a \textit{serial} execution, i.e., running each packet in 
+isolation, one after the other. 
+%
+More formally, for the transitive closer $(\delta_{ser})^*$
+
+\[
+m_{fin} \in Ser_{g_0,g'}(S)
+\quad \iff \quad
+\langle g_0,\emptyset, \emptyset \rangle 
+\xrightarrow{(\delta_{ser})^*} \langle g', 
+\emptyset, m_{fin} \rangle
+\]
+
+\subsubsection{Always-Serializable Executions}
+We now define when a network service $S$ is \textbf{always serializable}:
+
+\begin{tcolorbox}[colback=white, colframe=black, boxrule=0.5mm, arc=0mm]
+	\definition{
+		An abstract network service $S=\langle 
+		G,L,g_0,REQ,RESP, \delta_{G,L} , \delta_{REQ}, \delta_{RESP}
+		\rangle$ is said to be 
+		\textbf{always-serializable} if and only if for any $g' \in G$ it holds 
+		that $Ser_{g_0,g'}(S) = Int_{g_0,g'}(S)$.
+		To abbreviate, we denote this as  $Ser(S) = Int(S)$ (without $g_0,g \in G$).
+	}
+\end{tcolorbox}
+
+It is straightforward to observe that $Ser(S) \subseteq Int(S)$, as any serial 
+execution is also a valid interleaving. 
+%
+However, our decision procedure checks whether also $Int(S) \subseteq Ser(S)$, 
+in other 
+words, 
+whether for any interleaving of packets modifying a global state concurrently, 
+the final result appears as if those packets ran sequentially, one after the 
+other, in isolation. 
+%
+
+\medskip
+\noindent
+\textbf{Note.}
+For a system with a bounded number of packets, this is trivially decidable --- 
+as we can enumerate all possible packet interleavings and serial executions, 
+and check inclusion. 
+%
+However, this is highly nontrivial for systems with an unbound number of packets 
+that could enter the network, as we later prove. 
+
+
