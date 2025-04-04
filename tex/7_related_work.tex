@@ -26,27 +26,19 @@ Several works have proposed relaxations of the (strong) consistency notion of se
 Other approaches focus on weaker consistency models: Lamport’s causal consistency~\cite{La78}, later generalized to shared memory as causal memory~\cite{AhNeBuKoHu95} and implemented in systems like COPS~\cite{LlFrKaAn11}, has inspired extensive research on model checking and complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-serializable behaviors in causally consistent databases.
 
 
+Furthermore, our work builds on both theoretical and practical advances in Petri net research~\cite{Mu89, Es96, Re12, EsNi24}. The undecidability we prove for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, HaThesis76} showing the undecidability of reachability set equivalence for Petri Nets --- a result inspired by similar (unpublished) work by M. Rabin. This undecidability originates in a series of reductions from Hilbert’s 10th problem, specifically the impossibility of determining integer roots for Diophantine equations (established as undecidable by Matijasēvič~\cite{Ma70}).
+%
+Jančar~\cite{Ja95} later provided an alternative proof by showing Petri nets can simulate universal (and thus undecidable) 2-counter Minsky machines~\cite{Mi67}. In addition, Jančar further strengthened this result by proving undecidability holds even for Petri nets with just five unbounded places.
 
-Our work also builds upon both theoretical literature, as well as practical results, pertaining to Petri Nets~\cite{Mu89, Es96, Reisig12}.
-%
-Firstly, our undecidability result is based on a classic result by Hack~\cite{Ha76, HaThesis76}, showing that, given two Petri Nets, it is undecidable to answer whether they have equivalent reachability sets. Hack based his result on the work of Rabin (which was never published). These undecidability results follow from a series of reductions, originating from Hilbert's 10th problem, i.e., deciding if a Diophantine polynomial has an integer root (a problem that was proved undecidable by Matijas{\'e}vi{\v{c}}~\cite{Ma70}).
-%
-Later, Jan{\v{c}}ar~\cite{Ja95} proved this result by demonstrating that Petri Nets can simulate 2-counter Minsky Machines~\cite{Mi67}, which are universally computable and hence undecidable. Moreover, Jan{\v{c}}ar strengthened the original result and proved that reachability equivalence is undecidable even for Petri Nets with five unbounded places~\cite{Ja95}.
-%
+Our approach also builds on Petri net reachability algorithms, which determine whether a given marking is attainable. While straightforward for bounded nets (through exhaustive enumeration), the unbounded case was first solved by Mayr~\cite{Ma81}, with subsequent improvements by Kosaraju~\cite{Ko82} and Lambert~\cite{La92}. Recent work~\cite{CzWo22} has also established this problem is Ackermann-complete, implying that, although decidable, it is practically infeasible to solve on large nets.
 
-Our decision procedure itself is based on an algorithm for deciding whether a given marking is reachable, for a Petri Net.
+These theoretical advances in Petri Net reachability have given rise to a plethora of practical tools, including K-Reach~\cite{DiLa20}, DICER~\cite{XiZhLi21}, MARCIE~\cite{HeRoSc13}, and others. 
 %
-Mayr~\cite{Ma81} was the first to put forth an algorithm for this problem given a (potentially, unbounded) Petri Net (note that for a bounded case this is straightforward, as you can enumerate all reachable markings.)
+Specifically, our implementation leverages SMPT~\cite{AmDa23}, a state-of-the-art Petri Net reachability tool that combines SMT-solving~\cite{AmBeDa21, AmDaHu22} with structural invariants. At a high level, SMPT formulates reachability as satisfiability queries (resolved via Z3~\cite{DeBj08}) while curtailing the search space by proactively inferring invariants on the net's structure.
 %
-Mayr's reachability algorithm was later improved and simplified by Kosaraju~\cite{Ko82}, and then again by Lambert~\cite{La92}.
-%
-Very recently, this problem was also proven to be Ackermann complete~\cite{CzWo22}, implying that, although decidable, it is practically infeasible to solve on large nets.
-%
-Furthermore, these theoretical algorithms have inspired various tools, such as K-Reach~\cite{DiLa20}, DICER~\cite{XiZhLi21}, MARCIE~\cite{HeRoSc13}, and others. 
-%
-Specifically, our tool employs SMPT~\cite{AmDa23}, a state-of-the-art Petri Net reachability tool, which employs an SMT-based approach~\cite{AmBeDa21, AmDaHu22}. SMPT curtails the search space by reducing the reachability problem to a satisfiability query (that is subsequently dispatched to the Z3 solver~\cite{DeBj08}) and inferring invariants on the net's structure.
-%
-We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary on additional decidability results pertaining to Petri Nets.
+%We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary on additional decidability results pertaining to Petri Nets.
+
+
  
  
 \todo{decide over 1992 paper: Modeling Serializability via Process Equivalence in Petri Nets}
@@ -91,7 +83,7 @@ We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently r
 %
 %
 %
-%Our work also builds upon both theoretical literature, as well as practical results, pertaining to Petri Nets~\cite{Mu89, Es96, Reisig12}.
+%Our work also builds upon both theoretical literature, as well as practical results, pertaining to Petri Nets~\cite{Mu89, Es96, Re12}.
 %%
 %Firstly, our undecidability result is based on a classic result by Hack~\cite{Ha76, HaThesis76}, showing that, given two Petri Nets, it is undecidable to answer whether they have equivalent reachability sets. Hack based his result on the work of Rabin (which was never published). These undecidability results follow from a series of reductions, originating from Hilbert's 10th problem, i.e., deciding if a Diophantine polynomial has an integer root (a problem that was proved undecidable by Matijas{\'e}vi{\v{c}}~\cite{Ma70}).
 %%
