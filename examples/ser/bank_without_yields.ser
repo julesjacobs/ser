@@ -1,3 +1,13 @@
+request init {
+    if (X == 0) {
+    	X := 1;    	
+    	A := 100;
+    	B := 50
+    } else {
+        y := 0 // empty
+    }
+}
+
 request transfer {
     if (A == 100) {
         A := 50;
