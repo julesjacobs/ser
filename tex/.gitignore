@@ -1,0 +1,42 @@
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+*.ptc
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+
+## Bibliography auxiliary files:
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+
+## Build tool auxiliary files:
+*.fdb_latexmk
+*.pdfsync
+
+## Generated PDFs
+*.pdf
+
+## Intermediate documents:
+*.dvi
+*.xdv
+*-converted-to.*
+
+## latexmk
+.*.lb
+.vscode/settings.json

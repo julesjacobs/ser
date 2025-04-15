@@ -51,6 +51,31 @@ pub struct Constraints {
     pub constraints: Vec<Vec<Constraint>>,
 }
 
+impl PartialEq for Constraints {
+    fn eq(&self, other: &Self) -> bool {
+        // Convert both constraints to ISL sets and check equality using ISL
+        use crate::isl;
+
+        let set1 = isl::affine_constraints_to_isl_set(self);
+        let set2 = isl::affine_constraints_to_isl_set(other);
+
+        // Check equality using ISL
+        let result = unsafe {
+            let is_equal = isl::isl_set_is_equal(set1, set2);
+
+            // Clean up
+            isl::isl_set_free(set1);
+            isl::isl_set_free(set2);
+
+            is_equal != 0
+        };
+
+        result
+    }
+}
+
+impl Eq for Constraints {}
+
 impl Constraints {
     pub fn new(
         num_vars: usize,

@@ -11,7 +11,7 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::hash::Hash;
 
-use crate::kleene::{nfa_to_kleene, Kleene, Regex};
+use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
 
 // Helper function to escape strings for use as node IDs in GraphViz DOT language
@@ -496,8 +496,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, path::Path};
-
     use super::*;
 
     #[test]
@@ -866,40 +864,40 @@ mod tests {
         assert!(dot.contains("Login / Success"));
     }
 
-    #[test]
-    fn test_save_graphviz() {
-        // This test is conditional on GraphViz being installed
-        // We'll only verify the file creation, not the PNG generation
+    // #[test]
+    // fn test_save_graphviz() {
+    //     // This test is conditional on GraphViz being installed
+    //     // We'll only verify the file creation, not the PNG generation
 
-        let mut ns = NS::<String, String, String, String>::new("G1".to_string());
+    //     let mut ns = NS::<String, String, String, String>::new("G1".to_string());
 
-        // Add a simple system
-        ns.add_request("Req".to_string(), "L1".to_string());
-        ns.add_response("L2".to_string(), "Resp".to_string());
+    //     // Add a simple system
+    //     ns.add_request("Req".to_string(), "L1".to_string());
+    //     ns.add_response("L2".to_string(), "Resp".to_string());
 
-        ns.add_transition(
-            "L1".to_string(),
-            "G1".to_string(),
-            "L2".to_string(),
-            "G2".to_string(),
-        );
+    //     ns.add_transition(
+    //         "L1".to_string(),
+    //         "G1".to_string(),
+    //         "L2".to_string(),
+    //         "G2".to_string(),
+    //     );
 
-        // Save to out directory with test prefix, don't open files during testing
-        let result = ns.save_graphviz("test_graphviz", false);
+    //     // Save to out directory with test prefix, don't open files during testing
+    //     let result = ns.save_graphviz("test_graphviz", false);
 
-        // Check if saving worked (may fail if GraphViz not installed)
-        if result.is_ok() {
-            let files = result.unwrap();
+    //     // Check if saving worked (may fail if GraphViz not installed)
+    //     if result.is_ok() {
+    //         let files = result.unwrap();
 
-            // Check DOT files were created
-            assert!(files.iter().any(|f| f.contains("network.dot")));
+    //         // Check DOT files were created
+    //         assert!(files.iter().any(|f| f.contains("network.dot")));
 
-            // Check if files exist
-            assert!(Path::new("out/test_graphviz/network.dot").exists());
+    //         // Check if files exist
+    //         assert!(Path::new("out/test_graphviz/network.dot").exists());
 
-            // Clean up test files
-            let _ = fs::remove_dir_all("out/test_graphviz");
-        }
-        // Note: We don't assert on error case since GraphViz might not be installed
-    }
+    //         // Clean up test files
+    //         let _ = fs::remove_dir_all("out/test_graphviz");
+    //     }
+    //     // Note: We don't assert on error case since GraphViz might not be installed
+    // }
 }

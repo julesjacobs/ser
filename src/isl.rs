@@ -9,7 +9,7 @@ use crate::semilinear::*;
 
 use std::cell::Cell;
 use std::collections::HashMap;
-use std::ffi::{c_void, CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::fmt::Display;
 use std::ptr;
 
@@ -27,6 +27,79 @@ pub fn affine_constraints_for_complement(
     }
 }
 
+/// Compute the complement of an affine constraint set using ISL.
+pub fn complement_affine_constraints(constraints: &Constraints) -> Constraints {
+    unsafe {
+        // 1. Convert the affine constraints to an ISL set
+        let isl_set = affine_constraints_to_isl_set(constraints);
+
+        // 2. Compute the complement of the ISL set
+        // The universe set is already restricted to non-negative integers
+        let universe = universe_set_for_vars(constraints.num_vars);
+        let complemented_set = isl_set_subtract(universe, isl_set);
+
+        // 3. Convert the complemented ISL set back to affine constraints
+        let result = isl_set_to_affine_constraints(constraints.num_vars, complemented_set);
+
+        // 4. Clean up
+        isl_set_free(complemented_set);
+
+        result
+    }
+}
+
+/// Compute the intersection of two affine constraint sets using ISL.
+pub fn intersect_affine_constraints(
+    constraints1: &Constraints,
+    constraints2: &Constraints,
+) -> Constraints {
+    // This requires that both constraints have the same variable numbering
+    assert_eq!(
+        constraints1.num_vars, constraints2.num_vars,
+        "Intersect requires constraints with the same number of variables"
+    );
+
+    unsafe {
+        // 1. Convert both affine constraints to ISL sets
+        let isl_set1 = affine_constraints_to_isl_set(constraints1);
+        let isl_set2 = affine_constraints_to_isl_set(constraints2);
+
+        // 2. Compute the intersection
+        let intersection_set = isl_set_intersect(isl_set1, isl_set2);
+
+        // 3. Convert back to affine constraints
+        let result = isl_set_to_affine_constraints(constraints1.num_vars, intersection_set);
+
+        // 4. Clean up
+        isl_set_free(intersection_set);
+
+        result
+    }
+}
+
+/// Check if an affine constraint set is empty using ISL.
+pub fn is_affine_constraints_empty(constraints: &Constraints) -> bool {
+    unsafe {
+        // 1. Convert to ISL set
+        let isl_set = affine_constraints_to_isl_set(constraints);
+
+        // 2. Check if empty using ISL's isEmpty function
+        let is_empty = isl_set_is_empty(isl_set) != 0;
+
+        // 3. Clean up
+        isl_set_free(isl_set);
+
+        is_empty
+    }
+}
+
+/// Create a universe set for the given number of variables
+pub fn universe_set_for_vars(num_vars: usize) -> *mut isl_set {
+    let var_names: Vec<_> = (0..num_vars).map(|i| format!("P{}", i)).collect();
+    let var_refs: Vec<_> = var_names.iter().map(|s| s.as_str()).collect();
+    universe_set(&var_refs)
+}
+
 /// Based on https://rust-lang.github.io/rust-bindgen/tutorial-4.html
 #[allow(non_upper_case_globals)]
 #[allow(non_camel_case_types)]
@@ -35,6 +108,11 @@ pub mod bindings {
     include!(concat!(env!("OUT_DIR"), "/isl_bindings.rs"));
 }
 use bindings::*;
+
+// Error handling options for ISL
+pub const ISL_ON_ERROR_WARN: i32 = 0;
+pub const ISL_ON_ERROR_CONTINUE: i32 = 1;
+pub const ISL_ON_ERROR_ABORT: i32 = 2;
 
 /// The lazily-allocated thread-local (but global within a thread) ISL context
 pub fn get_ctx() -> *mut isl_ctx {
@@ -163,6 +241,138 @@ pub fn complement_semilinear_set<K: Eq + Hash + Clone + Ord + Display>(
             semilinear_set_to_isl_set(semilinear_set, keys),
         )
     }
+}
+
+/// Create a copy of an ISL set
+pub unsafe fn isl_set_copy(set: *mut isl_set) -> *mut isl_set {
+    bindings::isl_set_copy(set)
+}
+
+/// Check if two ISL sets are equal
+pub unsafe fn isl_set_is_equal(set1: *mut isl_set, set2: *mut isl_set) -> isl_bool {
+    bindings::isl_set_is_equal(set1, set2)
+}
+
+/// Intersect two ISL sets
+pub unsafe fn isl_set_intersect(set1: *mut isl_set, set2: *mut isl_set) -> *mut isl_set {
+    bindings::isl_set_intersect(set1, set2)
+}
+
+/// Union two ISL sets
+pub unsafe fn isl_set_union(set1: *mut isl_set, set2: *mut isl_set) -> *mut isl_set {
+    bindings::isl_set_union(set1, set2)
+}
+
+/// Free an ISL set
+pub unsafe fn isl_set_free(set: *mut isl_set) -> *mut isl_set {
+    bindings::isl_set_free(set)
+}
+
+/// Check if an ISL set is empty
+pub unsafe fn isl_set_is_empty(set: *mut isl_set) -> isl_bool {
+    bindings::isl_set_is_empty(set)
+}
+
+/// Convert a set of affine constraints to an ISL set
+pub fn affine_constraints_to_isl_set(constraints: &Constraints) -> *mut isl_set {
+    // Create variable names for all the variables (including existential ones)
+    let total_vars = constraints.num_vars + constraints.num_existential_vars;
+    let var_names: Vec<_> = (0..total_vars).map(|i| format!("P{}", i)).collect();
+
+    // Convert each disjunct (AND clause) to a basic set, then union them
+    let mut result_set: *mut isl_set = std::ptr::null_mut();
+
+    for conjuncts in &constraints.constraints {
+        // Generate the string representation for this conjunction
+        let mut constraint_strings = Vec::new();
+
+        // Add the main constraints
+        for constraint in conjuncts {
+            // Build the affine expression
+            let mut expr = String::new();
+
+            for (i, (coeff, var)) in constraint.affine_formula.iter().enumerate() {
+                if i > 0 {
+                    if *coeff >= 0 {
+                        expr.push_str(" + ");
+                    } else {
+                        expr.push_str(" - ");
+                    }
+                    expr.push_str(&format!("{} {}", coeff.abs(), var_names[var.0]));
+                } else {
+                    // First term
+                    expr.push_str(&format!("{} {}", coeff, var_names[var.0]));
+                }
+            }
+
+            // Add the offset
+            if constraint.offset != 0 {
+                if constraint.offset > 0 {
+                    expr.push_str(&format!(" + {}", constraint.offset));
+                } else {
+                    expr.push_str(&format!(" - {}", -constraint.offset));
+                }
+            }
+
+            // Add the constraint type
+            match constraint.constraint_type {
+                EqualToZero => constraint_strings.push(format!("{} = 0", expr)),
+                NonNegative => constraint_strings.push(format!("{} >= 0", expr)),
+            }
+        }
+
+        // Handle existential variables
+        let mut exists_vars = Vec::new();
+        for i in constraints.num_vars..total_vars {
+            exists_vars.push(format!("{}", var_names[i]));
+        }
+
+        // Define the domain: real vars are non-negative
+        for i in 0..constraints.num_vars {
+            constraint_strings.push(format!("{} >= 0", var_names[i]));
+        }
+
+        // Create the ISL set string
+        let set_string = if exists_vars.is_empty() {
+            // No existential variables
+            format!(
+                "{{ [{}] : {} }}",
+                var_names[0..constraints.num_vars].join(", "),
+                constraint_strings.join(" and "),
+            )
+        } else {
+            // With existential variables
+            format!(
+                "{{ [{}] : exists ({} : {}) }}",
+                var_names[0..constraints.num_vars].join(", "),
+                exists_vars.join(", "),
+                constraint_strings.join(" and "),
+            )
+        };
+
+        // Parse the ISL set string
+        let basic_set = read_from_str(&set_string);
+
+        // Union with the result set
+        unsafe {
+            if result_set.is_null() {
+                result_set = basic_set;
+            } else {
+                result_set = isl_set_union(result_set, basic_set);
+            }
+        }
+    }
+
+    // If no constraints, return the universe set
+    if result_set.is_null() {
+        let var_names_refs: Vec<_> = var_names[0..constraints.num_vars]
+            .iter()
+            .map(|s| s.as_str())
+            .collect();
+        return universe_set(&var_names_refs);
+    }
+
+    result_set
 }
 
 /// Iterate through each basic set in a set
@@ -314,6 +524,334 @@ fn test_affine_constraints() {
         let constraints = isl_set_to_affine_constraints(vars.len(), isl);
         dbg!(constraints);
         isl_set_free(isl);
+    }
+}
+
+#[test]
+fn test_complement_affine_constraints() {
+    // Create a simple constraint system representing x >= 5
+    // The complement should be x < 5, which in our representation is -x + 4 >= 0
+    let affine_constraints = Constraints {
+        num_vars: 1, // just one variable x
+        num_existential_vars: 0,
+        constraints: vec![vec![Constraint {
+            affine_formula: vec![(1, Var(0))], // x
+            offset: -5,                        // -5
+            constraint_type: NonNegative,      // x - 5 >= 0 means x >= 5
+        }]],
+    };
+
+    // Compute the complement
+    let complement = complement_affine_constraints(&affine_constraints);
+    println!("Original constraints: {:?}", affine_constraints);
+    println!("Complemented constraints: {:?}", complement);
+
+    // Check the structure of the complemented constraints
+    assert_eq!(complement.num_vars, 1);
+    assert_eq!(complement.constraints.len(), 1); // Should have one disjunct
+    assert_eq!(complement.constraints[0].len(), 1); // Should have one constraint
+
+    // Check that the constraint is -x + 4 >= 0 (which is x <= 4)
+    let constraint = &complement.constraints[0][0];
+    assert_eq!(constraint.constraint_type, NonNegative);
+    assert_eq!(constraint.affine_formula.len(), 1);
+    assert_eq!(constraint.affine_formula[0].0, -1); // Coefficient -1
+    assert_eq!(constraint.affine_formula[0].1, Var(0)); // Variable x
+    assert!(constraint.offset >= 4); // Should be 4 or higher
+}
+
+#[test]
+fn test_complement_keeps_non_negative_constraint() {
+    // This test checks that when we complement a set,
+    // the result is properly restricted to the non-negative orthant
+
+    // Create a constraint system representing x <= 3
+    // The complement in the full integer space would be x > 3
+    // But in the non-negative natural number space, it should be x >= 4
+    let affine_constraints = Constraints {
+        num_vars: 1,
+        num_existential_vars: 0,
+        constraints: vec![vec![Constraint {
+            affine_formula: vec![(-1, Var(0))], // -x
+            offset: 3,                          // +3
+            constraint_type: NonNegative,       // -x + 3 >= 0 means x <= 3
+        }]],
+    };
+
+    // Convert to ISL to see the string representation
+    let isl_set = affine_constraints_to_isl_set(&affine_constraints);
+    println!("Original as ISL: {}", to_str(isl_set));
+
+    // Compute the complement
+    let complement = complement_affine_constraints(&affine_constraints);
+
+    // Convert to ISL to see the string representation
+    let complement_isl = affine_constraints_to_isl_set(&complement);
+    println!("Complement as ISL: {}", to_str(complement_isl));
+
+    // Check that the result has the correct constraints
+    assert_eq!(complement.num_vars, 1);
+    assert_eq!(complement.constraints.len(), 1); // Should have one disjunct
+
+    // The constraint should be x >= 4
+    let constraint = &complement.constraints[0][0];
+    assert_eq!(constraint.constraint_type, NonNegative);
+
+    // Check the constraint structure (should be x - 4 >= 0)
+    let coeff = constraint.affine_formula[0].0;
+    let var = constraint.affine_formula[0].1;
+    let offset = constraint.offset;
+
+    assert_eq!(coeff, 1); // Coefficient 1 for x
+    assert_eq!(var, Var(0)); // Variable x
+    assert_eq!(offset, -4); // Offset -4
+
+    // Also verify by converting to strings
+    let set_string = to_str(isl_set);
+    let complement_string = to_str(complement_isl);
+
+    // In the string representation, the non-negative constraint might be implicit
+    // or simplified out by ISL, but we can see that the complement is correctly
+    // computed as x >= 4, not simply x > 3, which confirms the non-negative constraint
+    // is being respected
+    assert!(set_string.contains("0 <= P0 <= 3"));
+    assert!(complement_string.contains("P0 >= 4"));
+
+    // Clean up ISL resources
+    unsafe {
+        isl_set_free(isl_set);
+        isl_set_free(complement_isl);
+    }
+}
+
+#[test]
+fn test_complement_affine_constraints_complex() {
+    // Create a constraint system representing (x >= 2 AND y >= 3) OR (x = y)
+    let affine_constraints = Constraints {
+        num_vars: 2, // Two variables x and y
+        num_existential_vars: 0,
+        constraints: vec![
+            // First disjunct: x >= 2 AND y >= 3
+            vec![
+                Constraint {
+                    affine_formula: vec![(1, Var(0))], // x
+                    offset: -2,                        // -2
+                    constraint_type: NonNegative,      // x - 2 >= 0 means x >= 2
+                },
+                Constraint {
+                    affine_formula: vec![(1, Var(1))], // y
+                    offset: -3,                        // -3
+                    constraint_type: NonNegative,      // y - 3 >= 0 means y >= 3
+                },
+            ],
+            // Second disjunct: x = y
+            vec![Constraint {
+                affine_formula: vec![(1, Var(0)), (-1, Var(1))], // x - y
+                offset: 0,                                       // 0
+                constraint_type: EqualToZero,                    // x - y = 0 means x = y
+            }],
+        ],
+    };
+
+    // Compute the complement
+    let complement = complement_affine_constraints(&affine_constraints);
+    println!("Original constraints: {:?}", affine_constraints);
+    println!("Complemented constraints: {:?}", complement);
+
+    // The complement of (x >= 2 AND y >= 3) OR (x = y) should be
+    // (x < 2 OR y < 3) AND (x != y)
+    // Check that the complemented constraints have the expected structure
+    assert_eq!(complement.num_vars, 2);
+
+    // Convert to ISL set strings for better visualization
+    let original_set = affine_constraints_to_isl_set(&affine_constraints);
+    let complement_set = affine_constraints_to_isl_set(&complement);
+    println!("Original set: {}", to_str(original_set));
+    println!("Complement set: {}", to_str(complement_set));
+
+    // Clean up
+    unsafe {
+        isl_set_free(original_set);
+        isl_set_free(complement_set);
+    }
+}
+
+#[test]
+fn test_intersect_affine_constraints() {
+    // Create two constraint systems
+    // First set: x >= 2
+    let constraints1 = Constraints {
+        num_vars: 1,
+        num_existential_vars: 0,
+        constraints: vec![vec![Constraint {
+            affine_formula: vec![(1, Var(0))], // x
+            offset: -2,                        // -2
+            constraint_type: NonNegative,      // x - 2 >= 0 means x >= 2
+        }]],
+    };
+
+    // Second set: x <= 5
+    let constraints2 = Constraints {
+        num_vars: 1,
+        num_existential_vars: 0,
+        constraints: vec![vec![Constraint {
+            affine_formula: vec![(-1, Var(0))], // -x
+            offset: 5,                          // +5
+            constraint_type: NonNegative,       // -x + 5 >= 0 means x <= 5
+        }]],
+    };
+
+    // Compute the intersection: should be 2 <= x <= 5
+    let intersection = intersect_affine_constraints(&constraints1, &constraints2);
+
+    // Convert to ISL set strings for visualization
+    let set1 = affine_constraints_to_isl_set(&constraints1);
+    let set2 = affine_constraints_to_isl_set(&constraints2);
+    let intersection_set = affine_constraints_to_isl_set(&intersection);
+
+    println!("Set 1: {}", to_str(set1));
+    println!("Set 2: {}", to_str(set2));
+    println!("Intersection: {}", to_str(intersection_set));
+
+    // Verify the intersection is correct
+    unsafe {
+        // Check the intersection set directly
+        let expected = read_from_str("{ [P0] : 2 <= P0 <= 5 }");
+        assert!(isl_set_is_equal(intersection_set, expected) != 0);
+
+        // Clean up
+        isl_set_free(set1);
+        isl_set_free(set2);
+        isl_set_free(intersection_set);
+        isl_set_free(expected);
+    }
+}
+
+#[test]
+fn test_is_affine_constraints_empty() {
+    // Create a non-empty set: x >= 0
+    let non_empty = Constraints {
+        num_vars: 1,
+        num_existential_vars: 0,
+        constraints: vec![vec![Constraint {
+            affine_formula: vec![(1, Var(0))], // x
+            offset: 0,                         // 0
+            constraint_type: NonNegative,      // x >= 0
+        }]],
+    };
+
+    // Create an empty set: x >= 1 AND x <= 0
+    let empty = Constraints {
+        num_vars: 1,
+        num_existential_vars: 0,
+        constraints: vec![vec![
+            Constraint {
+                affine_formula: vec![(1, Var(0))], // x
+                offset: -1,                        // -1
+                constraint_type: NonNegative,      // x - 1 >= 0 means x >= 1
+            },
+            Constraint {
+                affine_formula: vec![(-1, Var(0))], // -x
+                offset: 0,                          // 0
+                constraint_type: NonNegative,       // -x >= 0 means x <= 0
+            },
+        ]],
+    };
+
+    // Check if the sets are empty
+    assert!(!is_affine_constraints_empty(&non_empty));
+    assert!(is_affine_constraints_empty(&empty));
+
+    // Visualize the sets
+    let non_empty_set = affine_constraints_to_isl_set(&non_empty);
+    let empty_set = affine_constraints_to_isl_set(&empty);
+
+    println!("Non-empty set: {}", to_str(non_empty_set));
+    println!("Empty set: {}", to_str(empty_set));
+
+    // Clean up
+    unsafe {
+        isl_set_free(non_empty_set);
+        isl_set_free(empty_set);
+    }
+}
+
+#[test]
+fn test_affine_constraints_to_isl() {
+    // Create a simple constraint system
+    // (2P0 + P1 ≥ 4) OR (P0 = P1)
+    let constraints = Constraints {
+        num_vars: 2, // P0 (v0) and P1 (v1)
+        num_existential_vars: 0,
+        constraints: vec![
+            // First OR clause: 2P0 + P1 ≥ 4
+            vec![Constraint {
+                affine_formula: vec![(2, Var(0)), (1, Var(1))],
+                offset: -4, // 2P0 + P1 - 4 ≥ 0
+                constraint_type: NonNegative,
+            }],
+            // Second OR clause: P0 = P1
+            vec![Constraint {
+                affine_formula: vec![(1, Var(0)), (-1, Var(1))],
+                offset: 0,
+                constraint_type: EqualToZero,
+            }],
+        ],
+    };
+
+    // Convert to ISL set
+    let isl_set = affine_constraints_to_isl_set(&constraints);
+    println!("ISL set: {}", to_str(isl_set));
+
+    // Convert back to affine constraints to verify round-trip conversion
+    unsafe {
+        let round_trip = isl_set_to_affine_constraints(constraints.num_vars, isl_set);
+        println!("Round-trip constraints: {:?}", round_trip);
+
+        // Clean up
+        isl_set_free(isl_set);
+    }
+}
+
+#[test]
+fn test_affine_constraints_with_existential_vars() {
+    // Create a constraint system with existential variables
+    // There exists P2, P3 such that:
+    // (P0 = 2*P2) AND (P1 = 2*P3 + 1)
+    // This represents the set where P0 is even and P1 is odd
+    let constraints = Constraints {
+        num_vars: 2,             // P0 (v0) and P1 (v1)
+        num_existential_vars: 2, // P2 (v2) and P3 (v3) are existential
+        constraints: vec![vec![
+            // P0 = 2*P2
+            Constraint {
+                affine_formula: vec![(1, Var(0)), (-2, Var(2))],
+                offset: 0,
+                constraint_type: EqualToZero,
+            },
+            // P1 = 2*P3 + 1
+            Constraint {
+                affine_formula: vec![(1, Var(1)), (-2, Var(3))],
+                offset: -1,
+                constraint_type: EqualToZero,
+            },
+        ]],
+    };
+
+    // Convert to ISL set
+    let isl_set = affine_constraints_to_isl_set(&constraints);
+    println!("ISL set with existential vars: {}", to_str(isl_set));
+
+    // Convert back to affine constraints
+    unsafe {
+        let round_trip = isl_set_to_affine_constraints(constraints.num_vars, isl_set);
+        println!(
+            "Round-trip constraints with existential vars: {:?}",
+            round_trip
+        );
+
+        // Clean up
+        isl_set_free(isl_set);
     }
 }
 

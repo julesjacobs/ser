@@ -23,8 +23,6 @@ pub fn save_graphviz(
     viz_type: &str,
     open_files: bool,
 ) -> Result<Vec<String>, String> {
-
-
     let out_path = Path::new(out_dir);
 
     // *** Create directory if it doesn't exist ***
@@ -34,7 +32,6 @@ pub fn save_graphviz(
             Err(e) => return Err(format!("Failed to create output directory: {}", e)),
         }
     }
-
 
     let mut generated_files = Vec::new();
 

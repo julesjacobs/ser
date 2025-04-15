@@ -1,0 +1,84 @@
+\documentclass[acmsmall,review,anonymous,nonacm]{acmart}
+\usepackage{mathpartir}
+\usepackage{cleveref}
+
+% ----- Macros -----
+
+\newcommand{\guy}[1]{\textcolor{green!50!black}{G: #1}}
+\newcommand{\jules}[1]{\textcolor{red!50!black}{J: #1}}
+\newcommand{\markb}[1]{\textcolor{blue!50!black}{M: #1}}
+\newcommand{\todo}[1]{\textcolor{gray}{TODO: #1}}
+
+% Define macros for keywords
+\newcommand{\kw}[1]{\textbf{#1}}
+\newcommand{\nondet}{\kw{?}}
+\newcommand{\ifkw}{\kw{if}}
+\newcommand{\elsekw}{\kw{else}}
+\newcommand{\whilekw}{\kw{while}}
+\newcommand{\yieldkw}{\kw{yield}}
+\newcommand{\requestkw}{\kw{request}}
+
+
+% ----- Main paper -----
+
+\title{When One Message Tells the Whole Story:\\ Deciding Serializability in Programmable Networks}
+\author{Author Name}
+\affiliation{
+  \institution{Institution Name}
+  \city{City}
+  \state{State}
+  \country{Country}
+}
+\email{author@institution.edu}
+
+\settopmatter{printfolios=false,printccs=false,printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{} % removes footnote with DOI
+% \renewcommand{\keywords}[1]{}  % removes "Additional keywords and phrases"
+% \renewcommand{\acmSubmissionID}[1]{} % removes SUBMISSION ID
+\let\oldmaketitle\maketitle
+\renewcommand{\maketitle}{
+  \oldmaketitle
+  \pagestyle{plain}  % empty headers and footers on all pages
+  \thispagestyle{plain}  % empty header and footer on the first page
+}
+
+% Make paragraph headings bold
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {1.5ex \@plus1ex \@minus.2ex}%
+  {-1em}%
+  {\normalfont\normalsize\bfseries}}
+\makeatother
+
+% Redefine sections to display with § symbol
+\crefformat{section}{\S#2#1#3}
+\Crefformat{section}{\S#2#1#3}
+
+% Ensure subsections/subsubsections behave the same way (optional)
+\crefformat{subsection}{\S#2#1#3}
+\Crefformat{subsection}{\S#2#1#3}
+\crefformat{subsubsection}{\S#2#1#3}
+\Crefformat{subsubsection}{\S#2#1#3}
+
+
+\begin{document}
+
+\begin{abstract}
+	\input{sections/0_abstract}
+\end{abstract}
+
+\maketitle
+
+% \keywords{programming languages, static analysis, verification}
+
+\input{sections/1_introduction}
+\input{sections/2_problem_definition}
+\input{sections/3_formal_results}
+\input{sections/4_implementation}
+\input{sections/5_related_work}
+\input{sections/6_discussion}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}
