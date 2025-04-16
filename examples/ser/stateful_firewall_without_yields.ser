@@ -1,12 +1,3 @@
-request init {
-    if (X == 0) {
-    	X := 1;    	
-    	T := 0
-    } else {
-        y := 0 // empty
-    }
-}
-
 request main {
     if (T == 0) {
         t := 0;
