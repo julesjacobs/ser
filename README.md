@@ -31,7 +31,6 @@ the `ISL_PREFIX` environment variable.
 ## TODO
 - dependencies for SMPT need to be clarified (Guy)
 - simpler backward/forward optimizations (instead of Guy's original one)
-- FIX bug in stateful_firewall.ser example
 - Example: lock manager (CAS)
 - Example: BGP routing
 
@@ -43,8 +42,8 @@ the `ISL_PREFIX` environment variable.
 - fred_arith simplified until 2 (always serializable, terminates + FALSE)
 - fred2 (NOT always serializable, terminates + TRUE + counterexample)
 - bank account + yields (NOT always serializable, terminates + TRUE)
-- bank account + without yields (always serializable, terminates + FALSE)
-- TODO FIX: stateful firewall + yields (NOT always serializable, terminates + TRUE)
+- bank account + without yields (always serializable, NOT terminates)
+- stateful firewall + yields (NOT always serializable, terminates + TRUE)
 - stateful firewall + without yields (always serializable, terminates + FALSE)
 
 Note: when TRUE, the answer is typically returned via BMC or K-INDUCTION

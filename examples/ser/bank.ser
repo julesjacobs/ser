@@ -2,110 +2,85 @@ request init {
     if (X == 0) {
     	X := 1;    	
     	A := 100;
-    	B := 50;
-    	a := 100;
-    	b := 50
-    } else {
-        y := 0 // empty
-    }
+    	B := 50
+    } else {0} // empty
 }
 
 request transfer {
+    while (X == 0) {
+    	yield
+	};
     if (A == 100) {
         A := 50;
-        a := 50;
         yield;
         if (B == 100) {
-            B := 150;
-            b := 150
-        } else {
+            B := 150
+        } else {   
             if (B == 50) {
-                B := 100;
-                b := 100
-            } else {
-                b := 1 // empty
-            }
+                B := 100
+            } else {0} // empty
         }
     } else {
         if (A == 150) {
             A := 100;
-            a := 100;
             yield;
             if (B == 100) {
-                B := 150;
-                b := 150
+                B := 150
             } else {
                 if (B == 50) {
-                    B := 100;
-                    b := 100
-                } else {
-                    b := 1 // empty
-                }
+                    B := 100
+                } else {0} // empty
             }
         } else {
             if (A == 200) {
                 A := 150;
-                a := 150;
                 yield;
                 if (B == 100) {
-                    B := 150;
-                    b := 150
+                    B := 150
                 } else {
                     if (B == 50) {
-                        B := 100;
-                        b := 100
-                    } else {
-                        b := 1 // empty
-                    }
+                        B := 100
+                    } else {0} // empty
                 }
-            } else {
-                a := 1 // empty
-            }
+            } else {0} // empty
         }
-    }
+    };
+    A + B // a non-serializable execution includes (A+B)%150 != 0
 }
 
 request interest {
+    while (X == 0) {
+    	yield
+	};
     if (A == 100) {
         A := 200;
-        a := 200;
         yield;
         if (B == 100) {
-            B := 200;
-            b := 200
+            B := 200
         }
         else {
             if (B == 50) {
-                B := 100;
-                b := 100
+                B := 100
             }
-            else {
-                b := 1 //empty
-            }
+            else {0} // empty
         }
     }
     else {
         if (A == 50) {
             A := 100;
-            a := 100;
             yield;
             if (B == 100) {
-                B := 200;
-                b := 200
+                B := 200
             }
             else {
                 if (B == 50) {
-                    B := 100;
-                    b := 100
+                    B := 100
                 }
-                else {
-                    b := 1 //empty
-                }
+                else {0} // empty
             }
         }
-        else {
-            a := 1 //empty
-        }
-    }
+        else {0} // empty
+    };
+    A + B // a non-serializable execution includes (A+B)%150 != 0
 }
 

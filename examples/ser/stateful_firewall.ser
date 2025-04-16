@@ -23,7 +23,7 @@ request main {
 	if (T == 1) {
 	    t := 1;
 	    T := 2;
-        if (?) {
+	if (?) {
     		s := 0; // originally from switch 0 (= switch h_in)
     		if (X == 0) {
     			X := 1;
@@ -42,5 +42,7 @@ request main {
 	} else {
         t := 2 // T=2 and above
    	}
-    }
+    };
+        s + t + t + c + c + c + c + c + c + c + c // return a unique value indicating the combination t (0/1/2), s (0/1), and c (0/1/2)
+        // only a non-serializable interleaving can return result_1=(t=0,s=0,c=1) and result_2=(t=1,s=1,c=2)
 }
