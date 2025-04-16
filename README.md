@@ -29,7 +29,11 @@ installed (it comes with GCC).  For a non-standard install, you may need to set
 the `ISL_PREFIX` environment variable.
 
 ## TODO
-dependencies for SMPT need to be clarified (Guy)
+- dependencies for SMPT need to be clarified (Guy)
+- simpler backward/forward optimizations (instead of Guy's original one)
+- FIX bug in stateful_firewall.ser example
+- Example: lock manager (CAS)
+- Example: BGP routing
 
 ## Working examples:
 - state machine (always serializable, terminates + FALSE) 
@@ -38,10 +42,16 @@ dependencies for SMPT need to be clarified (Guy)
 - fred_arith simplified until 1 (always serializable, terminates + FALSE)
 - fred_arith simplified until 2 (always serializable, terminates + FALSE)
 - fred2 (NOT always serializable, terminates + TRUE + counterexample)
+- bank account + yields (NOT always serializable, terminates + TRUE)
+- bank account + without yields (always serializable, terminates + FALSE)
+- TODO FIX: stateful firewall + yields (NOT always serializable, terminates + TRUE)
+- stateful firewall + without yields (always serializable, terminates + FALSE)
 
-Note: when TRUE, the answer is typically returned via BMC
+Note: when TRUE, the answer is typically returned via BMC or K-INDUCTION
 Note: when FALSE, the answer (when returned) is typically via --method --STATE-EQUATION
-
+Note: the flag --auto-reduce speeds the SMT solver
+Note: the flag --show-model returns the actual reachable marking (note that it's 
+better not to use also with --auto-reduce in parallel)
 
 Depends on SMPT.
 [Add description of how to install SMPT here.]
