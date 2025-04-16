@@ -35,6 +35,9 @@ the `ISL_PREFIX` environment variable.
 - Example: BGP routing
 
 ## Working examples:
+- simple_nonser (NOT serializable, terminates + TRUE)
+- simple_nonser2 (NOT serializable, terminates + TRUE)
+- simple_nonser2_turned_ser_with_locks (always serializable, terminates + FALSE)
 - state machine (always serializable, terminates + FALSE) 
 - shopping cart (always serializable, terminates + FALSE)
 - fred1 (always serializable, terminates + FALSE)
