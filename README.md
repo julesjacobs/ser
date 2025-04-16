@@ -48,6 +48,7 @@ the `ISL_PREFIX` environment variable.
 - bank account + without yields (always serializable, NOT terminates)
 - stateful firewall + yields (NOT always serializable, terminates + TRUE)
 - stateful firewall + without yields (always serializable, terminates + FALSE)
+- BGP routing (NOT serializable, terminates + TRUE)
 
 Note: when TRUE, the answer is typically returned via BMC or K-INDUCTION
 Note: when FALSE, the answer (when returned) is typically via --method --STATE-EQUATION
