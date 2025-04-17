@@ -49,6 +49,7 @@ the `ISL_PREFIX` environment variable.
 - stateful firewall + yields (NOT always serializable, terminates + TRUE)
 - stateful firewall + without yields (always serializable, terminates + FALSE)
 - BGP routing (NOT serializable, terminates + TRUE)
+- complex_while_with_yields (always serializable, terminates + TRUE for i<=4)
 
 Note: when TRUE, the answer is typically returned via BMC or K-INDUCTION
 Note: when FALSE, the answer (when returned) is typically via --method --STATE-EQUATION
