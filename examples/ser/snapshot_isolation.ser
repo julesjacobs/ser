@@ -1,0 +1,50 @@
+request init {
+	if (X ==0){
+		ALICE := 1 ; // initialize Dr. Alice to be on call 
+		BOB := 1; // initialize Dr. Bob to be on call
+		X := 1
+	} else {0}
+}
+
+// at least one doctor (Alice and/or Bob) needs to be on call at any given moment
+// if the snapshot records both on call, non-deterministically choose whether (and then whom) to remove from call 
+request main {
+	while (X == 0){
+		yield
+	};
+	// take snapshot
+	if (ALICE == 1) {
+		alice_on_call := 1 
+	} else {
+		alice_on_call := 0 
+	};
+	if (BOB == 1) {
+		bob_on_call := 1 
+	} else {
+		bob_on_call := 0 
+	};
+	yield; //snapshot taken
+	if (alice_on_call == 1) {
+		if (bob_on_call == 1) {
+			
+			// if both alice and bob are recorded on call in the snapshot --- choose whether to remove one
+			if (?) {
+				
+				// if chose to remove --- randomly pick whom to remove form being on call
+				if (?) {
+					ALICE := 0
+				} else {
+					BOB := 0
+				}
+			
+			} else {0} 
+		
+		} else {0} // do nothing
+	
+	} else {0}; // do nothing
+	
+	ALICE + BOB // return the total number of people on call (only in non-serializable runs this can be 0!)
+}
+	
+
+
