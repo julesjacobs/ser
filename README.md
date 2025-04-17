@@ -50,7 +50,8 @@ the `ISL_PREFIX` environment variable.
 - stateful firewall + without yields (always serializable, terminates + FALSE)
 - BGP routing (NOT serializable, terminates + TRUE)
 - complex_while_with_yields (always serializable, terminates + TRUE for i<=4)
-- snapshot isolation setting: 2 doctors on call (always serializable, terminates + TRUE)
+- snapshot isolation setting (medical center scenario): 2 doctors on call (always serializable, terminates + TRUE)
+- snapshot isolation setting (network scenario): 2 monitoring nodes with at least one active (always serializable, terminates + TRUE)
 
 Note: when TRUE, the answer is typically returned via BMC or K-INDUCTION
 Note: when FALSE, the answer (when returned) is typically via --method --STATE-EQUATION
