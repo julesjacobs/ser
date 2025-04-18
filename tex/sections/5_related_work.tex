@@ -8,7 +8,7 @@
 \todo{Describe the differences between our notion and the others}
 \todo{Find the notion(s) most closely related to ours.}
 
-Serializability was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for concurrent transaction execution. Their work also introduced conflict serializability, a stricter variant that requires equivalence to a serial schedule solely by reordering non-conflicting operations. Papadimitriou~\cite{Pa79} later proved that determining serializability even for a given, single interleaving is NP-hard. 
+Serializability was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for concurrent transaction execution. Their work also introduced what was later referred to as conflict serializability, a stricter variant that requires equivalence to a serial schedule solely by reordering non-conflicting operations. Papadimitriou~\cite{Pa79, Pa86} later proved that determining serializability even for a given, single interleaving is NP-hard. 
 %
 Moreover, although conflict serializability is more conservative measure than serializability, it is easier to enforce during runtime by various approaches. 
 %
@@ -27,21 +27,29 @@ Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts 
 
 Work on Serializability;
 
-- Strict serializability is a stronger consistency notion in which an execution need not only be serializable but also respects the real-time ordering of the transactions, i.e., it is not enough for the interleaving to be equivalent to a serial one, but the serial execution must also preserve the ordering of the transactions.
+- Strict serializability (a.k.a. SSR~\cite{Pa79}) is a stronger consistency notion in which an execution need not only be serializable but also respects the real-time ordering of the transactions, i.e., it is not enough for the interleaving to be equivalent to a serial one, but the serial execution must also preserve the ordering of the transactions.
 %
-
+Guerraoui et al.~\cite{GuHeJoSi08} present a algorithm for model checking strict serializability.
+%
+Konig and Wehrheim recently proved that that it is possible to decide whether all executions of a program are strictly serializable, given that the transactions are live~\cite{KoWe21}.
 
 
 Work on linearizability:
 
 - linearizability~\cite{HeWi90} of a concurrent data structure implies that every concurrent execution with operations on the data structure appears as if the operations occurred atomically, while respecting real-time ordering and obeying the object specifications. 
 %
-Equivalently, this can be viewed as a case of strict serializability in which each transaction consists of a single operation, operating on a single concurrent object~\cite{WaSt06}.
+Equivalently, this can be viewed as a case of strict serializability in which each transaction consists of a single operation, operating on a single concurrent object~\cite{WaSt06a}.
 
 
 
 
 - techniques used directly and indirectly for testing for linearizability~\cite{PrGr12, PrGr13, WiGo93}. For example, Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly generating histories and subsequently testing if the generated histories are linearizable.
+
+- In a series of paper, Wang and Stoller put forth runtime techniques for detecting violations serializability (also termed \textit{atomicity})~\cite{WaSt06a} as well as fragments of serializability such as conflict serializability and view-serializability~\cite{WaSt06b}. They do so by  checking whether a given execution can be recombined to generate non-serializable executions.
+
+
+
+
 
 - verification approaches for linearizability:
 
@@ -78,6 +86,8 @@ Static analysis techniques may prove linearizability for the bounded~\cite{AmRiR
 
 - complexity results for linearizability:
 
+Conflict serializability
+
 Alur et al.~\cite{AlMcPe96} prove that conflict serializability is decidable (in PSPACE) and that linearizability is decidable (in EXPSPACE) for concurrent system with a bounded number of threads.
 %
 Bouajjani et al.~\cite{BoEmEnHa13} extend these results and prove that conflict serializability is decidable even for the unbounded case. The authors also show that linearizability, on the other hand, in undecidable for the unbounded case, except for setting (which the authors define as \textit{bounded-barrier linearizability}) in which the problem is decidable for an unbound number of operations.
@@ -88,9 +98,11 @@ However, as far as we are aware, there is no tool implementing this approach and
 %
 In followup work, Bouajjani et al. prove that linearizability is decidable in the unbounded case for specidic abstract state types~\cite{BoEmEnHa18}, in which the authors rely on checking coverability in a Vector Addition System with States (VASS), which was proven to be in EXPSPACE~\cite{Ra78}.
 
+- result for conflict serializability
 
-
-
+Various work focus on checking conflict serializability, .e.g. Farzan and Mahusudan~\cite{FaMa08} present an approach for monitoring conflict serializability for a bounded number of operations, and Flanagan et al.~\cite{FlFrYi08} present a dynamic analyzer for conflict serializability. Additional approaches include~\cite{CoOlPnTuZu07,EmMaMa10} and others.
+%
+Other works~\cite{XuBoRa05} have also put forth techniques to automatically detect conflict-serializability violations.
 
 
 \todo{end}
@@ -101,9 +113,16 @@ In followup work, Bouajjani et al. prove that linearizability is decidable in th
 
 \jules{Main goal of this section is to describe all the related work on deciding serializability, from deciding it on traces, to bounded model checking, to unbounded ones. Key distinction is on two axes: (1) the notion of serializability used (2) whether they \emph{prove} serializability of unbounded systems or whether they just model check.}
 
-Alur et al.~\cite{AlMcPe96} established the complexity of deciding conflict serializability for bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later extended this result to unbounded systems, proving the problem remains decidable and EXPTIME-complete. Their key insight reveals that while the conflict graph becomes infinite, cycle detection, and thus conflict serializability, is independent of transaction count. By modeling transactions via Vector Addition Systems (equivalent to Petri Nets), they provide a finite framework for analyzing infinite behaviors. This approach inspired our use of Petri Nets to capture Int(S). 
+The \textit{membership problem} of serializability, is deciding whether a specific interleaving is serializable. This has been proven to be NP-complete by Papadimitriou~\cite{Pa79}.
+%
+The \textit{correctness problem} on the other hand, is much harder, and pertains to deciding whether \textit{all} executions of a program ar serializable.
 
-A separate research direction attempts to \textit{directly} verify serializability, without limiting it to conflict restrictions, as done in other works. Towards this end, the expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a formal specification that validates whether only serializable executions occur. While TLA can naturally encode ``real'' serializability (based on final-state equivalence), existing TLA-based approaches~\cite{SoVaVi20, Ho24} remain limited to bounded transaction systems. This limitation stems from TLA/TLA+ model checkers like TLC and Apalache~\cite{YuMaLa99, KoKuTr19}, which require finite-state verification and cannot handle unbounded transaction counts.
+%
+Alur et al.~\cite{AlMcPe96} established that correctness problem for conflict serializability is decidable (and in PSPACE) for a bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later proved that decidability is also extended to unbounded systems (and EXPTIME-complete). Their key insight reveals that while the conflict graph becomes infinite, cycle detection, and thus conflict serializability, is independent of transaction count. By modeling transactions via Vector Addition Systems (equivalent to Petri Nets), they provide a finite framework for analyzing infinite behaviors. This approach inspired our use of Petri Nets to capture Int(S).
+%
+We also note that the correctness problem of linearizbaility is in EXPSPACE~\cite{AlMcPe96} when bounding the number of threads, and undecidable otherwise~\cite{BoEmEnHa13}.  
+
+A separate research direction attempts to \textit{directly} verify serializability (or conflict-serializability~\cite{CoOlPnTuZu07}), without limiting it to conflict restrictions, as done in other works. Towards this end, the expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a formal specification that validates whether only serializable executions occur. While TLA can naturally encode ``real'' serializability (based on final-state equivalence), existing TLA-based approaches~\cite{SoVaVi20, Ho24} remain limited to bounded transaction systems. This limitation stems from TLA/TLA+ model checkers like TLC and Apalache~\cite{YuMaLa99, KoKuTr19}, which require finite-state verification and cannot handle unbounded transaction counts.
 
 %
 While these contributions represent significant advances, to our knowledge, our work is the first to:
