@@ -27,6 +27,8 @@ Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts 
 
 Work on Serializability;
 
+- There are works that focus on manual proofs of serializability. For example, Tasiran~\cite{Ta08} proved serializability of the Bartok STM.
+
 - Strict serializability (a.k.a. SSR~\cite{Pa79}) is a stronger consistency notion in which an execution need not only be serializable but also respects the real-time ordering of the transactions, i.e., it is not enough for the interleaving to be equivalent to a serial one, but the serial execution must also preserve the ordering of the transactions.
 %
 Guerraoui et al.~\cite{GuHeJoSi08} present a algorithm for model checking strict serializability.
@@ -57,15 +59,16 @@ Equivalently, this can be viewed as a case of strict serializability in which ea
 
 (i) model checking techniques include:
 
-Line-up~\cite{BuDeMuTa10} (built on the CHESS model checker~\cite{MuQaBaBaNaNe08}) includes a heuristic-driven technique that searches for violations of linearizability by enumerating all possible serializations. 
+Line-up~\cite{BuDeMuTa10} (built on the CHESS model checker~\cite{MuQaBaBaNaNe08}) includes a heuristic-driven technique that searches for violations of linearizability by enumerating all possible serializations. Similar to spirit is LinTSO~\cite{BuGoMuYa12} which search for linearizability violations in the Total Store
+Order (TSO) weak memory model.
 %
 Additional model checking techniques were proposed by Liu et al.~\cite{LiChLiSuZhDo12} build upon PAT~\cite{SuLuDoPa09} and verify linearizability through the lens of refinement checking optimization.
 %
 Recently, Golovin et al.~\cite{GoKoVa25} presented \textit{RELINCHE}, a model checker for bounded-linearizability, in which a predefined number of operations can be invoked invoked.
 %
-Other automatic linearizability checking tools include the CDSSPEC specification checker under the C/C++ 11 memory model, and Lincheck~\cite{KoDeSoTsAl23} for verifying linearizbaility in JVM by Ou and Demsky~\cite{OuDe17}. 
+Other automatic linearizability checking tools include the CDSSpec specification checker under the C/C++ 11 memory model, and Lincheck~\cite{KoDeSoTsAl23} for verifying linearizability in JVM by Ou and Demsky~\cite{OuDe17}. 
 %
-Burckhardt et al.~\cite{BuAlMa07} employ a SAT solver and check for linearizbaility violations of specific client programs.
+Burckhardt et al.~\cite{BuAlMa07} employ a SAT solver and check for linearizability violations of specific client programs.
 %
 As far as we are aware, unlike our algorithm, none of these tools afford complete coverage for the case of unbounded threads.
 %
