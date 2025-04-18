@@ -23,6 +23,79 @@ Other relaxations focus on weaker consistency models: Lamport’s causal consist
 %
 Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-serializable behaviors in causally consistent databases.
 
+\todo{start}
+
+Work on Serializability;
+
+- Strict serializability is a stronger consistency notion in which an execution need not only be serializable but also respects the real-time ordering of the transactions, i.e., it is not enough for the interleaving to be equivalent to a serial one, but the serial execution must also preserve the ordering of the transactions.
+%
+
+
+
+Work on linearizability:
+
+- linearizability~\cite{HeWi90} of a concurrent data structure implies that every concurrent execution with operations on the data structure appears as if the operations occurred atomically, while respecting real-time ordering and obeying the object specifications. 
+%
+Equivalently, this can be viewed as a case of strict serializability in which each transaction consists of a single operation, operating on a single concurrent object~\cite{WaSt06}.
+
+
+
+
+- techniques used directly and indirectly for testing for linearizability~\cite{PrGr12, PrGr13, WiGo93}. For example, Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly generating histories and subsequently testing if the generated histories are linearizable.
+
+- verification approaches for linearizability:
+
+
+
+(i) model checking techniques include:
+
+Line-up~\cite{BuDeMuTa10} (built on the CHESS model checker~\cite{MuQaBaBaNaNe08}) includes a heuristic-driven technique that searches for violations of linearizability by enumerating all possible serializations. 
+%
+Additional model checking techniques were proposed by Liu et al.~\cite{LiChLiSuZhDo12} build upon PAT~\cite{SuLuDoPa09} and verify linearizability through the lens of refinement checking optimization.
+%
+Recently, Golovin et al.~\cite{GoKoVa25} presented \textit{RELINCHE}, a model checker for bounded-linearizability, in which a predefined number of operations can be invoked invoked.
+%
+Other automatic linearizability checking tools include the CDSSPEC specification checker under the C/C++ 11 memory model, and Lincheck~\cite{KoDeSoTsAl23} for verifying linearizbaility in JVM by Ou and Demsky~\cite{OuDe17}. 
+%
+Burckhardt et al.~\cite{BuAlMa07} employ a SAT solver and check for linearizbaility violations of specific client programs.
+%
+As far as we are aware, unlike our algorithm, none of these tools afford complete coverage for the case of unbounded threads.
+%
+
+Other model checking techniques rely on specifying linearization points, i.e., points in which the event occurs logically.
+%
+These include the work of Vechev et al.~\cite{VeYaYo09}, built upon SPIN~\cite{Ho97}~\footnote{Note that Vechev et al. can also apply their technique without linearization points, but solely on bounded executions.}
+%
+Static analysis techniques may prove linearizability for the bounded~\cite{AmRiReSaYa07} and unbounded cases~\cite{BeLeMaRaSa08, Va09, Va10}, but rely on heuristics and the manual/automatic annotation of linearization points.
+%
+\todo{Guy: read more about shape/static analysis techniques}
+
+
+
+
+(ii) Other techniques for linearizability proof include the use of theorem provers (e.g.~\cite{CoDoGr05, DeScWe11}).
+
+
+- complexity results for linearizability:
+
+Alur et al.~\cite{AlMcPe96} prove that conflict serializability is decidable (in PSPACE) and that linearizability is decidable (in EXPSPACE) for concurrent system with a bounded number of threads.
+%
+Bouajjani et al.~\cite{BoEmEnHa13} extend these results and prove that conflict serializability is decidable even for the unbounded case. The authors also show that linearizability, on the other hand, in undecidable for the unbounded case, except for setting (which the authors define as \textit{bounded-barrier linearizability}) in which the problem is decidable for an unbound number of operations.
+%
+We note that the proof of Bouajjani et al. is reminiscent to our setting, as the authors also reduce the problem to a Petri Net reachability problem.
+%
+However, as far as we are aware, there is no tool implementing this approach and verifying linearizability with Petri Nets.
+%
+In followup work, Bouajjani et al. prove that linearizability is decidable in the unbounded case for specidic abstract state types~\cite{BoEmEnHa18}, in which the authors rely on checking coverability in a Vector Addition System with States (VASS), which was proven to be in EXPSPACE~\cite{Ra78}.
+
+
+
+
+
+
+\todo{end}
+
+
 \subsection{Deciding serializability.}
 \label{sec:related:deciding-serializability}
 
