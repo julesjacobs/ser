@@ -13,7 +13,7 @@ fn main() {
         isl_prefix.join("lib").display()
     );
     println!("cargo:rustc-link-lib=isl");
-    println!("cargo:rerun-if-changed=isl_wrapper.h");
+    println!("cargo:rerun-if-changed=src/isl_wrapper.h");
     println!("cargo:rerun-if-changed=src/isl_helpers.c"); // Rerun if C code changes
 
     // --- Compile C helper file ---
