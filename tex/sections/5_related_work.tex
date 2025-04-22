@@ -102,7 +102,9 @@ Zhang et al.~\cite{ZhChWa13}, relaxed the notion of linearizability to quasi lin
 
 Conflict serializability
 
-Alur et al.~\cite{AlMcPe96} prove that conflict serializability is decidable (in PSPACE) and that linearizability is decidable (in EXSPACE) for concurrent system with a bounded number of threads.
+Alur et al.~\cite{AlMcPe96} prove that conflict serializability is decidable 
+(in PSPACE) and that linearizability is decidable (in EXPSPACE) for concurrent 
+system with a bounded number of threads.
 %
 Bouajjani et al.~\cite{BoEmEnHa13} extend these results and prove that conflict serializability is decidable even for the unbounded case. The authors also show that linearizability, on the other hand, in undecidable for the unbounded case, except for setting (which the authors define as \textit{bounded-barrier linearizability}) in which the problem is decidable for an unbound number of operations.
 %
@@ -110,7 +112,10 @@ We note that the proof of Bouajjani et al. is reminiscent to our setting, as the
 %
 However, as far as we are aware, there is no tool implementing this approach and verifying linearizability with Petri Nets.
 %
-In followup work, Bouajjani et al. prove that linearizability is decidable in the unbounded case for specific abstract state types~\cite{BoEmEnHa18}, in which the authors rely on checking coverability in a Vector Addition System with States (VASS), which was proven to be in EXSPACE~\cite{Ra78}.
+In followup work, Bouajjani et al. prove that linearizability is decidable in 
+the unbounded case for specific abstract state types~\cite{BoEmEnHa18}, in 
+which the authors rely on checking coverability in a Vector Addition System 
+with States (VASS), which was proven to be in EXPSPACE~\cite{Ra78}.
 
 - result for conflict serializability
 
@@ -136,7 +141,11 @@ The \textit{correctness problem} on the other hand, is much harder, and pertains
 %
 Alur et al.~\cite{AlMcPe96} established that correctness problem for conflict serializability is decidable (and in PSPACE) for a bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later proved that decidability is also extended to unbounded systems (and EXPTIME-complete). Their key insight reveals that while the conflict graph becomes infinite, cycle detection, and thus conflict serializability, is independent of transaction count. By modeling transactions via Vector Addition Systems (equivalent to Petri Nets), they provide a finite framework for analyzing infinite behaviors. This approach inspired our use of Petri Nets to capture Int(S).
 %
-We also note that the correctness problem of linearizability is in EXSPACE~\cite{AlMcPe96} when bounding the number of threads, and undecidable otherwise~\cite{BoEmEnHa13}. The easier, membership problem is NP-complete in general, as proven by Gibbons and Korach~\cite{GiKo97}. Their result was later extended to \textit{collections}~\cite{EmEn18}.
+We also note that the correctness problem of linearizability is in 
+EXPSPACE~\cite{AlMcPe96} when bounding the number of threads, and undecidable 
+otherwise~\cite{BoEmEnHa13}. The easier, membership problem is NP-complete in 
+general, as proven by Gibbons and Korach~\cite{GiKo97}. Their result was later 
+extended to \textit{collections}~\cite{EmEn18}.
 \guy{Mark could you check EmEn18?}
 
 A separate research direction attempts to \textit{directly} verify serializability (or conflict-serializability~\cite{CoOlPnTuZu07}), without limiting it to conflict restrictions, as done in other works. Towards this end, the expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a formal specification that validates whether only serializable executions occur. While TLA can naturally encode ``real'' serializability (based on final-state equivalence), existing TLA-based approaches~\cite{SoVaVi20, Ho24} remain limited to bounded transaction systems. This limitation stems from TLA/TLA+ model checkers like TLC and Apalache~\cite{YuMaLa99, KoKuTr19}, which require finite-state verification and cannot handle unbounded transaction counts.
