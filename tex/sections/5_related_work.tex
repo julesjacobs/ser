@@ -31,7 +31,11 @@ Several works have proposed relaxations of the (strong) consistency notion of se
 %
 Other relaxations focus on weaker consistency models: Lamport’s causal consistency~\cite{La78}, later generalized to shared memory as causal memory~\cite{AhNeBuKoHu95} and implemented in systems like COPS~\cite{LlFrKaAn11}, has inspired extensive research on model checking and complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. 
 %
-Recent work by Brutschy et al.~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-serializable behaviors in causally consistent databases.
+Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a tool that checks whether a given program execution is conflict serializable, in an eventually consistent data store. In a followup work~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-(conflict)-serializable behaviors in causally consistent databases.
+%
+%Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis techniques for verifying view-serializability on specific program sub-types.
+
+\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention them?}
 
 \todo{start}
 
