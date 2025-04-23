@@ -55,13 +55,34 @@ Equivalently, this can be viewed as a case of strict serializability in which ea
 
 
 
-- techniques used directly and indirectly for testing for linearizability~\cite{PrGr12, PrGr13, WiGo93}. For example, Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly generating histories and subsequently testing if the generated histories are linearizable.
+- techniques used directly and indirectly for testing 
+linearizability~\cite{WiGo93, PrGr12, PrGr13, EmEn17}. For example, 
+Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly 
+generating histories and subsequently testing if the generated histories are 
+linearizable.
 
 - In a series of paper, Wang and Stoller put forth runtime techniques for detecting violations serializability (also termed \textit{atomicity})~\cite{WaSt06a} as well as fragments of serializability such as conflict serializability and view-serializability~\cite{WaSt06b}. They do so by  checking whether a given execution can be recombined to generate non-serializable executions.
 %
 Sinha and Malik~\cite{SiMa10} also put forth a conflict serializability checker during runtime.
 
-- Linearizability has also been proven for specific data types. For example. Wing and Gong~\cite{WiGo93} prove it for  (unbounded) FIFO queues, (unbounded) priority queues and other data structures. Chakraborty et al.~\cite{ChHeSeVa15} later provided a method for checking linearizability of queue-based algorithms, without the use of linearization points. Cern{\`y} et al.~\cite{CeRaZuChAl10} present CoLT, a model checker for linearizability of singly-linked heap-based objects. However, their approach is complete only with regard to a bounded number of threads.
+- Linearizability has also been proven for specific data types. For example. 
+Wing and Gong~\cite{WiGo93} prove it for  (unbounded) FIFO queues, (unbounded) 
+priority queues and other data structures. Chakraborty et al.~\cite{ChHeSeVa15} 
+later provided a method for checking linearizability of queue-based algorithms, 
+without the use of linearization points. Cern{\`y} et al.~\cite{CeRaZuChAl10} 
+present CoLT, a model checker for linearizability of singly-linked heap-based 
+objects. However, their approach is complete only with regard to a bounded 
+number of threads. 
+%
+Bouajjani et al.~\cite{BoEnWa17} present a recursive algorithm for idnetifying 
+linearizability violations in priority queues (based on register automata), in 
+a method similar to the one for finding linearizability violations stacks and 
+(regular) queues~\cite{BoEmEnHa18}, nonfinite-state automata.
+
+
+
+We define a recursive procedure
+queues requires register automata w
 
 
 
@@ -74,6 +95,10 @@ Sinha and Malik~\cite{SiMa10} also put forth a conflict serializability checker 
 
 Line-up~\cite{BuDeMuTa10} (built on the CHESS model checker~\cite{MuQaBaBaNaNe08}) includes a heuristic-driven technique that searches for violations of linearizability by enumerating all possible serializations. Similar to spirit is LinTSO~\cite{BuGoMuYa12} which search for linearizability violations in the Total Store
 Order (TSO) weak memory model.
+%
+Violat~\cite{EmEn19} generates tests to identify linearizability violations, by 
+enumeration linearizations efficiently, per program schema (instead of per 
+execution, as in~\cite{BuDeMuTa10}).
 %
 Additional model checking techniques were proposed by Burnim et al.~\cite{BuNeSe11}, which is similar to  Line-up~\cite{BuDeMuTa10} but based on leveraging bridge predicates~\cite{BuSe09}. 
 Liu et al.~\cite{LiChLiSuZhDo12} build upon PAT~\cite{SuLuDoPa09} (also used in~\cite{LiChLiSu09,Zh11}) and verify linearizability through the lens of refinement checking optimization, for a finite number of threads.
@@ -93,9 +118,13 @@ Other model checking techniques (e.g.,~\cite{Fl04}) rely on specifying lineariza
 %
 These include the work of Vechev et al.~\cite{VeYaYo09}, built upon SPIN~\cite{Ho97}, and extending the authors' PARGLIDER tool~\cite{VeYa08}~\footnote{Note that Vechev et al. can also apply their technique without linearization points, but solely on bounded executions.}
 %
-Static analysis techniques may prove linearizability for the bounded~\cite{AmRiReSaYa07} and unbounded cases~\cite{BeLeMaRaSa08, Va09, Va10}, but rely on heuristics and the manual/automatic annotation of linearization points. Other techniques that depend or linearization points include~\cite{OhRiVeYaYo10}. 
+Static analysis techniques may prove linearizability for the 
+bounded~\cite{AmRiReSaYa07} and unbounded cases~\cite{BeLeMaRaSa08, Va09, 
+Va10}, but rely on heuristics and the manual/automatic annotation of 
+linearization points. Other techniques that depend or linearization points 
+include~\cite{OhRiVeYaYo10, ZhPeHa15, AbJoTr16}. 
 %
-\guy{Mark can you take a look at Va10?}
+\guy{Mark can you take a look at Va10 and ZhPeHa15?}
 We note that both model-checking techniques (e.g.,~\cite{CeRaZuChAl10}) and static analysis techniques which rely on linearization points are inconclusive, as any failed proof can be due to incorrect annotation of the linearization points, as previously observed~\cite{BoEmCoHa15}.
 %
 Shacham et al.~\cite{ShBrAiSaVeYa11} use dynamic analysis to identify violations of linearizability in concurrent data structures, and combine it with a manual proof when there technique did not find a violation.
