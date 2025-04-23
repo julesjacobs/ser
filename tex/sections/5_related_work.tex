@@ -22,8 +22,10 @@ Moreover, although conflict serializability is more conservative measure than se
 %
 These approaches are typically categorized as either \textit{pessimistic} locking approaches, e.g, Two-Phase Locking~\cite{BeHaGo87}, or alternatively --- \textit{optimistic} locking approaches, e.g., Optimistic Concurrency Control (OCC)~\cite{KuRo81, BuMo06}.
 %
-Both approaches ensure acyclicity in the conflict graph --- a necessary and sufficient condition for conflict serializability. However, because these approaches \textit{ignore program semantics}, these may incorrectly reject executions that, although not conflict-serializable, are still valid serializable executions, i.e., have the same result as a serial execution. In terms of verification, Nagar and Jagannathan~\cite{KaJa18} presented an automatic static analysis technique to find violations of conflict serializability
+Both approaches ensure acyclicity in the conflict graph --- a necessary and sufficient condition for conflict serializability~\cite{SiMa10}. However, because these approaches \textit{ignore program semantics}, these may incorrectly reject executions that, although not conflict-serializable, are still valid serializable executions, i.e., have the same result as a serial execution. In terms of verification, Nagar and Jagannathan~\cite{KaJa18} presented an automatic static analysis technique to find violations of conflict serializability
 %
+Sinha et al.~\cite{SiMaWaGu11b} present a sound and incomplete predictive analysis technique for detecting violations of conflict serializability.
+
 
 Several works have proposed relaxations of the (strong) consistency notion of serializability guarantees. Rastogi et al.~\cite{RaMeBrKoSi93} introduced predicate-wise serializability (PWSR), which preserves database invariants while permitting non-atomic transactions. 
 %
@@ -61,7 +63,7 @@ Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly
 generating histories and subsequently testing if the generated histories are 
 linearizable.
 
-- In a series of paper, Wang and Stoller put forth runtime techniques for detecting violations serializability (also termed \textit{atomicity})~\cite{WaSt06a} as well as fragments of serializability such as conflict serializability and view-serializability~\cite{WaSt06b}. They do so by  checking whether a given execution can be recombined to generate non-serializable executions.
+- In a series of papers, Wang and Stoller put forth runtime techniques for detecting violations serializability (also termed \textit{atomicity})~\cite{WaSt06a} as well as fragments of serializability such as conflict serializability and view-serializability~\cite{WaSt06b}. They do so by  checking whether a given execution can be recombined to generate non-serializable executions.
 %
 Sinha and Malik~\cite{SiMa10} also put forth a conflict serializability checker during runtime.
 
@@ -164,7 +166,7 @@ with States (VASS), which was proven to be in EXPSPACE~\cite{Ra78}.
 
 - result for conflict serializability
 
-Various work focus on checking conflict serializability, .e.g. Farzan and Mahusudan~\cite{FaMa08} present a monitoring-based decision procedure for conflict serializability of a bounded number of operations, and Flanagan et al.~\cite{FlFrYi08} present Velodrome --- a dynamic analyzer for conflict serializability. Additional dynamic approaches include~\cite{FlFr04, XuBoRa05, WaSt06a, CoOlPnTuZu07, EmMaMa10, SiMaWaGu11} and others.
+Various work focus on checking conflict serializability, .e.g. Farzan and Mahusudan~\cite{FaMa08} present a monitoring-based decision procedure for conflict serializability of a bounded number of operations, and Flanagan et al.~\cite{FlFrYi08} present Velodrome --- a dynamic analyzer for conflict serializability. Additional dynamic approaches include~\cite{FlFr04, XuBoRa05, WaSt06a, CoOlPnTuZu07, EmMaMa10, SiMaWaGu11a} and others.
 %
 %Other works~\cite{XuBoRa05} have also put forth techniques to automatically detect conflict-serializability violations.
 %
