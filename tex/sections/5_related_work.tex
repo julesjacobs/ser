@@ -35,7 +35,8 @@ Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a too
 %
 %Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis techniques for verifying view-serializability on specific program sub-types.
 
-\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention them?}
+\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
+them?}
 
 \todo{start}
 
@@ -127,10 +128,16 @@ These include the work of Vechev et al.~\cite{VeYaYo09}, built upon SPIN~\cite{H
 Static analysis techniques may prove linearizability for the 
 bounded~\cite{AmRiReSaYa07} and unbounded cases~\cite{BeLeMaRaSa08, Va09, 
 Va10}, but rely on heuristics and the manual/automatic annotation of 
-linearization points. Other techniques that depend or linearization points 
+linearization points. 
+%
+Lian and Feng~\cite{LiFe13} propose a sound program logic that can prove 
+linearizability with non-fixed linearization points.
+%
+Other techniques that depend or linearization points 
 include~\cite{OhRiVeYaYo10, ZhPeHa15, AbJoTr16}. 
 %
-\guy{Mark can you take a look at Va10 and ZhPeHa15?}
+\guy{Mark can you take a look at Va10, LiFe13, and ZhPeHa15?}
+
 We note that both model-checking techniques (e.g.,~\cite{CeRaZuChAl10}) and static analysis techniques which rely on linearization points are inconclusive, as any failed proof can be due to incorrect annotation of the linearization points, as previously observed~\cite{BoEmCoHa15}.
 %
 Shacham et al.~\cite{ShBrAiSaVeYa11} use dynamic analysis to identify violations of linearizability in concurrent data structures, and combine it with a manual proof when there technique did not find a violation.
