@@ -181,7 +181,10 @@ Various work focus on checking conflict serializability, .e.g. Farzan and Mahusu
 %
 %Other works~\cite{XuBoRa05} have also put forth techniques to automatically detect conflict-serializability violations.
 %
-Hatcliff et al>~\cite{HaRoDw04} demonstrate the use of the Bogor model checker~\cite{RoDwHa03} and check atomicity w.r.t. Liptopn's reduction theory of left/right movers~\cite{Li75} (which is reminiscent of conflict-serializability)
+Hatcliff et al.~\cite{HaRoDw04} demonstrate the use of the Bogor model checker~\cite{RoDwHa03} and check atomicity w.r.t. Liptopn's reduction theory of left/right movers~\cite{Li75} (which is reminiscent of conflict-serializability).
+%
+Elmas et al.~\cite{ElQaSeSuTa10} also use the notion of movers and present a technique to prove linearizability by iteratively rewriting an input program.
+\guy{Mark can you please check out ElQaSeSuTa10}
 %
 Von Praun and Gross~\cite{VoGr04} present an unsound static analysis technique for identifying potential atomicity violations. Additional static analysis techniques are based on type systems, e.g.~\cite{FlQa03, FlFrLiQa08}.
 %
