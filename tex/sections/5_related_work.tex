@@ -25,6 +25,17 @@ the real-time ordering of the transactions, i.e., it is not enough for the
 interleaving to be equivalent to a serial one, but the serial execution must 
 also preserve the ordering of the transactions.
 %
+%Strict serializability:
+%
+%Guerraoui et al.~\cite{GuHeJoSi08} present a algorithm for model checking 
+%strict serializability fro two threads. The work was later 
+%extended~\cite{GuHeSi11}, to include a manual proof for an arbitrary number of 
+%threads.
+%
+%Konig and Wehrheim recently proved that that it is possible to decide whether 
+%all executions of a program are strictly serializable, given that the 
+%transactions are live~\cite{KoWe21}.
+%
 Herlihy and Wing~\cite{HeWe87, HeWi90} defined Linearizability as a 
 similar notion to that of serializability, adapted from transactional programs 
 to concurrent data structures. In this setting, a linearizable data structure 
@@ -61,10 +72,12 @@ complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
 \subsubsection{Theoretical Results}
 %
 The \textit{membership problem} of serializability, is deciding whether a 
-specific interleaving is serializable. This has been proven to be NP-complete 
+specific interleaving is serializable. This has been proven to be 
+\texttt{NP}-complete 
 by Papadimitriou~\cite{Pa79}, a result that was later extended~\cite{BiEn19} to 
 other consistency models.
-Regarding linearizability, the easier, membership problem is NP-complete in 
+Regarding linearizability, the easier, membership problem is 
+\texttt{NP}-complete in 
 general, as proven by Gibbons and Korach~\cite{GiKo97}. Their result was later 
 extended to \textit{collections}~\cite{EmEn18}.
 \guy{Mark could you check EmEn18?}
@@ -74,7 +87,8 @@ pertains to deciding whether \textit{all} executions of a program are
 serializable.
 %
 We also note that the correctness problem of linearizability is in 
-EXPSPACE~\cite{AlMcPe96} when bounding the number of threads, linearizability 
+\texttt{EXPSPACE}~\cite{AlMcPe96} when bounding the number of threads, 
+linearizability 
 membership is undecidable otherwise, as proven by Bouajjani et 
 al.~\cite{BoEmEnHa13}. The authors also prove that the correctness problem of 
 linearizability becomes decidable on the fragment of finite-barrier programs. 
@@ -84,7 +98,7 @@ implies that serializability membership is in fact decidable.
 In followup work, Bouajjani et al. prove that linearizability is decidable in 
 the unbounded case for specific abstract state types~\cite{BoEmEnHa18}, in 
 which the authors rely on checking coverability in a Vector Addition System 
-with States (VASS), which was proven to be in EXPSPACE~\cite{Ra78}.
+with States (VASS), which was proven to be in \texttt{EXPSPACE}~\cite{Ra78}.
 %
 Our work can be viewed as the first tool to implement serializability proofs, 
 building upon the theoretical algorithm proposed by Bouajjani et 
@@ -251,34 +265,6 @@ Other techniques for linearizability proof include the use of theorem provers
 
 
 
-\todo{continue}
-
-%
- 
-
-%
-Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a tool that checks whether a given program execution is conflict serializable, in an eventually consistent data store. In a followup work~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-(conflict)-serializable behaviors in causally consistent databases.
-%
-%Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis 
-%techniques for verifying view-serializability on specific program sub-types.
-%
-\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
-them?}
-
-
-Work on Serializability;
-
-
-
-
-%
-\todo{for strict serializability}
-Guerraoui et al.~\cite{GuHeJoSi08} present a algorithm for model checking strict serializability fro two threads. The work was later extended~\cite{GuHeSi11}, to include a manual proof for an arbitrary number of threads.
-%
-Konig and Wehrheim recently proved that that it is possible to decide whether all executions of a program are strictly serializable, given that the transactions are live~\cite{KoWe21}.
-
-
-
 \section{Deciding conflict serializability}
 
 \subsubsection{Runtime enforcement}
@@ -302,10 +288,12 @@ program can be attained by a serial execution.
 
 \subsubsection{Theoretical results}
 From the theoretical perspective, Alur et al.~\cite{AlMcPe96} established that 
-correctness problem for conflict serializability is decidable (and in PSPACE) 
+correctness problem for conflict serializability is decidable (and in 
+\texttt{PSPACE}) 
 for a bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later 
 proved that decidability is also extended to unbounded systems (and 
-EXPTIME-complete). Their key insight reveals that while the conflict graph 
+\texttt{EXPTIME}-complete). Their key insight reveals that while the conflict 
+graph 
 becomes infinite, cycle detection, and thus conflict serializability, is 
 independent of transaction count. 
 %
@@ -346,6 +334,18 @@ Von Praun and Gross~\cite{VoGr04} present an unsound static analysis technique
 for identifying potential atomicity violations. Additional static analysis 
 techniques are based on type systems, e.g.~\cite{FlQa03, FlFrLiQa08}.
 %
+Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a 
+tool that checks whether a given program execution is conflict serializable, in 
+an eventually consistent data store. In a followup work~\cite{BrDiMuVe18} 
+further bridges these concepts by statically detecting 
+non-(conflict)-serializable behaviors in causally consistent databases.
+%
+%Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis 
+%techniques for verifying view-serializability on specific program sub-types.
+%
+\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
+	them?}
+%
 We also note that conflict serializability has been studied in relation to weak 
 memory models~\cite{EnFa16}.
 %
@@ -354,7 +354,7 @@ memory models~\cite{EnFa16}.
 
 
 
-\subsection{Petri Nets, VAS(S) \& Semilinear sets, Presburger arithmetic.}
+\subsection{Petri Nets, VAS(S), Semilinear sets  \& Presburger arithmetic.}
 \label{sec:related:petri}
 
 In addition, our work builds on both theoretical and practical advances in Petri net research~\cite{Mu89, Es96, Re12, EsNi24}. The undecidability we prove for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, HaThesis76} showing the undecidability of reachability set equivalence for Petri Nets. This undecidability originates in a series of reductions from Hilbert’s 10th problem, specifically the possibility of determining whether there exists an integer root for Diophantine equations, a problem that was later proven undecidable by Matijasēvič~\cite{Ma70}.
@@ -363,13 +363,30 @@ Jančar~\cite{Ja95} later provided an alternative proof to this undecidability r
 
 Furthermore, our approach also builds on Petri net reachability algorithms, which determine whether a given marking is attainable. While the solution is straightforward for bounded nets (through exhaustive enumeration), the solution for the unbounded case is highly nontrivial, and was first solved by Mayr~\cite{Ma81}, with subsequent improvements by Kosaraju~\cite{Ko82} and Lambert~\cite{La92}. Recent work~\cite{CzWo22} has also established this problem is Ackermann-complete, implying that, although decidable, it is practically infeasible to solve on large nets in the worst case.
 
-These theoretical advances in Petri Net reachability have given rise to a plethora of practical tools, including K-Reach~\cite{DiLa20}, DICER~\cite{XiZhLi21}, MARCIE~\cite{HeRoSc13}, and others. 
+These theoretical advances in Petri Net reachability have given rise to a 
+plethora of practical tools, including KReach~\cite{DiLa20}, 
+DICER~\cite{XiZhLi21}, MARCIE~\cite{HeRoSc13}, and others. 
 %
-Specifically, our implementation leverages SMPT~\cite{AmDa23}, a state-of-the-art Petri Net reachability tool that combines SMT-solving with structural invariants~\cite{AmBeDa21, AmDaHu22}. At a high level, SMPT formulates reachability as satisfiability queries (dispatched to the Z3 solver~\cite{DeBj08}) while curtailing the search space by proactively inferring invariants on the net's structure.
+Specifically, our implementation leverages SMPT~\cite{AmDa23}, a 
+state-of-the-art Petri Net reachability tool that combines SMT-solving with 
+structural invariants~\cite{AmBeDa21, AmDaHu22}. At a high level, SMPT 
+formulates reachability as satisfiability queries (dispatched to the Z3 
+solver~\cite{DeBj08}) while curtailing the search space~\footnote{As far as we 
+aware, the only two sound reachbility solvers for unbounded Petri Nets are 
+K-Reach~\cite{DiLa20} and SMPT~\cite{AmDa23}. Although only K-Reach is claimed 
+as complete, we decided in our implementation to use SMPT as it was 
+reported~\cite{Am23} that KReach is unable to solve various reachbaility 
+problems. 
+Still, both our Petri Net is encoded in the standard \texttt{.nnet} format, and 
+the property file is encoded in the standard \texttt{.XML} format --- in order 
+to be compatible with any of-the-shelf solvers.
+}.
 %
 %We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary of additional decidability results pertaining to Petri Nets.
 %
-\todo{add parts on invariant inference}
+Finally, we believe that our various, nontrivial optimizations, and first and 
+foremost --- the automatic invariant inference, are interesting in their own, 
+allowing the speedy termination of queries that otherwise timed-out. 
 
  
  
