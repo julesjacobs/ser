@@ -1,6 +1,6 @@
 \section{Related Work}
 \label{sec:relatedWork}
-
+\todo{5 papers (OOPSLA 2024 + another 4) from slack DM channel with Mark}
 % from the CAV-2010 Vafeiadis paper (+ some other papers in our slack RW thread):
 %
 %1. model checking techniques - find violations, but do not prove correctness as they work on finite-state systems
@@ -12,67 +12,218 @@
 \subsection{Notions of serializability.}
 \label{sec:related:notions-of-serializability}
 
-\jules{Main goal of this section is to place our notion of serializability in context of the literature. If our notion matches some existing, then we should say so. If it does not, we should somehow argue that it is novel but reasonable.}
-\todo{Describe the differences between our notion and the others}
-\todo{Find the notion(s) most closely related to ours.}
-
-Serializability was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for concurrent transaction execution. Their work also introduced what was later referred to as conflict serializability, a stricter variant that requires equivalence to a serial schedule solely by reordering non-conflicting operations. Papadimitriou~\cite{Pa79, Pa86} later proved that determining serializability even for a given, single interleaving is NP-hard. 
+Serializability was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as a 
+correctness condition for concurrent transaction execution. 
+Their work also introduced what was later referred to as \textit{conflict 
+serializability}, a stricter variant that requires equivalence to a serial 
+schedule solely by reordering non-conflicting operations (e.g., two reads by 
+different threads). 
 %
-Moreover, although conflict serializability is more conservative measure than serializability, it is easier for database schedulers to enforce during runtime by various approaches. 
+Strict serializability (a.k.a. SSR~\cite{Pa79}) is a stronger consistency 
+notion in which an execution need not only be serializable but also respects 
+the real-time ordering of the transactions, i.e., it is not enough for the 
+interleaving to be equivalent to a serial one, but the serial execution must 
+also preserve the ordering of the transactions.
 %
-These approaches are typically categorized as either \textit{pessimistic} locking approaches, e.g, Two-Phase Locking~\cite{BeHaGo87}, or alternatively --- \textit{optimistic} locking approaches, e.g., Optimistic Concurrency Control (OCC)~\cite{KuRo81, BuMo06}.
+Herlihy and Wing~\cite{HeWe87, HeWi90} defined Linearizability as a 
+similar notion to that of serializability, adapted from transactional programs 
+to concurrent data structures. In this setting, a linearizable data structure 
+implies that every concurrent execution 
+with operations on the data structure appears as if the operations occurred 
+atomically, while respecting real-time ordering and obeying the object's 
+specification. 
 %
-Both approaches ensure acyclicity in the conflict graph --- a necessary and sufficient condition for conflict serializability~\cite{SiMa10}. However, because these approaches \textit{ignore program semantics}, these may incorrectly reject executions that, although not conflict-serializable, are still valid serializable executions, i.e., have the same result as a serial execution. In terms of verification, Nagar and Jagannathan~\cite{KaJa18} presented an automatic static analysis technique to find violations of conflict serializability
+Equivalently, this can also be viewed as a case of strict serializability in 
+which each transaction consists of a single operation, operating on a single 
+concurrent object~\cite{WaSt06a}.
 %
-Sinha et al.~\cite{SiMaWaGu11b} present a sound and incomplete predictive analysis technique for detecting violations of conflict serializability.
-
-
-Several works have proposed relaxations of the (strong) consistency notion of serializability guarantees. Rastogi et al.~\cite{RaMeBrKoSi93} introduced predicate-wise serializability (PWSR), which preserves database invariants while permitting non-atomic transactions. 
+As transactions can be defined as a single ``action'' opearating on a 
+concurrent data structure, we also cover the related work on linearizability.
 %
-Other relaxations focus on weaker consistency models: Lamport’s causal consistency~\cite{La78}, later generalized to shared memory as causal memory~\cite{AhNeBuKoHu95} and implemented in systems like COPS~\cite{LlFrKaAn11}, has inspired extensive research on model checking and complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. 
+Zhang et al.~\cite{ZhChWa13}, relaxed the notion of linearizability to quasi 
+linearizability, and put forth a method to identify violations thereof in 
+concurrent data structures.
 %
-Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a tool that checks whether a given program execution is conflict serializable, in an eventually consistent data store. In a followup work~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-(conflict)-serializable behaviors in causally consistent databases.
+Rastogi et al.~\cite{RaMeBrKoSi93} introduced the relaxed notion of 
+predicate-wise serializability (PWSR), which preserves database invariants 
+while permitting non-atomic transactions.
 %
-%Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis techniques for verifying view-serializability on specific program sub-types.
+Other non-serializability-related notions focus on weaker consistency models: 
+Lamport’s causal 
+consistency~\cite{La78}, later generalized to shared memory~\cite{AhNeBuKoHu95} 
+and implemented in systems like 
+COPS~\cite{LlFrKaAn11} has inspired extensive research on model checking and 
+complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. 
 
-\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
-them?}
 
-\todo{start}
+\subsection{Deciding serializability and linearizability}
 
-Work on Serializability;
-
-- There are works that focus on manual proofs of serializability. For example, Tasiran~\cite{Ta08} proved serializability of the Bartok STM, and Colvin et al.~\cite{CoGrLuMo06} prove that a list-based set algorithm is linearizable by simulating the observed behavior with input/output automata.
-\guy{Mark could you take a 2nd look at CoGrLuMo06? Not sure if this is considered manual. One paper which I put in the slack channel mentioned that it semiautomatically verifies linearizability of an implementation.}
-Additional verification attempt of linearizability have been presented both with (e.g.~\cite{CoGrLuMo06}) and without (e.g.~\cite{DoGrLuMo04}) the use of proof assistants.
-
-- Strict serializability (a.k.a. SSR~\cite{Pa79}) is a stronger consistency notion in which an execution need not only be serializable but also respects the real-time ordering of the transactions, i.e., it is not enough for the interleaving to be equivalent to a serial one, but the serial execution must also preserve the ordering of the transactions.
+\subsubsection{Theoretical Results}
 %
-Guerraoui et al.~\cite{GuHeJoSi08} present a algorithm for model checking strict serializability fro two threads. The work was later extended~\cite{GuHeSi11}, to include a manual proof for an arbitrary number of threads.
+The \textit{membership problem} of serializability, is deciding whether a 
+specific interleaving is serializable. This has been proven to be NP-complete 
+by Papadimitriou~\cite{Pa79}, a result that was later extended~\cite{BiEn19} to 
+other consistency models.
+Regarding linearizability, the easier, membership problem is NP-complete in 
+general, as proven by Gibbons and Korach~\cite{GiKo97}. Their result was later 
+extended to \textit{collections}~\cite{EmEn18}.
+\guy{Mark could you check EmEn18?}
 %
-Konig and Wehrheim recently proved that that it is possible to decide whether all executions of a program are strictly serializable, given that the transactions are live~\cite{KoWe21}.
-
-
-Work on linearizability:
-
-- linearizability (defined by Herlihy and Wing~\cite{HeWe87, HeWi90}) of a concurrent data structure implies that every concurrent execution with operations on the data structure appears as if the operations occurred atomically, while respecting real-time ordering and obeying the object specifications. 
+The \textit{correctness problem} on the other hand, is much harder, and 
+pertains to deciding whether \textit{all} executions of a program are 
+serializable.
 %
-Equivalently, this can be viewed as a case of strict serializability in which each transaction consists of a single operation, operating on a single concurrent object~\cite{WaSt06a}.
-
-
-
-
-- techniques used directly and indirectly for testing 
-linearizability~\cite{WiGo93, PrGr12, PrGr13, EmEn17}. For example, 
-Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly 
-generating histories and subsequently testing if the generated histories are 
-linearizable.
-
-- In a series of papers, Wang and Stoller put forth runtime techniques for detecting violations serializability (also termed \textit{atomicity})~\cite{WaSt06a} as well as fragments of serializability such as conflict serializability and view-serializability~\cite{WaSt06b}. They do so by  checking whether a given execution can be recombined to generate non-serializable executions.
+We also note that the correctness problem of linearizability is in 
+EXPSPACE~\cite{AlMcPe96} when bounding the number of threads, linearizability 
+membership is undecidable otherwise, as proven by Bouajjani et 
+al.~\cite{BoEmEnHa13}. The authors also prove that the correctness problem of 
+linearizability becomes decidable on the fragment of finite-barrier programs. 
+As serializability can be viewed as a case in which there are no barriers, this 
+implies that serializability membership is in fact decidable. 
 %
-Sinha and Malik~\cite{SiMa10} also put forth a conflict serializability checker during runtime.
+In followup work, Bouajjani et al. prove that linearizability is decidable in 
+the unbounded case for specific abstract state types~\cite{BoEmEnHa18}, in 
+which the authors rely on checking coverability in a Vector Addition System 
+with States (VASS), which was proven to be in EXPSPACE~\cite{Ra78}.
+%
+Our work can be viewed as the first tool to implement serializability proofs, 
+building upon the theoretical algorithm proposed by Bouajjani et 
+al.~\cite{BoEmEnHa13}. While our setting differs from theirs (e.g., we derive 
+the serial specification directly from the program and provide a correctness 
+proof), the core connection makes our work an implementation of their approach 
+in spirit. However, despite the theoretical foundation, the implementation 
+itself is the key novelty—translating their algorithm into a practical, 
+scalable tool required significant advancements. The process was highly 
+non-trivial, demanding various optimizations such as automatic invariant 
+inference, automaton minimization, and additional techniques to handle 
+unbounded systems efficiently. To the best of our knowledge, ours is the first 
+tool capable of verifying serializability in unbounded domains.
+%
+While these contributions represent significant advances, to our knowledge, our 
+work is the first to:
+(i) Decide serializability universally --- \textit{considering all executions} 
+purely through program semantics and final states, independent of read/write 
+conflicts; 
+(ii) Support \textit{unbounded} transaction systems; and
+(iii) Provide a complete end-to-end implementation.
 
-- Linearizability has also been proven for specific data types. For example. 
+
+
+\subsubsection{Model checking and runtime verification}
+
+In a series of papers, Wang and Stoller put forth runtime techniques for 
+detecting violations serializability (also termed 
+\textit{atomicity})~\cite{WaSt06a} as well as fragments of serializability such 
+as conflict serializability and view-serializability~\cite{WaSt06b}. They do so 
+by  checking whether a given execution can be recombined to generate 
+non-serializable executions.
+%
+Sinha and Malik~\cite{SiMa10} also put forth a conflict serializability checker 
+during runtime.
+%
+The expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a 
+formal specification that validates whether only serializable executions (or 
+conflict-serializable~\cite{CoOlPnTuZu07}) always occur. 
+While TLA can naturally encode ``real'' serializability (based on final-state 
+equivalence), existing TLA-based approaches~\cite{SoVaVi20, Ho24} remain 
+limited to bounded transaction systems. This limitation stems from TLA/TLA+ 
+model checkers like TLC and Apalache~\cite{YuMaLa99, KoKuTr19}, which require 
+finite-state verification and cannot handle unbounded transaction counts.
+%
+Line-up~\cite{BuDeMuTa10} (built on the CHESS model 
+checker~\cite{MuQaBaBaNaNe08}) includes a heuristic-driven technique that 
+searches for violations of linearizability by enumerating all possible 
+serializations. Similar to spirit is LinTSO~\cite{BuGoMuYa12} which search for 
+linearizability violations in the Total Store
+Order (TSO) weak memory model.
+%
+Violat~\cite{EmEn19} generates tests to identify linearizability violations, by 
+enumeration linearizations efficiently, per program schema (instead of per 
+execution, as in~\cite{BuDeMuTa10}).
+%
+Additional model checking techniques were proposed by Burnim et 
+al.~\cite{BuNeSe11}, which is similar to  Line-up~\cite{BuDeMuTa10} but based 
+on leveraging bridge predicates~\cite{BuSe09}. 
+Liu et al.~\cite{LiChLiSuZhDo12} build upon PAT~\cite{SuLuDoPa09} (also used 
+in~\cite{LiChLiSu09,Zh11}) and verify linearizability through the lens of 
+refinement checking optimization, for a finite number of threads.
+%
+\guy{Mark, could you please check LiChLiSu09,Zh11}
+%
+Recently, Golovin et al.~\cite{GoKoVa25} presented \textit{RELINCHE}, a model 
+checker for bounded-linearizability, in which a predefined number of operations 
+can be invoked invoked.
+%
+Other automatic linearizability checking tools include the CDSSpec 
+specification checker under the C/C++ 11 memory model, and 
+Lincheck~\cite{KoDeSoTsAl23} for verifying linearizability in JVM by Ou and 
+Demsky~\cite{OuDe17}. 
+%
+Burckhardt et al.~\cite{BuAlMa07} employ a SAT solver and check for 
+linearizability violations of specific client programs.
+%
+As far as we are aware, unlike our algorithm, none of these tools afford 
+complete coverage for the case of unbounded threads.
+%
+Other model checking techniques (e.g.,~\cite{Fl04}) rely on specifying 
+linearization points, i.e., points in which the event occurs logically. We note 
+that identifying all such points can be quite challenging~\cite{VeYaYo09}.
+%
+These include the work of Vechev et al.~\cite{VeYaYo09}, built upon 
+SPIN~\cite{Ho97}, and extending the authors' PARGLIDER 
+tool~\cite{VeYa08}.~\footnote{Note that Vechev et al. can also apply their 
+technique without linearization points, but solely on bounded executions.}
+
+
+
+\subsubsection{Stataic analysis}
+
+Static analysis techniques may prove linearizability for the 
+bounded~\cite{AmRiReSaYa07, BeLeMaRaSa08, MaLeSaRaBe08} and unbounded 
+cases~\cite{BeLeMaRaSa08, Va09, 
+	Va10}, but typically rely on heuristics and the manual/automatic annotation 
+	of 
+linearization points. 
+%
+Lian and Feng~\cite{LiFe13} propose a sound program logic that can prove 
+linearizability with non-fixed linearization points.
+%
+Other techniques that depend or linearization points 
+include~\cite{OhRiVeYaYo10, ZhPeHa15, AbJoTr16}. 
+%
+\guy{Mark can you take a look at Va10, LiFe13, and ZhPeHa15?}
+%
+We note that both model-checking techniques (e.g.,~\cite{CeRaZuChAl10}) and 
+static analysis techniques which rely on linearization points are inconclusive, 
+as any failed proof can be due to incorrect annotation of the linearization 
+points, as previously observed~\cite{BoEmCoHa15}.
+%
+\todo{check if the next two lines correspond to static analysis}
+Shacham et al.~\cite{ShBrAiSaVeYa11} use dynamic analysis to identify 
+violations of linearizability in concurrent data structures, and combine it 
+with a manual proof when there technique did not find a violation.
+%
+We also mention the symbolic-reasoning-based (incomplete) approach by Emmi et 
+al.~\cite{EmEnHa15} to identify violations of \textit{observational refinement} 
+--- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
+BoEmCoHa15}.
+%
+
+\subsubsection{Manual proofs and results for specific data types}
+
+Tasiran~\cite{Ta08} proved serializability of the Bartok STM, and Colvin et 
+al.~\cite{CoGrLuMo06} prove that a list-based set algorithm is linearizable by 
+simulating the observed behavior with input/output automata.
+%
+\guy{Mark could you take a 2nd look at CoGrLuMo06? Not sure if this is 
+considered manual. One paper which I put in the slack channel mentioned that it 
+semiautomatically verifies linearizability of an implementation.}
+%
+Additional verification attempt of linearizability have been presented both 
+with (e.g.~\cite{CoGrLuMo06}) and without (e.g.~\cite{DoGrLuMo04}) the use of 
+proof assistants.
+%
+Linearizability has also been proven for specific data types. For example. 
 Wing and Gong~\cite{WiGo93} prove it for  (unbounded) FIFO queues, (unbounded) 
 priority queues and other data structures. Chakraborty et al.~\cite{ChHeSeVa15} 
 later provided a method for checking linearizability of queue-based algorithms, 
@@ -84,149 +235,127 @@ number of threads.
 Bouajjani et al.~\cite{BoEnWa17} present a recursive algorithm for idnetifying 
 linearizability violations in priority queues (based on register automata), in 
 a method similar to the one for finding linearizability violations stacks and 
-(regular) queues~\cite{BoEmEnHa18}, nonfinite-state automata.
+(regular) queues~\cite{BoEmEnHa18}.
 
 
+\subsubsection{Additional approaches}
 
-We define a recursive procedure
-queues requires register automata w
-
-
-
-
-- verification approaches for linearizability:
-
-
-
-(i) model checking techniques include:
-
-Line-up~\cite{BuDeMuTa10} (built on the CHESS model checker~\cite{MuQaBaBaNaNe08}) includes a heuristic-driven technique that searches for violations of linearizability by enumerating all possible serializations. Similar to spirit is LinTSO~\cite{BuGoMuYa12} which search for linearizability violations in the Total Store
-Order (TSO) weak memory model.
+Other techniques attempt to generate tests for linearizability~\cite{WiGo93, 
+PrGr12, PrGr13, EmEn17}. For example, 
+Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly 
+generating histories and subsequently testing if the generated histories are 
+linearizable.
 %
-Violat~\cite{EmEn19} generates tests to identify linearizability violations, by 
-enumeration linearizations efficiently, per program schema (instead of per 
-execution, as in~\cite{BuDeMuTa10}).
-%
-Additional model checking techniques were proposed by Burnim et al.~\cite{BuNeSe11}, which is similar to  Line-up~\cite{BuDeMuTa10} but based on leveraging bridge predicates~\cite{BuSe09}. 
-Liu et al.~\cite{LiChLiSuZhDo12} build upon PAT~\cite{SuLuDoPa09} (also used in~\cite{LiChLiSu09,Zh11}) and verify linearizability through the lens of refinement checking optimization, for a finite number of threads.
-%
-\guy{Mark, could you please check LiChLiSu09,Zh11}
-%
-Recently, Golovin et al.~\cite{GoKoVa25} presented \textit{RELINCHE}, a model checker for bounded-linearizability, in which a predefined number of operations can be invoked invoked.
-%
-Other automatic linearizability checking tools include the CDSSpec specification checker under the C/C++ 11 memory model, and Lincheck~\cite{KoDeSoTsAl23} for verifying linearizability in JVM by Ou and Demsky~\cite{OuDe17}. 
-%
-Burckhardt et al.~\cite{BuAlMa07} employ a SAT solver and check for linearizability violations of specific client programs.
-%
-As far as we are aware, unlike our algorithm, none of these tools afford complete coverage for the case of unbounded threads.
-%
-
-Other model checking techniques (e.g.,~\cite{Fl04}) rely on specifying linearization points, i.e., points in which the event occurs logically. We note that identifying all such points can be quite challenging~\cite{VeYaYo09}.
-%
-These include the work of Vechev et al.~\cite{VeYaYo09}, built upon SPIN~\cite{Ho97}, and extending the authors' PARGLIDER tool~\cite{VeYa08}~\footnote{Note that Vechev et al. can also apply their technique without linearization points, but solely on bounded executions.}
-%
-Static analysis techniques may prove linearizability for the 
-bounded~\cite{AmRiReSaYa07, BeLeMaRaSa08, MaLeSaRaBe08} and unbounded cases~\cite{BeLeMaRaSa08, Va09, 
-Va10}, but rely on heuristics and the manual/automatic annotation of 
-linearization points. 
-%
-Lian and Feng~\cite{LiFe13} propose a sound program logic that can prove 
-linearizability with non-fixed linearization points.
-%
-Other techniques that depend or linearization points 
-include~\cite{OhRiVeYaYo10, ZhPeHa15, AbJoTr16}. 
-%
-\guy{Mark can you take a look at Va10, LiFe13, and ZhPeHa15?}
-
-We note that both model-checking techniques (e.g.,~\cite{CeRaZuChAl10}) and static analysis techniques which rely on linearization points are inconclusive, as any failed proof can be due to incorrect annotation of the linearization points, as previously observed~\cite{BoEmCoHa15}.
-%
-Shacham et al.~\cite{ShBrAiSaVeYa11} use dynamic analysis to identify violations of linearizability in concurrent data structures, and combine it with a manual proof when there technique did not find a violation.
-%
-We also mention the symbolic-reasoning-based (incomplete) approach by Emmi et al.~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, BoEmCoHa15}.
-%
-Zhang et al.~\cite{ZhChWa13}, relaxed the notion of linearizability to quasi linearizability, and put forth a method to identify violations thereof in concurrent data structures.
+Other techniques for linearizability proof include the use of theorem provers 
+(e.g.~\cite{CoDoGr05, DeScWe11}).
 
 
 
-\todo{Guy: read more about shape/static analysis techniques}
+\todo{continue}
+
+%
+ 
+
+%
+Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a tool that checks whether a given program execution is conflict serializable, in an eventually consistent data store. In a followup work~\cite{BrDiMuVe18} further bridges these concepts by statically detecting non-(conflict)-serializable behaviors in causally consistent databases.
+%
+%Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis 
+%techniques for verifying view-serializability on specific program sub-types.
+%
+\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
+them?}
+
+
+Work on Serializability;
 
 
 
 
-(ii) Other techniques for linearizability proof include the use of theorem provers (e.g.~\cite{CoDoGr05, DeScWe11}).
+%
+\todo{for strict serializability}
+Guerraoui et al.~\cite{GuHeJoSi08} present a algorithm for model checking strict serializability fro two threads. The work was later extended~\cite{GuHeSi11}, to include a manual proof for an arbitrary number of threads.
+%
+Konig and Wehrheim recently proved that that it is possible to decide whether all executions of a program are strictly serializable, given that the transactions are live~\cite{KoWe21}.
 
 
-- complexity results for linearizability:
 
-Conflict serializability
+\section{Deciding conflict serializability}
 
-Alur et al.~\cite{AlMcPe96} prove that conflict serializability is decidable 
-(in PSPACE) and that linearizability is decidable (in EXPSPACE) for concurrent 
-system with a bounded number of threads.
+\subsubsection{Runtime enforcement}
+Although conflict serializability is more conservative measure than 
+serializability, it is easier for database schedulers to enforce during 
+runtime, either by \textit{pessimistic} locking approaches (e.g, Two-Phase 
+Locking~\cite{BeHaGo87}), or \textit{optimistic} locking 
+approaches (e.g., OCC~\cite{KuRo81, BuMo06}).
 %
-Bouajjani et al.~\cite{BoEmEnHa13} extend these results and prove that conflict serializability is decidable even for the unbounded case. The authors also show that linearizability, on the other hand, in undecidable for the unbounded case, except for setting (which the authors define as \textit{bounded-barrier linearizability}) in which the problem is decidable for an unbound number of operations.
+Both approaches ensure acyclicity in the conflict graph --- a necessary and 
+sufficient condition for conflict serializability~\cite{SiMa10}. However, 
+because these approaches \textit{ignore program semantics}, these may 
+incorrectly reject executions that, although not conflict-serializable, are 
+still valid serializable executions, i.e., have the same result as a serial 
+execution. 
 %
-We note that the proof of Bouajjani et al. is reminiscent to our setting, as the authors also reduce the problem to a Petri Net reachability problem.
+We note that we focus on the notion of (``real'') serializability, which takes 
+into account the program semantics, and regards whether the final result of the 
+program can be attained by a serial execution.
 %
-However, as far as we are aware, there is no tool implementing this approach and verifying linearizability with Petri Nets.
-%
-In followup work, Bouajjani et al. prove that linearizability is decidable in 
-the unbounded case for specific abstract state types~\cite{BoEmEnHa18}, in 
-which the authors rely on checking coverability in a Vector Addition System 
-with States (VASS), which was proven to be in EXPSPACE~\cite{Ra78}.
 
-- result for conflict serializability
+\subsubsection{Theoretical results}
+From the theoretical perspective, Alur et al.~\cite{AlMcPe96} established that 
+correctness problem for conflict serializability is decidable (and in PSPACE) 
+for a bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later 
+proved that decidability is also extended to unbounded systems (and 
+EXPTIME-complete). Their key insight reveals that while the conflict graph 
+becomes infinite, cycle detection, and thus conflict serializability, is 
+independent of transaction count. 
+%
+%By modeling transactions via Vector Addition Systems (equivalent to Petri 
+%Nets), they provide a finite framework for analyzing infinite behaviors. This 
+%approach inspired our use of Petri Nets to capture Int(S).
+%
+\subsubsection{Approaches and techniques}
 
-Various work focus on checking conflict serializability, .e.g. Farzan and Mahusudan~\cite{FaMa08} present a monitoring-based decision procedure for conflict serializability of a bounded number of operations, and Flanagan et al.~\cite{FlFrYi08} present Velodrome --- a dynamic analyzer for conflict serializability. Additional dynamic approaches include~\cite{FlFr04, XuBoRa05, WaSt06a, CoOlPnTuZu07, EmMaMa10, SiMaWaGu11a} and others.
+Various work focus on checking conflict serializability,.e.g., Farzan and 
+Mahusudan~\cite{FaMa08} present a monitoring-based decision procedure for 
+conflict serializability of a bounded number of operations, and Flanagan et 
+al.~\cite{FlFrYi08} present Velodrome --- a dynamic analyzer for conflict 
+serializability. Additional dynamic approaches include~\cite{FlFr04, XuBoRa05, 
+WaSt06a, CoOlPnTuZu07, EmMaMa10, SiMaWaGu11a} and others.
 %
-%Other works~\cite{XuBoRa05} have also put forth techniques to automatically detect conflict-serializability violations.
+%Other works~\cite{XuBoRa05} have also put forth techniques to automatically 
+%detect conflict-serializability violations.
 %
-Hatcliff et al.~\cite{HaRoDw04} demonstrate the use of the Bogor model checker~\cite{RoDwHa03} and check atomicity w.r.t. Liptopn's reduction theory of left/right movers~\cite{Li75} (which is reminiscent of conflict-serializability).
+Hatcliff et al.~\cite{HaRoDw04} demonstrate the use of the Bogor model 
+checker~\cite{RoDwHa03} and check atomicity w.r.t. Liptopn's reduction theory 
+of left/right movers~\cite{Li75} (which is reminiscent of 
+conflict-serializability).
 %
 Elmas et al.~\cite{ElQaSeSuTa10} also use the notion of movers and present an 
 (incomplete) technique to prove linearizability by iteratively rewriting an 
 input program.
 \guy{Mark can you please check out ElQaSeSuTa10}
 %
-Von Praun and Gross~\cite{VoGr04} present an unsound static analysis technique for identifying potential atomicity violations. Additional static analysis techniques are based on type systems, e.g.~\cite{FlQa03, FlFrLiQa08}.
+Nagar and Jagannathan~\cite{KaJa18} presented an 
+automatic static analysis technique to find violations of conflict 
+serializability.
 %
-We also note that conflict serializability has been studied in relation to weak memory models~\cite{EnFa16}.
-
-
-\todo{end}
-
-
-\subsection{Deciding serializability.}
-\label{sec:related:deciding-serializability}
-
-\jules{Main goal of this section is to describe all the related work on deciding serializability, from deciding it on traces, to bounded model checking, to unbounded ones. Key distinction is on two axes: (1) the notion of serializability used (2) whether they \emph{prove} serializability of unbounded systems or whether they just model check.}
-
-The \textit{membership problem} of serializability, is deciding whether a specific interleaving is serializable. This has been proven to be NP-complete by Papadimitriou~\cite{Pa79}, a result that was later extended~\cite{BiEn19} to other consistency models.
+Sinha et al.~\cite{SiMaWaGu11b} present a sound and incomplete predictive 
+analysis technique for detecting violations of conflict serializability.
 %
-The \textit{correctness problem} on the other hand, is much harder, and pertains to deciding whether \textit{all} executions of a program ar serializable.
-
+Von Praun and Gross~\cite{VoGr04} present an unsound static analysis technique 
+for identifying potential atomicity violations. Additional static analysis 
+techniques are based on type systems, e.g.~\cite{FlQa03, FlFrLiQa08}.
 %
-Alur et al.~\cite{AlMcPe96} established that correctness problem for conflict serializability is decidable (and in PSPACE) for a bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later proved that decidability is also extended to unbounded systems (and EXPTIME-complete). Their key insight reveals that while the conflict graph becomes infinite, cycle detection, and thus conflict serializability, is independent of transaction count. By modeling transactions via Vector Addition Systems (equivalent to Petri Nets), they provide a finite framework for analyzing infinite behaviors. This approach inspired our use of Petri Nets to capture Int(S).
+We also note that conflict serializability has been studied in relation to weak 
+memory models~\cite{EnFa16}.
 %
-We also note that the correctness problem of linearizability is in 
-EXPSPACE~\cite{AlMcPe96} when bounding the number of threads, and undecidable 
-otherwise~\cite{BoEmEnHa13}. The easier, membership problem is NP-complete in 
-general, as proven by Gibbons and Korach~\cite{GiKo97}. Their result was later 
-extended to \textit{collections}~\cite{EmEn18}.
-\guy{Mark could you check EmEn18?}
 
-A separate research direction attempts to \textit{directly} verify serializability (or conflict-serializability~\cite{CoOlPnTuZu07}), without limiting it to conflict restrictions, as done in other works. Towards this end, the expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a formal specification that validates whether only serializable executions occur. While TLA can naturally encode ``real'' serializability (based on final-state equivalence), existing TLA-based approaches~\cite{SoVaVi20, Ho24} remain limited to bounded transaction systems. This limitation stems from TLA/TLA+ model checkers like TLC and Apalache~\cite{YuMaLa99, KoKuTr19}, which require finite-state verification and cannot handle unbounded transaction counts.
 
-%
-While these contributions represent significant advances, to our knowledge, our work is the first to:
-(i) Decide serializability universally --- \textit{considering all executions} purely through program semantics and final states, independent of read/write conflicts; 
-(ii) Support \textit{unbounded} transaction systems; and
-(iii) Provide a complete end-to-end implementation.
+
+
 
 \subsection{Petri Nets, VAS(S) \& Semilinear sets, Presburger arithmetic.}
 \label{sec:related:petri}
-
-\jules{The main goal of this section is to place our technical methods in context. Should include stuff on petri reachability as well as semilinear sets / presburger. We should contrast our implementation methods with existing stuff as far as we want to claim novelty (e.g., of the semilinear set implementation and heuristics or of the Petri net reduction heuristics)}
 
 In addition, our work builds on both theoretical and practical advances in Petri net research~\cite{Mu89, Es96, Re12, EsNi24}. The undecidability we prove for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, HaThesis76} showing the undecidability of reachability set equivalence for Petri Nets. This undecidability originates in a series of reductions from Hilbert’s 10th problem, specifically the possibility of determining whether there exists an integer root for Diophantine equations, a problem that was later proven undecidable by Matijasēvič~\cite{Ma70}.
 %
@@ -239,7 +368,8 @@ These theoretical advances in Petri Net reachability have given rise to a pletho
 Specifically, our implementation leverages SMPT~\cite{AmDa23}, a state-of-the-art Petri Net reachability tool that combines SMT-solving with structural invariants~\cite{AmBeDa21, AmDaHu22}. At a high level, SMPT formulates reachability as satisfiability queries (dispatched to the Z3 solver~\cite{DeBj08}) while curtailing the search space by proactively inferring invariants on the net's structure.
 %
 %We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary of additional decidability results pertaining to Petri Nets.
-
+%
+\todo{add parts on invariant inference}
 
  
  
