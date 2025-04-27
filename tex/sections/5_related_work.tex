@@ -187,6 +187,11 @@ Demsky~\cite{OuDe17}.
 Burckhardt et al.~\cite{BuAlMa07} employ a SAT solver and check for 
 linearizability violations of specific client programs.
 %
+We also note the symbolic-reasoning-based (incomplete) approach by Emmi et 
+al.~\cite{EmEnHa15} to identify violations of \textit{observational refinement} 
+--- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
+	BoEmCoHa15}.
+%
 As far as we are aware, unlike our algorithm, none of these tools afford 
 complete coverage for the case of unbounded threads.
 %
@@ -224,16 +229,7 @@ the static analysis techniques which rely on linearization points are
 inconclusive, as any failed proof can be due to incorrect annotation of the 
 linearization points, as previously observed~\cite{BoEmCoHa15}.
 %
-\todo{check if the next two lines correspond to static analysis}
-Shacham et al.~\cite{ShBrAiSaVeYa11} use dynamic analysis to identify 
-violations of linearizability in concurrent data structures, and combine it 
-with a manual proof when their technique did not find a violation.
-%
-We also mention the symbolic-reasoning-based (incomplete) approach by Emmi et 
-al.~\cite{EmEnHa15} to identify violations of \textit{observational refinement} 
---- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
-BoEmCoHa15}.
-%
+
 
 \subsubsection{Manual proofs and results for specific data types}
 
@@ -268,6 +264,12 @@ and (regular) queues~\cite{BoEmEnHa18}.
 
 \subsubsection{Additional approaches}
 
+%
+Some methods combine multiple approaches, e.g., Shacham et 
+al.~\cite{ShBrAiSaVeYa11} use dynamic analysis to identify 
+violations of linearizability in concurrent data structures, and combine it 
+with a manual proof when their technique did not find a violation.
+%
 Other techniques attempt to generate tests for linearizability~\cite{WiGo93, 
 PrGr12, PrGr13, EmEn17}. For example, 
 Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly 
