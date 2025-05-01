@@ -31,8 +31,6 @@ the `ISL_PREFIX` environment variable.
 ## TODO
 - dependencies for SMPT need to be clarified (Guy)
 - simpler backward/forward optimizations (instead of Guy's original one)
-- Example: lock manager (CAS)
-- Example: BGP routing
 
 ## Working examples:
 - simple_nonser (NOT serializable, terminates + TRUE)
