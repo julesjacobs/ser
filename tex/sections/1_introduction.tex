@@ -274,3 +274,56 @@ example - 6
 
 
 \newpage
+
+example - 7
+
+\begin{minipage}[t]{1.0\textwidth}
+	\begin{lstlisting}[caption={BGP (non serializable --- cycles can appear)}]
+    // initialize accounts
+    G := 0
+    
+    request policy_update:
+    if (?):
+        G := 1  // green policy 
+    else:
+        G := 0 // red policy
+		
+    request route_from_west:
+        visited_east := 0
+        current := 1
+        while (current == 2) or (current == 3): // still routing        
+            if (current == 1): // west (switch 1)
+                if (G == 1): // green policy
+                    current := 2
+                else: // red policy
+                    current := 1
+            if (current == 2): // east (switch 2)
+                visited_east := 1
+                if (G == 1): // green policy
+                    current := 3
+                else: // red policy
+                    current := 1
+ 
+            yield
+		
+        return current + current + visited_east
+        
+    request route_from_east:
+        ... // dual case     		        
+	\end{lstlisting}
+\end{minipage}
+
+
+%// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
+%else:
+%G := 0 // red policy
+%// [out, switch 0] <--- [WEST, switch 1] <--- [EAST, switch 2] 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.65\linewidth]{plots/BgpColoredRouting.pdf}
+	\caption{Routing policy in example 7.}
+	\label{fig:pdfimage}
+\end{figure}
+
+\newpage
