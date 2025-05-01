@@ -1,6 +1,7 @@
 \documentclass[acmsmall,review,anonymous,nonacm]{acmart}
 \usepackage{mathpartir}
 \usepackage{cleveref}
+\usepackage{listings}
 
 % ----- Macros -----
 
@@ -17,6 +18,34 @@
 \newcommand{\whilekw}{\kw{while}}
 \newcommand{\yieldkw}{\kw{yield}}
 \newcommand{\requestkw}{\kw{request}}
+
+\lstdefinelanguage{CustomPseudoCode}{
+	morekeywords={request, yield, return, if, else, while},
+	morecomment=[l]{//},
+	morestring=[b]",
+	sensitive=true
+}
+
+\lstset{
+	language=CustomPseudoCode,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\color{blue}\bfseries,
+	commentstyle=\color{gray}\itshape,
+	stringstyle=\color{orange},
+	numbers=left,
+	numberstyle=\tiny,
+	stepnumber=1,
+	numbersep=5pt,
+	backgroundcolor=\color{white},
+	frame=single,
+	rulecolor=\color{black},
+	tabsize=2,
+	captionpos=b,
+	breaklines=true,
+	breakatwhitespace=false,
+	showstringspaces=false,
+	escapeinside={(*@}{@*)},  % used for coloring "?" below
+}
 
 
 % ----- Main paper -----
