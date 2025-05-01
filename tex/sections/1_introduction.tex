@@ -31,44 +31,44 @@ bla 1
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{minipage}[t]{\textwidth}
 		\begin{lstlisting}[caption={Without yield or lock (serializable)}]
-			request foo: 
-			    X := 1 
-			    // no yield
-			    y := X 
-			    X := 0
-			    return y 
+    request foo: 
+        X := 1 
+        // no yield
+        y := X 
+        X := 0
+        return y 
 		\end{lstlisting}
 	\end{minipage}
 	\vspace{1em}
 	\begin{minipage}[t]{\textwidth}
 		\begin{lstlisting}[caption={With yield (not serializable)}]
-			request foo: 
-			    X := 1 
-			    yield 
-			    y := X + 1
-			    X := 0
-			    return y 	
+    request foo: 
+        X := 1 
+        yield 
+        y := X + 1
+        X := 0
+        return y 	
 		\end{lstlisting}
 	\end{minipage}
 \end{minipage}%
 \hfill
-\begin{minipage}[t]{0.48\textwidth}
+\begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={With yield and lock (serializable)}]
-		request foo: 
-		    // lock
-		    while (L == 1): 
-		        yield
-		    L := 1 
-		
-		    X := 1
-		    yield
-		    y := X 
-		    X := 0
-		
-		    // unlock    
-		    L := 0
-		
-		    return y 
+    request foo: 
+        // lock
+        while (L == 1): 
+            yield
+        L := 1 
+
+        X := 1
+        yield
+        y := X 
+        X := 0
+
+        // unlock    
+        L := 0
+
+        return y 
 	\end{lstlisting}
 \end{minipage}
 
@@ -77,7 +77,7 @@ bla 2
 
 % Second row
 \noindent
-\begin{minipage}[t]{0.48\textwidth}
+\begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable: {(A,0),(A,0)}}]
 		request A: 
 		    x := FLAG 
@@ -92,7 +92,7 @@ bla 2
 	\end{lstlisting}
 \end{minipage}%
 \hfill
-\begin{minipage}[t]{0.48\textwidth}
+\begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable}]
 		request A: 
 		    x := FLAG
@@ -112,7 +112,7 @@ bla 3
 
 % Third row
 \noindent
-\begin{minipage}[t]{0.48\textwidth}
+\begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Fred (serializable)}]
 		request incr: 
 		    while (X == 3):
@@ -131,7 +131,7 @@ bla 3
 	\end{lstlisting}
 \end{minipage}
 \hfill
-\begin{minipage}[t]{0.48\textwidth}
+\begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Fred2 (not serializable)}]
 		request incr:
 		    while (X == 3):
