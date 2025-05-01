@@ -67,7 +67,6 @@ bla 1
 
         // unlock    
         L := 0
-
         return y 
 	\end{lstlisting}
 \end{minipage}
@@ -151,6 +150,8 @@ bla 3
 \end{minipage}
 	
 
+bla-4
+
 \begin{minipage}[t]{1.0\textwidth}
 \begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sume of 0 active monitors)}]
 	// initialize both monitors to be active
@@ -179,5 +180,99 @@ bla 3
 	
 %only 0 in non-serializable runs!
 
+
+bla-5
+
+
+\noindent
+\begin{minipage}[t]{0.45\textwidth}
+	\begin{lstlisting}[caption={bank (serializable)}]
+    // initialize accounts
+    A := 100
+    B := 50
+    
+    request transfer: 
+        // transfer 50$
+        A := A - 50
+        // no yield
+        B := B + 50
+        return A + B
+			
+    request interest: 
+        // add a 100% interest
+        A := A + A
+        // no yield
+        B := B + B
+        return A + B	      		        
+		\end{lstlisting}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+	\begin{lstlisting}[caption={bank with yields (non serializable)}]
+    // initialize accounts
+    A := 100
+    B := 50
+		
+    request transfer: 
+        // transfer 50$
+        A := A - 50
+        yield
+        B := B + 50
+        return A + B
+
+    request interest: 
+        // add a 100% interest
+        A := A + A
+        yield
+        B := B + B
+        return A + B	      		        
+	\end{lstlisting}
+\end{minipage}
 	
+%\newpage
+
+
+bla-6
+
+
+% Second row
+\noindent
+\begin{minipage}[t]{0.45\textwidth}
+	\begin{lstlisting}[caption={Complex while (serializable)}]
+    request flip: 
+        X := 1 - X 
+    
+    request main:
+        i := 5
+        while (i > 0):
+            while (X == 0):
+                pass
+            while (X == 1):
+                pass
+            i := i - 1
+        
+        return 1       
+		\end{lstlisting}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+	\begin{lstlisting}[caption={Complex while with yields (not serializable)}]
+    request flip: 
+        X := 1 - X 
+
+    request main:
+        i := 5
+        while (i > 0):
+            while (X == 0):
+                yield
+            while (X == 1):
+                yield
+            i := i - 1
+
+        return 1        
+			\end{lstlisting}
+\end{minipage}
+
+
+
 \newpage
