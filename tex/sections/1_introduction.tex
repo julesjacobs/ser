@@ -152,13 +152,10 @@ bla 3
 	
 
 \begin{minipage}[t]{1.0\textwidth}
-\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return 0 active monitors)}]
-    request init:
-        if (X == 0):
-            N_1_ACTIVE := 1
-            N_2_ACTIVE := 1
-            X := 1
-	
+\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sume of 0 active monitors)}]
+	// initialize both monitors to be active
+    N_1_ACTIVE := 1
+    N_2_ACTIVE := 1
 	
     request main:
         while (X == 0):
@@ -167,20 +164,16 @@ bla 3
         // take snapshot
         n_1_active_snapshot := N_1_ACTIVE
         n_2_active_snapshot := N_2_ACTIVE
-
-        yield // snapshot taken
+        yield
 		
-        if (n_1_active_snapshot == 1): 
-            if (n_2_active_snapshot == 1):
-                // both nodes active 
-                if (?): // choose whether to deactivate a monitor
-                    if (?): // choose which monitor to deactivate
-                        N_1_ACTIVE := 0
-                    else:
-                        N_2_ACTIVE := 0
+        if (n_1_active_snapshot == 1) and (n_2_active_snapshot == 1):
+            // if both nodes active --- choose which one to deactivate 
+            if (?): 
+                N_1_ACTIVE := 0
+            else:
+                N_2_ACTIVE := 0
 
-        // total active nodes
-        return N_1_ACTIVE + N_2_ACTIVE 
+        return N_1_ACTIVE + N_2_ACTIVE  // total active nodes
 \end{lstlisting}
 \end{minipage}
 	
