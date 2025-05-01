@@ -167,7 +167,16 @@ pub fn constraints_to_xml(constraints: &Constraints, id: &str) -> String {
 "#,
         id
     );
-
+    // If no constraints are present, add a clause that is always false
+    if constraints.constraints.is_empty() {
+        xml.push_str(
+                         r#"            <integer-eq>
+              <integer-constant>1</integer-constant>
+              <integer-constant>0</integer-constant>
+            </integer-eq>
+"#,
+                     );
+    } else {
     // Each top-level group is a disjunct
     for and_clause in &constraints.constraints {
         // If we have multiple constraints in a group, wrap in conjunction
@@ -193,6 +202,7 @@ pub fn constraints_to_xml(constraints: &Constraints, id: &str) -> String {
             xml.push_str("            </conjunction>\n");
         }
     }
+        }
 
     xml.push_str(
         r#"          </disjunction>
