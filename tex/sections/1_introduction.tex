@@ -71,6 +71,102 @@ example - 1
 	\end{lstlisting}
 \end{minipage}
 
+
+\todo{guy - START}
+
+
+
+\lstset{
+	basicstyle=\ttfamily\small,
+	language=C++,
+	keywordstyle=\color{blue},
+}
+
+
+	
+%	% Tuple with inline code inside
+%	\[
+%	\left( x, \text{\lstinline!for (int i = 0; i < n; ++i) {...}!}, y^2 \right)
+%	\]
+
+\[
+\Bigg(
+\text{\Large\textcolor{ForestGreen}{[X=0]}},\quad
+\bigg(
+\begin{tabular}{c c}
+	\text{\large\textcolor{red}{[y=0]}},\quad & 
+	\begin{minipage}{0.14\linewidth}
+		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+X := 1 
+yield 
+y := X + 1
+X := 0
+return y
+		\end{lstlisting}
+	\end{minipage}
+\end{tabular}
+\bigg)
+\Bigg)
+\Longrightarrow
+\Bigg(
+\text{\Large\textcolor{ForestGreen}{[X=1]}},\quad
+\bigg(
+\begin{tabular}{c c}
+\text{\large\textcolor{red}{[y=0]}},\quad & 
+	\begin{minipage}{0.14\linewidth}
+		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+y := X + 1
+X := 0
+return y
+		\end{lstlisting}
+	\end{minipage}
+\end{tabular}
+\bigg)
+\Bigg)
+\]
+
+
+
+\[
+\Bigg(
+\text{\Large\textcolor{ForestGreen}{[X=1]}},\quad
+\bigg(
+\begin{tabular}{c c}
+	\text{\large\textcolor{red}{[y=0]}},\quad & 
+	\begin{minipage}{0.14\linewidth}
+			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+y := X + 1
+X := 0
+return y
+				\end{lstlisting}
+		\end{minipage}
+\end{tabular}
+\bigg)
+\Bigg)
+\Longrightarrow
+\Bigg(
+\text{\Large\textcolor{ForestGreen}{[X=0]}},\quad
+\bigg(
+\begin{tabular}{c c}
+\text{\large\textcolor{red}{[y=1]}},\quad & 
+	\begin{minipage}{0.14\linewidth}
+			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+//empty
+				\end{lstlisting}
+		\end{minipage}
+\end{tabular}
+\bigg)
+\Bigg)
+\]
+
+
+
+
+\todo{guy - END}
+
+
+
+
 \vspace{2em}
 example - 2
 
