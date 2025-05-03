@@ -1,6 +1,6 @@
 \section{Related Work}
 \label{sec:relatedWork}
-\todo{5 papers (OOPSLA 2024 + another 4) from the slack DM channel with Mark}
+
 % from the CAV-2010 Vafeiadis paper (+ some other papers in our slack RW thread):
 %
 %1. model checking techniques - find violations, but do not prove correctness as they work on finite-state systems
@@ -242,6 +242,8 @@ simulating the observed behavior with input/output automata.
 considered manual. One paper which I put in the slack channel mentioned that it 
 semiautomatically verifies linearizability of an implementation.}
 %
+Other methods demonstrate that in some cases, proofs can be simplified for specific data structure to which certain properties hold~\cite{BoEmEnMu17, FeEnMoRiSh18}.
+%
 Additional verification attempts of linearizability have been presented both 
 with (e.g.~\cite{CoGrLuMo06}) and without (e.g.~\cite{DoGrLuMo04}) the use of 
 proof assistants.
@@ -260,6 +262,7 @@ Bouajjani et al.~\cite{BoEnWa17} present a recursive algorithm for identifying
 linearizability violations in priority queues (based on register automata), in 
 a method similar to the one for finding linearizability violations in stacks 
 and (regular) queues~\cite{BoEmEnHa18}.
+%
 
 
 \subsubsection{Additional approaches}
@@ -276,11 +279,19 @@ Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly
 generating histories and subsequently testing if they are 
 linearizable.
 %
+There has also been ample research in technique for linearizability  and simplifying proofs for data structures pertaining ~\cite{BoEmEnMu17, FeEnMoRiSh18, EnKo24} 
+%
 Other techniques for linearizability proof include the use of theorem provers, 
-e.g.~\cite{CoDoGr05, DeScWe11}. Additional related work includes~\cite{EnKo24}.
+e.g.~\cite{CoDoGr05, DeScWe11} and proof assistance techniques~\cite{EnKo24}.
+%
+\guy{Mark EnKo24 is the OOPSLA paper, is it legit to cite it as a proof assistance technique?} 
+%Additional related work includes~\cite{BoEmEnMu17, FeEnMoRiSh18, EnKo24}.
 %
 %EnKo24: OOPSLA paper (Mark) trying to formalize and prove existing reduction techniques, and introduce a new abstraction for splitting linearizability checking scenarios (cases) and check if they covers all the checks. They don't actually check linearizability but say there it can help other checkers
 
+%FeEnMoRiSh18 simplify proofs for some types of data structures
+
+%BoEmEnMu17 also show that proof can be simplified sometimes 
 
 
 \section{Deciding conflict serializability}
