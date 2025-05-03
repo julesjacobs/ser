@@ -161,7 +161,7 @@ Order (TSO) weak memory model.
 \texttt{Violat}~\cite{EmEn19} is a tool that generates tests to identify 
 linearizability violations, by 
 enumeration linearizations efficiently, per program schema (instead of per 
-execution, as in~\cite{BuDeMuTa10}).
+execution, as in~\cite{BuDeMuTa10}).This follows the authors' previous runtime verification technique~\cite{EmEn18}, which enumerates minimal visibility relations.
 %
 Additional model checking techniques were proposed by Burnim et 
 al.~\cite{BuNeSe11}, which are similar to Line-up~\cite{BuDeMuTa10} but based 
@@ -277,7 +277,9 @@ generating histories and subsequently testing if they are
 linearizable.
 %
 Other techniques for linearizability proof include the use of theorem provers, 
-e.g.~\cite{CoDoGr05, DeScWe11}.
+e.g.~\cite{CoDoGr05, DeScWe11}. Additional related work includes~\cite{EnKo24}.
+%
+%EnKo24: OOPSLA paper (Mark) trying to formalize and prove existing reduction techniques, and introduce a new abstraction for splitting linearizability checking scenarios (cases) and check if they covers all the checks. They don't actually check linearizability but say there it can help other checkers
 
 
 
