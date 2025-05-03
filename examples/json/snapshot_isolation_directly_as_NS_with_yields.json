@@ -1,0 +1,135 @@
+{
+  "initial_global": "N1,N2",
+  "requests": [
+    [
+      "main",
+      "before snapshot"
+    ]
+  ],
+  "responses": [
+    [
+      "[count] 0 active",
+      "0"
+    ],
+    [
+      "[count] 1 active",
+      "1"
+    ]
+  ],
+  "transitions": [
+    [
+      "before snapshot",
+      "N1,N2",
+      "[snapshot] active: (N1,N2)",
+      "N1,N2"
+    ],
+    [
+      "before snapshot",
+      "N1",
+      "[snapshot] active: (N1)",
+      "N1"
+    ],
+    [
+      "before snapshot",
+      "N2",
+      "[snapshot] active: (N2)",
+      "N2"
+    ],
+    [
+      "before snapshot",
+      "_",
+      "[snapshot] active: ()",
+      "_"
+    ],
+    [
+      "[snapshot] active: (N1,N2)",
+      "N1,N2",
+      "deactivate N1",
+      "N2"
+    ],  
+        [
+      "[snapshot] active: (N1,N2)",
+      "N2",
+      "deactivate N1",
+      "N2"
+    ],  
+        [
+      "[snapshot] active: (N1,N2)",
+      "N1",
+      "deactivate N1",
+      "_"
+    ],  
+    [
+      "[snapshot] active: (N1,N2)",
+      "_",
+      "deactivate N1",
+      "_"
+    ],  
+     [
+      "[snapshot] active: (N1,N2)",
+      "N1,N2",
+      "deactivate N2",
+      "N1"
+    ],  
+         [
+      "[snapshot] active: (N1,N2)",
+      "N1",
+      "deactivate N2",
+      "N1"
+    ],  
+        [
+      "[snapshot] active: (N1,N2)",
+      "N2",
+      "deactivate N2",
+      "_"
+    ],  
+    [
+      "[snapshot] active: (N1,N2)",
+      "_",
+      "deactivate N2",
+      "_"
+    ],  
+	[
+      "deactivate N1",
+      "N2",
+      "[count] 1 active",
+      "N2"
+    ],  
+    	[
+      "deactivate N1",
+      "_",
+      "[count] 0 active",
+      "_"
+    ],  
+    [
+      "deactivate N2",
+      "N1",
+      "[count] 1 active",
+      "N1"
+    ],  
+    	[
+      "deactivate N2",
+      "_",
+      "[count] 0 active",
+      "_"
+    ],  
+    [
+      "[snapshot] active: (N1)",
+      "N1",
+      "[count] 1 active",
+      "N1"
+    ],  
+	[
+      "[snapshot] active: (N2)",
+      "N2",
+      "[count] 1 active",
+      "N2"
+    ], 
+        [
+      "[snapshot] active: ()",
+      "_",
+      "[count] 0 active",
+      "_"
+    ]
+  ]
+}
