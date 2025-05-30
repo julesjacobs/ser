@@ -249,18 +249,15 @@ where
     can_reach_constraint_set(new_petri, basic_constraint_set, out_dir)
 }
 
-/// Simple reachability check with constraints
+
+/// Simple reachability check with constraints using SMPT
 pub fn can_reach_constraint_set<P>(
     petri: Petri<P>,
     constraints: Vec<super::presburger::Constraint<P>>,
-    _out_dir: &str
+    out_dir: &str
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
-    // TODO: Implement simple constraint-based reachability
-    // For now, return false (conservative)
-    println!("Checking reachability with {} constraints on {} places", 
-             constraints.len(), petri.get_places().len());
-    false
+    crate::smpt::can_reach_constraint_set(petri, constraints, out_dir)
 }

@@ -12,6 +12,7 @@ mod petri;
 mod presburger;
 mod reachability;
 mod semilinear;
+mod smpt;
 mod spresburger;
 
 use colored::*;
