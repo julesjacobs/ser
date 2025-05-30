@@ -5,6 +5,8 @@
 //! The implementation maintains an internal union type and converts between representations
 //! as needed to perform operations that are unique to each type.
 
+use either::Either;
+
 use crate::kleene::Kleene;
 use crate::presburger::PresburgerSet;
 use crate::semilinear::SemilinearSet;
@@ -166,7 +168,111 @@ where
             SPresburgerSet::Presburger(pset) => pset.is_empty(),
         }
     }
+
+    /// Rename all variables in this set using a mapping function
+    /// 
+    /// This creates a new SPresburgerSet<U> where each variable t of type T
+    /// is mapped to f(t) of type U. This is useful for domain transformations
+    /// like embedding Q into Either<P,Q> or changing variable namespaces.
+    /// 
+    /// Example: rename SPresburgerSet<char> into SPresburgerSet<String> by
+    ///          mapping each char to its string representation
+    pub fn rename<U, F>(self, f: F) -> SPresburgerSet<U>
+    where
+        U: Clone + Ord + Debug + ToString + Eq + Hash,
+        F: Fn(T) -> U,
+    {
+        match self {
+            SPresburgerSet::Semilinear(sset) => {
+                // Use the semilinear set's rename method
+                SPresburgerSet::Semilinear(sset.rename(f))
+            }
+            SPresburgerSet::Presburger(pset) => {
+                // Use the presburger set's rename method directly
+                SPresburgerSet::Presburger(pset.rename(f))
+            }
+        }
+    }
+
+    /// Iterate over all keys (variables) in the set
+    /// This calls the provided function for each unique variable that appears in the set
+    pub fn for_each_key<F>(&self, mut f: F)
+    where
+        F: FnMut(T),
+    {
+        match self {
+            SPresburgerSet::Semilinear(sset) => {
+                // Delegate to semilinear set's for_each_key method
+                // Note: semilinear's for_each_key takes FnMut(&T), but we need FnMut(T)
+                sset.for_each_key(|key| f(key.clone()));
+            }
+            SPresburgerSet::Presburger(pset) => {
+                // Use the presburger set's for_each_key method
+                pset.for_each_key(f);
+            }
+        }
+    }
+
+    /// Convert this SPresburgerSet to a list of constraint sets in disjunctive normal form
+    /// Each ConstraintSet represents one disjunct in the DNF representation
+    /// 
+    /// This is used by the new reachability checking algorithm to process constraints
+    /// from SPresburgerSet representations.
+    pub fn to_constraint_disjuncts(&mut self) -> Vec<super::reachability::ConstraintSet<T>> {
+        // TODO: Implement this method properly
+        // For now, return empty vector as placeholder
+        println!("Warning: to_constraint_disjuncts not yet implemented, returning empty");
+        Vec::new()
+    }
 }
+
+/// Represents a set of constraints in disjunctive normal form.
+/// This is extracted from SPresburgerSet for reachability checking.
+#[derive(Debug, Clone)]
+pub struct ConstraintSet<T> {
+    pub basic_constraint_set: BasicConstraintSet<Either<usize, T>>,
+    pub existential_vars: Vec<usize>,
+}
+
+#[derive(Debug, Clone)]
+pub struct BasicConstraintSet<T> {
+    pub constraints: Vec<PrimConstraint<T>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PrimConstraint<T> {
+    pub affine_formula: Vec<(i32, T)>,
+    pub offset: i32,
+    pub constraint_type: ConstraintType,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConstraintType {
+    NonNegative,
+    EqualToZero,
+}
+
+impl<T> ConstraintSet<T> 
+where 
+    T: Clone + Hash + Ord + Display + Debug,
+{
+    /// Extract and reify existential variables by converting them to explicit variables
+    /// Returns the list of new places that should be added to the Petri net and a basic constraint set
+    /// without existential variables
+    pub fn extract_and_reify_existential_variables(self) -> (Vec<Either<usize, T>>, BasicConstraintSet<Either<usize, T>>) {
+        // Create explicit variables for all existential variables: Left(0), Left(1), ..., Left(n-1)
+        let existential_places: Vec<Either<usize, T>> = (0..self.existential_vars.len())
+            .map(|i| Either::Left(i))
+            .collect();
+        
+        // The basic constraint set is already in the correct form - it uses Either<usize, T>
+        // where Left(i) represents existential variables and Right(t) represents original variables
+        let basic_constraint_set = self.basic_constraint_set;
+        
+        (existential_places, basic_constraint_set)
+    }
+}
+
 
 impl<T> Kleene for SPresburgerSet<T>
 where
@@ -1273,5 +1379,60 @@ mod tests {
         // Union idempotency: a + a = a (should hold for union)
         let a_plus_a = a.clone().union(a.clone());
         assert_eq!(a, a_plus_a);
+    }
+
+    #[test]
+    fn test_rename_function() {
+        // Test the new rename function
+        println!("\n=== Testing Rename Function ===");
+        
+        // Test renaming from char to String
+        let char_set = SPresburgerSet::atom('a');
+        let string_set = char_set.rename(|c| c.to_string());
+        
+        // Both should be semilinear since we started with an atom
+        assert!(matches!(string_set, SPresburgerSet::Semilinear(_)));
+        
+        // Test renaming into Either type
+        let either_set = SPresburgerSet::atom(42).rename(|x| either::Right::<String, i32>(x));
+        assert!(matches!(either_set, SPresburgerSet::Semilinear(_)));
+        
+        println!("✅ Rename function tests passed");
+    }
+
+    #[test]
+    fn test_presburger_rename() {
+        // Test the PresburgerSet rename function directly
+        use crate::presburger::PresburgerSet;
+        
+        println!("\n=== Testing PresburgerSet Rename ===");
+        
+        let pres_set = PresburgerSet::atom(42);
+        let renamed_set = pres_set.rename(|x| format!("var_{}", x));
+        
+        // Check that we can call methods on the renamed set
+        assert!(!renamed_set.is_empty());
+        
+        println!("✅ PresburgerSet rename tests passed");
+    }
+
+    #[test]
+    fn test_for_each_key_presburger() {
+        // Test for_each_key on PresburgerSet
+        use crate::presburger::PresburgerSet;
+        
+        println!("\n=== Testing for_each_key on PresburgerSet ===");
+        
+        let pres_set = PresburgerSet::universe(vec![1, 2, 3]);
+        let mut collected_keys = Vec::new();
+        
+        pres_set.for_each_key(|key| collected_keys.push(key));
+        
+        assert_eq!(collected_keys.len(), 3);
+        assert!(collected_keys.contains(&1));
+        assert!(collected_keys.contains(&2));
+        assert!(collected_keys.contains(&3));
+        
+        println!("✅ for_each_key on PresburgerSet tests passed");
     }
 }

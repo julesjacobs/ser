@@ -136,6 +136,37 @@ impl<T: Clone + ToString> PresburgerSet<T> {
             mapping: vec![atom], // one dimension corresponding to the single atom
         }
     }
+
+    /// Rename all variables in this PresburgerSet using the provided function
+    /// 
+    /// This transforms the mapping from T to U while keeping the underlying ISL set unchanged.
+    /// This is much more efficient than converting through semilinear representations.
+    pub fn rename<U, F>(mut self, f: F) -> PresburgerSet<U>
+    where
+        U: Clone + ToString,
+        F: Fn(T) -> U,
+    {
+        // Take ownership of both the ISL set pointer and mapping to avoid double-free
+        let isl_set = std::mem::replace(&mut self.isl_set, std::ptr::null_mut());
+        let mapping = std::mem::replace(&mut self.mapping, Vec::new());
+        
+        PresburgerSet {
+            isl_set,
+            mapping: mapping.into_iter().map(f).collect(),
+        }
+    }
+
+    /// Iterate over all variables in the mapping
+    /// 
+    /// This calls the provided function for each variable in the PresburgerSet's mapping.
+    pub fn for_each_key<F>(&self, mut f: F)
+    where
+        F: FnMut(T),
+    {
+        for key in &self.mapping {
+            f(key.clone());
+        }
+    }
 }
 
 impl<T: Clone> PresburgerSet<T> {

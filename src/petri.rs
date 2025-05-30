@@ -18,6 +18,7 @@ fn escape_for_graphviz_id(s: &str) -> String {
         .collect()
 }
 
+#[derive(Clone)]
 pub struct Petri<Place> {
     initial_marking: Vec<Place>,
     transitions: Vec<(Vec<Place>, Vec<Place>)>,
@@ -269,6 +270,26 @@ where
     /// Remove transitions where input places are exactly the same as output places
     pub fn remove_identity_transitions(&mut self) {
         self.transitions.retain(|(input, output)| input != output);
+    }
+
+    /// Remove transitions that output to any of the specified zero places
+    pub fn remove_transitions_outputting_to_zero_places(&mut self, zero_places: &[Place]) {
+        self.transitions.retain(|(_, outputs)| {
+            !outputs.iter().any(|place| zero_places.contains(place))
+        });
+    }
+
+    /// Remove unreachable places from the Petri net
+    /// This modifies the net by removing places that cannot be reached
+    pub fn remove_unreachable_places(&mut self, unreachable_places: &[Place]) {
+        // Remove unreachable places from initial marking
+        self.initial_marking.retain(|place| !unreachable_places.contains(place));
+        
+        // Remove transitions that involve unreachable places
+        self.transitions.retain(|(inputs, outputs)| {
+            !inputs.iter().any(|place| unreachable_places.contains(place)) &&
+            !outputs.iter().any(|place| unreachable_places.contains(place))
+        });
     }
 }
 
