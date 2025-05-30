@@ -162,14 +162,6 @@ where
 /// GOAL: Check if Reachable(petri) ⊆ semilinear when places_that_must_be_zero = 0
 /// APPROACH: Check if ¬semilinear ∩ {places_that_must_be_zero = 0} is reachable
 ///          If this intersection is reachable, then the subset property is violated
-///
-/// ARCHITECTURE:
-/// 1. Convert semilinear to SPresburgerSet
-/// 2. Compute complement: ¬semilinear  
-/// 3. Add zero constraints: ¬semilinear ∩ {places = 0}
-/// 4. Check if this constraint set is reachable in the Petri net
-///
-/// Returns: true if subset property holds (serializable), false otherwise
 pub fn is_petri_reachability_set_subset_of_semilinear_new<P, Q>(
     petri: Petri<Either<P, Q>>,
     places_that_must_be_zero: &[P],
@@ -212,13 +204,6 @@ where
 /// APPROACH: Convert SPresburgerSet to disjunctive normal form and check each disjunct.
 /// A SPresburgerSet represents a union of constraint sets (disjuncts).
 /// The Petri net can reach the SPresburgerSet if it can reach ANY of the disjuncts.
-///
-/// Args:
-/// - petri: Petri net to analyze
-/// - presburger: Constraint set to check reachability for
-/// - out_dir: Directory for debug output
-///
-/// Returns: true if any state satisfying presburger is reachable, false otherwise
 pub fn can_reach_presburger<P>(
     petri: Petri<P>, 
     mut presburger: SPresburgerSet<P>,
@@ -227,14 +212,14 @@ pub fn can_reach_presburger<P>(
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
-    // Convert SPresburgerSet to disjunctive normal form (list of constraint sets)
+    // Convert SPresburgerSet to disjunctive normal form (list of quantified sets)
     let disjuncts = presburger.to_constraint_disjuncts();
     
     // Check if ANY disjunct is reachable
-    for (i, constraint_set) in disjuncts.iter().enumerate() {
-        println!("Checking disjunct {}: {:?}", i, constraint_set);
+    for (i, quantified_set) in disjuncts.iter().enumerate() {
+        println!("Checking disjunct {}: {:?}", i, quantified_set);
         
-        if can_reach_constraint(petri.clone(), constraint_set.clone(), out_dir) {
+        if can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir) {
             println!("Disjunct {} is reachable - constraint set is satisfiable", i);
             return true;
         }
@@ -244,30 +229,15 @@ where
     false
 }
 
-/// Checks if a Petri net can reach any state satisfying a single constraint set (one disjunct).
-///
-/// APPROACH: Process existential variables and then check the simplified constraint set.
-/// This handles constraints of the form: ∃x₁,x₂,.... φ(x₁,x₂,...,y₁,y₂,...)
-/// where y₁,y₂,... are Petri net places and x₁,x₂,... are existential variables.
-/// We add the existential variables as explicit places in the Petri net, and then check reachability.
-///
-/// Args:
-/// - petri: Petri net to analyze  
-/// - constraint_set: Single conjunction of constraints to check
-/// - out_dir: Directory for debug output
-///
-/// Returns: true if any state satisfying this constraint set is reachable
-pub fn can_reach_constraint<P>(
+pub fn can_reach_quantified_set<P>(
     petri: Petri<P>,
-    constraint_set: ConstraintSet<P>, 
+    quantified_set: super::presburger::QuantifiedSet<P>, 
     out_dir: &str
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
-    println!("Processing constraint set with {} constraints", constraint_set.basic_constraint_set.constraints.len());
-
-    let (variables, basic_constraint_set) = constraint_set.extract_and_reify_existential_variables();
+    let (variables, basic_constraint_set) = quantified_set.extract_and_reify_existential_variables();
 
     // Transform the Petri net from Petri<P> to Petri<Either<usize, P>>
     // by mapping all existing places to Right(p) and adding existential places as Left(i)
@@ -276,75 +246,21 @@ where
         new_petri.add_existential_place(place);
     }
 
-    can_reach_basic_constraint(new_petri, basic_constraint_set, out_dir)
+    can_reach_constraint_set(new_petri, basic_constraint_set, out_dir)
 }
 
-/// Prunese the petri net and checks reachability using SMPT.
-pub fn can_reach_basic_constraint<P>(
-    petri: Petri<Either<usize, P>>,
-    basic_constraint_set: BasicConstraintSet<Either<usize, P>>,
-    out_dir: &str
+/// Simple reachability check with constraints
+pub fn can_reach_constraint_set<P>(
+    petri: Petri<P>,
+    constraints: Vec<super::presburger::Constraint<P>>,
+    _out_dir: &str
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
-    // TODO: Prune the petri net
-
-    // TODO: Call SMPT to check reachability
-
+    // TODO: Implement simple constraint-based reachability
+    // For now, return false (conservative)
+    println!("Checking reachability with {} constraints on {} places", 
+             constraints.len(), petri.get_places().len());
     false
 }
-
-//=============================================================================
-// SUPPORTING DATA STRUCTURES FOR NEW ARCHITECTURE  
-//=============================================================================
-
-/// Represents a set of constraints in disjunctive normal form.
-/// This is extracted from SPresburgerSet for reachability checking.
-#[derive(Debug, Clone)]
-pub struct ConstraintSet<T> {
-    pub basic_constraint_set: BasicConstraintSet<Either<usize, T>>,
-    pub existential_vars: Vec<usize>,
-}
-
-#[derive(Debug, Clone)]
-pub struct BasicConstraintSet<T> {
-    pub constraints: Vec<PrimConstraint<T>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct PrimConstraint<T> {
-    pub affine_formula: Vec<(i32, T)>,
-    pub offset: i32,
-    pub constraint_type: ConstraintType,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ConstraintType {
-    NonNegative,
-    EqualToZero,
-}
-
-impl<T> ConstraintSet<T> 
-where 
-    T: Clone + Hash + Ord + Display + Debug,
-{
-    /// Extract and reify existential variables by converting them to explicit variables
-    /// Returns the list of new places that should be added to the Petri net and a basic constraint set
-    /// without existential variables
-    pub fn extract_and_reify_existential_variables(self) -> (Vec<Either<usize, T>>, BasicConstraintSet<Either<usize, T>>) {
-        // Create explicit variables for all existential variables: Left(0), Left(1), ..., Left(n-1)
-        let existential_places: Vec<Either<usize, T>> = (0..self.existential_vars.len())
-            .map(|i| Either::Left(i))
-            .collect();
-        
-        // The basic constraint set is already in the correct form - it uses Either<usize, T>
-        // where Left(i) represents existential variables and Right(t) represents original variables
-        let basic_constraint_set = self.basic_constraint_set;
-        
-        (existential_places, basic_constraint_set)
-    }
-}
-
-
-

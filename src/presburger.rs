@@ -9,6 +9,7 @@ use std::{
 };
 
 use crate::kleene::Kleene;
+use either::Either;
 
 #[derive(Debug)]
 pub struct PresburgerSet<T> {
@@ -349,6 +350,62 @@ pub struct QuantifiedSet<T> {
     constraints: Vec<Constraint<Variable<T>>>,
 }
 
+impl<T: Clone> QuantifiedSet<T> {
+    /// Create a new QuantifiedSet with the given constraints
+    pub fn new(constraints: Vec<Constraint<Variable<T>>>) -> Self {
+        QuantifiedSet { constraints }
+    }
+    
+    /// Get the constraints in this quantified set
+    pub fn constraints(&self) -> &[Constraint<Variable<T>>] {
+        &self.constraints
+    }
+
+    pub fn extract_and_reify_existential_variables(&self) -> (Vec<Either<usize, T>>, Vec<Constraint<Either<usize, T>>>) {
+        // Collect all existential variables
+        let mut existential_vars = std::collections::BTreeSet::new();
+        for constraint in &self.constraints {
+            for (_, var) in &constraint.linear_combination {
+                if let Variable::Existential(n) = var {
+                    existential_vars.insert(*n);
+                }
+            }
+        }
+        
+        // Convert existential variables to Either::Left format
+        let existential_places: Vec<Either<usize, T>> = existential_vars
+            .into_iter()
+            .map(|n| Either::Left(n))
+            .collect();
+        
+        // Transform constraints by converting Variable<T> to Either<usize, T>
+        let transformed_constraints: Vec<Constraint<Either<usize, T>>> = self.constraints
+            .iter()
+            .map(|constraint| {
+                let transformed_linear_combination: Vec<(i32, Either<usize, T>)> = constraint
+                    .linear_combination
+                    .iter()
+                    .map(|(coeff, var)| {
+                        let new_var = match var {
+                            Variable::Var(t) => Either::Right(t.clone()),
+                            Variable::Existential(n) => Either::Left(*n),
+                        };
+                        (*coeff, new_var)
+                    })
+                    .collect();
+                
+                Constraint::new(
+                    transformed_linear_combination,
+                    constraint.constant_term,
+                    constraint.constraint_type,
+                )
+            })
+            .collect();
+        
+        (existential_places, transformed_constraints)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Variable<T> {
     Var(T),
@@ -372,7 +429,33 @@ pub struct Constraint<T> {
     constraint_type: ConstraintType,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+impl<T> Constraint<T> {
+    /// Create a new constraint
+    pub fn new(linear_combination: Vec<(i32, T)>, constant_term: i32, constraint_type: ConstraintType) -> Self {
+        Constraint {
+            linear_combination,
+            constant_term,
+            constraint_type,
+        }
+    }
+    
+    /// Get the linear combination of variables in this constraint
+    pub fn linear_combination(&self) -> &[(i32, T)] {
+        &self.linear_combination
+    }
+    
+    /// Get the constant term in this constraint
+    pub fn constant_term(&self) -> i32 {
+        self.constant_term
+    }
+    
+    /// Get the constraint type
+    pub fn constraint_type(&self) -> ConstraintType {
+        self.constraint_type
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConstraintType {
     NonNegative,
     EqualToZero,

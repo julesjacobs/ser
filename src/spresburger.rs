@@ -5,7 +5,6 @@
 //! The implementation maintains an internal union type and converts between representations
 //! as needed to perform operations that are unique to each type.
 
-use either::Either;
 
 use crate::kleene::Kleene;
 use crate::presburger::PresburgerSet;
@@ -214,64 +213,27 @@ where
     }
 
     /// Convert this SPresburgerSet to a list of constraint sets in disjunctive normal form
-    /// Each ConstraintSet represents one disjunct in the DNF representation
+    /// Each QuantifiedSet represents one disjunct in the DNF representation
     /// 
     /// This is used by the new reachability checking algorithm to process constraints
     /// from SPresburgerSet representations.
-    pub fn to_constraint_disjuncts(&mut self) -> Vec<super::reachability::ConstraintSet<T>> {
-        // TODO: Implement this method properly
-        // For now, return empty vector as placeholder
-        println!("Warning: to_constraint_disjuncts not yet implemented, returning empty");
-        Vec::new()
+    pub fn to_constraint_disjuncts(&mut self) -> Vec<super::presburger::QuantifiedSet<T>> {
+        // Convert to PresburgerSet to access ISL constraint extraction
+        self.ensure_presburger();
+        
+        match self {
+            SPresburgerSet::Presburger(pset) => {
+                // Use PresburgerSet's to_quantified_sets to get constraint information
+                pset.to_quantified_sets()
+            }
+            SPresburgerSet::Semilinear(_) => {
+                // This should not happen after ensure_presburger()
+                unreachable!()
+            }
+        }
     }
 }
 
-/// Represents a set of constraints in disjunctive normal form.
-/// This is extracted from SPresburgerSet for reachability checking.
-#[derive(Debug, Clone)]
-pub struct ConstraintSet<T> {
-    pub basic_constraint_set: BasicConstraintSet<Either<usize, T>>,
-    pub existential_vars: Vec<usize>,
-}
-
-#[derive(Debug, Clone)]
-pub struct BasicConstraintSet<T> {
-    pub constraints: Vec<PrimConstraint<T>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct PrimConstraint<T> {
-    pub affine_formula: Vec<(i32, T)>,
-    pub offset: i32,
-    pub constraint_type: ConstraintType,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ConstraintType {
-    NonNegative,
-    EqualToZero,
-}
-
-impl<T> ConstraintSet<T> 
-where 
-    T: Clone + Hash + Ord + Display + Debug,
-{
-    /// Extract and reify existential variables by converting them to explicit variables
-    /// Returns the list of new places that should be added to the Petri net and a basic constraint set
-    /// without existential variables
-    pub fn extract_and_reify_existential_variables(self) -> (Vec<Either<usize, T>>, BasicConstraintSet<Either<usize, T>>) {
-        // Create explicit variables for all existential variables: Left(0), Left(1), ..., Left(n-1)
-        let existential_places: Vec<Either<usize, T>> = (0..self.existential_vars.len())
-            .map(|i| Either::Left(i))
-            .collect();
-        
-        // The basic constraint set is already in the correct form - it uses Either<usize, T>
-        // where Left(i) represents existential variables and Right(t) represents original variables
-        let basic_constraint_set = self.basic_constraint_set;
-        
-        (existential_places, basic_constraint_set)
-    }
-}
 
 
 impl<T> Kleene for SPresburgerSet<T>
