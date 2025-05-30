@@ -29,7 +29,8 @@ fn main() {
         .allowlist_type("isl_.*")
         .allowlist_function("isl_.*")
         // --- Allowlist your C helper function(s) ---
-        .allowlist_function("rust_harmonize_sets") // Or whatever you name it
+        .allowlist_function("rust_harmonize_sets") // Original function
+        .allowlist_function("rust_harmonize_sets_with_mapping") // New improved function
         // --- End allowlist ---
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()

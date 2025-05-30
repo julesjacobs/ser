@@ -12,6 +12,7 @@ mod petri;
 mod presburger;
 mod reachability;
 mod semilinear;
+mod spresburger;
 
 use colored::*;
 use parser::Program;

@@ -127,3 +127,111 @@ HarmonizeResult rust_harmonize_sets(
 
     return result;
 }
+
+// Helper to create preimage map with explicit dimension mapping
+static isl_multi_aff *create_preimage_map_with_mapping(
+    isl_space *target_space,    // Borrows
+    isl_space *original_space,  // Consumes
+    const int *mapping_indices, // Array mapping original dims to target positions
+    int original_dims)          // Number of dimensions in original space
+{
+    if (!target_space || !original_space || !mapping_indices) {
+        isl_space_free(original_space);
+        return NULL;
+    }
+
+    isl_ctx *ctx = isl_space_get_ctx(target_space);
+    isl_space *map_space = isl_space_map_from_domain_and_range(
+        isl_space_copy(target_space),
+        isl_space_copy(original_space));
+
+    isl_aff_list *aff_list = isl_aff_list_alloc(ctx, original_dims);
+    if (!aff_list) {
+        isl_space_free(original_space);
+        isl_space_free(map_space);
+        return NULL;
+    }
+
+    for (int i = 0; i < original_dims; ++i) {
+        // Map original dimension i to target dimension mapping_indices[i]
+        int target_dim = mapping_indices[i];
+        isl_local_space *ls = isl_local_space_from_space(isl_space_copy(target_space));
+        isl_aff *aff = isl_aff_var_on_domain(ls, isl_dim_set, target_dim);
+        aff_list = isl_aff_list_add(aff_list, aff);
+    }
+
+    isl_multi_aff *ma = isl_multi_aff_from_aff_list(map_space, aff_list);
+    isl_space_free(original_space);
+    return ma;
+}
+
+// Improved harmonization function with explicit mapping
+HarmonizeResult rust_harmonize_sets_with_mapping(
+    isl_set *set1_in,
+    isl_set *set2_in,
+    isl_space *target_space,
+    const int *set1_indices,
+    int set1_dims,
+    const int *set2_indices,
+    int set2_dims)
+{
+    HarmonizeResult result = {NULL, NULL, 1}; // Default to error
+
+    if (!set1_in || !set2_in || !target_space || !set1_indices || !set2_indices) {
+        isl_set_free(set1_in);
+        isl_set_free(set2_in);
+        return result;
+    }
+
+    isl_space *space1 = isl_set_get_space(set1_in);
+    isl_space *space2 = isl_set_get_space(set2_in);
+
+    // Align parameters first
+    isl_set *set1_p = isl_set_align_params(set1_in, isl_space_copy(target_space));
+    isl_set *set2_p = isl_set_align_params(set2_in, isl_space_copy(target_space));
+
+    if (!set1_p || !set2_p) {
+        isl_space_free(space1);
+        isl_space_free(space2);
+        isl_set_free(set1_p);
+        isl_set_free(set2_p);
+        return result;
+    }
+
+    isl_space *space1_p = isl_set_get_space(set1_p);
+    isl_space *space2_p = isl_set_get_space(set2_p);
+
+    // Create preimage maps with explicit dimension mapping
+    isl_multi_aff *ma1 = create_preimage_map_with_mapping(target_space, space1_p, set1_indices, set1_dims);
+    isl_multi_aff *ma2 = create_preimage_map_with_mapping(target_space, space2_p, set2_indices, set2_dims);
+
+    if (!ma1 || !ma2) {
+        isl_multi_aff_free(ma1);
+        isl_multi_aff_free(ma2);
+        isl_set_free(set1_p);
+        isl_set_free(set2_p);
+        isl_space_free(space1);
+        isl_space_free(space2);
+        return result;
+    }
+
+    // Compute preimages
+    result.set1 = isl_set_preimage_multi_aff(set1_p, ma1);
+    result.set2 = isl_set_preimage_multi_aff(set2_p, ma2);
+
+    if (!result.set1 || !result.set2) {
+        isl_set_free(result.set1);
+        isl_set_free(result.set2);
+        result.set1 = NULL;
+        result.set2 = NULL;
+        // Error already set to 1
+    } else {
+        result.error = 0; // Success!
+    }
+
+    // Cleanup
+    isl_space_free(space1);
+    isl_space_free(space2);
+
+    return result;
+}
