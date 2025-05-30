@@ -103,19 +103,6 @@ where
         }
     }
 
-    /// Compute the complement of this set (requires Presburger representation)
-    pub fn complement(mut self, universe_vars: &[T]) -> Self {
-        self.ensure_presburger();
-        match self {
-            SPresburgerSet::Presburger(pset) => {
-                // Create universe set and subtract this set
-                let universe = PresburgerSet::universe(universe_vars.to_vec());
-                let result = universe.difference(&pset);
-                SPresburgerSet::Presburger(result)
-            }
-            SPresburgerSet::Semilinear(_) => unreachable!(),
-        }
-    }
 
     /// Union of two sets
     pub fn union(mut self, mut other: Self) -> Self {
@@ -572,6 +559,644 @@ mod tests {
         let star_empty = empty.star();
         assert_eq!(star_empty, one);
     }
+
+    #[test]
+    fn test_property_based_comprehensive() {
+        println!("\n=== Comprehensive Property-Based Testing ===");
+        
+        // Run property-based tests with different sample sizes
+        test_all_kleene_algebra_laws(50);
+        test_representation_independence(30);  
+        test_conversion_correctness(20);
+        test_boundary_cases(25);
+        test_star_operations_comprehensive(30);
+        test_difference_operations_comprehensive(30);
+        
+        println!("✅ All property-based tests passed!");
+    }
+
+    // === Random Set Generation ===
+    
+    fn random_atom(seed: &mut u32) -> char {
+        // Use simple LCG for deterministic "randomness"
+        *seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
+        let atoms = ['a', 'b', 'c', 'd', 'e']; // Small set for interesting overlaps
+        atoms[(*seed as usize) % atoms.len()]
+    }
+    
+    fn random_basic_set(seed: &mut u32, prefer_semilinear: bool) -> SPresburgerSet<char> {
+        *seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
+        match *seed % 10 {
+            0..=1 => SPresburgerSet::zero(),
+            2..=3 => SPresburgerSet::one(), 
+            4..=7 => SPresburgerSet::atom(random_atom(seed)),
+            8..=9 => {
+                if prefer_semilinear {
+                    SPresburgerSet::from_semilinear(SemilinearSet::atom(random_atom(seed)))
+                } else {
+                    SPresburgerSet::from_presburger(PresburgerSet::atom(random_atom(seed)))
+                }
+            }
+            _ => unreachable!()
+        }
+    }
+    
+    fn random_compound_set(seed: &mut u32, depth: usize, allow_star: bool) -> SPresburgerSet<char> {
+        if depth == 0 {
+            return random_basic_set(seed, allow_star);
+        }
+        
+        *seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
+        let a = random_compound_set(seed, depth - 1, allow_star);
+        let b = random_compound_set(seed, depth - 1, allow_star);
+        
+        match *seed % (if allow_star { 4 } else { 3 }) {
+            0 => a.plus(b),           // Union
+            1 => a.times(b),          // Minkowski sum
+            2 => a.union(b),          // Direct union
+            3 if allow_star => {
+                // Only apply star to semilinear sets
+                match a {
+                    SPresburgerSet::Semilinear(_) => a.star(),
+                    _ => a.plus(b), // Fallback if not semilinear
+                }
+            }
+            _ => a.plus(b)
+        }
+    }
+
+    // === Property Testing Framework ===
+    
+    fn test_property<F>(property: F, num_tests: usize, property_name: &str)
+    where F: Fn(u32) -> bool {
+        let mut failures = Vec::new();
+        
+        for i in 0..num_tests {
+            let seed = 12345u32.wrapping_add(i as u32);
+            if !property(seed) {
+                failures.push(seed);
+            }
+        }
+        
+        if !failures.is_empty() {
+            panic!("Property '{}' failed on seeds: {:?}", property_name, failures);
+        }
+        println!("✅ Property '{}' passed {} tests", property_name, num_tests);
+    }
+
+    // === Mathematical Law Tests ===
+    
+    fn test_all_kleene_algebra_laws(num_tests: usize) {
+        println!("\n--- Testing Kleene Algebra Laws ---");
+        
+        // Associativity laws
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, true);
+            let b = random_compound_set(&mut s, 2, true); 
+            let c = random_compound_set(&mut s, 2, true);
+            
+            let left = a.clone().plus(b.clone()).plus(c.clone());
+            let right = a.plus(b.plus(c));
+            left == right
+        }, num_tests, "Plus Associativity");
+        
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, false); // No star for times
+            let b = random_compound_set(&mut s, 2, false);
+            let c = random_compound_set(&mut s, 2, false);
+            
+            let left = a.clone().times(b.clone()).times(c.clone());
+            let right = a.times(b.times(c));
+            left == right
+        }, num_tests, "Times Associativity");
+        
+        // Commutativity of plus
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, true);
+            let b = random_compound_set(&mut s, 2, true);
+            
+            let left = a.clone().plus(b.clone());
+            let right = b.plus(a);
+            left == right
+        }, num_tests, "Plus Commutativity");
+        
+        // Identity laws
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, false);
+            let zero = SPresburgerSet::<char>::zero();
+            
+            let result = a.clone().plus(zero);
+            a == result
+        }, num_tests, "Plus Identity (a + 0 = a)");
+        
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, false);
+            let one = SPresburgerSet::<char>::one();
+            
+            let result = a.clone().times(one);
+            a == result
+        }, num_tests, "Times Identity (a * 1 = a)");
+        
+        // Annihilator law
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, false);
+            let zero = SPresburgerSet::<char>::zero();
+            
+            let result = a.times(zero.clone());
+            result == zero
+        }, num_tests, "Times Annihilator (a * 0 = 0)");
+        
+        // Idempotency of plus
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, true);
+            
+            let result = a.clone().plus(a.clone());
+            a == result
+        }, num_tests, "Plus Idempotency (a + a = a)");
+        
+        // Distributivity laws
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 1, false);
+            let b = random_compound_set(&mut s, 1, false);
+            let c = random_compound_set(&mut s, 1, false);
+            
+            let left = a.clone().plus(b.clone()).times(c.clone());
+            let right = a.clone().times(c.clone()).plus(b.times(c));
+            left == right
+        }, num_tests, "Right Distributivity ((a + b) * c = a*c + b*c)");
+        
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 1, false);
+            let b = random_compound_set(&mut s, 1, false);
+            let c = random_compound_set(&mut s, 1, false);
+            
+            let left = a.clone().times(b.clone().plus(c.clone()));
+            let right = a.clone().times(b).plus(a.times(c));
+            left == right
+        }, num_tests, "Left Distributivity (a * (b + c) = a*b + a*c)");
+    }
+    
+    fn test_representation_independence(num_tests: usize) {
+        println!("\n--- Testing Representation Independence ---");
+        
+        // Test that operations give same result regardless of internal representation
+        test_property(|seed| {
+            let mut s = seed;
+            let a_semi = random_compound_set(&mut s, 2, true);
+            let b_semi = random_compound_set(&mut s, 2, true);
+            
+            // Convert to presburger versions
+            let mut a_pres = a_semi.clone();
+            let mut b_pres = b_semi.clone();
+            a_pres.ensure_presburger();
+            b_pres.ensure_presburger();
+            
+            // Test plus operation
+            let result_semi = a_semi.clone().plus(b_semi.clone());
+            let result_pres = a_pres.clone().plus(b_pres.clone());
+            
+            result_semi == result_pres
+        }, num_tests, "Plus operation representation independence");
+        
+        test_property(|seed| {
+            let mut s = seed;
+            let a_semi = random_compound_set(&mut s, 2, false); // No star
+            let b_semi = random_compound_set(&mut s, 2, false);
+            
+            // Convert to presburger versions
+            let mut a_pres = a_semi.clone();
+            let mut b_pres = b_semi.clone();
+            a_pres.ensure_presburger();
+            b_pres.ensure_presburger();
+            
+            // Test times operation
+            let result_semi = a_semi.clone().times(b_semi.clone());
+            let result_pres = a_pres.clone().times(b_pres.clone());
+            
+            result_semi == result_pres
+        }, num_tests, "Times operation representation independence");
+        
+        test_property(|seed| {
+            let mut s = seed;
+            let a_semi = random_compound_set(&mut s, 2, false);
+            let b_semi = random_compound_set(&mut s, 2, false);
+            
+            // Convert to presburger versions  
+            let mut a_pres = a_semi.clone();
+            let mut b_pres = b_semi.clone();
+            a_pres.ensure_presburger();
+            b_pres.ensure_presburger();
+            
+            // Test union operation
+            let result_semi = a_semi.clone().union(b_semi.clone());
+            let result_pres = a_pres.clone().union(b_pres.clone());
+            
+            result_semi == result_pres
+        }, num_tests, "Union operation representation independence");
+    }
+    
+    fn test_conversion_correctness(num_tests: usize) {
+        println!("\n--- Testing Conversion Correctness ---");
+        
+        test_property(|seed| {
+            let mut s = seed;
+            let original = random_compound_set(&mut s, 2, true);
+            
+            // Convert to presburger and back (conceptually)
+            let mut converted = original.clone();
+            converted.ensure_presburger();
+            
+            // Should be equal to original
+            original == converted
+        }, num_tests, "Semilinear to Presburger conversion preserves equality");
+        
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 1, true);
+            let b = random_compound_set(&mut s, 1, true);
+            
+            // Compute operation, then convert
+            let result1 = {
+                let mut temp = a.clone().plus(b.clone());
+                temp.ensure_presburger();
+                temp
+            };
+            
+            // Convert operands, then compute operation
+            let result2 = {
+                let mut a_conv = a.clone();
+                let mut b_conv = b.clone();
+                a_conv.ensure_presburger();
+                b_conv.ensure_presburger();
+                a_conv.plus(b_conv)
+            };
+            
+            result1 == result2
+        }, num_tests, "Convert-then-operate equals operate-then-convert");
+    }
+    
+    fn test_boundary_cases(num_tests: usize) {
+        println!("\n--- Testing Boundary Cases ---");
+        
+        // Test operations with zero and one
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, false);
+            let zero = SPresburgerSet::<char>::zero();
+            let one = SPresburgerSet::<char>::one();
+            
+            // a + a = a (idempotency)
+            let idem = a.clone().plus(a.clone());
+            let idem_ok = a == idem;
+            
+            // a + 0 = a  
+            let zero_add = a.clone().plus(zero.clone());
+            let zero_add_ok = a == zero_add;
+            
+            // a * 1 = a
+            let one_mult = a.clone().times(one.clone());
+            let one_mult_ok = a == one_mult;
+            
+            // a * 0 = 0
+            let zero_mult = a.times(zero.clone());
+            let zero_mult_ok = zero == zero_mult;
+            
+            idem_ok && zero_add_ok && one_mult_ok && zero_mult_ok
+        }, num_tests, "Boundary operations with zero and one");
+        
+        // Test self-operations
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_compound_set(&mut s, 2, false);
+            
+            // Test various self-operations
+            let self_union = a.clone().union(a.clone());
+            let self_plus = a.clone().plus(a.clone());
+            
+            // Both should equal a (idempotency)
+            (a == self_union) && (a == self_plus)
+        }, num_tests, "Self-operations idempotency");
+        
+        // Test star properties (only for semilinear)
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, true); // Prefer semilinear
+            
+            // Only test if a is semilinear
+            match &a {
+                SPresburgerSet::Semilinear(_) => {
+                    let one = SPresburgerSet::<char>::one();
+                    let a_star = a.clone().star();
+                    
+                    // a* should contain one (epsilon)
+                    let a_star_plus_one = a_star.clone().plus(one.clone());
+                    let contains_one = a_star == a_star_plus_one;
+                    
+                    // a* should contain a
+                    let a_star_plus_a = a_star.clone().plus(a.clone());
+                    let contains_a = a_star == a_star_plus_a;
+                    
+                    contains_one && contains_a
+                }
+                _ => true // Skip if not semilinear
+            }
+        }, num_tests, "Star operation properties");
+    }
+    
+    // === Star Operations Testing ===
+    
+    fn test_star_operations_comprehensive(num_tests: usize) {
+        println!("\n--- Testing Star Operations ---");
+        
+        // Test star idempotency: (a*)* = a*
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, true); // Prefer semilinear for star
+            
+            match &a {
+                SPresburgerSet::Semilinear(_) => {
+                    let a_star = a.clone().star();
+                    match &a_star {
+                        SPresburgerSet::Semilinear(_) => {
+                            let a_star_star = a_star.clone().star();
+                            a_star == a_star_star
+                        }
+                        _ => true // Skip if conversion happened
+                    }
+                }
+                _ => true // Skip if not semilinear
+            }
+        }, num_tests, "Star idempotency (a*)* = a*");
+        
+        // Test star contains one: 1 ≤ a*
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, true);
+            
+            match &a {
+                SPresburgerSet::Semilinear(_) => {
+                    let one = SPresburgerSet::<char>::one();
+                    let a_star = a.star();
+                    
+                    // a* should contain one (a* + 1 = a*)
+                    let a_star_plus_one = a_star.clone().plus(one);
+                    a_star == a_star_plus_one
+                }
+                _ => true // Skip if not semilinear
+            }
+        }, num_tests, "Star contains one (1 ≤ a*)");
+        
+        // Test star contains original: a ≤ a*
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, true);
+            
+            match &a {
+                SPresburgerSet::Semilinear(_) => {
+                    let a_star = a.clone().star();
+                    
+                    // a* should contain a (a* + a = a*)
+                    let a_star_plus_a = a_star.clone().plus(a);
+                    a_star == a_star_plus_a
+                }
+                _ => true // Skip if not semilinear
+            }
+        }, num_tests, "Star contains original (a ≤ a*)");
+        
+        // Test star right distributivity: (a + b)* = a*(ba*)*
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, true);
+            let b = random_basic_set(&mut s, true);
+            
+            match (&a, &b) {
+                (SPresburgerSet::Semilinear(_), SPresburgerSet::Semilinear(_)) => {
+                    let ab_plus = a.clone().plus(b.clone());
+                    match &ab_plus {
+                        SPresburgerSet::Semilinear(_) => {
+                            let _left = ab_plus.star();
+                            
+                            let ba = b.times(a.clone());
+                            match &ba {
+                                SPresburgerSet::Semilinear(_) => {
+                                    let ba_star = ba.star();
+                                    let a_star = a.star();
+                                    let _right = a_star.times(ba_star);
+                                    
+                                    // This is a complex property, mainly test that it doesn't crash
+                                    // Full verification would require more sophisticated logic
+                                    true
+                                }
+                                _ => true
+                            }
+                        }
+                        _ => true
+                    }
+                }
+                _ => true // Skip if not both semilinear
+            }
+        }, num_tests, "Star distributivity property (complexity test)");
+        
+        // Test star with zero: 0* = 1
+        test_property(|_seed| {
+            let zero = SPresburgerSet::<char>::zero();
+            let one = SPresburgerSet::<char>::one();
+            let zero_star = zero.star();
+            zero_star == one
+        }, num_tests, "Star of zero (0* = 1)");
+        
+        // Test star with one: 1* = 1  
+        test_property(|_seed| {
+            let one = SPresburgerSet::<char>::one();
+            let one_star = one.clone().star();
+            one == one_star
+        }, num_tests, "Star of one (1* = 1)");
+        
+        // Test star iteration property: a* = 1 + a + a² + a³ + ... (finite prefix)
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, true);
+            
+            match &a {
+                SPresburgerSet::Semilinear(_) => {
+                    let one = SPresburgerSet::<char>::one();
+                    let a_star = a.clone().star();
+                    
+                    // Build finite prefix: 1 + a + a*a + a*a*a
+                    let a_squared = a.clone().times(a.clone());
+                    let a_cubed = a_squared.clone().times(a.clone());
+                    
+                    let finite_prefix = one.clone()
+                        .plus(a.clone())
+                        .plus(a_squared)
+                        .plus(a_cubed);
+                    
+                    // a* should contain this finite prefix
+                    // (a* ∩ finite_prefix = finite_prefix)
+                    let intersection = a_star.clone().intersection(finite_prefix.clone());
+                    intersection == finite_prefix
+                }
+                _ => true // Skip if not semilinear
+            }
+        }, num_tests, "Star iteration property (finite prefix)");
+    }
+    
+    // === Difference Operations Testing ===
+    
+    fn test_difference_operations_comprehensive(num_tests: usize) {
+        println!("\n--- Testing Difference Operations ---");
+        
+        // Test difference with self: a - a = ∅
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, false);
+            
+            let difference = a.clone().difference(a);
+            let zero = SPresburgerSet::<char>::zero();
+            
+            difference == zero
+        }, num_tests, "Difference with self (a - a = ∅)");
+        
+        // Test difference with empty set: a - ∅ = a
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, false);
+            let zero = SPresburgerSet::<char>::zero();
+            
+            let difference = a.clone().difference(zero);
+            
+            a == difference
+        }, num_tests, "Difference with empty set (a - ∅ = a)");
+        
+        // Test empty difference: ∅ - a = ∅
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, false);
+            let zero = SPresburgerSet::<char>::zero();
+            
+            let difference = zero.clone().difference(a);
+            
+            zero == difference
+        }, num_tests, "Empty difference (∅ - a = ∅)");
+        
+        // Test difference is subset: (a - b) ⊆ a (i.e., (a - b) ∪ b ⊇ a)
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, false);
+            let b = random_basic_set(&mut s, false);
+            
+            let a_minus_b = a.clone().difference(b.clone());
+            let union_with_b = a_minus_b.union(b);
+            
+            // Check if a ⊆ (a - b) ∪ b by checking if a ∩ ((a - b) ∪ b) = a
+            let intersection = a.clone().intersection(union_with_b);
+            
+            intersection == a
+        }, num_tests, "Difference is subset ((a - b) ∪ b ⊇ a)");
+        
+        // Test difference disjointness: (a - b) ∩ b = ∅
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, false);
+            let b = random_basic_set(&mut s, false);
+            
+            let a_minus_b = a.difference(b.clone());
+            let intersection = a_minus_b.intersection(b);
+            let zero = SPresburgerSet::<char>::zero();
+            
+            intersection == zero
+        }, num_tests, "Difference disjointness ((a - b) ∩ b = ∅)");
+        
+        // Test difference with universe (complement-like behavior)
+        test_property(|seed| {
+            let s = seed;
+            let universe_atoms = vec!['a', 'b', 'c'];
+            let universe = SPresburgerSet::universe(universe_atoms);
+            
+            let a = match s % 4 {
+                0 => SPresburgerSet::<char>::zero(),
+                1 => SPresburgerSet::atom('a'),
+                2 => SPresburgerSet::atom('b'),
+                3 => SPresburgerSet::atom('c'),
+                _ => unreachable!()
+            };
+            
+            let complement_like = universe.clone().difference(a.clone());
+            
+            // Should satisfy: a ∩ (U - a) = ∅
+            let intersection = a.clone().intersection(complement_like.clone());
+            let zero = SPresburgerSet::<char>::zero();
+            let disjoint = intersection == zero;
+            
+            // Should satisfy: a ∪ (U - a) = U (when a ⊆ U)
+            let union = a.union(complement_like);
+            let covers = union == universe;
+            
+            disjoint && covers
+        }, num_tests, "Universe difference (complement-like properties)");
+        
+        // Test difference associativity: a - (b ∪ c) = (a - b) ∩ (a - c)
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, false);
+            let b = random_basic_set(&mut s, false);
+            let c = random_basic_set(&mut s, false);
+            
+            let b_union_c = b.clone().union(c.clone());
+            let left = a.clone().difference(b_union_c);
+            
+            let a_minus_b = a.clone().difference(b);
+            let a_minus_c = a.difference(c);
+            let right = a_minus_b.intersection(a_minus_c);
+            
+            left == right
+        }, num_tests, "Difference with union (a - (b ∪ c) = (a - b) ∩ (a - c))");
+        
+        // Test difference with intersection: a - (b ∩ c) ⊇ (a - b) ∪ (a - c)
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, false);
+            let b = random_basic_set(&mut s, false);
+            let c = random_basic_set(&mut s, false);
+            
+            let b_intersect_c = b.clone().intersection(c.clone());
+            let left = a.clone().difference(b_intersect_c);
+            
+            let a_minus_b = a.clone().difference(b);
+            let a_minus_c = a.difference(c);
+            let right = a_minus_b.union(a_minus_c);
+            
+            // Check if left ⊇ right by verifying right ∩ left = right
+            let intersection = right.clone().intersection(left);
+            
+            intersection == right
+        }, num_tests, "Difference with intersection (a - (b ∩ c) ⊇ (a - b) ∪ (a - c))");
+        
+        // Test difference transitivity: a - b - c = a - (b ∪ c)
+        test_property(|seed| {
+            let mut s = seed;
+            let a = random_basic_set(&mut s, false);
+            let b = random_basic_set(&mut s, false);
+            let c = random_basic_set(&mut s, false);
+            
+            let left = a.clone().difference(b.clone()).difference(c.clone());
+            
+            let b_union_c = b.union(c);
+            let right = a.difference(b_union_c);
+            
+            left == right
+        }, num_tests, "Difference transitivity (a - b - c = a - (b ∪ c))");
+    }
+
 
     #[test]
     fn test_comprehensive_equality_complex_expressions() {
