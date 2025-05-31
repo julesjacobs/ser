@@ -46,6 +46,5 @@ tex/*.aux
 # SMPT installation files - don't commit to git
 SMPT/
 smpt_venv/
-smpt_wrapper.sh
 install_smpt.sh
 CLAUDE.md
