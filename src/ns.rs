@@ -472,7 +472,7 @@ where
         debug_logger.step("Initialization", "Starting serializability analysis", &format!("Program: {}\nOutput directory: {}", program_name, out_dir));
 
         let mut places_that_must_be_zero = HashSet::new();
-        let petri = ns_to_petri_with_requests(&self).rename(|st| match st {
+        let petri = ns_to_petri_with_requests(self).rename(|st| match st {
             Response(_, _) => Right(st),
             Global(_) => Left(st),
             Local(_, _) | Request(_) => {

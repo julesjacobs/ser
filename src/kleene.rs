@@ -182,8 +182,8 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
     }
     let mut answer = K::zero();
     for ((from, to), k) in nfa.iter() {
-        assert!(from == &None);
-        assert!(to == &None);
+        assert!(from.is_none());
+        assert!(to.is_none());
         answer = answer.plus(k.clone());
     }
     answer

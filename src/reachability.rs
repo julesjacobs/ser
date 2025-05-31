@@ -147,7 +147,7 @@ where
     debug_logger.step("Domain Expanded", "Presburger set domain expanded", &format!("Expanded presburger set: {}", presburger));
     
     // Convert SPresburgerSet to disjunctive normal form (list of quantified sets)
-    let disjuncts = presburger.to_constraint_disjuncts();
+    let disjuncts = presburger.extract_constraint_disjuncts();
     
     debug_logger.step("Disjunct Conversion", "SPresburgerSet converted to disjuncts", &format!("Number of disjuncts: {}\nDisjuncts: {}", disjuncts.len(), disjuncts.iter().map(|d| d.to_string()).collect::<Vec<_>>().join(", ")));
     

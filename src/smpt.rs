@@ -437,7 +437,7 @@ pub fn presburger_constraints_to_xml<P: Display>(
             for line in constraint_xml.lines() {
                 xml.push_str("            ");
                 xml.push_str(line);
-                xml.push_str("\n");
+                xml.push('\n');
             }
         }
     }
@@ -480,7 +480,7 @@ pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>, petr
 
     // Build the left side (linear combination)
     let linear_combo = constraint.linear_combination();
-    if linear_combo.len() == 0 {
+    if linear_combo.is_empty() {
         // Special case: no variables
         xml.push_str("  <integer-constant>0</integer-constant>\n");
     } else if linear_combo.len() == 1 && linear_combo[0].0 == 1 {

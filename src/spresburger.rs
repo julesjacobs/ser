@@ -217,7 +217,7 @@ where
     /// 
     /// This is used by the new reachability checking algorithm to process constraints
     /// from SPresburgerSet representations.
-    pub fn to_constraint_disjuncts(&mut self) -> Vec<super::presburger::QuantifiedSet<T>> {
+    pub fn extract_constraint_disjuncts(&mut self) -> Vec<super::presburger::QuantifiedSet<T>> {
         // Convert to PresburgerSet to access ISL constraint extraction
         self.ensure_presburger();
         

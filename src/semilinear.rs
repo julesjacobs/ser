@@ -88,7 +88,7 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
 
     /// Run an operation on each key
     pub fn for_each_key(&self, mut f: impl for<'a> FnMut(&'a K)) {
-        for (key, _) in &self.values {
+        for key in self.values.keys() {
             f(key);
         }
     }
@@ -138,7 +138,7 @@ impl<K: Eq + Hash + Clone + Ord + std::fmt::Display> std::fmt::Display for Linea
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.base)?;
         if !self.periods.is_empty() {
-            if self.base.to_string().len() != 0 {
+            if !self.base.to_string().is_empty() {
                 write!(f, " ")?;
             }
             write!(f, "(")?;
@@ -232,7 +232,7 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
         // Try merging any of the new_components into another
         'outer: loop {
             let new_components_vec: Vec<LinearSet<K>> =
-                new_components.iter().map(|l| l.clone()).collect();
+                new_components.iter().cloned().collect();
             for new_comp1 in &new_components_vec {
                 for new_comp2 in &new_components_vec {
                     if new_comp1 != new_comp2 {
@@ -460,10 +460,10 @@ pub fn try_merge_linear_sets<K: Eq + Hash + Clone + Ord>(
             periods1_set.insert(diff);
             let periods2_set: HashSet<SparseVector<K>> = l2.periods.iter().cloned().collect();
             if periods1_set == periods2_set {
-                return Some(LinearSet {
+                Some(LinearSet {
                     base: l1.base.clone(),
                     periods: l2.periods.clone(),
-                });
+                })
             } else {
                 None
             }
@@ -602,9 +602,8 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
             let mut subset_base = SparseVector::new();
             let mut subset_periods: Vec<SparseVector<K>> = Vec::new();
 
-            for i in 0..n {
+            for (i, comp) in components_with_both.iter().enumerate().take(n) {
                 if mask & (1 << i) != 0 {
-                    let comp = &components_with_both[i];
                     // add this component's base to subset_base
                     subset_base = subset_base.add(&comp.base);
                     // include this component's base and periods in subset_periods

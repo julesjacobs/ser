@@ -149,7 +149,7 @@ impl<T: Clone + ToString> PresburgerSet<T> {
     {
         // Take ownership of both the ISL set pointer and mapping to avoid double-free
         let isl_set = std::mem::replace(&mut self.isl_set, std::ptr::null_mut());
-        let mapping = std::mem::replace(&mut self.mapping, Vec::new());
+        let mapping = std::mem::take(&mut self.mapping);
         
         PresburgerSet {
             isl_set,
@@ -565,10 +565,10 @@ impl<T: Display> Display for Constraint<T> {
         // Add the constant term if non-zero or if there are no terms
         if self.constant_term != 0 || first {
             if !first {
-                if self.constant_term > 0 {
-                    write!(f, " + ")?;
-                } else if self.constant_term < 0 {
-                    write!(f, " -")?;
+                match self.constant_term.cmp(&0) {
+                    std::cmp::Ordering::Greater => write!(f, " + ")?,
+                    std::cmp::Ordering::Less => write!(f, " -")?,
+                    std::cmp::Ordering::Equal => {}
                 }
             } else if self.constant_term < 0 {
                 // First term and negative
@@ -592,11 +592,7 @@ impl<T: Display> Display for QuantifiedSet<T> {
         // Check if there are existential variables
         let has_existentials = self.constraints.iter().any(|c| {
             c.linear_combination.iter().any(|(_, var)| {
-                if let Variable::Existential(_) = var {
-                    true
-                } else {
-                    false
-                }
+                matches!(var, Variable::Existential(_))
             })
         });
 
@@ -632,13 +628,13 @@ impl<T: Clone + Ord + Debug + ToString + Eq + Hash> PresburgerSet<T> {
         let mut all_keys = BTreeSet::new();
         for component in &semilinear_set.components {
             // Add keys from the base vector
-            for (key, _) in &component.base.values {
+            for key in component.base.values.keys() {
                 all_keys.insert(key.clone());
             }
 
             // Add keys from the period vectors
             for period in &component.periods {
-                for (key, _) in &period.values {
+                for key in period.values.keys() {
                     all_keys.insert(key.clone());
                 }
             }

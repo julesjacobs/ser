@@ -46,7 +46,7 @@ fn print_usage() {
         "  {}      Set SMPT timeout in seconds (default: 300)",
         "--timeout <seconds>".green()
     );
-    println!("");
+    println!();
     println!("  - {}", "If a file is provided:".bold());
     println!(
         "    - {}: Parses as a Network System (NS), saves as graphviz, converts to Petri net and saves that as graphviz and .net",
@@ -208,7 +208,7 @@ where
     // Generate GraphViz output for the Network System
     println!("{}", "Generating GraphViz visualization...".cyan().bold());
 
-    match ns.save_graphviz(&out_dir, open_files) {
+    match ns.save_graphviz(out_dir, open_files) {
         Ok(files) => {
             println!(
                 "{} the following Network System files:",
@@ -238,7 +238,7 @@ where
     let petri = ns_to_petri::ns_to_petri(ns);
 
     // Generate Petri net visualization
-    match petri.save_graphviz(&out_dir, open_files) {
+    match petri.save_graphviz(out_dir, open_files) {
         Ok(files) => {
             println!(
                 "{} the following Petri net files:",
@@ -286,7 +286,7 @@ where
     // Create a custom method or modify the underlying implementation to use a different viz_type
     // For now, we need to make a direct call to the graphviz module
     let dot_content = petri_with_requests.to_graphviz();
-    match crate::graphviz::save_graphviz(&dot_content, &out_dir, "petri_with_requests", open_files)
+    match crate::graphviz::save_graphviz(&dot_content, out_dir, "petri_with_requests", open_files)
     {
         Ok(files) => {
             println!(
@@ -345,7 +345,7 @@ where
 
     // Check serializability
     println!("{}", "Checking serializability...".cyan().bold());
-    let serializable = ns.is_serializable(&out_dir);
+    let serializable = ns.is_serializable(out_dir);
     println!(
         "Serializable: {}",
         if serializable {
@@ -515,7 +515,7 @@ fn process_directory(dir: &Path, open_files: bool) -> Result<usize, String> {
                     }
                     _ => {} // Skip files with unsupported extensions
                 }
-                println!("");
+                println!();
             }
         }
     }

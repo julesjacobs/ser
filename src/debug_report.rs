@@ -364,7 +364,7 @@ impl DebugLogger {
         }
         
         // Add summary
-        details.push_str(&format!("\n📊 SUMMARY:\n"));
+        details.push_str("\n📊 SUMMARY:\n");
         details.push_str(&format!("  • {} places, {} transitions\n", places.len(), transitions.len()));
         details.push_str(&format!("  • {} initial tokens\n", initial_marking.len()));
         let reachable_from_initial = transitions.iter().filter(|(inputs, _)| inputs.is_empty()).count();
@@ -382,7 +382,7 @@ impl DebugLogger {
         
         // Add some structural analysis
         let components = &set.components;
-        details.push_str(&format!("📊 STRUCTURE ANALYSIS:\n"));
+        details.push_str("📊 STRUCTURE ANALYSIS:\n");
         details.push_str(&format!("  • {} linear set component{}\n", 
             components.len(), if components.len() > 1 { "s" } else { "" }));
         
