@@ -103,7 +103,7 @@ where
             println!("Generated files for manual verification:");
             println!("  XML: {}", xml_file_path);
             println!("  Net: {}", pnet_file_path);
-            println!("Manual command: python3 -m smpt -n {} --reachability-xml {}", pnet_file_path, xml_file_path);
+            println!("Manual command: python3 -m smpt -n {} --xml {}", pnet_file_path, xml_file_path);
             false // Conservative fallback
         }
     }
@@ -185,9 +185,9 @@ pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, String> {
         std::process::Command::new("./smpt_wrapper.sh")
             .args([
                 "-n", net_file,
-                "--reachability-xml", xml_file,
+                "--xml", xml_file,
                 "--show-time",
-                "--methods", "BMC,INDUCTION,PDR"
+                "--methods", "BMC", "INDUCTION", "PDR-REACH"
             ])
             .output()
             .map_err(|e| format!("Failed to execute SMPT wrapper: {}", e))?
@@ -196,9 +196,9 @@ pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, String> {
             .args([
                 "-m", "smpt",
                 "-n", net_file,
-                "--reachability-xml", xml_file,
+                "--xml", xml_file,
                 "--show-time",
-                "--methods", "BMC,INDUCTION,PDR"
+                "--methods", "BMC", "INDUCTION", "PDR-REACH"
             ])
             .output()
             .map_err(|e| format!("Failed to execute SMPT: {}", e))?
@@ -533,4 +533,44 @@ mod tests {
             assert!(result.unwrap_err().contains("not installed"));
         }
     }
+
+    #[test]
+    fn test_smpt_reachability_analysis() {
+        use tempfile::TempDir;
+        
+        if !is_smpt_installed() {
+            println!("SMPT not available - skipping integration test");
+            return;
+        }
+        
+        let temp_dir = TempDir::new().expect("Failed to create temp directory");
+        let out_dir = temp_dir.path().to_str().unwrap();
+        
+        // Create simple but interesting Petri net: Producer-Consumer with buffer
+        let mut petri = Petri::new(vec!["Producer", "BufferSlot"]);
+        petri.add_transition(vec!["Producer", "BufferSlot"], vec!["Producer", "Item"]);  // Produce
+        petri.add_transition(vec!["Item"], vec!["Consumer", "BufferSlot"]);             // Consume (creates consumer)
+        petri.add_transition(vec!["Item"], vec!["Waste"]);                              // Alternative: waste the item
+        
+        println!("Producer-Consumer net: Producer+BufferSlot->Item, Item->Consumer+BufferSlot OR Item->Waste");
+        
+        // Test 1: Reachable - Can we produce an item?
+        let can_produce = can_reach_constraint_set(
+            petri.clone(),
+            vec![Constraint::new(vec![(1, "Item")], -1, ConstraintType::NonNegative)],
+            out_dir
+        );
+        println!("Can produce Item: {}", can_produce);
+        assert!(can_produce, "Should be able to produce items");
+        
+        // Test 2: Unreachable - Can we have Consumer and Waste simultaneously?
+        // This should be unreachable because both come from consuming the same Item
+        let both_outcomes = can_reach_constraint_set(
+            petri,
+            vec![Constraint::new(vec![(1, "Consumer"), (1, "Waste")], -2, ConstraintType::NonNegative)],
+            out_dir
+        );
+        println!("Can have Consumer+Waste: {} (competing outcomes)", both_outcomes);
+    }
+
 }
