@@ -286,8 +286,19 @@ pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, String> {
     run_smpt_with_timeout(net_file, xml_file, Some(get_smpt_timeout()))
 }
 
-/// Run SMPT on a Petri net file with constraints with optional timeout
 pub fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, String> {
+    // First try to run with 1 second timeout
+    match run_smpt_with_timeout_prim(net_file, xml_file, Some(1)) {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            // If it fails, try again with the current global timeout
+            run_smpt_with_timeout_prim(net_file, xml_file, timeout_seconds)
+        }
+    }
+}
+
+/// Run SMPT on a Petri net file with constraints with optional timeout
+pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, String> {
     if !is_smpt_installed() {
         return Err("SMPT is not installed".to_string());
     }
@@ -303,7 +314,7 @@ pub fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Op
         "-n", abs_net_file.to_str().unwrap(),
         "--xml", abs_xml_file.to_str().unwrap(),
         "--show-time",
-        "--methods", "SMT", "CP", "INDUCTION", "K-INDUCTION", "STATE-EQUATION", "BMC", "PDR-COV", "PDR-REACH", "PDR-REACH-SATURATED"
+        "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
     ];
     
     // Add timeout arguments if specified (skip if 0 = use SMPT default)
