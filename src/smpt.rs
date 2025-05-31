@@ -290,7 +290,7 @@ pub fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Op
     // First try to run with 1 second timeout
     match run_smpt_with_timeout_prim(net_file, xml_file, Some(1)) {
         Ok(result) => Ok(result),
-        Err(e) => {
+        Err(_e) => {
             // If it fails, try again with the current global timeout
             run_smpt_with_timeout_prim(net_file, xml_file, timeout_seconds)
         }
