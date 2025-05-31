@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod affine_constraints;
+mod debug_report;
 mod expr_to_ns;
 mod graphviz;
 mod isl;

@@ -2,9 +2,23 @@
 
 use crate::petri::*;
 use crate::presburger::{Constraint, ConstraintType};
-use std::collections::HashMap;
+use crate::debug_report::{add_debug_smpt_call, format_constraints_description, SmptCall, DebugLogger};
+use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
+
+/// Default SMPT timeout in seconds (can be configured)
+/// 
+/// **Configuration:** To change the timeout globally, modify this value:
+/// - `2` = 2 seconds (default, good for quick testing)
+/// - `60` = 1 minute (for most examples)
+/// - `300` = 5 minutes (for complex examples)
+/// - `600` = 10 minutes (for very complex examples)
+/// - `0` = Use SMPT's default timeout (225 seconds)
+/// 
+/// This timeout is passed to SMPT's `--timeout` argument, which limits
+/// execution time per property verification method.
+pub const DEFAULT_SMPT_TIMEOUT_SECONDS: u64 = 2;
 
 /// Convert a Petri net to SMPT .net format
 /// Produces a textual representation of the Petri net compatible with SMPT tools
@@ -75,8 +89,54 @@ pub fn can_reach_constraint_set<P>(
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
+    can_reach_constraint_set_with_debug(petri, constraints, out_dir, 0)
+}
+
+/// Simple reachability check with constraints using SMPT with debug tracking
+pub fn can_reach_constraint_set_with_debug<P>(
+    petri: Petri<P>,
+    constraints: Vec<Constraint<P>>,
+    out_dir: &str,
+    disjunct_id: usize,
+) -> bool
+where
+    P: Clone + Hash + Ord + Display + Debug,
+{
+    can_reach_constraint_set_with_logger(petri, constraints, out_dir, disjunct_id, None)
+}
+
+/// Simple reachability check with constraints using SMPT with optional debug logger
+pub fn can_reach_constraint_set_with_logger<P>(
+    petri: Petri<P>,
+    constraints: Vec<Constraint<P>>,
+    out_dir: &str,
+    disjunct_id: usize,
+    debug_logger: Option<&DebugLogger>,
+) -> bool
+where
+    P: Clone + Hash + Ord + Display + Debug,
+{
+    // Debug logging
+    if let Some(logger) = debug_logger {
+        logger.log_petri_net(
+            "SMPT Input Petri Net", 
+            &format!("Petri net for disjunct {} before SMPT verification", disjunct_id),
+            &petri
+        );
+        logger.log_constraints(
+            "SMPT Input Constraints",
+            &format!("Constraints for disjunct {} to be verified by SMPT", disjunct_id),
+            &constraints
+        );
+    }
+    
+    // Extract places from Petri net to handle missing places in constraints
+    let petri_places: HashSet<String> = petri.get_places().iter()
+        .map(|p| sanitize(&p.to_string()))
+        .collect();
+    
     // Convert constraints to XML and use SMPT to check reachability
-    let xml = presburger_constraints_to_xml(&constraints, "reachability-check");
+    let xml = presburger_constraints_to_xml(&constraints, "reachability-check", &petri_places);
     
     // Convert Petri net to SMPT format
     let pnet_content = petri_to_pnet(&petri, "constraint_check");
@@ -92,19 +152,54 @@ where
     // Try to run SMPT tool
     match run_smpt(&pnet_file_path, &xml_file_path) {
         Ok(result) => {
-            println!("SMPT result: {}", if result.is_reachable { "REACHABLE" } else { "UNREACHABLE" });
+            let result_str = if result.is_reachable { "REACHABLE" } else { "UNREACHABLE" };
+            println!("SMPT result: {}", result_str);
             if let Some(time) = result.execution_time {
                 println!("Execution time: {}ms", time);
             }
+            
+            // Add debug entry
+            let smpt_call = SmptCall {
+                disjunct_id,
+                petri_net_content: pnet_content.clone(),
+                xml_content: xml.clone(),
+                result: result_str.to_string(),
+                execution_time_ms: result.execution_time,
+                constraints_description: format_constraints_description(&constraints),
+            };
+            
+            if let Some(logger) = debug_logger {
+                logger.smpt_call(smpt_call);
+            } else {
+                add_debug_smpt_call(smpt_call);
+            }
+            
             result.is_reachable
         }
         Err(e) => {
-            println!("Warning: Failed to run SMPT: {}", e);
-            println!("Generated files for manual verification:");
-            println!("  XML: {}", xml_file_path);
-            println!("  Net: {}", pnet_file_path);
-            println!("Manual command: python3 -m smpt -n {} --xml {}", pnet_file_path, xml_file_path);
-            false // Conservative fallback
+            eprintln!("ERROR: Failed to run SMPT: {}", e);
+            eprintln!("Generated files for manual verification:");
+            eprintln!("  XML: {}", xml_file_path);
+            eprintln!("  Net: {}", pnet_file_path);
+            eprintln!("Manual command: ./smpt_wrapper.sh -n {} --xml {}", pnet_file_path, xml_file_path);
+            
+            // Add debug entry for failed call
+            let smpt_call = SmptCall {
+                disjunct_id,
+                petri_net_content: pnet_content.clone(),
+                xml_content: xml.clone(),
+                result: format!("ERROR: {}", e),
+                execution_time_ms: None,
+                constraints_description: format_constraints_description(&constraints),
+            };
+            
+            if let Some(logger) = debug_logger {
+                logger.smpt_call(smpt_call);
+            } else {
+                add_debug_smpt_call(smpt_call);
+            }
+            
+            panic!("SMPT verification failed: {}", e);
         }
     }
 }
@@ -174,32 +269,58 @@ pub fn is_smpt_installed() -> bool {
         .unwrap_or(false)
 }
 
-/// Run SMPT on a Petri net file with constraints
+/// Run SMPT on a Petri net file with constraints using the default timeout
 pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, String> {
+    run_smpt_with_timeout(net_file, xml_file, Some(DEFAULT_SMPT_TIMEOUT_SECONDS))
+}
+
+/// Run SMPT on a Petri net file with constraints with optional timeout
+pub fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, String> {
     if !is_smpt_installed() {
         return Err("SMPT is not installed".to_string());
+    }
+    
+    // Convert paths to absolute paths for wrapper script compatibility
+    let abs_net_file = std::fs::canonicalize(net_file)
+        .map_err(|e| format!("Failed to get absolute path for {}: {}", net_file, e))?;
+    let abs_xml_file = std::fs::canonicalize(xml_file)
+        .map_err(|e| format!("Failed to get absolute path for {}: {}", xml_file, e))?;
+
+    // Build command arguments with optional timeout
+    let mut args = vec![
+        "-n", abs_net_file.to_str().unwrap(),
+        "--xml", abs_xml_file.to_str().unwrap(),
+        "--show-time",
+        "--methods", "SMT", "CP", "INDUCTION", "K-INDUCTION", "STATE-EQUATION", "BMC", "PDR-COV", "PDR-REACH", "PDR-REACH-SATURATED"
+    ];
+    
+    // Add timeout arguments if specified (skip if 0 = use SMPT default)
+    let timeout_str = timeout_seconds.filter(|&t| t > 0).map(|t| t.to_string());
+    if let Some(ref timeout_val) = timeout_str {
+        args.extend_from_slice(&["--timeout", timeout_val]);
     }
     
     // Try wrapper script first, then fall back to global python3
     let output = if std::path::Path::new("./smpt_wrapper.sh").exists() {
         std::process::Command::new("./smpt_wrapper.sh")
-            .args([
-                "-n", net_file,
-                "--xml", xml_file,
-                "--show-time",
-                "--methods", "BMC", "INDUCTION", "PDR-REACH"
-            ])
+            .args(&args)
             .output()
             .map_err(|e| format!("Failed to execute SMPT wrapper: {}", e))?
     } else {
+        // For python3 command, use original file paths (not absolute)
+        let mut python_args = vec![
+            "-m", "smpt",
+            "-n", net_file,
+            "--xml", xml_file,
+            "--show-time",
+            "--methods", "SMT", "CP", "INDUCTION", "K-INDUCTION", "STATE-EQUATION", "BMC", "PDR-COV", "PDR-REACH", "PDR-REACH-SATURATED"
+        ];
+        if let Some(ref timeout_val) = timeout_str {
+            python_args.extend_from_slice(&["--timeout", timeout_val]);
+        }
+        
         std::process::Command::new("python3")
-            .args([
-                "-m", "smpt",
-                "-n", net_file,
-                "--xml", xml_file,
-                "--show-time",
-                "--methods", "BMC", "INDUCTION", "PDR-REACH"
-            ])
+            .args(&python_args)
             .output()
             .map_err(|e| format!("Failed to execute SMPT: {}", e))?
     };
@@ -259,7 +380,8 @@ fn extract_method_used(output: &str) -> Option<String> {
 /// Converts a Vec of presburger Constraints to XML format compatible with SMPT
 pub fn presburger_constraints_to_xml<P: Display>(
     constraints: &[Constraint<P>], 
-    id: &str
+    id: &str,
+    petri_places: &HashSet<String>
 ) -> String {
     let mut xml = format!(
         r#"<?xml version='1.0' encoding='utf-8'?>
@@ -287,7 +409,7 @@ pub fn presburger_constraints_to_xml<P: Display>(
     } else {
         // Add each constraint
         for constraint in constraints {
-            let constraint_xml = presburger_constraint_to_xml(constraint);
+            let constraint_xml = presburger_constraint_to_xml(constraint, petri_places);
             for line in constraint_xml.lines() {
                 xml.push_str("            ");
                 xml.push_str(line);
@@ -308,8 +430,25 @@ pub fn presburger_constraints_to_xml<P: Display>(
     xml
 }
 
+/// Sanitize place names for SMPT compatibility (same as petri_to_pnet)
+fn sanitize(s: &str) -> String {
+    s.chars()
+        .map(|c| if c.is_alphanumeric() { c } else { '_' })
+        .collect()
+}
+
+/// Helper function to generate place token count or constant 0 if place doesn't exist
+fn place_tokens_or_zero(place_name: &str, petri_places: &HashSet<String>) -> String {
+    let sanitized_place = sanitize(place_name);
+    if petri_places.contains(&sanitized_place) {
+        format!("<tokens-count><place>{}</place></tokens-count>", sanitized_place)
+    } else {
+        "<integer-constant>0</integer-constant>".to_string()
+    }
+}
+
 /// Convert a single presburger Constraint to XML
-pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>) -> String {
+pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>, petri_places: &HashSet<String>) -> String {
     let mut xml = String::new();
 
     let operator = match constraint.constraint_type() {
@@ -324,37 +463,40 @@ pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>) -> S
     if linear_combo.len() == 1 && linear_combo[0].0 == 1 {
         // Simple case: coefficient = 1
         xml.push_str(&format!(
-            "  <tokens-count><place>{}</place></tokens-count>\n",
-            linear_combo[0].1
+            "  {}\n",
+            place_tokens_or_zero(&linear_combo[0].1.to_string(), petri_places)
         ));
     } else if linear_combo.len() == 1 {
         // Single variable with coefficient != 1
-        xml.push_str("  <integer-mul>\n");
-        xml.push_str(&format!(
-            "    <integer-constant>{}</integer-constant>\n",
-            linear_combo[0].0
-        ));
-        xml.push_str(&format!(
-            "    <tokens-count><place>{}</place></tokens-count>\n",
-            linear_combo[0].1
-        ));
-        xml.push_str("  </integer-mul>\n");
+        let place_xml = place_tokens_or_zero(&linear_combo[0].1.to_string(), petri_places);
+        if place_xml.contains("integer-constant") {
+            // If place doesn't exist, result is coefficient * 0 = 0
+            xml.push_str("  <integer-constant>0</integer-constant>\n");
+        } else {
+            xml.push_str("  <integer-mul>\n");
+            xml.push_str(&format!(
+                "    <integer-constant>{}</integer-constant>\n",
+                linear_combo[0].0
+            ));
+            xml.push_str(&format!("    {}\n", place_xml));
+            xml.push_str("  </integer-mul>\n");
+        }
     } else {
         // Multiple variables - use integer-add
         xml.push_str("  <integer-add>\n");
         for (coeff, var) in linear_combo {
+            let place_xml = place_tokens_or_zero(&var.to_string(), petri_places);
+            if place_xml.contains("integer-constant") {
+                // If place doesn't exist, skip this term since it contributes 0
+                continue;
+            }
+            
             if *coeff == 1 {
-                xml.push_str(&format!(
-                    "    <tokens-count><place>{}</place></tokens-count>\n",
-                    var
-                ));
+                xml.push_str(&format!("    {}\n", place_xml));
             } else if *coeff == -1 {
                 xml.push_str("    <integer-sub>\n");
                 xml.push_str("      <integer-constant>0</integer-constant>\n");
-                xml.push_str(&format!(
-                    "      <tokens-count><place>{}</place></tokens-count>\n",
-                    var
-                ));
+                xml.push_str(&format!("      {}\n", place_xml));
                 xml.push_str("    </integer-sub>\n");
             } else {
                 xml.push_str("    <integer-mul>\n");
@@ -362,10 +504,7 @@ pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>) -> S
                     "      <integer-constant>{}</integer-constant>\n",
                     coeff
                 ));
-                xml.push_str(&format!(
-                    "      <tokens-count><place>{}</place></tokens-count>\n",
-                    var
-                ));
+                xml.push_str(&format!("      {}\n", place_xml));
                 xml.push_str("    </integer-mul>\n");
             }
         }
@@ -396,7 +535,11 @@ mod tests {
             ConstraintType::NonNegative,
         );
 
-        let xml = presburger_constraint_to_xml(&constraint);
+        // Create a set of places that includes 'x'
+        let mut petri_places = HashSet::new();
+        petri_places.insert("x".to_string());
+
+        let xml = presburger_constraint_to_xml(&constraint, &petri_places);
         
         assert!(xml.contains("<integer-ge>"));
         assert!(xml.contains("<place>x</place>"));
@@ -412,7 +555,12 @@ mod tests {
             ConstraintType::EqualToZero,
         );
 
-        let xml = presburger_constraint_to_xml(&constraint);
+        // Create a set of places that includes 'x' and 'y'
+        let mut petri_places = HashSet::new();
+        petri_places.insert("x".to_string());
+        petri_places.insert("y".to_string());
+
+        let xml = presburger_constraint_to_xml(&constraint, &petri_places);
         
         assert!(xml.contains("<integer-eq>"));
         assert!(xml.contains("<integer-add>"));
@@ -426,7 +574,8 @@ mod tests {
     #[test]
     fn test_presburger_constraints_to_xml_empty() {
         let constraints: Vec<Constraint<&str>> = vec![];
-        let xml = presburger_constraints_to_xml(&constraints, "test-empty");
+        let petri_places = HashSet::new();
+        let xml = presburger_constraints_to_xml(&constraints, "test-empty", &petri_places);
         
         assert!(xml.contains("<conjunction>"));
         assert!(xml.contains("<integer-eq>"));
@@ -440,7 +589,12 @@ mod tests {
             Constraint::new(vec![(1, "y")], 0, ConstraintType::EqualToZero),
         ];
         
-        let xml = presburger_constraints_to_xml(&constraints, "test-multiple");
+        // Create a set of places that includes 'x' and 'y'
+        let mut petri_places = HashSet::new();
+        petri_places.insert("x".to_string());
+        petri_places.insert("y".to_string());
+        
+        let xml = presburger_constraints_to_xml(&constraints, "test-multiple", &petri_places);
         
         assert!(xml.contains("<conjunction>"));
         assert!(xml.contains("<integer-ge>"));
