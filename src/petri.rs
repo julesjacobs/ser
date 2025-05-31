@@ -1,7 +1,7 @@
 use std::hash::Hash;
 use crate::graphviz;
 use crate::affine_constraints::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 // Helper function to escape strings for use as node IDs in GraphViz DOT language
 fn escape_for_graphviz_id(s: &str) -> String {
@@ -18,6 +18,7 @@ fn escape_for_graphviz_id(s: &str) -> String {
         .collect()
 }
 
+#[derive(Clone)]
 pub struct Petri<Place> {
     initial_marking: Vec<Place>,
     transitions: Vec<(Vec<Place>, Vec<Place>)>,
@@ -270,6 +271,144 @@ where
     pub fn remove_identity_transitions(&mut self) {
         self.transitions.retain(|(input, output)| input != output);
     }
+
+    /// Remove transitions that output to any of the specified zero places
+    pub fn remove_transitions_outputting_to_zero_places(&mut self, zero_places: &[Place]) {
+        self.transitions.retain(|(_, outputs)| {
+            !outputs.iter().any(|place| zero_places.contains(place))
+        });
+    }
+
+    /// Remove unreachable places from the Petri net
+    /// This modifies the net by removing places that cannot be reached
+    pub fn remove_unreachable_places(&mut self, unreachable_places: &[Place]) {
+        // Remove unreachable places from initial marking
+        self.initial_marking.retain(|place| !unreachable_places.contains(place));
+        
+        // Remove transitions that involve unreachable places
+        self.transitions.retain(|(inputs, outputs)| {
+            !inputs.iter().any(|place| unreachable_places.contains(place)) &&
+            !outputs.iter().any(|place| unreachable_places.contains(place))
+        });
+    }
+
+    /// Filter the Petri net to keep only reachable transitions using a worklist algorithm
+    /// 
+    /// Takes a list of initially reachable places and modifies the Petri net by:
+    /// - Finding all transitions that can fire (all preconditions are reachable)
+    /// - Removing all unreachable transitions from self.transitions
+    /// 
+    /// A transition is reachable (can fire) if all its precondition places are reachable.
+    /// When a transition can fire, all its postcondition places become reachable.
+    pub fn filter_reachable(&mut self, initial_places: &[Place]) {
+        let mut reachable_places: HashSet<Place> = initial_places.iter().cloned().collect();
+        let mut reachable_transitions: HashSet<usize> = HashSet::new();
+        let mut worklist: Vec<Place> = initial_places.to_vec();
+        
+        while let Some(_current_place) = worklist.pop() {
+            // Check all transitions to see if any can now fire
+            for (transition_idx, (inputs, outputs)) in self.transitions.iter().enumerate() {
+                // Skip if we've already processed this transition
+                if reachable_transitions.contains(&transition_idx) {
+                    continue;
+                }
+                
+                // Check if all input places of this transition are reachable
+                let can_fire = inputs.iter().all(|input_place| reachable_places.contains(input_place));
+                
+                if can_fire {
+                    // Mark this transition as reachable (can fire)
+                    reachable_transitions.insert(transition_idx);
+                    
+                    // Add all output places to reachable set and worklist
+                    for output_place in outputs {
+                        if !reachable_places.contains(output_place) {
+                            reachable_places.insert(output_place.clone());
+                            worklist.push(output_place.clone());
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Filter transitions to keep only reachable ones
+        self.transitions = self.transitions
+            .iter()
+            .enumerate()
+            .filter(|(idx, _)| reachable_transitions.contains(idx))
+            .map(|(_, transition)| transition.clone())
+            .collect();
+    }
+
+    /// Filter the Petri net to keep only transitions reachable from the initial marking
+    pub fn filter_reachable_from_initial(&mut self) {
+        let initial_marking = self.initial_marking.clone();
+        self.filter_reachable(&initial_marking);
+    }
+
+    /// Flip the Petri net by reversing all transitions (input becomes output, output becomes input)
+    /// This is useful for backwards reachability analysis
+    pub fn flip(&mut self) {
+        for (inputs, outputs) in &mut self.transitions {
+            std::mem::swap(inputs, outputs);
+        }
+    }
+
+    /// Filter the Petri net to keep only transitions that can reach the given target places
+    /// This performs backwards reachability analysis by:
+    /// 1. Flipping the net (reversing all transitions)
+    /// 2. Running forward reachability from target places
+    /// 3. Flipping back to original orientation
+    pub fn filter_backwards_reachable(&mut self, target_places: &[Place]) {
+        // Step 1: Flip the net
+        self.flip();
+        
+        // Step 2: Run forward reachability from target places
+        self.filter_reachable(target_places);
+        
+        // Step 3: Flip back to original orientation
+        self.flip();
+    }
+
+    /// Iteratively filter the Petri net using alternating forward and backward reachability
+    /// until a fixed point is reached.
+    /// 
+    /// This finds the minimal set of transitions that are:
+    /// 1. Reachable from the initial marking (forward reachability)
+    /// 2. Can reach the target places (backward reachability)
+    /// 
+    /// The algorithm alternates between these filters until no more transitions are removed.
+    pub fn filter_bidirectional_reachable(&mut self, target_places: &[Place]) {
+        let initial_places = self.initial_marking.clone();
+        let mut previous_count = self.transitions.len();
+        let mut iteration = 0;
+        
+        loop {
+            iteration += 1;
+            
+            // Step 1: Filter forward from initial marking
+            self.filter_reachable(&initial_places);
+            
+            // Step 2: Filter backward from target places
+            self.filter_backwards_reachable(target_places);
+            let after_backward = self.transitions.len();
+            
+            // Check if we've reached a fixed point (no changes)
+            if after_backward == previous_count {
+                // No transitions were removed in this iteration
+                break;
+            }
+            
+            previous_count = after_backward;
+            
+            // Safety check to prevent infinite loops (shouldn't be needed)
+            if iteration > 100 {
+                eprintln!("Warning: Bidirectional filtering exceeded 100 iterations");
+                break;
+            }
+        }
+    }
+
 }
 
 impl<Place> Petri<Place>
@@ -640,63 +779,12 @@ where
 
 impl<Place> Petri<Place>
 where
-    Place: ToString,
+    Place: ToString + Clone + PartialEq + Eq + Hash,
 {
-    /// Produce a textual representation of this Petri net,
+    /// Produce a textual representation of this Petri net in SMPT format,
     /// with `net_name` as the net's label.
     pub fn to_pnet(&self, net_name: &str) -> String {
-        // A small helper to sanitize non-alphanumeric chars from strings.
-        fn sanitize(s: &str) -> String {
-            s.chars()
-                .map(|c| if c.is_alphanumeric() { c } else { '_' })
-                .collect()
-        }
-
-        let mut out = String::new();
-
-        // 1. net {...}
-        out.push_str(&format!("net {{{}}}\n", sanitize(net_name)));
-
-        // 2. Count how many times each place appears in the initial marking.
-        let mut marking_count: HashMap<String, usize> = HashMap::new();
-        for place in &self.initial_marking {
-            let place_str = sanitize(&place.to_string());
-            *marking_count.entry(place_str).or_insert(0) += 1;
-        }
-
-        // 3. Output the "pl" lines, e.g. "pl P1 (1)"
-        //    for each place in initial marking.
-        for (place, count) in marking_count {
-            out.push_str(&format!("pl {} ({})\n", place, count));
-        }
-
-        // 4. Output each transition, named t0, t1, ...
-        for (i, (input_places, output_places)) in self.transitions.iter().enumerate() {
-            // "tr tX <inputs> -> <outputs>"
-            out.push_str(&format!("tr t{} ", i));
-
-            // Input places
-            for p in input_places {
-                out.push_str(&sanitize(&p.to_string()));
-                out.push(' ');
-            }
-
-            // Arrow
-            out.push_str("-> ");
-
-            // Output places
-            let mut first = true;
-            for p in output_places {
-                if !first {
-                    out.push(' ');
-                }
-                out.push_str(&sanitize(&p.to_string()));
-                first = false;
-            }
-            out.push('\n');
-        }
-
-        out
+        crate::smpt::petri_to_pnet(self, net_name)
     }
 }
 
@@ -704,6 +792,346 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_filter_reachable() {
+        // Create a simple Petri net: P0 -> P1 -> P2, with P3 isolated
+        let mut petri = Petri::new(vec!["P0"]);
+        petri.add_transition(vec!["P0"], vec!["P1"]);      // t0: P0 -> P1
+        petri.add_transition(vec!["P1"], vec!["P2"]);      // t1: P1 -> P2
+        petri.add_transition(vec!["P3"], vec!["P4"]);      // t2: P3 -> P4 (unreachable)
+        
+        // Before filtering: should have 3 transitions
+        assert_eq!(petri.transitions.len(), 3);
+        
+        petri.filter_reachable_from_initial();
+        
+        // After filtering: should have only 2 reachable transitions (t0 and t1)
+        assert_eq!(petri.transitions.len(), 2);
+        assert_eq!(petri.transitions[0], (vec!["P0"], vec!["P1"]));  // t0
+        assert_eq!(petri.transitions[1], (vec!["P1"], vec!["P2"]));  // t1
+        // t2 (P3 -> P4) should be removed
+    }
+
+    #[test]
+    fn test_filter_reachable_complex() {
+        // More complex net: requires multiple places to fire transition
+        let mut petri = Petri::new(vec!["A", "B"]);
+        petri.add_transition(vec!["A"], vec!["C"]);           // t0: A -> C
+        petri.add_transition(vec!["B"], vec!["D"]);           // t1: B -> D  
+        petri.add_transition(vec!["C", "D"], vec!["E"]);      // t2: C+D -> E (needs both C and D)
+        petri.add_transition(vec!["F"], vec!["G"]);           // t3: F -> G (unreachable, F not reachable)
+        
+        // Before filtering: should have 4 transitions
+        assert_eq!(petri.transitions.len(), 4);
+        
+        petri.filter_reachable_from_initial();
+        
+        // After filtering: should have only 3 reachable transitions (t0, t1, t2)
+        assert_eq!(petri.transitions.len(), 3);
+        assert_eq!(petri.transitions[0], (vec!["A"], vec!["C"]));           // t0
+        assert_eq!(petri.transitions[1], (vec!["B"], vec!["D"]));           // t1
+        assert_eq!(petri.transitions[2], (vec!["C", "D"], vec!["E"]));      // t2
+        // t3 (F -> G) should be removed
+    }
+
+    #[test]
+    fn test_filter_reachable_with_custom_initial() {
+        // Test with custom initial places instead of initial marking
+        let mut petri = Petri::new(vec!["P0"]);  // P0 in initial marking
+        petri.add_transition(vec!["P0"], vec!["P1"]);      // t0: P0 -> P1
+        petri.add_transition(vec!["P2"], vec!["P3"]);      // t1: P2 -> P3
+        
+        // Before filtering: should have 2 transitions
+        assert_eq!(petri.transitions.len(), 2);
+        
+        // Filter reachable from custom set including P2 (not in initial marking)
+        petri.filter_reachable(&["P2"]);
+        
+        // After filtering: should have only 1 reachable transition (t1)
+        assert_eq!(petri.transitions.len(), 1);
+        assert_eq!(petri.transitions[0], (vec!["P2"], vec!["P3"]));  // t1
+        // t0 (P0 -> P1) should be removed since P0 is not in custom initial set
+    }
+
+    #[test]
+    fn test_filter_reachable_usage_example() {
+        // Example showing how to use reachability filtering to remove unreachable parts
+        let mut petri = Petri::new(vec!["Start", "Resource"]);
+        petri.add_transition(vec!["Start"], vec!["Process1"]);                    // t0
+        petri.add_transition(vec!["Process1", "Resource"], vec!["Process2"]);    // t1  
+        petri.add_transition(vec!["Process2"], vec!["End", "Resource"]);         // t2
+        petri.add_transition(vec!["Unreachable"], vec!["AlsoUnreachable"]);      // t3
+        
+        // Before filtering: 4 transitions
+        assert_eq!(petri.transitions.len(), 4);
+        
+        petri.filter_reachable_from_initial();
+        
+        // After filtering: only 3 reachable transitions remain (t0, t1, t2)
+        assert_eq!(petri.transitions.len(), 3);
+        assert_eq!(petri.transitions[0], (vec!["Start"], vec!["Process1"]));
+        assert_eq!(petri.transitions[1], (vec!["Process1", "Resource"], vec!["Process2"]));
+        assert_eq!(petri.transitions[2], (vec!["Process2"], vec!["End", "Resource"]));
+        // t3 (Unreachable -> AlsoUnreachable) should be removed
+    }
+
+    #[test]
+    fn test_flip() {
+        let mut petri = Petri::new(vec!["P0"]);
+        petri.add_transition(vec!["P0"], vec!["P1"]);                    // t0: P0 -> P1
+        petri.add_transition(vec!["P1", "P2"], vec!["P3"]);              // t1: P1+P2 -> P3
+        
+        // Before flip
+        assert_eq!(petri.transitions[0], (vec!["P0"], vec!["P1"]));
+        assert_eq!(petri.transitions[1], (vec!["P1", "P2"], vec!["P3"]));
+        
+        petri.flip();
+        
+        // After flip: inputs and outputs should be swapped
+        assert_eq!(petri.transitions[0], (vec!["P1"], vec!["P0"]));      // was P0 -> P1, now P1 -> P0
+        assert_eq!(petri.transitions[1], (vec!["P3"], vec!["P1", "P2"])); // was P1+P2 -> P3, now P3 -> P1+P2
+        
+        // Flip back
+        petri.flip();
+        
+        // Should be back to original
+        assert_eq!(petri.transitions[0], (vec!["P0"], vec!["P1"]));
+        assert_eq!(petri.transitions[1], (vec!["P1", "P2"], vec!["P3"]));
+    }
+
+    #[test]
+    fn test_filter_backwards_reachable() {
+        // Create a linear chain: P0 -> P1 -> P2 -> P3, with unreachable branch P4 -> P5
+        let mut petri = Petri::new(vec!["P0"]);
+        petri.add_transition(vec!["P0"], vec!["P1"]);        // t0: P0 -> P1
+        petri.add_transition(vec!["P1"], vec!["P2"]);        // t1: P1 -> P2
+        petri.add_transition(vec!["P2"], vec!["P3"]);        // t2: P2 -> P3
+        petri.add_transition(vec!["P4"], vec!["P5"]);        // t3: P4 -> P5 (unreachable from target)
+        
+        // Before filtering: 4 transitions
+        assert_eq!(petri.transitions.len(), 4);
+        
+        // Filter backwards reachable to P2 (only transitions that can lead to P2)
+        petri.filter_backwards_reachable(&["P2"]);
+        
+        // After filtering: should keep t0 and t1 (can reach P2), remove t2 and t3
+        assert_eq!(petri.transitions.len(), 2);
+        assert_eq!(petri.transitions[0], (vec!["P0"], vec!["P1"]));     // t0: P0 -> P1 (can reach P2)
+        assert_eq!(petri.transitions[1], (vec!["P1"], vec!["P2"]));     // t1: P1 -> P2 (can reach P2)
+        // t2 (P2 -> P3) removed because it doesn't lead TO P2
+        // t3 (P4 -> P5) removed because it can't reach P2
+    }
+
+    #[test]
+    fn test_filter_backwards_reachable_complex() {
+        // More complex backwards reachability: multiple paths to target
+        let mut petri = Petri::new(vec!["A", "B"]);
+        petri.add_transition(vec!["A"], vec!["C"]);          // t0: A -> C (leads to target E)
+        petri.add_transition(vec!["B"], vec!["D"]);          // t1: B -> D (leads to target E)
+        petri.add_transition(vec!["C", "D"], vec!["E"]);     // t2: C+D -> E (creates target E)
+        petri.add_transition(vec!["E"], vec!["F"]);          // t3: E -> F (doesn't lead TO E)
+        petri.add_transition(vec!["X"], vec!["Y"]);          // t4: X -> Y (unconnected, can't reach E)
+        
+        // Before filtering: 5 transitions
+        assert_eq!(petri.transitions.len(), 5);
+        
+        // Filter backwards reachable to E (transitions that can lead to E)
+        petri.filter_backwards_reachable(&["E"]);
+        
+        // Should keep t0, t1, t2 (all can lead to E), remove t3, t4
+        assert_eq!(petri.transitions.len(), 3);
+        assert_eq!(petri.transitions[0], (vec!["A"], vec!["C"]));        // t0: can contribute to E
+        assert_eq!(petri.transitions[1], (vec!["B"], vec!["D"]));        // t1: can contribute to E  
+        assert_eq!(petri.transitions[2], (vec!["C", "D"], vec!["E"]));   // t2: directly creates E
+        // t3 (E -> F) removed: doesn't lead TO E
+        // t4 (X -> Y) removed: unconnected
+    }
+
+    #[test]
+    fn test_backwards_vs_forwards_filtering_example() {
+        // Demonstrate the difference between forward and backward reachability
+        let mut petri_forward = Petri::new(vec!["Start"]);
+        petri_forward.add_transition(vec!["Start"], vec!["Middle"]);     // t0: Start -> Middle
+        petri_forward.add_transition(vec!["Middle"], vec!["End"]);       // t1: Middle -> End  
+        petri_forward.add_transition(vec!["End"], vec!["Cleanup"]);      // t2: End -> Cleanup
+        petri_forward.add_transition(vec!["Isolated"], vec!["Nowhere"]); // t3: Isolated -> Nowhere
+        
+        let mut petri_backward = petri_forward.clone();
+        
+        println!("Original net: Start->Middle->End->Cleanup, Isolated->Nowhere");
+        assert_eq!(petri_forward.transitions.len(), 4);
+        
+        // Forward reachability from "Start"
+        petri_forward.filter_reachable(&["Start"]);
+        println!("Forward from 'Start': {} transitions remain", petri_forward.transitions.len());
+        assert_eq!(petri_forward.transitions.len(), 3); // Keep t0, t1, t2; remove t3
+        
+        // Backward reachability to "End" 
+        petri_backward.filter_backwards_reachable(&["End"]);
+        println!("Backward to 'End': {} transitions remain", petri_backward.transitions.len());
+        assert_eq!(petri_backward.transitions.len(), 2); // Keep t0, t1; remove t2, t3
+        
+        // Forward: transitions reachable FROM start
+        assert_eq!(petri_forward.transitions[0], (vec!["Start"], vec!["Middle"]));
+        assert_eq!(petri_forward.transitions[1], (vec!["Middle"], vec!["End"]));
+        assert_eq!(petri_forward.transitions[2], (vec!["End"], vec!["Cleanup"]));
+        
+        // Backward: transitions that can reach TO end
+        assert_eq!(petri_backward.transitions[0], (vec!["Start"], vec!["Middle"]));
+        assert_eq!(petri_backward.transitions[1], (vec!["Middle"], vec!["End"]));
+        // End->Cleanup removed because it doesn't lead TO End
+    }
+
+    #[test]
+    fn test_filter_bidirectional_reachable_simple() {
+        // Simple case: linear chain with extra branches
+        let mut petri = Petri::new(vec!["Start"]);
+        petri.add_transition(vec!["Start"], vec!["A"]);          // t0: Start -> A (needed)
+        petri.add_transition(vec!["A"], vec!["Target"]);         // t1: A -> Target (needed)
+        petri.add_transition(vec!["Target"], vec!["After"]);     // t2: Target -> After (not needed for Target)
+        petri.add_transition(vec!["Isolated"], vec!["B"]);       // t3: Isolated -> B (unreachable from Start)
+        
+        // Before filtering: 4 transitions
+        assert_eq!(petri.transitions.len(), 4);
+        
+        // Bidirectional filter to Target
+        petri.filter_bidirectional_reachable(&["Target"]);
+        
+        // Should keep only t0 and t1 (path from Start to Target)
+        assert_eq!(petri.transitions.len(), 2);
+        assert_eq!(petri.transitions[0], (vec!["Start"], vec!["A"]));     // t0: needed for path
+        assert_eq!(petri.transitions[1], (vec!["A"], vec!["Target"]));    // t1: needed for path
+        // t2 removed: Target->After doesn't help reach Target
+        // t3 removed: Isolated->B unreachable from Start
+    }
+
+    #[test]
+    fn test_filter_bidirectional_reachable_complex() {
+        // More complex case requiring multiple iterations
+        let mut petri = Petri::new(vec!["Start"]);
+        petri.add_transition(vec!["Start"], vec!["A"]);          // t0: Start -> A (needed)
+        petri.add_transition(vec!["A"], vec!["B"]);              // t1: A -> B (needed)
+        petri.add_transition(vec!["B"], vec!["Target"]);         // t2: B -> Target (needed)
+        petri.add_transition(vec!["A"], vec!["C"]);              // t3: A -> C (dead end, not needed)
+        petri.add_transition(vec!["C"], vec!["D"]);              // t4: C -> D (dead end, not needed)
+        petri.add_transition(vec!["Target"], vec!["E"]);         // t5: Target -> E (not needed for Target)
+        petri.add_transition(vec!["Unreachable"], vec!["F"]);    // t6: Unreachable -> F (isolated)
+        
+        // Before filtering: 7 transitions
+        assert_eq!(petri.transitions.len(), 7);
+        
+        // Bidirectional filter to Target
+        petri.filter_bidirectional_reachable(&["Target"]);
+        
+        // Should keep only the direct path: Start -> A -> B -> Target
+        assert_eq!(petri.transitions.len(), 3);
+        assert_eq!(petri.transitions[0], (vec!["Start"], vec!["A"]));     // t0: needed
+        assert_eq!(petri.transitions[1], (vec!["A"], vec!["B"]));         // t1: needed
+        assert_eq!(petri.transitions[2], (vec!["B"], vec!["Target"]));    // t2: needed
+        // t3, t4 removed: A->C->D is a dead end that doesn't reach Target
+        // t5 removed: Target->E doesn't help reach Target
+        // t6 removed: Unreachable->F is isolated from Start
+    }
+
+    #[test]
+    fn test_filter_bidirectional_reachable_multiple_targets() {
+        // Test with multiple target places
+        let mut petri = Petri::new(vec!["Start"]);
+        petri.add_transition(vec!["Start"], vec!["A"]);          // t0: Start -> A (needed for both targets)
+        petri.add_transition(vec!["A"], vec!["Target1"]);        // t1: A -> Target1 (needed)
+        petri.add_transition(vec!["A"], vec!["Target2"]);        // t2: A -> Target2 (needed)
+        petri.add_transition(vec!["Target1"], vec!["B"]);        // t3: Target1 -> B (not needed)
+        petri.add_transition(vec!["Target2"], vec!["C"]);        // t4: Target2 -> C (not needed)
+        petri.add_transition(vec!["Isolated"], vec!["D"]);       // t5: Isolated -> D (unreachable)
+        
+        // Before filtering: 6 transitions
+        assert_eq!(petri.transitions.len(), 6);
+        
+        // Bidirectional filter to both targets
+        petri.filter_bidirectional_reachable(&["Target1", "Target2"]);
+        
+        // Should keep path to both targets: Start -> A -> {Target1, Target2}
+        assert_eq!(petri.transitions.len(), 3);
+        assert_eq!(petri.transitions[0], (vec!["Start"], vec!["A"]));     // t0: needed for both
+        assert_eq!(petri.transitions[1], (vec!["A"], vec!["Target1"]));   // t1: needed for Target1
+        assert_eq!(petri.transitions[2], (vec!["A"], vec!["Target2"]));   // t2: needed for Target2
+        // t3, t4 removed: don't help reach the targets
+        // t5 removed: isolated from Start
+    }
+
+    #[test]
+    fn test_filter_bidirectional_reachable_convergence() {
+        // Test case that requires multiple iterations to converge
+        let mut petri = Petri::new(vec!["Start"]);
+        petri.add_transition(vec!["Start"], vec!["A"]);          // t0: Start -> A (needed)
+        petri.add_transition(vec!["A"], vec!["B"]);              // t1: A -> B (needed)
+        petri.add_transition(vec!["B"], vec!["C"]);              // t2: B -> C (needed)
+        petri.add_transition(vec!["C"], vec!["Target"]);         // t3: C -> Target (needed)
+        petri.add_transition(vec!["A"], vec!["X"]);              // t4: A -> X (initially seems reachable)
+        petri.add_transition(vec!["X"], vec!["Y"]);              // t5: X -> Y (depends on t4)
+        petri.add_transition(vec!["Y"], vec!["Z"]);              // t6: Y -> Z (depends on t5, doesn't reach Target)
+        
+        // Before filtering: 7 transitions
+        assert_eq!(petri.transitions.len(), 7);
+        
+        // Bidirectional filter to Target
+        petri.filter_bidirectional_reachable(&["Target"]);
+        
+        // Should eliminate the X->Y->Z branch since it doesn't reach Target
+        assert_eq!(petri.transitions.len(), 4);
+        assert_eq!(petri.transitions[0], (vec!["Start"], vec!["A"]));     // t0: needed
+        assert_eq!(petri.transitions[1], (vec!["A"], vec!["B"]));         // t1: needed  
+        assert_eq!(petri.transitions[2], (vec!["B"], vec!["C"]));         // t2: needed
+        assert_eq!(petri.transitions[3], (vec!["C"], vec!["Target"]));    // t3: needed
+        // t4, t5, t6 removed: A->X->Y->Z doesn't contribute to reaching Target
+    }
+
+    #[test]
+    fn test_bidirectional_vs_individual_filtering_demo() {
+        // Demonstrate the power of bidirectional filtering vs individual approaches
+        println!("\n=== Bidirectional vs Individual Filtering Demo ===");
+        
+        // Create a complex network with multiple branches
+        let mut petri_original = Petri::new(vec!["Start"]);
+        petri_original.add_transition(vec!["Start"], vec!["A"]);         // t0: Start -> A (essential)
+        petri_original.add_transition(vec!["A"], vec!["B"]);             // t1: A -> B (essential)  
+        petri_original.add_transition(vec!["B"], vec!["Target"]);        // t2: B -> Target (essential)
+        petri_original.add_transition(vec!["A"], vec!["DeadEnd"]);       // t3: A -> DeadEnd (forward reachable, but useless)
+        petri_original.add_transition(vec!["Target"], vec!["After"]);    // t4: Target -> After (backward unreachable)
+        petri_original.add_transition(vec!["Isolated"], vec!["Nowhere"]); // t5: Isolated -> Nowhere (completely unreachable)
+        
+        println!("Original net has {} transitions", petri_original.transitions.len());
+        assert_eq!(petri_original.transitions.len(), 6);
+        
+        // Test 1: Forward-only filtering
+        let mut petri_forward = petri_original.clone();
+        petri_forward.filter_reachable_from_initial();
+        println!("Forward-only filtering: {} transitions remain", petri_forward.transitions.len());
+        assert_eq!(petri_forward.transitions.len(), 5); // Removes only t5 (isolated), keeps everything else
+        
+        // Test 2: Backward-only filtering  
+        let mut petri_backward = petri_original.clone();
+        petri_backward.filter_backwards_reachable(&["Target"]);
+        println!("Backward-only filtering: {} transitions remain", petri_backward.transitions.len());
+        assert_eq!(petri_backward.transitions.len(), 3); // Removes t4, t5; keeps t3
+        
+        // Test 3: Bidirectional filtering (the optimal result)
+        let mut petri_bidirectional = petri_original.clone();
+        petri_bidirectional.filter_bidirectional_reachable(&["Target"]);
+        println!("Bidirectional filtering: {} transitions remain", petri_bidirectional.transitions.len());
+        assert_eq!(petri_bidirectional.transitions.len(), 3); // Keeps only essential path: t0, t1, t2
+        
+        // Verify the bidirectional result is optimal
+        assert_eq!(petri_bidirectional.transitions[0], (vec!["Start"], vec!["A"]));
+        assert_eq!(petri_bidirectional.transitions[1], (vec!["A"], vec!["B"]));
+        assert_eq!(petri_bidirectional.transitions[2], (vec!["B"], vec!["Target"]));
+        
+        println!("✓ Bidirectional filtering found the minimal essential path!");
+        println!("  Forward-only: kept dead-end branches reachable from Start");
+        println!("  Backward-only: kept irrelevant transitions after Target"); 
+        println!("  Bidirectional: kept only Start → A → B → Target");
+    }
 
 
 #[test]

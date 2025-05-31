@@ -1,0 +1,4 @@
+net {demo_petri}
+pl start (1)
+tr t0 start -> middle
+tr t1 middle -> end

@@ -72,7 +72,7 @@ example - 1
 \end{minipage}
 
 
-\todo{guy - START}
+%\todo{guy - START}
 
 \[
 req \coloneq 
@@ -307,7 +307,7 @@ example - 2
 \end{minipage}
 
 \vspace{2em}
-\newpage
+%\newpage
 example - 3
 
 % Third row
@@ -350,6 +350,7 @@ example - 3
 	\end{lstlisting}
 \end{minipage}
 	
+\newpage
 
 example - 4
 
@@ -377,6 +378,32 @@ example - 4
 \end{minipage}
 	
 %only 0 in non-serializable runs!
+
+%\todo{start}
+
+%/snapshot_isolation_directly_as_NS_with_yields
+
+\begin{figure}[h]
+	\centering
+\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_with\_yields.pdf}
+	\caption{Snapshot Isolation with Yields.}
+	\label{fig:snapshotIsolationJsonWithYields}
+\end{figure}
+
+
+
+%/snapshot_isolation_directly_as_NS_without_yields
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_without\_yields.pdf}
+	\caption{Snapshot Isolation with Yields.}
+	\label{fig:snapshotIsolationJsonWithoutYields}
+\end{figure}
+
+
+\todo{maybe we have: (1) a copy of the global automaton; (2) a copy of the local automaton (with yields) with coloring of edges that don't exist in the one without yields}
+
 
 \newpage
 

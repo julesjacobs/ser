@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod affine_constraints;
+mod debug_report;
 mod expr_to_ns;
 mod graphviz;
 mod isl;
@@ -12,6 +13,8 @@ mod petri;
 mod presburger;
 mod reachability;
 mod semilinear;
+mod smpt;
+mod spresburger;
 
 use colored::*;
 use parser::Program;
@@ -32,6 +35,10 @@ fn print_usage() {
     println!(
         "  {}                  Open generated visualization files",
         "--open".green()
+    );
+    println!(
+        "  {}               Check SMPT installation status",
+        "--check-smpt".green()
     );
     println!("");
     println!("  - {}", "If a file is provided:".bold());
@@ -75,6 +82,10 @@ fn main() {
             "--open" => {
                 open_files = true;
                 i += 1;
+            }
+            "--check-smpt" => {
+                smpt::ensure_smpt_available();
+                process::exit(0);
             }
             _ => {
                 // If it's not a recognized flag, it must be the path
@@ -146,10 +157,10 @@ fn main() {
 // Process a Network System: generate visualizations for NS, Petri net, and Petri net with requests
 fn process_ns<G, L, Req, Resp>(ns: &NS<G, L, Req, Resp>, out_dir: &str, open_files: bool)
 where
-    G: Clone + Ord + Hash + Display,
-    L: Clone + Ord + Hash + Display,
-    Req: Clone + Ord + Hash + Display,
-    Resp: Clone + Ord + Hash + Display,
+    G: Clone + Ord + Hash + Display + std::fmt::Debug,
+    L: Clone + Ord + Hash + Display + std::fmt::Debug,
+    Req: Clone + Ord + Hash + Display + std::fmt::Debug,
+    Resp: Clone + Ord + Hash + Display + std::fmt::Debug,
 {
     // Create the output directory if it doesn't exist
     match fs::create_dir_all("out") {

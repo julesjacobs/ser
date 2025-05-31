@@ -8,7 +8,7 @@
 use either::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::hash::Hash;
 
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
@@ -460,15 +460,28 @@ where
 
 impl<G, L, Req, Resp> NS<G, L, Req, Resp>
 where
-    G: Clone + Ord + Hash + Display,
-    L: Clone + Ord + Hash + Display,
-    Req: Clone + Ord + Hash + Display,
-    Resp: Clone + Ord + Hash + Display,
+    G: Clone + Ord + Hash + Display + Debug,
+    L: Clone + Ord + Hash + Display + Debug,
+    Req: Clone + Ord + Hash + Display + Debug,
+    Resp: Clone + Ord + Hash + Display + Debug,
 {
-    /// Check if the network system is serializable
+    /// Check if the network system is serializable using both methods and report results
     pub fn is_serializable(&self, out_dir: &str) -> bool {
         use crate::ns_to_petri::*;
         use ReqPetriState::*;
+        use crate::debug_report::DebugLogger;
+
+        // Initialize debug logger
+        let program_name = std::path::Path::new(out_dir)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("unknown")
+            .to_string();
+        
+        let debug_logger = DebugLogger::new(program_name.clone(), format!("Network System: {:?}", self));
+        let start_time = std::time::Instant::now();
+
+        debug_logger.step("Initialization", "Starting serializability analysis", &format!("Program: {}\nOutput directory: {}", program_name, out_dir));
 
         let mut places_that_must_be_zero = HashSet::new();
         let petri = ns_to_petri_with_requests(&self).rename(|st| match st {
@@ -481,16 +494,38 @@ where
         });
         let places_that_must_be_zero: Vec<_> = places_that_must_be_zero.into_iter().collect();
 
+        debug_logger.log_petri_net("Original Petri Net", "Petri net converted from Network System", &petri);
+        debug_logger.step("Places to Zero", "Places that must be zero for serializability", &format!("Places: [{}]", places_that_must_be_zero.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
+
         let ser: SemilinearSet<_> = self.serialized_automaton_kleene(|req, resp| {
             SemilinearSet::singleton(SparseVector::unit(Response(req, resp)))
         });
 
-        crate::reachability::is_petri_reachability_set_subset_of_semilinear(
+        debug_logger.log_semilinear_set("Serialized Automaton", "Expected serializable behavior as semilinear set", &ser);
+
+        // Call new version with pruning and debug logging
+        let result_new = crate::reachability::is_petri_reachability_set_subset_of_semilinear_new(
             petri,
             &places_that_must_be_zero,
             ser,
             out_dir,
-        )
+            &debug_logger,
+        );
+        
+        let total_time = start_time.elapsed().as_millis() as u64;
+        let result_str = if result_new { "Serializable" } else { "Not serializable" };
+        
+        // Report results
+        println!("Serializability check results:");
+        println!("  New method (with pruning): {}", if result_new { "Serializable" } else { "Not serializable" });
+        
+        // Finalize debug report
+        if let Err(e) = debug_logger.finalize(result_str.to_string(), total_time, out_dir) {
+            eprintln!("Warning: Failed to generate debug report: {}", e);
+        }
+        
+        // Return the new result as the primary result
+        result_new
     }
 }
 

@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct Env {
     vars: HashMap<String, i64>,
 }
@@ -451,7 +451,7 @@ pub fn run_expr(
 }
 
 // Request type that holds the request name
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ExprRequest {
     pub name: String,
 }
@@ -463,7 +463,7 @@ impl std::fmt::Display for ExprRequest {
 }
 
 // We need a wrapper type since we can't implement Display directly for a tuple
-#[derive(Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
 pub struct LocalExpr(pub Local, pub Hc<Expr>);
 
 impl std::fmt::Display for LocalExpr {

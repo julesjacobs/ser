@@ -11,6 +11,7 @@ colored = "3.0.0"
 libc = "0.2.171"
 either = "1.15.0"
 tempfile = "3"
+chrono = { version = "0.4", features = ["serde"] }
 
 [build-dependencies]
 bindgen = "0.71.1"
