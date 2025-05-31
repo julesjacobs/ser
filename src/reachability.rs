@@ -189,7 +189,7 @@ where
             // Keep the place if it's not in places_that_must_be_zero
             match place {
                 Left(p) => !places_that_must_be_zero.contains(p),
-                Right(_) => true, // All Q-places can vary
+                Right(_) => false, // All Q-places can vary
             }
         })
         .collect();
@@ -239,7 +239,14 @@ pub fn can_reach_presburger<P>(
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
-    debug_logger.step("Presburger Reachability Start", "Converting SPresburgerSet to disjunctive normal form", &format!("SPresburgerSet to be checked: {}", presburger));
+    debug_logger.step("Presburger Reachability Start", "Expanding domain and converting to disjunctive normal form", &format!("SPresburgerSet to be checked: {}", presburger));
+    
+    // First step: Expand the domain of the presburger set to include all places in the Petri net
+    let all_petri_places = petri.get_places();
+    debug_logger.step("Domain Expansion", "Expanding presburger set domain to match Petri net", &format!("Petri net places: [{}]", all_petri_places.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
+    
+    presburger = presburger.expand_domain(all_petri_places);
+    debug_logger.step("Domain Expanded", "Presburger set domain expanded", &format!("Expanded presburger set: {}", presburger));
     
     // Convert SPresburgerSet to disjunctive normal form (list of quantified sets)
     let disjuncts = presburger.to_constraint_disjuncts();

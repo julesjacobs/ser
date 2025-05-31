@@ -40,6 +40,10 @@ fn print_usage() {
         "  {}               Check SMPT installation status",
         "--check-smpt".green()
     );
+    println!(
+        "  {}      Set SMPT timeout in seconds (default: 300)",
+        "--timeout <seconds>".green()
+    );
     println!("");
     println!("  - {}", "If a file is provided:".bold());
     println!(
@@ -86,6 +90,33 @@ fn main() {
             "--check-smpt" => {
                 smpt::ensure_smpt_available();
                 process::exit(0);
+            }
+            "--timeout" => {
+                if i + 1 >= args.len() {
+                    eprintln!(
+                        "{}: --timeout requires a value",
+                        "Error".red().bold()
+                    );
+                    print_usage();
+                    process::exit(1);
+                }
+                i += 1;
+                match args[i].parse::<u64>() {
+                    Ok(timeout) => {
+                        smpt::set_smpt_timeout(timeout);
+                        println!("Set SMPT timeout to {} seconds", timeout);
+                        i += 1;
+                    }
+                    Err(_) => {
+                        eprintln!(
+                            "{}: Invalid timeout value '{}'",
+                            "Error".red().bold(),
+                            args[i]
+                        );
+                        print_usage();
+                        process::exit(1);
+                    }
+                }
             }
             _ => {
                 // If it's not a recognized flag, it must be the path

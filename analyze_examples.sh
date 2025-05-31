@@ -1,12 +1,28 @@
 #!/bin/bash
 
 # Script to analyze all .ser examples and generate a serializability report
-# Usage: ./analyze_examples.sh
+# Usage: ./analyze_examples.sh [--timeout <seconds>]
 
 set -e
 
 OUTPUT_FILE="serializability_report.md"
 TEMP_FILE="temp_results.txt"
+
+# Parse command line arguments
+TIMEOUT_ARG=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --timeout)
+            TIMEOUT_ARG="--timeout $2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: ./analyze_examples.sh [--timeout <seconds>]"
+            exit 1
+            ;;
+    esac
+done
 
 echo "🔍 Analyzing Serializability of .ser Examples"
 echo "=============================================="
@@ -40,7 +56,7 @@ for file in "${files[@]}"; do
     printf "[$current/$total] Processing %-40s" "$filename..."
     
     # Run the analysis and capture output
-    if output=$(cargo run --quiet -- "$file" 2>&1); then
+    if output=$(cargo run --quiet -- $TIMEOUT_ARG "$file" 2>&1); then
         # Extract the new method result
         if echo "$output" | grep -q "New method (with pruning): Serializable"; then
             result="✅ Serializable"

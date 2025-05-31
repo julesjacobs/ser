@@ -232,6 +232,49 @@ where
             }
         }
     }
+
+    /// Expand the domain of this set to include all variables in the given domain.
+    /// This ensures the set is in Presburger form and harmonizes it with a universe
+    /// set constructed from the given domain.
+    /// 
+    /// This is useful when you need to ensure that a set has a specific domain
+    /// for operations like intersection or difference with sets in that domain.
+    /// 
+    /// # Arguments
+    /// * `domain` - Vector of variables that should be included in the set's domain
+    /// 
+    /// # Returns
+    /// A new SPresburgerSet that includes all variables from the domain,
+    /// with variables not originally in the set implicitly set to 0.
+    /// 
+    /// # Example
+    /// ```rust
+    /// // Set only mentions variable 'a'
+    /// let mut set = SPresburgerSet::atom('a');
+    /// // Expand to include variables 'a', 'b', 'c'
+    /// let expanded = set.expand_domain(vec!['a', 'b', 'c']);
+    /// // Now the set is defined over all three variables
+    /// ```
+    pub fn expand_domain(mut self, domain: Vec<T>) -> Self {
+        // Ensure this set is in Presburger form for harmonization
+        self.ensure_presburger();
+        
+        // Create a universe set over the desired domain
+        let mut universe = Self::universe(domain);
+        universe.ensure_presburger();
+        
+        // Harmonize the sets so they have the same domain
+        match (&mut self, &mut universe) {
+            (SPresburgerSet::Presburger(self_pset), SPresburgerSet::Presburger(universe_pset)) => {
+                // Use ISL harmonization to align domains
+                self_pset.harmonize(universe_pset);
+                
+                // Return the harmonized self (now expanded to the full domain)
+                SPresburgerSet::Presburger(self_pset.clone())
+            }
+            _ => unreachable!("Both sets should be in Presburger form after ensure_presburger"),
+        }
+    }
 }
 
 
@@ -392,6 +435,34 @@ mod tests {
         let one = SPresburgerSet::<i32>::one();
         assert!(matches!(zero, SPresburgerSet::Semilinear(_)));
         assert!(matches!(one, SPresburgerSet::Semilinear(_)));
+    }
+
+    #[test]
+    fn test_expand_domain() {
+        // Create a set that only mentions variable 0
+        let atom_set = SPresburgerSet::atom(0);
+        
+        // Expand domain to include variables 0, 1, 2
+        let expanded = atom_set.expand_domain(vec![0, 1, 2]);
+        
+        // Should now be in Presburger form
+        assert!(matches!(expanded, SPresburgerSet::Presburger(_)));
+        
+        // The set should now be defined over the expanded domain
+        // (though we can't easily test the internal structure without more complex assertions)
+    }
+
+    #[test]
+    fn test_expand_domain_with_universe() {
+        // Create an empty set
+        let empty_set = SPresburgerSet::<i32>::empty();
+        
+        // Expand domain to include variables 1, 2, 3
+        let expanded = empty_set.expand_domain(vec![1, 2, 3]);
+        
+        // Should be in Presburger form and still empty
+        assert!(matches!(expanded, SPresburgerSet::Presburger(_)));
+        // Note: We can't easily test emptiness here without making is_empty take &mut self
     }
 
     #[test]

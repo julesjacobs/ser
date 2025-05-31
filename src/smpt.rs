@@ -7,9 +7,11 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 
-/// Default SMPT timeout in seconds (can be configured)
+use std::sync::Mutex;
+
+/// Default SMPT timeout in seconds (can be configured at runtime)
 /// 
-/// **Configuration:** To change the timeout globally, modify this value:
+/// **Configuration:** To change the timeout globally, use `set_smpt_timeout()`:
 /// - `2` = 2 seconds (default, good for quick testing)
 /// - `60` = 1 minute (for most examples)
 /// - `300` = 5 minutes (for complex examples)
@@ -18,7 +20,17 @@ use std::hash::Hash;
 /// 
 /// This timeout is passed to SMPT's `--timeout` argument, which limits
 /// execution time per property verification method.
-pub const DEFAULT_SMPT_TIMEOUT_SECONDS: u64 = 2;
+static SMPT_TIMEOUT_SECONDS: Mutex<u64> = Mutex::new(10);
+
+/// Get the current SMPT timeout value
+pub fn get_smpt_timeout() -> u64 {
+    *SMPT_TIMEOUT_SECONDS.lock().unwrap()
+}
+
+/// Set the global SMPT timeout value
+pub fn set_smpt_timeout(timeout_seconds: u64) {
+    *SMPT_TIMEOUT_SECONDS.lock().unwrap() = timeout_seconds;
+}
 
 /// Convert a Petri net to SMPT .net format
 /// Produces a textual representation of the Petri net compatible with SMPT tools
@@ -269,9 +281,9 @@ pub fn is_smpt_installed() -> bool {
         .unwrap_or(false)
 }
 
-/// Run SMPT on a Petri net file with constraints using the default timeout
+/// Run SMPT on a Petri net file with constraints using the current global timeout
 pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, String> {
-    run_smpt_with_timeout(net_file, xml_file, Some(DEFAULT_SMPT_TIMEOUT_SECONDS))
+    run_smpt_with_timeout(net_file, xml_file, Some(get_smpt_timeout()))
 }
 
 /// Run SMPT on a Petri net file with constraints with optional timeout
@@ -313,7 +325,8 @@ pub fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Op
             "-n", net_file,
             "--xml", xml_file,
             "--show-time",
-            "--methods", "SMT", "CP", "INDUCTION", "K-INDUCTION", "STATE-EQUATION", "BMC", "PDR-COV", "PDR-REACH", "PDR-REACH-SATURATED"
+            // "--methods", "SMT", "CP", "INDUCTION", "K-INDUCTION", "STATE-EQUATION", "BMC", "PDR-COV", "PDR-REACH", "PDR-REACH-SATURATED"
+            "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
         ];
         if let Some(ref timeout_val) = timeout_str {
             python_args.extend_from_slice(&["--timeout", timeout_val]);
@@ -460,7 +473,10 @@ pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>, petr
 
     // Build the left side (linear combination)
     let linear_combo = constraint.linear_combination();
-    if linear_combo.len() == 1 && linear_combo[0].0 == 1 {
+    if linear_combo.len() == 0 {
+        // Special case: no variables
+        xml.push_str("  <integer-constant>0</integer-constant>\n");
+    } else if linear_combo.len() == 1 && linear_combo[0].0 == 1 {
         // Simple case: coefficient = 1
         xml.push_str(&format!(
             "  {}\n",
@@ -483,21 +499,12 @@ pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>, petr
         }
     } else {
         // Multiple variables - use integer-add
-        xml.push_str("  <integer-add>\n");
+        xml.push_str("  <integer-add>      \n");
         for (coeff, var) in linear_combo {
             let place_xml = place_tokens_or_zero(&var.to_string(), petri_places);
-            if place_xml.contains("integer-constant") {
-                // If place doesn't exist, skip this term since it contributes 0
-                continue;
-            }
             
             if *coeff == 1 {
                 xml.push_str(&format!("    {}\n", place_xml));
-            } else if *coeff == -1 {
-                xml.push_str("    <integer-sub>\n");
-                xml.push_str("      <integer-constant>0</integer-constant>\n");
-                xml.push_str(&format!("      {}\n", place_xml));
-                xml.push_str("    </integer-sub>\n");
             } else {
                 xml.push_str("    <integer-mul>\n");
                 xml.push_str(&format!(

@@ -473,6 +473,56 @@ impl<T> Constraint<T> {
 
         zero_vars
     }
+
+    /// Extracts all variables from a clause that have constraints requiring them to be nonzero.
+    /// This includes:
+    /// - Variables with NonNegative constraints where constant_term < 0 (i.e., var >= positive_value)
+    /// - Any variables that appear in constraints that are not of the form "var = 0"
+    /// 
+    /// This is the complement of extract_zero_variables and is useful for identifying
+    /// which variables must have nonzero values in the solution.
+    pub fn extract_nonzero_variables(clause: &[Constraint<T>]) -> Vec<T> 
+    where
+        T: Clone + Eq + std::hash::Hash,
+    {
+        let mut nonzero_vars = Vec::new();
+        let mut seen_vars = std::collections::HashSet::new();
+
+        for constraint in clause {
+            match constraint.constraint_type {
+                ConstraintType::NonNegative => {
+                    // For constraints of the form: linear_combination + constant_term >= 0
+                    // If constant_term < 0, then linear_combination >= -constant_term > 0
+                    if constraint.constant_term < 0 {
+                        // All variables in this constraint must contribute to making it positive
+                        for (_, var) in &constraint.linear_combination {
+                            if seen_vars.insert(var.clone()) {
+                                nonzero_vars.push(var.clone());
+                            }
+                        }
+                    }
+                    // Note: If constant_term >= 0, the constraint might be satisfiable with zeros
+                }
+                ConstraintType::EqualToZero => {
+                    // Skip pure zero constraints (handled by extract_zero_variables)
+                    if constraint.linear_combination.len() == 1 && constraint.constant_term == 0 {
+                        continue;
+                    }
+                    // For more complex equality constraints, all variables might need to be nonzero
+                    // to satisfy the constraint (conservative approach)
+                    if constraint.constant_term != 0 || constraint.linear_combination.len() > 1 {
+                        for (_, var) in &constraint.linear_combination {
+                            if seen_vars.insert(var.clone()) {
+                                nonzero_vars.push(var.clone());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        nonzero_vars
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
