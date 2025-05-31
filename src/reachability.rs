@@ -1,20 +1,42 @@
-use crate::affine_constraints::*;
 use crate::debug_report::DebugLogger;
-use crate::isl::affine_constraints_for_complement;
 use crate::kleene::Kleene;
 use crate::petri::*;
 use crate::semilinear::*;
 use crate::spresburger::SPresburgerSet;
 use either::{Either, Left, Right};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fmt::{Debug, Display};
-use std::fs;
 use std::hash::Hash;
-use std::io::Write;
+use std::sync::Mutex;
 
-/// Checks if the reachability set of the Petri net has the property that:
-///   If places_that_must_be_zero are zero, then marking is in the semilinear set
-/// To do this we check whether ~Q /\ P=0 is reachable.
+/// Global debug logger for reachability analysis
+static DEBUG_LOGGER: Mutex<Option<DebugLogger>> = Mutex::new(None);
+
+/// Initialize the global debug logger
+pub fn init_debug_logger(program_name: String, program_content: String) {
+    let logger = DebugLogger::new(program_name, program_content);
+    *DEBUG_LOGGER.lock().unwrap() = Some(logger);
+}
+
+/// Get a reference to the global debug logger, or create a default one if not initialized
+pub fn get_debug_logger() -> DebugLogger {
+    let mut guard = DEBUG_LOGGER.lock().unwrap();
+    if guard.is_none() {
+        *guard = Some(DebugLogger::new("default".to_string(), "No program content".to_string()));
+    }
+    guard.as_ref().unwrap().clone()
+}
+
+/// Execute a closure with the debug logger
+fn with_debug_logger<F, R>(f: F) -> R
+where
+    F: FnOnce(&DebugLogger) -> R,
+{
+    let logger = get_debug_logger();
+    f(&logger)
+}
+
+/// Alias for the new implementation - uses the new SPresburgerSet-based architecture
 pub fn is_petri_reachability_set_subset_of_semilinear<P, Q>(
     petri: Petri<Either<P, Q>>,
     places_that_must_be_zero: &[P],
@@ -22,135 +44,10 @@ pub fn is_petri_reachability_set_subset_of_semilinear<P, Q>(
     out_dir: &str,
 ) -> bool
 where
-    P: Clone + Hash + Ord + Display,
-    Q: Clone + Hash + Ord + Display,
+    P: Clone + Hash + Ord + Display + Debug,
+    Q: Clone + Hash + Ord + Display + Debug,
 {
-    // Make new names for all the output places
-    let mut outputs = HashSet::new();
-    let mut non_outputs = HashSet::new();
-    petri.for_each_place(|place| {
-        match place {
-            Left(p) => non_outputs.insert(p.clone()),
-            Right(q) => outputs.insert(q.clone()),
-        };
-    });
-    semilinear.for_each_key(|q| {
-        outputs.insert(q.clone());
-    });
-    let mut outputs: Vec<_> = outputs.into_iter().collect();
-    let mut non_outputs: Vec<_> = non_outputs.into_iter().collect();
-    outputs.sort(); // so the renaming is predictable
-    non_outputs.sort();
-    let renaming: HashMap<&Q, Var> = outputs
-        .iter()
-        .enumerate()
-        .map(|(i, q)| (q, Var(i)))
-        .collect();
-    let mut petri: Petri<Either<P, Var>> = petri.rename(|p| p.map_right(|q| renaming[&q]));
-    let semilinear = semilinear.rename(|p| renaming[&p]);
-    let mut renaming_readable = String::new();
-    for q in &outputs {
-        renaming_readable.push_str(&format!("{} <-> {}\n", renaming[q], q));
-    }
-
-    // Compute the constraints
-    let mut constraints = affine_constraints_for_complement(outputs.len(), &semilinear);
-
-    // Reify existential vars as places in the petri net
-    for i in 0..constraints.num_existential_vars {
-        let v = Var(constraints.num_vars + i);
-        petri.add_existential_place(Right(v));
-        renaming_readable.push_str(&format!("{v} <-> new existential variable\n"));
-    }
-    constraints.num_vars += constraints.num_existential_vars;
-    constraints.num_existential_vars = 0;
-
-    // Rename the non-output places; assert that they are zero at the end
-    let renaming: HashMap<&P, Var> = non_outputs
-        .iter()
-        .enumerate()
-        .map(|(i, p)| (p, Var(i + constraints.num_vars)))
-        .collect();
-    let mut petri: Petri<Var> = petri.rename(|place| match place {
-        Left(p) => renaming[&p],
-        Right(v) => v,
-    });
-    for p in &non_outputs {
-        renaming_readable.push_str(&format!("{} <-> {}\n", renaming[p], p));
-    }
-    constraints.num_vars += places_that_must_be_zero.len();
-    for p in places_that_must_be_zero {
-        constraints.assert(Constraint {
-            affine_formula: vec![(1, renaming[p])],
-            offset: 0,
-            constraint_type: EqualToZero,
-        });
-    }
-
-
-    println!("*************************");
-
-    // per each (AND) clause constraint
-    for (i, and_clause) in constraints.constraints.iter_mut().enumerate() {
-        println!("\n#####");
-        println!("\nProcessing AND clause {}:", i);
-        println!("Current constraints:");
-        for constraint in &*and_clause {
-            println!("  {:?}", constraint);
-        }
-        // deduce invariant on places that must be zero
-        let deduced_new_zero_vars = petri.deduce_zero_places_from_constraints(&and_clause);
-
-        // add to the current (iterated) AND clause a new constraint of the deduced places that is 0
-        for var in deduced_new_zero_vars {
-            and_clause.push(Constraint {
-                affine_formula: vec![(1, var)],
-                offset: 0,
-                constraint_type: EqualToZero,
-            });
-        }
-
-    }
-
-
-    println!("*************************");
-
-    // identify non-reachable places, and add a constraint that their marking is 0
-    let unreachable = petri.find_unreachable_places();
-    constraints.assert_places_zero(&unreachable);
-
-    // IMPORTANT: to do this after finding upstream paths, as this changes the numbering of the transitions
-    // remove transitions with input places = output places
-    petri.remove_identity_transitions();
-
-    // Save the Petri Net
-    let string_representation_of_petri_net = petri.to_pnet(out_dir);
-    let petri_net_file_output_path = format!("{}/temp_interleaving_petri_net.net", out_dir);
-    fs::write(
-        &petri_net_file_output_path,
-        string_representation_of_petri_net,
-    )
-    .expect("Failed to write final Petri Net to output path");
-
-    // Save the renaming
-    fs::write(&format!("{out_dir}/temp_renaming.txt"), renaming_readable)
-        .expect("Failed to write human-readable renaming");
-
-    // Encode the constraints in XML for the SMPT tool
-    let xml = constraints_to_xml(&constraints, "XML-file");
-    let mut tmp = tempfile::Builder::new().suffix(".xml").tempfile().unwrap();
-    tmp.write_all(xml.as_bytes()).unwrap();
-    let tmp = tmp.into_temp_path();
-    let _filename = tmp.to_str().unwrap();
-
-    // also, save the XML in the main output directory
-    let xml_file_output_path = format!("{}/temp_non_serializable_outputs.xml", out_dir);
-    fs::write(&xml_file_output_path, xml).expect("Failed to write XML to output path");
-
-    // 4. Run the SMPT tool
-    return false; // TODO: Implement this
-    // TODO: add optimization: if Constraints are empty (=FALSE) for the complement semilinear set, then
-    // just return "FALSE". Currently the generated XML (e.g., simple_ser) is not parsed correctly
+    is_petri_reachability_set_subset_of_semilinear_new(petri, places_that_must_be_zero, semilinear, out_dir)
 }
 
 //=============================================================================
@@ -170,12 +67,12 @@ pub fn is_petri_reachability_set_subset_of_semilinear_new<P, Q>(
     places_that_must_be_zero: &[P],
     semilinear: SemilinearSet<Q>,
     out_dir: &str,
-    debug_logger: &DebugLogger,
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
     Q: Clone + Hash + Ord + Display + Debug,
 {
+    with_debug_logger(|debug_logger| {
     debug_logger.step("Reachability Analysis Start", "Starting new SPresburgerSet-based reachability analysis", &format!("Petri net places: [{}]\nPlaces that must be zero: [{}]\nSemilinear set: {}", petri.get_places().iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "), places_that_must_be_zero.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "), semilinear));
 
     // Step 1: Convert semilinear set to SPresburgerSet and embed it in Either<P,Q> domain
@@ -217,11 +114,12 @@ where
     
     // Step 4: Check if this constraint set is reachable
     // Note: we've effectively incorporated the zero constraints by filtering the universe
-    let result = !can_reach_presburger(petri, end_result_set, out_dir, debug_logger);
+    let result = !can_reach_presburger(petri, end_result_set, out_dir);
     
     debug_logger.step("Final Result", "Reachability analysis complete", &format!("Subset property holds: {}", result));
     
     result
+    })
 }
 
 
@@ -234,11 +132,11 @@ pub fn can_reach_presburger<P>(
     petri: Petri<P>, 
     mut presburger: SPresburgerSet<P>,
     out_dir: &str,
-    debug_logger: &DebugLogger,
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
+    with_debug_logger(|debug_logger| {
     debug_logger.step("Presburger Reachability Start", "Expanding domain and converting to disjunctive normal form", &format!("SPresburgerSet to be checked: {}", presburger));
     
     // First step: Expand the domain of the presburger set to include all places in the Petri net
@@ -258,7 +156,7 @@ where
         debug_logger.log_disjunct_start(i, quantified_set);
         println!("Checking disjunct {}: {}", i, quantified_set);
         
-        if can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i, debug_logger) {
+        if can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i) {
             println!("Disjunct {} is reachable - constraint set is satisfiable", i);
             debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is REACHABLE - constraint set is satisfiable", &format!("Disjunct {}: REACHABLE", i));
             return true;
@@ -269,6 +167,7 @@ where
     println!("No disjuncts are reachable - constraint set is unsatisfiable");
     debug_logger.step("All Disjuncts Checked", "No disjuncts are reachable - constraint set is unsatisfiable", &format!("Checked {} disjuncts, all UNREACHABLE", disjuncts.len()));
     false
+    })
 }
 
 pub fn can_reach_quantified_set<P>(
@@ -276,11 +175,11 @@ pub fn can_reach_quantified_set<P>(
     quantified_set: super::presburger::QuantifiedSet<P>, 
     out_dir: &str,
     disjunct_id: usize,
-    debug_logger: &DebugLogger,
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
+    with_debug_logger(|debug_logger| {
     debug_logger.step(&format!("Quantified Set {} Start", disjunct_id), "Extracting and reifying existential variables", &format!("Quantified set: {}", quantified_set));
     
     let (variables, basic_constraint_set) = quantified_set.extract_and_reify_existential_variables();
@@ -297,21 +196,22 @@ where
     debug_logger.log_petri_net(&format!("Transformed Petri Net {}", disjunct_id), "Petri net with existential variables added", &new_petri);
     debug_logger.log_constraints(&format!("Final Constraints {}", disjunct_id), "Final constraints to be checked with SMPT", &basic_constraint_set);
 
-    can_reach_constraint_set_with_debug(new_petri, basic_constraint_set, out_dir, disjunct_id, debug_logger)
+    can_reach_constraint_set_with_debug(new_petri, basic_constraint_set, out_dir, disjunct_id)
+    })
 }
 
 
-/// Simple reachability check with constraints using SMPT with debug logging
+/// Reachability check with constraints using SMPT with pruning and debug logging
 pub fn can_reach_constraint_set_with_debug<P>(
     mut petri: Petri<P>,
     constraints: Vec<super::presburger::Constraint<P>>,
     out_dir: &str,
     disjunct_id: usize,
-    debug_logger: &DebugLogger,
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
+    with_debug_logger(|debug_logger| {
     debug_logger.log_petri_net(&format!("Pre-Pruning Petri Net {}", disjunct_id), "Petri net before pruning and optimization", &petri);
     debug_logger.log_constraints(&format!("Input Constraints {}", disjunct_id), "Constraints for reachability check", &constraints);
     
@@ -347,42 +247,19 @@ where
     }
     
     crate::smpt::can_reach_constraint_set_with_logger(petri, constraints, out_dir, disjunct_id, Some(debug_logger))
+    })
 }
 
-/// Simple reachability check with constraints using SMPT
+/// Reachability check with constraints using SMPT with pruning (wrapper for debug version)
 pub fn can_reach_constraint_set<P>(
-    mut petri: Petri<P>,
+    petri: Petri<P>,
     constraints: Vec<super::presburger::Constraint<P>>,
     out_dir: &str
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
-    // Prune the petri net here by doing the iterative filtering where the target places 
-    // are all the nonzero variables (i.e. all places in the petri net that are not part 
-    // of the zero variables)
-    
-    // Extract zero variables from constraints
-    let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
-    let zero_variables_set: HashSet<P> = zero_variables.into_iter().collect();
-    
-    // Get all places in the Petri net
-    let all_places = petri.get_places();
-    
-    // Find nonzero variables (target places for filtering)
-    let nonzero_places: Vec<P> = all_places
-        .into_iter()
-        .filter(|place| !zero_variables_set.contains(place))
-        .collect();
-    
-    // Apply bidirectional iterative filtering to keep only transitions that:
-    // 1. Are reachable from the initial marking
-    // 2. Are backward reachable from the nonzero places
-    if !nonzero_places.is_empty() {
-        petri.filter_bidirectional_reachable(&nonzero_places);
-    }
-    
-    crate::smpt::can_reach_constraint_set(petri, constraints, out_dir)
+    can_reach_constraint_set_with_debug(petri, constraints, out_dir, 0)
 }
 
 #[cfg(test)]

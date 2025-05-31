@@ -454,12 +454,8 @@ pub fn presburger_constraints_to_xml<P: Display>(
     xml
 }
 
-/// Sanitize place names for SMPT compatibility (same as petri_to_pnet)
-fn sanitize(s: &str) -> String {
-    s.chars()
-        .map(|c| if c.is_alphanumeric() { c } else { '_' })
-        .collect()
-}
+// Use the shared utility function for sanitization
+use crate::utils::string::sanitize;
 
 /// Helper function to generate place token count or constant 0 if place doesn't exist
 fn place_tokens_or_zero(place_name: &str, petri_places: &HashSet<String>) -> String {

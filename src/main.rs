@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
-mod affine_constraints;
+// mod affine_constraints;
+mod isl;
 mod debug_report;
 mod expr_to_ns;
 mod graphviz;
-mod isl;
+
 mod kleene;
 mod ns;
 mod ns_to_petri;
@@ -15,6 +16,7 @@ mod reachability;
 mod semilinear;
 mod smpt;
 mod spresburger;
+mod utils;
 
 use colored::*;
 use parser::Program;
@@ -194,16 +196,13 @@ where
     Resp: Clone + Ord + Hash + Display + std::fmt::Debug,
 {
     // Create the output directory if it doesn't exist
-    match fs::create_dir_all("out") {
-        Ok(_) => {}
-        Err(err) => {
-            eprintln!(
-                "{} output directory: {}",
-                "Failed to create".red().bold(),
-                err
-            );
-            process::exit(1);
-        }
+    if let Err(err) = utils::file::ensure_dir_exists("out") {
+        eprintln!(
+            "{} output directory: {}",
+            "Failed to create".red().bold(),
+            err
+        );
+        process::exit(1);
     }
 
     // Generate GraphViz output for the Network System
@@ -260,16 +259,9 @@ where
     }
 
     // Output Petri net in .net format
-    let pnet_content = petri.to_pnet(out_dir);
+    let pnet_content = crate::smpt::petri_to_pnet(&petri, "petri");
     let pnet_file = format!("{}/petri.net", out_dir);
-    match fs::create_dir_all(format!("{}", out_dir)) {
-        Ok(_) => {}
-        Err(err) => {
-            eprintln!("{} directory: {}", "Failed to create".red().bold(), err);
-            process::exit(1);
-        }
-    }
-    match fs::write(&pnet_file, pnet_content) {
+    match utils::file::safe_write_file(&pnet_file, &pnet_content) {
         Ok(_) => println!("- {}", pnet_file.green()),
         Err(err) => {
             eprintln!(
@@ -316,9 +308,9 @@ where
     }
 
     // Output Petri net with requests in .net format
-    let pnet_req_content = petri_with_requests.to_pnet(&format!("{}_with_requests", out_dir));
+    let pnet_req_content = crate::smpt::petri_to_pnet(&petri_with_requests, "petri_with_requests");
     let pnet_req_file = format!("{}/petri_with_requests.net", out_dir);
-    match fs::write(&pnet_req_file, pnet_req_content) {
+    match utils::file::safe_write_file(&pnet_req_file, &pnet_req_content) {
         Ok(_) => println!("- {}", pnet_req_file.green()),
         Err(err) => {
             eprintln!(
@@ -339,7 +331,7 @@ where
         "Semilinear:\n{}\n",
         ns.serialized_automaton_semilinear()
     ));
-    match fs::write(&regex_file, regex_content) {
+    match utils::file::safe_write_file(&regex_file, &regex_content) {
         Ok(_) => println!("- {}", regex_file.green()),
         Err(err) => {
             eprintln!(

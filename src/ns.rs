@@ -14,21 +14,8 @@ use std::hash::Hash;
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
 
-// Helper function to escape strings for use as node IDs in GraphViz DOT language
-fn escape_for_graphviz_id(s: &str) -> String {
-    // Replace any non-alphanumeric characters with underscore
-    // Hack to avoid syntax errors in the DOT language
-    // Maybe cause issues if two different strings map to the same escaped string
-    s.chars()
-        .map(|c| {
-            if c.is_alphanumeric() || c == '_' {
-                c
-            } else {
-                '_'
-            }
-        })
-        .collect()
-}
+// Use the shared utility function for GraphViz escaping
+use crate::utils::string::escape_for_graphviz_id;
 
 // Helper function to properly quote strings for GraphViz labels
 fn quote_for_graphviz(s: &str) -> String {
@@ -469,7 +456,6 @@ where
     pub fn is_serializable(&self, out_dir: &str) -> bool {
         use crate::ns_to_petri::*;
         use ReqPetriState::*;
-        use crate::debug_report::DebugLogger;
 
         // Initialize debug logger
         let program_name = std::path::Path::new(out_dir)
@@ -478,9 +464,11 @@ where
             .unwrap_or("unknown")
             .to_string();
         
-        let debug_logger = DebugLogger::new(program_name.clone(), format!("Network System: {:?}", self));
+        crate::reachability::init_debug_logger(program_name.clone(), format!("Network System: {:?}", self));
         let start_time = std::time::Instant::now();
 
+        // Initialize and get reference to debug logger for ns-level logging
+        let debug_logger = crate::reachability::get_debug_logger();
         debug_logger.step("Initialization", "Starting serializability analysis", &format!("Program: {}\nOutput directory: {}", program_name, out_dir));
 
         let mut places_that_must_be_zero = HashSet::new();
@@ -509,7 +497,6 @@ where
             &places_that_must_be_zero,
             ser,
             out_dir,
-            &debug_logger,
         );
         
         let total_time = start_time.elapsed().as_millis() as u64;
