@@ -243,18 +243,6 @@ where
     })
 }
 
-/// Reachability check with constraints using SMPT with pruning (wrapper for debug version)
-pub fn can_reach_constraint_set<P>(
-    petri: Petri<P>,
-    constraints: Vec<super::presburger::Constraint<P>>,
-    out_dir: &str
-) -> bool
-where
-    P: Clone + Hash + Ord + Display + Debug,
-{
-    can_reach_constraint_set_with_debug(petri, constraints, out_dir, 0)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
