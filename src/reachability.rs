@@ -236,15 +236,8 @@ where
     
     debug_logger.step(&format!("Nonzero Places {}", disjunct_id), "Determined nonzero places for bidirectional filtering", &format!("Nonzero places: [{}]", nonzero_places.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
     
-    // Apply bidirectional iterative filtering to keep only transitions that:
-    // 1. Are reachable from the initial marking
-    // 2. Are backward reachable from the nonzero places
-    if !nonzero_places.is_empty() {
-        petri.filter_bidirectional_reachable(&nonzero_places);
-        debug_logger.log_petri_net(&format!("Post-Pruning Petri Net {}", disjunct_id), "Petri net after bidirectional filtering", &petri);
-    } else {
-        debug_logger.step(&format!("Skip Pruning {}", disjunct_id), "No nonzero places found - skipping pruning", "No filtering needed");
-    }
+    petri.filter_bidirectional_reachable(&nonzero_places);
+    debug_logger.log_petri_net(&format!("Post-Pruning Petri Net {}", disjunct_id), "Petri net after bidirectional filtering", &petri);
     
     crate::smpt::can_reach_constraint_set_with_logger(petri, constraints, out_dir, disjunct_id, Some(debug_logger))
     })
