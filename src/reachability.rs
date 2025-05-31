@@ -252,12 +252,107 @@ where
 
 /// Simple reachability check with constraints using SMPT
 pub fn can_reach_constraint_set<P>(
-    petri: Petri<P>,
+    mut petri: Petri<P>,
     constraints: Vec<super::presburger::Constraint<P>>,
     out_dir: &str
 ) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
+    // Prune the petri net here by doing the iterative filtering where the target places 
+    // are all the nonzero variables (i.e. all places in the petri net that are not part 
+    // of the zero variables)
+    
+    // Extract zero variables from constraints
+    let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
+    let zero_variables_set: HashSet<P> = zero_variables.into_iter().collect();
+    
+    // Get all places in the Petri net
+    let all_places = petri.get_places();
+    
+    // Find nonzero variables (target places for filtering)
+    let nonzero_places: Vec<P> = all_places
+        .into_iter()
+        .filter(|place| !zero_variables_set.contains(place))
+        .collect();
+    
+    // Apply bidirectional iterative filtering to keep only transitions that:
+    // 1. Are reachable from the initial marking
+    // 2. Are backward reachable from the nonzero places
+    if !nonzero_places.is_empty() {
+        petri.filter_bidirectional_reachable(&nonzero_places);
+    }
+    
     crate::smpt::can_reach_constraint_set(petri, constraints, out_dir)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::presburger::{Constraint, ConstraintType};
+
+    #[test]
+    fn test_petri_net_pruning_with_zero_constraints() {
+        // Create a Petri net: Start -> A -> B -> C, with unreachable D -> E
+        let mut petri = Petri::new(vec!["Start"]);
+        petri.add_transition(vec!["Start"], vec!["A"]);       // t0: Start -> A (reachable)
+        petri.add_transition(vec!["A"], vec!["B"]);           // t1: A -> B (reachable)  
+        petri.add_transition(vec!["B"], vec!["C"]);           // t2: B -> C (reachable)
+        petri.add_transition(vec!["D"], vec!["E"]);           // t3: D -> E (unreachable from Start)
+        petri.add_transition(vec!["C"], vec!["F"]);           // t4: C -> F (reachable)
+        
+        // Before pruning: 5 transitions
+        assert_eq!(petri.get_transitions().len(), 5);
+        
+        // Create constraints: A = 0, C = 0 (so B and F are nonzero)
+        let constraints = vec![
+            Constraint::new(vec![(1, "A")], 0, ConstraintType::EqualToZero),  // A = 0
+            Constraint::new(vec![(1, "C")], 0, ConstraintType::EqualToZero),  // C = 0
+        ];
+        
+        // Extract zero variables  
+        let zero_vars = Constraint::extract_zero_variables(&constraints);
+        assert_eq!(zero_vars.len(), 2);
+        assert!(zero_vars.contains(&"A"));
+        assert!(zero_vars.contains(&"C"));
+        
+        // Get all places and find nonzero places
+        let all_places = petri.get_places();
+        let zero_vars_set: HashSet<&str> = zero_vars.into_iter().collect();
+        let nonzero_places: Vec<&str> = all_places
+            .into_iter()
+            .filter(|place| !zero_vars_set.contains(place))
+            .collect();
+        
+        // Nonzero places should be: Start, B, D, E, F
+        assert_eq!(nonzero_places.len(), 5);
+        assert!(nonzero_places.contains(&"Start"));
+        assert!(nonzero_places.contains(&"B"));
+        assert!(nonzero_places.contains(&"D"));
+        assert!(nonzero_places.contains(&"E"));
+        assert!(nonzero_places.contains(&"F"));
+        
+        // Apply bidirectional filtering
+        petri.filter_bidirectional_reachable(&nonzero_places);
+        
+        // After filtering, should keep only transitions that can reach nonzero places
+        // from the initial marking: Start -> A -> B and B -> C -> F
+        // t3 (D -> E) should be removed as it's not reachable from Start
+        let remaining_transitions = petri.get_transitions();
+        assert!(remaining_transitions.len() <= 4); // Should remove at least t3
+        
+        // Verify the remaining transitions form a path from Start to nonzero places
+        let has_start_to_a = remaining_transitions.contains(&(vec!["Start"], vec!["A"]));
+        let has_a_to_b = remaining_transitions.contains(&(vec!["A"], vec!["B"]));
+        let has_b_to_c = remaining_transitions.contains(&(vec!["B"], vec!["C"]));
+        let has_c_to_f = remaining_transitions.contains(&(vec!["C"], vec!["F"]));
+        let has_d_to_e = remaining_transitions.contains(&(vec!["D"], vec!["E"]));
+        
+        // Should keep transitions that lead to nonzero places (B, F)
+        assert!(has_start_to_a); // Needed to reach B
+        assert!(has_a_to_b);     // Creates nonzero place B
+        
+        // Should not keep isolated transition
+        assert!(!has_d_to_e);    // Not reachable from Start
+    }
 }

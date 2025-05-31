@@ -156,10 +156,10 @@ fn main() {
 // Process a Network System: generate visualizations for NS, Petri net, and Petri net with requests
 fn process_ns<G, L, Req, Resp>(ns: &NS<G, L, Req, Resp>, out_dir: &str, open_files: bool)
 where
-    G: Clone + Ord + Hash + Display,
-    L: Clone + Ord + Hash + Display,
-    Req: Clone + Ord + Hash + Display,
-    Resp: Clone + Ord + Hash + Display,
+    G: Clone + Ord + Hash + Display + std::fmt::Debug,
+    L: Clone + Ord + Hash + Display + std::fmt::Debug,
+    Req: Clone + Ord + Hash + Display + std::fmt::Debug,
+    Resp: Clone + Ord + Hash + Display + std::fmt::Debug,
 {
     // Create the output directory if it doesn't exist
     match fs::create_dir_all("out") {

@@ -453,6 +453,26 @@ impl<T> Constraint<T> {
     pub fn constraint_type(&self) -> ConstraintType {
         self.constraint_type
     }
+    
+    /// Extracts all variables from a clause that have constraints of the form "coeff*var = 0"
+    /// (EqualToZero with single variable and zero constant term, any coefficient)
+    pub fn extract_zero_variables(clause: &[Constraint<T>]) -> Vec<T> 
+    where
+        T: Clone,
+    {
+        let mut zero_vars = Vec::new();
+
+        for constraint in clause {
+            if constraint.constraint_type == ConstraintType::EqualToZero &&
+                constraint.linear_combination.len() == 1 &&
+                constraint.constant_term == 0
+            {
+                zero_vars.push(constraint.linear_combination[0].1.clone());
+            }
+        }
+
+        zero_vars
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2230,5 +2250,28 @@ mod tests {
         let a_star_times_bc = a_star.times(bc);
         let presburger = PresburgerSet::from_semilinear_set(&a_star_times_bc);
         println!("PresburgerSet: {}", presburger);
+    }
+
+    #[test]
+    fn test_extract_zero_variables() {
+        // Create constraints: x = 0, 2y = 0, z >= 5, 3w + u = 0
+        let constraints = vec![
+            Constraint::new(vec![(1, "x")], 0, ConstraintType::EqualToZero),           // x = 0
+            Constraint::new(vec![(2, "y")], 0, ConstraintType::EqualToZero),           // 2y = 0  
+            Constraint::new(vec![(1, "z")], -5, ConstraintType::NonNegative),          // z >= 5 (not zero constraint)
+            Constraint::new(vec![(3, "w"), (1, "u")], 0, ConstraintType::EqualToZero), // 3w + u = 0 (multiple vars)
+            Constraint::new(vec![(1, "v")], 1, ConstraintType::EqualToZero),           // v = -1 (non-zero constant)
+        ];
+
+        let zero_vars = Constraint::extract_zero_variables(&constraints);
+        
+        // Should extract only "x" and "y" (single variable equal to zero)
+        assert_eq!(zero_vars.len(), 2);
+        assert!(zero_vars.contains(&"x"));
+        assert!(zero_vars.contains(&"y"));
+        assert!(!zero_vars.contains(&"z")); // Not equal to zero constraint
+        assert!(!zero_vars.contains(&"w")); // Multiple variables in constraint
+        assert!(!zero_vars.contains(&"u")); // Multiple variables in constraint  
+        assert!(!zero_vars.contains(&"v")); // Non-zero constant term
     }
 }

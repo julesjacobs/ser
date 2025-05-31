@@ -8,7 +8,7 @@
 use either::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::hash::Hash;
 
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
@@ -460,12 +460,12 @@ where
 
 impl<G, L, Req, Resp> NS<G, L, Req, Resp>
 where
-    G: Clone + Ord + Hash + Display,
-    L: Clone + Ord + Hash + Display,
-    Req: Clone + Ord + Hash + Display,
-    Resp: Clone + Ord + Hash + Display,
+    G: Clone + Ord + Hash + Display + Debug,
+    L: Clone + Ord + Hash + Display + Debug,
+    Req: Clone + Ord + Hash + Display + Debug,
+    Resp: Clone + Ord + Hash + Display + Debug,
 {
-    /// Check if the network system is serializable
+    /// Check if the network system is serializable using both methods and report results
     pub fn is_serializable(&self, out_dir: &str) -> bool {
         use crate::ns_to_petri::*;
         use ReqPetriState::*;
@@ -485,12 +485,29 @@ where
             SemilinearSet::singleton(SparseVector::unit(Response(req, resp)))
         });
 
-        crate::reachability::is_petri_reachability_set_subset_of_semilinear(
+        // Call original version
+        let result_original = crate::reachability::is_petri_reachability_set_subset_of_semilinear(
+            petri.clone(),
+            &places_that_must_be_zero,
+            ser.clone(),
+            out_dir,
+        );
+        
+        // Call new version with pruning
+        let result_new = crate::reachability::is_petri_reachability_set_subset_of_semilinear_new(
             petri,
             &places_that_must_be_zero,
             ser,
             out_dir,
-        )
+        );
+        
+        // Report both results
+        println!("Serializability check results:");
+        println!("  Original method: {}", if result_original { "Serializable" } else { "Not serializable" });
+        println!("  New method (with pruning): {}", if result_new { "Serializable" } else { "Not serializable" });
+        
+        // Return the new result as the primary result
+        result_new
     }
 }
 
