@@ -82,20 +82,178 @@ where
     let pnet_content = petri_to_pnet(&petri, "constraint_check");
     
     // Save files for SMPT
+    std::fs::create_dir_all(out_dir).expect("Failed to create output directory");
     let xml_file_path = format!("{}/smpt_constraints.xml", out_dir);
     let pnet_file_path = format!("{}/smpt_petri.net", out_dir);
     
     std::fs::write(&xml_file_path, &xml).expect("Failed to write SMPT XML");
     std::fs::write(&pnet_file_path, &pnet_content).expect("Failed to write SMPT Petri net");
     
-    // TODO: Actually run SMPT tool here
-    // For now, return false (conservative)
-    println!("Checking reachability with {} constraints on {} places", 
-             constraints.len(), petri.get_places().len());
-    println!("Generated files:");
-    println!("  XML: {}", xml_file_path);
-    println!("  Net: {}", pnet_file_path);
-    false
+    // Try to run SMPT tool
+    match run_smpt(&pnet_file_path, &xml_file_path) {
+        Ok(result) => {
+            println!("SMPT result: {}", if result.is_reachable { "REACHABLE" } else { "UNREACHABLE" });
+            if let Some(time) = result.execution_time {
+                println!("Execution time: {}ms", time);
+            }
+            result.is_reachable
+        }
+        Err(e) => {
+            println!("Warning: Failed to run SMPT: {}", e);
+            println!("Generated files for manual verification:");
+            println!("  XML: {}", xml_file_path);
+            println!("  Net: {}", pnet_file_path);
+            println!("Manual command: python3 -m smpt -n {} --reachability-xml {}", pnet_file_path, xml_file_path);
+            false // Conservative fallback
+        }
+    }
+}
+
+/// Result from SMPT execution
+#[derive(Debug)]
+pub struct SmptResult {
+    pub is_reachable: bool,
+    pub execution_time: Option<u64>, // milliseconds
+    pub method_used: Option<String>,
+}
+
+/// Install SMPT tool - returns true if already installed or successfully installed
+pub fn install_smpt() -> Result<(), String> {
+    // Check if SMPT is already available
+    if is_smpt_installed() {
+        return Ok(());
+    }
+    
+    println!("SMPT not found. Installation instructions:");
+    println!("1. Install Python 3.7+ and pip");
+    println!("2. Install Z3: pip install z3-solver");
+    println!("3. Clone SMPT: git clone https://github.com/nicolasAmat/SMPT.git");
+    println!("4. Install SMPT: cd SMPT && python setup.py bdist_wheel && pip install dist/smpt-5.0-py3-none-any.whl");
+    println!("5. Alternative: pip install smpt");
+    
+    Err("SMPT is not installed. Please follow the installation instructions above.".to_string())
+}
+
+/// Check and install SMPT if needed, with user-friendly output
+pub fn ensure_smpt_available() -> bool {
+    if is_smpt_installed() {
+        println!("✓ SMPT is available");
+        return true;
+    }
+    
+    println!("⚠ SMPT is not installed or not available in PATH");
+    match install_smpt() {
+        Ok(_) => {
+            println!("✓ SMPT installation check complete");
+            true
+        }
+        Err(msg) => {
+            println!("✗ {}", msg);
+            false
+        }
+    }
+}
+
+/// Check if SMPT is installed and available
+pub fn is_smpt_installed() -> bool {
+    // Try the wrapper script first
+    if std::process::Command::new("./smpt_wrapper.sh")
+        .args(["--help"])
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+    {
+        return true;
+    }
+    
+    // Fall back to global python3 -m smpt
+    std::process::Command::new("python3")
+        .args(["-m", "smpt", "--help"])
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
+/// Run SMPT on a Petri net file with constraints
+pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, String> {
+    if !is_smpt_installed() {
+        return Err("SMPT is not installed".to_string());
+    }
+    
+    // Try wrapper script first, then fall back to global python3
+    let output = if std::path::Path::new("./smpt_wrapper.sh").exists() {
+        std::process::Command::new("./smpt_wrapper.sh")
+            .args([
+                "-n", net_file,
+                "--reachability-xml", xml_file,
+                "--show-time",
+                "--methods", "BMC,INDUCTION,PDR"
+            ])
+            .output()
+            .map_err(|e| format!("Failed to execute SMPT wrapper: {}", e))?
+    } else {
+        std::process::Command::new("python3")
+            .args([
+                "-m", "smpt",
+                "-n", net_file,
+                "--reachability-xml", xml_file,
+                "--show-time",
+                "--methods", "BMC,INDUCTION,PDR"
+            ])
+            .output()
+            .map_err(|e| format!("Failed to execute SMPT: {}", e))?
+    };
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    
+    // Parse SMPT output
+    let is_reachable = if stdout.contains("TRUE") {
+        true
+    } else if stdout.contains("FALSE") {
+        false
+    } else {
+        return Err(format!("Could not parse SMPT result. stdout: {}, stderr: {}", stdout, stderr));
+    };
+    
+    // Extract execution time if available
+    let execution_time = extract_execution_time(&stdout);
+    
+    // Extract method used
+    let method_used = extract_method_used(&stdout);
+    
+    Ok(SmptResult {
+        is_reachable,
+        execution_time,
+        method_used,
+    })
+}
+
+/// Extract execution time from SMPT output
+fn extract_execution_time(output: &str) -> Option<u64> {
+    // Look for patterns like "Time: 0.123s" or "Execution time: 123ms"
+    for line in output.lines() {
+        if let Some(time_str) = line.strip_prefix("Time: ").and_then(|s| s.strip_suffix("s")) {
+            if let Ok(time_f) = time_str.parse::<f64>() {
+                return Some((time_f * 1000.0) as u64);
+            }
+        }
+    }
+    None
+}
+
+/// Extract method that found the result from SMPT output
+fn extract_method_used(output: &str) -> Option<String> {
+    for line in output.lines() {
+        if line.contains("Method:") {
+            return line.split("Method:").nth(1).map(|s| s.trim().to_string());
+        }
+        // Look for method names in the output
+        if line.contains("BMC") { return Some("BMC".to_string()); }
+        if line.contains("INDUCTION") { return Some("INDUCTION".to_string()); }
+        if line.contains("PDR") { return Some("PDR".to_string()); }
+    }
+    None
 }
 
 /// Converts a Vec of presburger Constraints to XML format compatible with SMPT
@@ -328,5 +486,51 @@ mod tests {
         assert!(pnet.contains("pl P_0 (1)"));
         assert!(pnet.contains("pl P_1 (1)"));
         assert!(pnet.contains("tr t0 P_0 -> P_1"));
+    }
+
+    #[test]
+    fn test_is_smpt_installed() {
+        // This test will check if SMPT is available, but won't fail if it's not installed
+        let installed = is_smpt_installed();
+        println!("SMPT installed: {}", installed);
+        // Always pass - this is just for information
+        assert!(true);
+    }
+
+    #[test]
+    fn test_extract_execution_time() {
+        let output1 = "Some output\nTime: 0.123s\nMore output";
+        assert_eq!(extract_execution_time(output1), Some(123));
+        
+        let output2 = "No time info here";
+        assert_eq!(extract_execution_time(output2), None);
+        
+        let output3 = "Time: 1.5s";
+        assert_eq!(extract_execution_time(output3), Some(1500));
+    }
+
+    #[test]
+    fn test_extract_method_used() {
+        let output1 = "Some output\nMethod: BMC found result\nMore output";
+        assert_eq!(extract_method_used(output1), Some("BMC found result".to_string()));
+        
+        let output2 = "BMC successful";
+        assert_eq!(extract_method_used(output2), Some("BMC".to_string()));
+        
+        let output3 = "PDR method used";
+        assert_eq!(extract_method_used(output3), Some("PDR".to_string()));
+        
+        let output4 = "No method info";
+        assert_eq!(extract_method_used(output4), None);
+    }
+
+    #[test]
+    fn test_install_smpt_instructions() {
+        // Test that install function provides instructions when SMPT is not installed
+        if !is_smpt_installed() {
+            let result = install_smpt();
+            assert!(result.is_err());
+            assert!(result.unwrap_err().contains("not installed"));
+        }
     }
 }

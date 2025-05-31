@@ -35,6 +35,10 @@ fn print_usage() {
         "  {}                  Open generated visualization files",
         "--open".green()
     );
+    println!(
+        "  {}               Check SMPT installation status",
+        "--check-smpt".green()
+    );
     println!("");
     println!("  - {}", "If a file is provided:".bold());
     println!(
@@ -77,6 +81,10 @@ fn main() {
             "--open" => {
                 open_files = true;
                 i += 1;
+            }
+            "--check-smpt" => {
+                smpt::ensure_smpt_available();
+                process::exit(0);
             }
             _ => {
                 // If it's not a recognized flag, it must be the path
