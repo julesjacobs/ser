@@ -8,9 +8,12 @@ use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Global debug logger for reachability analysis
 static DEBUG_LOGGER: Mutex<Option<DebugLogger>> = Mutex::new(None);
+
+static OPTIMIZE_ENABLED: AtomicBool = AtomicBool::new(false);
 
 /// Initialize the global debug logger
 pub fn init_debug_logger(program_name: String, program_content: String) {
@@ -25,6 +28,16 @@ pub fn get_debug_logger() -> DebugLogger {
         *guard = Some(DebugLogger::new("default".to_string(), "No program content".to_string()));
     }
     guard.as_ref().unwrap().clone()
+}
+
+/// Set the optimize flag (called from `main.rs`)
+pub fn set_optimize_flag(enabled: bool) {
+    OPTIMIZE_ENABLED.store(enabled, Ordering::SeqCst);
+}
+
+/// Helper to check whether optimization should run
+pub fn optimize_enabled() -> bool {
+    OPTIMIZE_ENABLED.load(Ordering::SeqCst)
 }
 
 /// Execute a closure with the debug logger

@@ -56,7 +56,8 @@ for file in "${files[@]}"; do
     printf "[$current/$total] Processing %-40s" "$filename..."
     
     # Run the analysis and capture output
-    if output=$(cargo run --quiet -- $TIMEOUT_ARG "$file" 2>&1); then
+    # always run this script with the optimizations
+    if output=$(cargo run --quiet -- --optimize $TIMEOUT_ARG "$file" 2>&1); then
         # Extract the new method result
         if echo "$output" | grep -q "New method (with pruning): Serializable"; then
             result="✅ Serializable"

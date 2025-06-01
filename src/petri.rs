@@ -345,28 +345,33 @@ where
     /// 
     /// The algorithm alternates between these filters until no more transitions are removed.
     pub fn filter_bidirectional_reachable(&mut self, target_places: &[Place]) {
-        let initial_places = self.initial_marking.clone();
+        // If the user didn’t pass --optimize, skip the entire pruning step.
+        if !crate::reachability::optimize_enabled() {
+            return;
+        }
+
+    let initial_places = self.initial_marking.clone();
         let mut previous_count = self.transitions.len();
         let mut iteration = 0;
-        
+
         loop {
             iteration += 1;
-            
+
             // Step 1: Filter forward from initial marking
             self.filter_reachable(&initial_places);
-            
+
             // Step 2: Filter backward from target places
             self.filter_backwards_reachable(target_places);
             let after_backward = self.transitions.len();
-            
+
             // Check if we've reached a fixed point (no changes)
             if after_backward == previous_count {
                 // No transitions were removed in this iteration
                 break;
             }
-            
+
             previous_count = after_backward;
-            
+
             // Safety check to prevent infinite loops (shouldn't be needed)
             if iteration > 100 {
                 eprintln!("Warning: Bidirectional filtering exceeded 100 iterations");

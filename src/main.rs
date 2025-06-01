@@ -79,6 +79,7 @@ fn main() {
 
     // Parse command line flags
     let mut open_files = false;
+    let mut optimize_enabled = false;
     let mut path_str = "";
 
     // Skip the program name (args[0])
@@ -92,6 +93,10 @@ fn main() {
             "--check-smpt" => {
                 smpt::ensure_smpt_available();
                 process::exit(0);
+            }
+            "--optimize" => {
+                optimize_enabled = true;
+                i += 1;
             }
             "--timeout" => {
                 if i + 1 >= args.len() {
@@ -146,6 +151,10 @@ fn main() {
     }
 
     let path = Path::new(path_str);
+
+    // Make the optimize flag available globally (via a simple static, or by passing it down).
+    // Here we’ll use a simple static AtomicBool in reachability.rs (see next section).
+    crate::reachability::set_optimize_flag(optimize_enabled);
 
     if !path.exists() {
         eprintln!("{}: '{}' does not exist", "Error".red().bold(), path_str);
