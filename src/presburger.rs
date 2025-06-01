@@ -874,7 +874,7 @@ mod presburger_equality_tests {
         println!("atom99 display: {}", atom99);
         
         // Check if they're equal before harmonization (should not be)
-        let equal_before = unsafe {
+        let equal_before = {
             // We can't directly compare without harmonization, so skip this
             false
         };

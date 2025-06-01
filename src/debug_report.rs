@@ -12,6 +12,8 @@ pub struct SmptCall {
     pub result: String,
     pub execution_time_ms: Option<u64>,
     pub constraints_description: String,
+    pub raw_stdout: String,
+    pub raw_stderr: String,
 }
 
 #[derive(Debug, Clone)]
@@ -238,6 +240,12 @@ impl DebugReport {
                         
                         <h4>🔧 XML Constraints:</h4>
                         <div class="code-block xml-content">{}</div>
+                        
+                        <h4>📤 Raw SMPT Output (stdout):</h4>
+                        <div class="code-block smpt-stdout">{}</div>
+                        
+                        <h4>🚨 Raw SMPT Error Output (stderr):</h4>
+                        <div class="code-block smpt-stderr">{}</div>
                     </div>"#,
                     i + 1,
                     call.disjunct_id,
@@ -246,7 +254,9 @@ impl DebugReport {
                     time_info,
                     html_escape(&call.constraints_description),
                     html_escape(&call.petri_net_content),
-                    html_escape(&call.xml_content)
+                    html_escape(&call.xml_content),
+                    html_escape(&call.raw_stdout),
+                    html_escape(&call.raw_stderr)
                 )
             })
             .collect::<Vec<_>>()

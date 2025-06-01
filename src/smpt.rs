@@ -3,6 +3,7 @@
 use crate::petri::*;
 use crate::presburger::{Constraint, ConstraintType};
 use crate::debug_report::{add_debug_smpt_call, format_constraints_description, SmptCall, DebugLogger};
+use crate::smpt_result_types::{SmptVerificationResult, SmptModel, SmptProof, SmptError};
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
@@ -93,11 +94,12 @@ where
 }
 
 /// Simple reachability check with constraints using SMPT
+/// Returns Result<bool, String> where Ok(true) means reachable, Ok(false) means unreachable, Err means SMPT failed
 pub fn can_reach_constraint_set<P>(
     petri: Petri<P>,
     constraints: Vec<Constraint<P>>,
     out_dir: &str,
-) -> bool
+) -> Result<bool, String>
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -105,12 +107,13 @@ where
 }
 
 /// Simple reachability check with constraints using SMPT with debug tracking
+/// Returns Result<bool, String> where Ok(true) means reachable, Ok(false) means unreachable, Err means SMPT failed
 pub fn can_reach_constraint_set_with_debug<P>(
     petri: Petri<P>,
     constraints: Vec<Constraint<P>>,
     out_dir: &str,
     disjunct_id: usize,
-) -> bool
+) -> Result<bool, String>
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -118,13 +121,14 @@ where
 }
 
 /// Simple reachability check with constraints using SMPT with optional debug logger
+/// Returns Result<bool, String> where Ok(true) means reachable, Ok(false) means unreachable, Err means SMPT failed
 pub fn can_reach_constraint_set_with_logger<P>(
     petri: Petri<P>,
     constraints: Vec<Constraint<P>>,
     out_dir: &str,
     disjunct_id: usize,
     debug_logger: Option<&DebugLogger>,
-) -> bool
+) -> Result<bool, String>
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -162,7 +166,8 @@ where
     std::fs::write(&pnet_file_path, &pnet_content).expect("Failed to write SMPT Petri net");
     
     // Try to run SMPT tool
-    match run_smpt(&pnet_file_path, &xml_file_path) {
+    let proof_file_path = format!("{}/smpt_proof_disjunct_{}", out_dir, disjunct_id);
+    match run_smpt_with_proof(&pnet_file_path, &xml_file_path, &proof_file_path) {
         Ok(result) => {
             let result_str = if result.is_reachable { "REACHABLE" } else { "UNREACHABLE" };
             println!("SMPT result: {}", result_str);
@@ -178,6 +183,8 @@ where
                 result: result_str.to_string(),
                 execution_time_ms: result.execution_time,
                 constraints_description: format_constraints_description(&constraints),
+                raw_stdout: result.raw_stdout.clone(),
+                raw_stderr: result.raw_stderr.clone(),
             };
             
             if let Some(logger) = debug_logger {
@@ -186,7 +193,7 @@ where
                 add_debug_smpt_call(smpt_call);
             }
             
-            result.is_reachable
+            Ok(result.is_reachable)
         }
         Err(e) => {
             eprintln!("ERROR: Failed to run SMPT: {}", e);
@@ -203,6 +210,8 @@ where
                 result: format!("ERROR: {}", e),
                 execution_time_ms: None,
                 constraints_description: format_constraints_description(&constraints),
+                raw_stdout: String::new(),
+                raw_stderr: String::new(),
             };
             
             if let Some(logger) = debug_logger {
@@ -211,18 +220,23 @@ where
                 add_debug_smpt_call(smpt_call);
             }
             
-            panic!("SMPT verification failed: {}", e);
+            Err(format!("SMPT verification failed: {}", e))
         }
     }
 }
 
-/// Result from SMPT execution
+/// Legacy result from SMPT execution (being replaced by SmptVerificationResult)
 #[derive(Debug)]
-pub struct SmptResult {
+pub struct LegacySmptResult {
     pub is_reachable: bool,
     pub execution_time: Option<u64>, // milliseconds
     pub method_used: Option<String>,
+    pub raw_stdout: String,
+    pub raw_stderr: String,
 }
+
+/// Type alias for the current Result type (will be updated to new types)
+pub type SmptResult = LegacySmptResult;
 
 /// Install SMPT tool - returns true if already installed or successfully installed
 pub fn install_smpt() -> Result<(), String> {
@@ -286,19 +300,34 @@ pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, String> {
     run_smpt_with_timeout(net_file, xml_file, Some(get_smpt_timeout()))
 }
 
+pub fn run_smpt_with_proof(net_file: &str, xml_file: &str, proof_file: &str) -> Result<SmptResult, String> {
+    run_smpt_with_timeout_and_proof(net_file, xml_file, Some(get_smpt_timeout()), proof_file)
+}
+
 pub fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, String> {
     // First try to run with 1 second timeout
-    match run_smpt_with_timeout_prim(net_file, xml_file, Some(1)) {
+    match run_smpt_with_timeout_prim(net_file, xml_file, Some(1), None) {
         Ok(result) => Ok(result),
         Err(_e) => {
             // If it fails, try again with the current global timeout
-            run_smpt_with_timeout_prim(net_file, xml_file, timeout_seconds)
+            run_smpt_with_timeout_prim(net_file, xml_file, timeout_seconds, None)
+        }
+    }
+}
+
+pub fn run_smpt_with_timeout_and_proof(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>, proof_file: &str) -> Result<SmptResult, String> {
+    // First try to run with 1 second timeout
+    match run_smpt_with_timeout_prim(net_file, xml_file, Some(1), Some(proof_file)) {
+        Ok(result) => Ok(result),
+        Err(_e) => {
+            // If it fails, try again with the current global timeout
+            run_smpt_with_timeout_prim(net_file, xml_file, timeout_seconds, Some(proof_file))
         }
     }
 }
 
 /// Run SMPT on a Petri net file with constraints with optional timeout
-pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, String> {
+pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>, proof_file: Option<&str>) -> Result<SmptResult, String> {
     if !is_smpt_installed() {
         return Err("SMPT is not installed".to_string());
     }
@@ -314,6 +343,7 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
         "-n", abs_net_file.to_str().unwrap(),
         "--xml", abs_xml_file.to_str().unwrap(),
         "--show-time",
+        "--check-proof",
         "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
     ];
     
@@ -321,6 +351,11 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
     let timeout_str = timeout_seconds.filter(|&t| t > 0).map(|t| t.to_string());
     if let Some(ref timeout_val) = timeout_str {
         args.extend_from_slice(&["--timeout", timeout_val]);
+    }
+    
+    // Add proof export argument if specified
+    if let Some(proof_path) = proof_file {
+        args.extend_from_slice(&["--export-proof", proof_path]);
     }
     
     // Try wrapper script first, then fall back to global python3
@@ -336,11 +371,15 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
             "-n", net_file,
             "--xml", xml_file,
             "--show-time",
+            "--check-proof",
             // "--methods", "SMT", "CP", "INDUCTION", "K-INDUCTION", "STATE-EQUATION", "BMC", "PDR-COV", "PDR-REACH", "PDR-REACH-SATURATED"
             "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
         ];
         if let Some(ref timeout_val) = timeout_str {
             python_args.extend_from_slice(&["--timeout", timeout_val]);
+        }
+        if let Some(proof_path) = proof_file {
+            python_args.extend_from_slice(&["--export-proof", proof_path]);
         }
         
         std::process::Command::new("python3")
@@ -371,7 +410,166 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
         is_reachable,
         execution_time,
         method_used,
+        raw_stdout: stdout.to_string(),
+        raw_stderr: stderr.to_string(),
     })
+}
+
+/// Enhanced SMPT runner with improved proof/model parsing
+pub fn run_smpt_enhanced(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>, proof_file: Option<&str>) -> Result<SmptVerificationResult, SmptError> {
+    if !is_smpt_installed() {
+        return Err(SmptError::ToolNotAvailable("SMPT is not installed".to_string()));
+    }
+    
+    // Convert paths to absolute paths for wrapper script compatibility
+    let abs_net_file = std::fs::canonicalize(net_file)
+        .map_err(|e| SmptError::ExecutionError(format!("Failed to get absolute path for {}: {}", net_file, e)))?;
+    let abs_xml_file = std::fs::canonicalize(xml_file)
+        .map_err(|e| SmptError::ExecutionError(format!("Failed to get absolute path for {}: {}", xml_file, e)))?;
+
+    // Build command arguments with optional timeout
+    let mut args = vec![
+        "-n", abs_net_file.to_str().unwrap(),
+        "--xml", abs_xml_file.to_str().unwrap(),
+        "--show-time",
+        "--show-model", // Always try to get models
+        "--check-proof", // Always try to get proofs
+        "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
+    ];
+    
+    // Add timeout arguments if specified (skip if 0 = use SMPT default)
+    let timeout_str = timeout_seconds.filter(|&t| t > 0).map(|t| t.to_string());
+    if let Some(ref timeout_val) = timeout_str {
+        args.extend_from_slice(&["--timeout", timeout_val]);
+    }
+    
+    // Add proof export argument if specified
+    if let Some(proof_path) = proof_file {
+        args.extend_from_slice(&["--export-proof", proof_path]);
+    }
+    
+    // Try wrapper script first, then fall back to global python3
+    let output = if std::path::Path::new("./smpt_wrapper.sh").exists() {
+        std::process::Command::new("./smpt_wrapper.sh")
+            .args(&args)
+            .output()
+            .map_err(|e| SmptError::ExecutionError(format!("Failed to execute SMPT wrapper: {}", e)))?
+    } else {
+        // For python3 command, use original file paths (not absolute)
+        let mut python_args = vec![
+            "-m", "smpt",
+            "-n", net_file,
+            "--xml", xml_file,
+            "--show-time",
+            "--show-model",
+            "--check-proof",
+            "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
+        ];
+        if let Some(ref timeout_val) = timeout_str {
+            python_args.extend_from_slice(&["--timeout", timeout_val]);
+        }
+        if let Some(proof_path) = proof_file {
+            python_args.extend_from_slice(&["--export-proof", proof_path]);
+        }
+        
+        std::process::Command::new("python3")
+            .args(&python_args)
+            .output()
+            .map_err(|e| SmptError::ExecutionError(format!("Failed to execute SMPT: {}", e)))?
+    };
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    
+    // Parse SMPT output to determine reachability
+    let is_reachable = if stdout.contains("TRUE") {
+        true
+    } else if stdout.contains("FALSE") {
+        false
+    } else {
+        return Err(SmptError::ParseError(format!("Could not parse SMPT result. stdout: {}, stderr: {}", stdout, stderr)));
+    };
+    
+    // Extract execution time if available
+    let execution_time = extract_execution_time(&stdout);
+    
+    // Extract method used
+    let method_used = extract_method_used(&stdout);
+    
+    // Parse model if reachable
+    let model = if is_reachable {
+        parse_smpt_model(&stdout)
+    } else {
+        None
+    };
+    
+    // Parse proof if unreachable  
+    let proof = if !is_reachable {
+        parse_smpt_proof(&stdout, &stderr, method_used.as_deref())
+    } else {
+        None
+    };
+    
+    // Build the result
+    let result = if is_reachable {
+        SmptVerificationResult::Reachable {
+            model,
+            execution_time,
+            method_used,
+            raw_stdout: stdout.to_string(),
+            raw_stderr: stderr.to_string(),
+        }
+    } else {
+        SmptVerificationResult::Unreachable {
+            proof,
+            execution_time,
+            method_used,
+            raw_stdout: stdout.to_string(),
+            raw_stderr: stderr.to_string(),
+        }
+    };
+    
+    Ok(result)
+}
+
+/// Parse SMPT model from output
+fn parse_smpt_model(output: &str) -> Option<SmptModel> {
+    // Look for lines starting with "# Model:"
+    for line in output.lines() {
+        if let Some(model_str) = line.strip_prefix("# Model: ") {
+            return Some(SmptModel::parse(model_str.to_string()));
+        }
+    }
+    None
+}
+
+/// Parse SMPT proof from output
+fn parse_smpt_proof(stdout: &str, stderr: &str, method: Option<&str>) -> Option<SmptProof> {
+    // Look for proof indicators in the output
+    let mut proof_lines = Vec::new();
+    let mut in_proof_section = false;
+    
+    for line in stdout.lines() {
+        if line.contains("[BMC] Trace") || line.contains("[PDR] Trace") || line.contains("Certificate") || line.contains("Proof") {
+            in_proof_section = true;
+            proof_lines.push(line.to_string());
+        } else if in_proof_section && (line.starts_with('#') || line.starts_with("##")) {
+            proof_lines.push(line.to_string());
+        } else if in_proof_section && line.trim().is_empty() {
+            // End of proof section
+            break;
+        }
+    }
+    
+    if !proof_lines.is_empty() {
+        Some(SmptProof {
+            raw_proof: proof_lines.join("\n"),
+            method: method.map(|s| s.to_string()),
+            verified: !stderr.contains("error") && !stderr.contains("failed"),
+        })
+    } else {
+        None
+    }
 }
 
 /// Extract execution time from SMPT output
@@ -727,7 +925,7 @@ mod tests {
             petri.clone(),
             vec![Constraint::new(vec![(1, "Item")], -1, ConstraintType::NonNegative)],
             out_dir
-        );
+        ).expect("SMPT should work for this test");
         println!("Can produce Item: {}", can_produce);
         assert!(can_produce, "Should be able to produce items");
         
@@ -737,7 +935,7 @@ mod tests {
             petri,
             vec![Constraint::new(vec![(1, "Consumer"), (1, "Waste")], -2, ConstraintType::NonNegative)],
             out_dir
-        );
+        ).expect("SMPT should work for this test");
         println!("Can have Consumer+Waste: {} (competing outcomes)", both_outcomes);
     }
 
