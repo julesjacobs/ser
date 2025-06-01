@@ -15,7 +15,6 @@ mod presburger;
 mod reachability;
 mod semilinear;
 mod smpt;
-mod smpt_result_types;
 mod spresburger;
 mod utils;
 

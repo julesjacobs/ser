@@ -156,19 +156,12 @@ where
         debug_logger.log_disjunct_start(i, quantified_set);
         println!("Checking disjunct {}: {}", i, quantified_set);
         
-        match can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i) {
-            Ok(true) => {
-                println!("Disjunct {} is reachable - constraint set is satisfiable", i);
-                debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is REACHABLE - constraint set is satisfiable", &format!("Disjunct {}: REACHABLE", i));
-                return true;
-            }
-            Ok(false) => {
-                debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is UNREACHABLE", &format!("Disjunct {}: UNREACHABLE", i));
-            }
-            Err(e) => {
-                panic!("SMPT verification failed for disjunct {}: {}", i, e);
-            }
+        if can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i) {
+            println!("Disjunct {} is reachable - constraint set is satisfiable", i);
+            debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is REACHABLE - constraint set is satisfiable", &format!("Disjunct {}: REACHABLE", i));
+            return true;
         }
+        debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is UNREACHABLE", &format!("Disjunct {}: UNREACHABLE", i));
     }
     
     println!("No disjuncts are reachable - constraint set is unsatisfiable");
@@ -182,7 +175,7 @@ pub fn can_reach_quantified_set<P>(
     quantified_set: super::presburger::QuantifiedSet<P>, 
     out_dir: &str,
     disjunct_id: usize,
-) -> Result<bool, String>
+) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -214,7 +207,7 @@ pub fn can_reach_constraint_set_with_debug<P>(
     constraints: Vec<super::presburger::Constraint<P>>,
     out_dir: &str,
     disjunct_id: usize,
-) -> Result<bool, String>
+) -> bool
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -308,8 +301,8 @@ mod tests {
         // Verify the remaining transitions form a path from Start to nonzero places
         let has_start_to_a = remaining_transitions.contains(&(vec!["Start"], vec!["A"]));
         let has_a_to_b = remaining_transitions.contains(&(vec!["A"], vec!["B"]));
-        let _has_b_to_c = remaining_transitions.contains(&(vec!["B"], vec!["C"]));
-        let _has_c_to_f = remaining_transitions.contains(&(vec!["C"], vec!["F"]));
+        let has_b_to_c = remaining_transitions.contains(&(vec!["B"], vec!["C"]));
+        let has_c_to_f = remaining_transitions.contains(&(vec!["C"], vec!["F"]));
         let has_d_to_e = remaining_transitions.contains(&(vec!["D"], vec!["E"]));
         
         // Should keep transitions that lead to nonzero places (B, F)
