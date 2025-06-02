@@ -2,6 +2,11 @@
 
 Serializability checker.
 
+cargo run PATH_TO_SER_FILE  [--timeout seconds] [--without-optimizations] -> runs a single file
+./analyze_examples.sh [--timeout seconds] -> runs all examples
+
+
+
 ## File Structure
 
 - `src/main.rs`: Entry point of the application that handles command line arguments and processes files.

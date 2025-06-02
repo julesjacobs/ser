@@ -345,7 +345,7 @@ where
     /// 
     /// The algorithm alternates between these filters until no more transitions are removed.
     pub fn filter_bidirectional_reachable(&mut self, target_places: &[Place]) {
-        // If the user didn’t pass --optimize, skip the entire pruning step.
+        // If the user passed --without-optimizations, skip the entire pruning step
         if !crate::reachability::optimize_enabled() {
             return;
         }

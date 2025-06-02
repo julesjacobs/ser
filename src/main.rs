@@ -39,6 +39,10 @@ fn print_usage() {
         "--open".green()
     );
     println!(
+        "  {}   Disable optimizations (default: optimizations ON)",
+        "--without-optimizations".green()
+    );
+    println!(
         "  {}               Check SMPT installation status",
         "--check-smpt".green()
     );
@@ -79,7 +83,7 @@ fn main() {
 
     // Parse command line flags
     let mut open_files = false;
-    let mut optimize_enabled = false;
+    let mut optimize_enabled = true;
     let mut path_str = "";
 
     // Skip the program name (args[0])
@@ -94,8 +98,8 @@ fn main() {
                 smpt::ensure_smpt_available();
                 process::exit(0);
             }
-            "--optimize" => {
-                optimize_enabled = true;
+            "--without-optimizations" => {
+                optimize_enabled = false;
                 i += 1;
             }
             "--timeout" => {
