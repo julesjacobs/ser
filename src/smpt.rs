@@ -97,7 +97,7 @@ pub fn can_reach_constraint_set<P>(
     petri: Petri<P>,
     constraints: Vec<Constraint<P>>,
     out_dir: &str,
-) -> bool
+) -> Result<bool, String>
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -110,7 +110,7 @@ pub fn can_reach_constraint_set_with_debug<P>(
     constraints: Vec<Constraint<P>>,
     out_dir: &str,
     disjunct_id: usize,
-) -> bool
+) -> Result<bool, String>
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -124,7 +124,7 @@ pub fn can_reach_constraint_set_with_logger<P>(
     out_dir: &str,
     disjunct_id: usize,
     debug_logger: Option<&DebugLogger>,
-) -> bool
+) -> Result<bool, String>
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -186,7 +186,7 @@ where
                 add_debug_smpt_call(smpt_call);
             }
             
-            result.is_reachable
+            Ok(result.is_reachable)
         }
         Err(e) => {
             eprintln!("ERROR: Failed to run SMPT: {}", e);
@@ -211,7 +211,7 @@ where
                 add_debug_smpt_call(smpt_call);
             }
             
-            panic!("SMPT verification failed: {}", e);
+            Err(format!("SMPT verification failed: {}", e))
         }
     }
 }
@@ -358,7 +358,14 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
     } else if stdout.contains("FALSE") {
         false
     } else {
-        return Err(format!("Could not parse SMPT result. stdout: {}, stderr: {}", stdout, stderr));
+        // Check for timeout patterns
+        if output.status.code() == Some(1) && stdout.trim() == "# Hello" {
+            return Err(format!("SMPT timeout: Analysis timed out after {}s. Try increasing timeout or enabling optimizations.", timeout_seconds.unwrap_or(get_smpt_timeout())));
+        } else if stdout.contains("# Hello") && stdout.contains("# Bye bye") && !stdout.contains("FORMULA") {
+            return Err(format!("SMPT timeout: Analysis timed out after {}s (completed startup but no results). Try increasing timeout or enabling optimizations.", timeout_seconds.unwrap_or(get_smpt_timeout())));
+        } else {
+            return Err(format!("Could not parse SMPT result. stdout: {}, stderr: {}", stdout, stderr));
+        }
     };
     
     // Extract execution time if available

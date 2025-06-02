@@ -252,7 +252,15 @@ where
     petri.filter_bidirectional_reachable(&nonzero_places);
     debug_logger.log_petri_net(&format!("Post-Pruning Petri Net {}", disjunct_id), "Petri net after bidirectional filtering", &petri);
     
-    crate::smpt::can_reach_constraint_set_with_logger(petri, constraints, out_dir, disjunct_id, Some(debug_logger))
+    match crate::smpt::can_reach_constraint_set_with_logger(petri, constraints, out_dir, disjunct_id, Some(debug_logger)) {
+        Ok(result) => result,
+        Err(e) => {
+            eprintln!("CRITICAL ERROR: SMPT verification failed in disjunct {}: {}", disjunct_id, e);
+            eprintln!("Cannot determine serializability - analysis is inconclusive");
+            eprintln!("This could indicate a bug when --without-optimizations is used");
+            panic!("SMPT verification failed: {}", e);
+        }
+    }
     })
 }
 

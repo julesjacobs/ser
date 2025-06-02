@@ -80,6 +80,9 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
     # Extract program output (stdout)
     output = result.stdout
     
+    # Check for SMPT timeout in the output
+    is_smpt_timeout = "SMPT timeout:" in output
+    
     if result.returncode == 0:
         # Check results from both methods
         has_original_serializable = "Original method: Serializable" in output
@@ -97,14 +100,20 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
             status = "❓ Unknown"
             console_status = "Unknown"
     else:
-        status = "⚠️ Error"
-        console_status = "Error"
+        # Check if this is a timeout error
+        if is_smpt_timeout:
+            status = "⏱️ SMPT Timeout"
+            console_status = "SMPT Timeout"
+        else:
+            status = "⚠️ Error"
+            console_status = "Error"
     
     return {
         'status': status,
         'console_status': console_status,
         'cpu_time': cpu_time,
-        'returncode': result.returncode
+        'returncode': result.returncode,
+        'is_timeout': is_smpt_timeout
     }
 
 
@@ -127,9 +136,26 @@ def analyze_file(file_path, timeout_arg, index):
         
         # Check if results are consistent
         if opt_result['status'] != no_opt_result['status']:
-            print(f"[{index}] {filename}: WARNING - Results differ between optimized and non-optimized runs!")
-            status = "⚠️ Inconsistent"
-            console_status = "Inconsistent"
+            # Only accept inconsistency if one or both runs had SMPT timeouts
+            if opt_result.get('is_timeout', False) or no_opt_result.get('is_timeout', False):
+                print(f"[{index}] {filename}: Results differ due to SMPT timeout")
+                # Use the non-timeout result if one succeeded
+                if opt_result.get('is_timeout', False) and not no_opt_result.get('is_timeout', False):
+                    status = no_opt_result['status'] + " (opt timed out)"
+                    console_status = no_opt_result['console_status'] + " (opt timed out)"
+                elif no_opt_result.get('is_timeout', False) and not opt_result.get('is_timeout', False):
+                    status = opt_result['status'] + " (no-opt timed out)"
+                    console_status = opt_result['console_status'] + " (no-opt timed out)"
+                else:
+                    # Both timed out
+                    status = "⏱️ Both Timed Out"
+                    console_status = "Both Timed Out"
+            else:
+                # Real inconsistency - this is a serious problem!
+                print(f"[{index}] {filename}: WARNING - Results differ between optimized and non-optimized runs (not due to timeout)!")
+                print(f"                    Optimized: {opt_result['status']}, No-opt: {no_opt_result['status']}")
+                status = "⚠️ Inconsistent"
+                console_status = "Inconsistent"
         
         # Format durations
         opt_duration_str = f"{opt_result['cpu_time']:.2f}"
@@ -236,8 +262,9 @@ def main():
         f.write("- ✅ **Serializable**: Programs that maintain serializability properties\n")
         f.write("- ❌ **Not serializable**: Programs that violate serializability\n")
         f.write("- ❓ **Unknown**: Could not determine result\n")
-        f.write("- ⚠️ **Error**: Analysis failed or timed out\n")
-        f.write("- ⚠️ **Inconsistent**: Results differ between optimized and non-optimized runs\n\n")
+        f.write("- ⚠️ **Error**: Analysis failed\n")
+        f.write("- ⏱️ **SMPT Timeout**: SMPT verification timed out\n")
+        f.write("- ⚠️ **Inconsistent**: Results differ between optimized and non-optimized runs (serious issue)\n\n")
         f.write("**Note**: Each example is analyzed twice - once with optimizations (default) and once with `--without-optimizations` flag. Both CPU times are reported to compare performance impact of optimizations.\n\n")
         f.write("---\n\n")
         f.write("*Report generated automatically by analyze_examples.py*\n")
@@ -251,13 +278,15 @@ def main():
     serializable_count = sum(1 for r in results if "✅ Serializable" in r['status'])
     not_serializable_count = sum(1 for r in results if "❌ Not serializable" in r['status'])
     unknown_count = sum(1 for r in results if "❓ Unknown" in r['status'])
+    timeout_count = sum(1 for r in results if "⏱️" in r['status'] or "timed out" in r['status'].lower())
     inconsistent_count = sum(1 for r in results if "⚠️ Inconsistent" in r['status'])
-    error_count = sum(1 for r in results if "⚠️" in r['status'] and "Inconsistent" not in r['status'])
+    error_count = sum(1 for r in results if "⚠️" in r['status'] and "Inconsistent" not in r['status'] and "⏱️" not in r['status'])
     
     print("📈 Summary:")
     print(f"   Serializable: {serializable_count}")
     print(f"   Not serializable: {not_serializable_count}")
     print(f"   Unknown: {unknown_count}")
+    print(f"   SMPT Timeouts: {timeout_count}")
     print(f"   Inconsistent: {inconsistent_count}")
     print(f"   Errors: {error_count}")
     print(f"   Total: {total_files}")
