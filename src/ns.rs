@@ -491,8 +491,16 @@ where
 
         debug_logger.log_semilinear_set("Serialized Automaton", "Expected serializable behavior as semilinear set", &ser);
 
-        // Call new version with pruning and debug logging
-        let result_new = crate::reachability::is_petri_reachability_set_subset_of_semilinear_new(
+        // Call original version
+        let result_original = crate::reachability::is_petri_reachability_set_subset_of_semilinear_new(
+            petri.clone(),
+            &places_that_must_be_zero,
+            ser.clone(),
+            out_dir,
+        );
+        
+        // Call new proof-based version
+        let result_with_proofs = crate::reachability_with_proofs::is_petri_reachability_set_subset_of_semilinear_new(
             petri,
             &places_that_must_be_zero,
             ser,
@@ -500,19 +508,31 @@ where
         );
         
         let total_time = start_time.elapsed().as_millis() as u64;
-        let result_str = if result_new { "Serializable" } else { "Not serializable" };
+        let result_original_str = if result_original { "Serializable" } else { "Not serializable" };
+        let result_proofs_bool: bool = result_with_proofs.clone().into();
+        let result_proofs_str = if result_proofs_bool { "Serializable" } else { "Not serializable" };
         
         // Report results
         println!("Serializability check results:");
-        println!("  New method (with pruning): {}", if result_new { "Serializable" } else { "Not serializable" });
+        println!("  Original method: {}", if result_original { "Serializable" } else { "Not serializable" });
+        println!("  Proof-based method: {:?} ({})", result_with_proofs, result_proofs_str);
+        
+        // Verify consistency
+        if result_original != result_proofs_bool {
+            eprintln!("WARNING: Results differ between original and proof-based methods!");
+            eprintln!("  Original: {}", result_original);
+            eprintln!("  Proof-based: {}", result_proofs_bool);
+        } else {
+            println!("✓ Both methods agree on the result");
+        }
         
         // Finalize debug report
-        if let Err(e) = debug_logger.finalize(result_str.to_string(), total_time, out_dir) {
+        if let Err(e) = debug_logger.finalize(result_original_str.to_string(), total_time, out_dir) {
             eprintln!("Warning: Failed to generate debug report: {}", e);
         }
         
-        // Return the new result as the primary result
-        result_new
+        // Return the original result as the primary result
+        result_original
     }
 }
 
