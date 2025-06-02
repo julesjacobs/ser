@@ -77,40 +77,69 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
         # Fallback to wall clock time if time parsing failed
         cpu_time = time.time() - start_time
     
-    # Extract program output (stdout)
-    output = result.stdout
+    # Extract program output (stdout and stderr combined)
+    output = result.stdout + result.stderr
     
-    # Check for SMPT timeout in the output
-    is_smpt_timeout = "SMPT timeout:" in output
+    # Check for SMPT timeout in the output - check multiple patterns
+    is_smpt_timeout = (
+        "SMPT timeout:" in output or 
+        "SMPT verification failed: SMPT timeout:" in output or
+        "Failed to run SMPT: SMPT timeout:" in output or
+        "Analysis timed out" in output
+    )
+    
+    # Determine results for each method separately
+    original_result = "Unknown"
+    proof_result = "Unknown"
     
     if result.returncode == 0:
-        # Check results from both methods
-        has_original_serializable = "Original method: Serializable" in output
-        has_original_not_serializable = "Original method: Not serializable" in output
-        has_proof_yes = "Proof-based method: Yes" in output
-        has_proof_no = "Proof-based method: No" in output
+        # Check original method results
+        if "Original method: Serializable" in output:
+            original_result = "Serializable"
+        elif "Original method: Not serializable" in output:
+            original_result = "Not serializable"
         
-        if has_original_serializable and has_proof_yes:
+        # Check proof-based method results
+        if "Proof-based method: Yes" in output:
+            proof_result = "Serializable"
+        elif "Proof-based method: No" in output:
+            proof_result = "Not serializable"
+    else:
+        # Process failed - check if due to timeout
+        if is_smpt_timeout:
+            original_result = "SMPT Timeout"
+            proof_result = "SMPT Timeout"
+        else:
+            original_result = "Error"
+            proof_result = "Error"
+    
+    # Create combined status for backward compatibility
+    if original_result == proof_result:
+        if original_result == "Serializable":
             status = "✅ Serializable"
             console_status = "Serializable"
-        elif has_original_not_serializable and has_proof_no:
+        elif original_result == "Not serializable":
             status = "❌ Not serializable"
             console_status = "Not serializable"
+        elif original_result == "SMPT Timeout":
+            status = "⏱️ SMPT Timeout"
+            console_status = "SMPT Timeout"
+        elif original_result == "Error":
+            status = "⚠️ Error"
+            console_status = "Error"
         else:
             status = "❓ Unknown"
             console_status = "Unknown"
     else:
-        # Check if this is a timeout error
-        if is_smpt_timeout:
-            status = "⏱️ SMPT Timeout"
-            console_status = "SMPT Timeout"
-        else:
-            status = "⚠️ Error"
-            console_status = "Error"
+        # Methods disagree
+        status = f"⚠️ Inconsistent (orig: {original_result}, proof: {proof_result})"
+        console_status = "Inconsistent"
     
     return {
         'status': status,
         'console_status': console_status,
+        'original_result': original_result,
+        'proof_result': proof_result,
         'cpu_time': cpu_time,
         'returncode': result.returncode,
         'is_timeout': is_smpt_timeout
@@ -168,6 +197,10 @@ def analyze_file(file_path, timeout_arg, index):
             'status': status,
             'opt_duration': opt_duration_str,
             'no_opt_duration': no_opt_duration_str,
+            'opt_original_result': opt_result['original_result'],
+            'opt_proof_result': opt_result['proof_result'],
+            'no_opt_original_result': no_opt_result['original_result'],
+            'no_opt_proof_result': no_opt_result['proof_result'],
             'index': index
         }
         
@@ -246,17 +279,23 @@ def main():
     # Generate report
     with open(output_file, 'w') as f:
         f.write("# Serializability Analysis Report\n\n")
-        f.write("This report shows the serializability analysis results for all `.ser` examples using both original and proof-based methods.\n\n")
+        f.write("This report shows the serializability analysis results for all `.ser` examples using both original and proof-based methods, with and without optimizations.\n\n")
         f.write("**Analysis Configuration:**\n")
         f.write(f"- Parallel jobs: {max_jobs}\n")
         f.write(f"- Timeout: {timeout_value}s\n" if timeout_value else "- Timeout: none\n")
         f.write(f"- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("## Results\n\n")
-        f.write("| Example | Result | Optimized CPU (s) | No-Opt CPU (s) |\n")
-        f.write("|---------|--------|-------------------|----------------|\n")
+        f.write("| Example | Opt Original | Opt Proof | No-Opt Original | No-Opt Proof | Opt CPU (s) | No-Opt CPU (s) |\n")
+        f.write("|---------|--------------|-----------|-----------------|--------------|-------------|---------------|\n")
         
         for result in results:
-            f.write(f"| `{result['filename']}` | {result['status']} | {result['opt_duration']} | {result['no_opt_duration']} |\n")
+            # Get method results for all combinations
+            opt_original = result.get('opt_original_result', 'Unknown')
+            opt_proof = result.get('opt_proof_result', 'Unknown') 
+            no_opt_original = result.get('no_opt_original_result', 'Unknown')
+            no_opt_proof = result.get('no_opt_proof_result', 'Unknown')
+            
+            f.write(f"| `{result['filename']}` | {opt_original} | {opt_proof} | {no_opt_original} | {no_opt_proof} | {result['opt_duration']} | {result['no_opt_duration']} |\n")
         
         f.write("\n## Summary\n\n")
         f.write("- ✅ **Serializable**: Programs that maintain serializability properties\n")
@@ -265,7 +304,7 @@ def main():
         f.write("- ⚠️ **Error**: Analysis failed\n")
         f.write("- ⏱️ **SMPT Timeout**: SMPT verification timed out\n")
         f.write("- ⚠️ **Inconsistent**: Results differ between optimized and non-optimized runs (serious issue)\n\n")
-        f.write("**Note**: Each example is analyzed twice - once with optimizations (default) and once with `--without-optimizations` flag. Both CPU times are reported to compare performance impact of optimizations.\n\n")
+        f.write("**Note**: Each example is analyzed twice - once with optimizations (default) and once with `--without-optimizations` flag. The table shows results for all four combinations: Optimized Original/Proof methods and Non-optimized Original/Proof methods. CPU times compare performance impact of optimizations.\n\n")
         f.write("---\n\n")
         f.write("*Report generated automatically by analyze_examples.py*\n")
     
