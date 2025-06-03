@@ -33,7 +33,6 @@ tex/*.log
 tex/*.blg 
 tex/*.aux
 /examples/ser/bank_without_yields_jules.ser
-/src/isl_to_xml_draft.rs
 /out_April_1/*
 /src/test.dot
 /src/test.png
