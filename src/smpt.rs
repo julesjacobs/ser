@@ -10,14 +10,14 @@ use std::hash::Hash;
 use std::sync::Mutex;
 
 /// Default SMPT timeout in seconds (can be configured at runtime)
-/// 
+///
 /// **Configuration:** To change the timeout globally, use `set_smpt_timeout()`:
 /// - `2` = 2 seconds (default, good for quick testing)
 /// - `60` = 1 minute (for most examples)
 /// - `300` = 5 minutes (for complex examples)
 /// - `600` = 10 minutes (for very complex examples)
 /// - `0` = Use SMPT's default timeout (225 seconds)
-/// 
+///
 /// This timeout is passed to SMPT's `--timeout` argument, which limits
 /// execution time per property verification method.
 static SMPT_TIMEOUT_SECONDS: Mutex<u64> = Mutex::new(10);
@@ -34,7 +34,7 @@ pub fn set_smpt_timeout(timeout_seconds: u64) {
 
 /// Convert a Petri net to SMPT .net format
 /// Produces a textual representation of the Petri net compatible with SMPT tools
-pub fn petri_to_pnet<Place>(petri: &Petri<Place>, net_name: &str) -> String 
+pub fn petri_to_pnet<Place>(petri: &Petri<Place>, net_name: &str) -> String
 where
     Place: ToString + Clone + PartialEq + Eq + Hash,
 {
@@ -131,7 +131,7 @@ where
     // Debug logging
     if let Some(logger) = debug_logger {
         logger.log_petri_net(
-            "SMPT Input Petri Net", 
+            "SMPT Input Petri Net",
             &format!("Petri net for disjunct {} before SMPT verification", disjunct_id),
             &petri
         );
@@ -141,26 +141,26 @@ where
             &constraints
         );
     }
-    
+
     // Extract places from Petri net to handle missing places in constraints
     let petri_places: HashSet<String> = petri.get_places().iter()
         .map(|p| sanitize(&p.to_string()))
         .collect();
-    
+
     // Convert constraints to XML and use SMPT to check reachability
     let xml = presburger_constraints_to_xml(&constraints, "reachability-check", &petri_places);
-    
+
     // Convert Petri net to SMPT format
     let pnet_content = petri_to_pnet(&petri, "constraint_check");
-    
+
     // Save files for SMPT
     std::fs::create_dir_all(out_dir).expect("Failed to create output directory");
     let xml_file_path = format!("{}/smpt_constraints.xml", out_dir);
     let pnet_file_path = format!("{}/smpt_petri.net", out_dir);
-    
+
     std::fs::write(&xml_file_path, &xml).expect("Failed to write SMPT XML");
     std::fs::write(&pnet_file_path, &pnet_content).expect("Failed to write SMPT Petri net");
-    
+
     // Try to run SMPT tool
     match run_smpt(&pnet_file_path, &xml_file_path) {
         Ok(result) => {
@@ -169,7 +169,7 @@ where
             if let Some(time) = result.execution_time {
                 println!("Execution time: {}ms", time);
             }
-            
+
             // Add debug entry
             let smpt_call = SmptCall {
                 disjunct_id,
@@ -179,13 +179,19 @@ where
                 execution_time_ms: result.execution_time,
                 constraints_description: format_constraints_description(&constraints),
             };
-            
+
             if let Some(logger) = debug_logger {
                 logger.smpt_call(smpt_call);
             } else {
                 add_debug_smpt_call(smpt_call);
             }
-            
+
+            if result.is_reachable {
+                if let Some(ref mdl_line) = result.model {
+                    println!("Non‐serializable/UNREACHABLE assignment (SMPT model):\n{}", mdl_line);
+                }
+            }
+
             Ok(result.is_reachable)
         }
         Err(e) => {
@@ -194,7 +200,7 @@ where
             eprintln!("  XML: {}", xml_file_path);
             eprintln!("  Net: {}", pnet_file_path);
             eprintln!("Manual command: ./smpt_wrapper.sh -n {} --xml {}", pnet_file_path, xml_file_path);
-            
+
             // Add debug entry for failed call
             let smpt_call = SmptCall {
                 disjunct_id,
@@ -204,13 +210,13 @@ where
                 execution_time_ms: None,
                 constraints_description: format_constraints_description(&constraints),
             };
-            
+
             if let Some(logger) = debug_logger {
                 logger.smpt_call(smpt_call);
             } else {
                 add_debug_smpt_call(smpt_call);
             }
-            
+
             Err(format!("SMPT verification failed: {}", e))
         }
     }
@@ -222,6 +228,7 @@ pub struct SmptResult {
     pub is_reachable: bool,
     pub execution_time: Option<u64>, // milliseconds
     pub method_used: Option<String>,
+    pub model: Option<String>,       // The reachable marking (if not-serializable)
 }
 
 /// Install SMPT tool - returns true if already installed or successfully installed
@@ -230,14 +237,14 @@ pub fn install_smpt() -> Result<(), String> {
     if is_smpt_installed() {
         return Ok(());
     }
-    
+
     println!("SMPT not found. Installation instructions:");
     println!("1. Install Python 3.7+ and pip");
     println!("2. Install Z3: pip install z3-solver");
     println!("3. Clone SMPT: git clone https://github.com/nicolasAmat/SMPT.git");
     println!("4. Install SMPT: cd SMPT && python setup.py bdist_wheel && pip install dist/smpt-5.0-py3-none-any.whl");
     println!("5. Alternative: pip install smpt");
-    
+
     Err("SMPT is not installed. Please follow the installation instructions above.".to_string())
 }
 
@@ -247,7 +254,7 @@ pub fn ensure_smpt_available() -> bool {
         println!("✓ SMPT is available");
         return true;
     }
-    
+
     println!("⚠ SMPT is not installed or not available in PATH");
     match install_smpt() {
         Ok(_) => {
@@ -272,7 +279,7 @@ pub fn is_smpt_installed() -> bool {
     {
         return true;
     }
-    
+
     // Fall back to global python3 -m smpt
     std::process::Command::new("python3")
         .args(["-m", "smpt", "--help"])
@@ -302,7 +309,7 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
     if !is_smpt_installed() {
         return Err("SMPT is not installed".to_string());
     }
-    
+
     // Convert paths to absolute paths for wrapper script compatibility
     let abs_net_file = std::fs::canonicalize(net_file)
         .map_err(|e| format!("Failed to get absolute path for {}: {}", net_file, e))?;
@@ -314,15 +321,16 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
         "-n", abs_net_file.to_str().unwrap(),
         "--xml", abs_xml_file.to_str().unwrap(),
         "--show-time",
+        "--show-model",
         "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
     ];
-    
+
     // Add timeout arguments if specified (skip if 0 = use SMPT default)
     let timeout_str = timeout_seconds.filter(|&t| t > 0).map(|t| t.to_string());
     if let Some(ref timeout_val) = timeout_str {
         args.extend_from_slice(&["--timeout", timeout_val]);
     }
-    
+
     // Try wrapper script first, then fall back to global python3
     let output = if std::path::Path::new("./smpt_wrapper.sh").exists() {
         std::process::Command::new("./smpt_wrapper.sh")
@@ -342,16 +350,16 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
         if let Some(ref timeout_val) = timeout_str {
             python_args.extend_from_slice(&["--timeout", timeout_val]);
         }
-        
+
         std::process::Command::new("python3")
             .args(&python_args)
             .output()
             .map_err(|e| format!("Failed to execute SMPT: {}", e))?
     };
-    
+
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    
+
     // Parse SMPT output
     let is_reachable = if stdout.contains("TRUE") {
         true
@@ -367,17 +375,21 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
             return Err(format!("Could not parse SMPT result. stdout: {}, stderr: {}", stdout, stderr));
         }
     };
-    
+
     // Extract execution time if available
     let execution_time = extract_execution_time(&stdout);
-    
+
     // Extract method used
     let method_used = extract_method_used(&stdout);
-    
+
+    // extract reachable marking (single‐line) if present
+    let model = extract_model(&stdout);
+
     Ok(SmptResult {
         is_reachable,
         execution_time,
         method_used,
+        model,
     })
 }
 
@@ -408,9 +420,25 @@ fn extract_method_used(output: &str) -> Option<String> {
     None
 }
 
+/// Scan SMPT’s stdout for a line starting with "# Model:" (i.e., the reachable marking
+/// , if exists)
+/// and return the remainder of that line (the space‐separated tokens).
+fn extract_model(output: &str) -> Option<String> {
+    for line in output.lines() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("# Model:") {
+            // Strip off "# Model:" and any leading whitespace, then return
+            let after = trimmed["# Model:".len()..].trim_start();
+            return Some(after.to_string());
+        }
+    }
+    None
+}
+
+
 /// Converts a Vec of presburger Constraints to XML format compatible with SMPT
 pub fn presburger_constraints_to_xml<P: Display>(
-    constraints: &[Constraint<P>], 
+    constraints: &[Constraint<P>],
     id: &str,
     petri_places: &HashSet<String>
 ) -> String {
@@ -516,7 +544,7 @@ pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>, petr
         xml.push_str("  <integer-add>      \n");
         for (coeff, var) in linear_combo {
             let place_xml = place_tokens_or_zero(&var.to_string(), petri_places);
-            
+
             if *coeff == 1 {
                 xml.push_str(&format!("    {}\n", place_xml));
             } else {
@@ -561,7 +589,7 @@ mod tests {
         petri_places.insert("x".to_string());
 
         let xml = presburger_constraint_to_xml(&constraint, &petri_places);
-        
+
         assert!(xml.contains("<integer-ge>"));
         assert!(xml.contains("<place>x</place>"));
         assert!(xml.contains("<integer-constant>5</integer-constant>"));
@@ -582,7 +610,7 @@ mod tests {
         petri_places.insert("y".to_string());
 
         let xml = presburger_constraint_to_xml(&constraint, &petri_places);
-        
+
         assert!(xml.contains("<integer-eq>"));
         assert!(xml.contains("<integer-add>"));
         assert!(xml.contains("<place>x</place>"));
@@ -597,7 +625,7 @@ mod tests {
         let constraints: Vec<Constraint<&str>> = vec![];
         let petri_places = HashSet::new();
         let xml = presburger_constraints_to_xml(&constraints, "test-empty", &petri_places);
-        
+
         assert!(xml.contains("<conjunction>"));
         assert!(xml.contains("<integer-eq>"));
         assert!(xml.contains("<integer-constant>0</integer-constant>"));
@@ -609,14 +637,14 @@ mod tests {
             Constraint::new(vec![(1, "x")], -5, ConstraintType::NonNegative),
             Constraint::new(vec![(1, "y")], 0, ConstraintType::EqualToZero),
         ];
-        
+
         // Create a set of places that includes 'x' and 'y'
         let mut petri_places = HashSet::new();
         petri_places.insert("x".to_string());
         petri_places.insert("y".to_string());
-        
+
         let xml = presburger_constraints_to_xml(&constraints, "test-multiple", &petri_places);
-        
+
         assert!(xml.contains("<conjunction>"));
         assert!(xml.contains("<integer-ge>"));
         assert!(xml.contains("<integer-eq>"));
@@ -629,9 +657,9 @@ mod tests {
         let mut petri = Petri::new(vec!["P0", "P1"]);
         petri.add_transition(vec!["P0"], vec!["P1"]);
         petri.add_transition(vec!["P1"], vec![]);
-        
+
         let pnet = petri_to_pnet(&petri, "test_net");
-        
+
         assert!(pnet.contains("net {test_net}"));
         assert!(pnet.contains("pl P0 (1)"));
         assert!(pnet.contains("pl P1 (1)"));
@@ -643,7 +671,7 @@ mod tests {
     fn test_petri_to_pnet_empty() {
         let petri = Petri::new(Vec::<&str>::new());
         let pnet = petri_to_pnet(&petri, "empty_net");
-        
+
         assert!(pnet.contains("net {empty_net}"));
         // Should have no place or transition lines
         assert!(!pnet.contains("pl "));
@@ -654,9 +682,9 @@ mod tests {
     fn test_petri_to_pnet_sanitization() {
         let mut petri = Petri::new(vec!["P-0", "P@1"]);
         petri.add_transition(vec!["P-0"], vec!["P@1"]);
-        
+
         let pnet = petri_to_pnet(&petri, "test-net@2");
-        
+
         assert!(pnet.contains("net {test_net_2}"));
         assert!(pnet.contains("pl P_0 (1)"));
         assert!(pnet.contains("pl P_1 (1)"));
@@ -676,10 +704,10 @@ mod tests {
     fn test_extract_execution_time() {
         let output1 = "Some output\nTime: 0.123s\nMore output";
         assert_eq!(extract_execution_time(output1), Some(123));
-        
+
         let output2 = "No time info here";
         assert_eq!(extract_execution_time(output2), None);
-        
+
         let output3 = "Time: 1.5s";
         assert_eq!(extract_execution_time(output3), Some(1500));
     }
@@ -688,13 +716,13 @@ mod tests {
     fn test_extract_method_used() {
         let output1 = "Some output\nMethod: BMC found result\nMore output";
         assert_eq!(extract_method_used(output1), Some("BMC found result".to_string()));
-        
+
         let output2 = "BMC successful";
         assert_eq!(extract_method_used(output2), Some("BMC".to_string()));
-        
+
         let output3 = "PDR method used";
         assert_eq!(extract_method_used(output3), Some("PDR".to_string()));
-        
+
         let output4 = "No method info";
         assert_eq!(extract_method_used(output4), None);
     }
@@ -712,23 +740,23 @@ mod tests {
     #[test]
     fn test_smpt_reachability_analysis() {
         use tempfile::TempDir;
-        
+
         if !is_smpt_installed() {
             println!("SMPT not available - skipping integration test");
             return;
         }
-        
+
         let temp_dir = TempDir::new().expect("Failed to create temp directory");
         let out_dir = temp_dir.path().to_str().unwrap();
-        
+
         // Create simple but interesting Petri net: Producer-Consumer with buffer
         let mut petri = Petri::new(vec!["Producer", "BufferSlot"]);
         petri.add_transition(vec!["Producer", "BufferSlot"], vec!["Producer", "Item"]);  // Produce
         petri.add_transition(vec!["Item"], vec!["Consumer", "BufferSlot"]);             // Consume (creates consumer)
         petri.add_transition(vec!["Item"], vec!["Waste"]);                              // Alternative: waste the item
-        
+
         println!("Producer-Consumer net: Producer+BufferSlot->Item, Item->Consumer+BufferSlot OR Item->Waste");
-        
+
         // Test 1: Reachable - Can we produce an item?
         let can_produce = can_reach_constraint_set(
             petri.clone(),
@@ -737,7 +765,7 @@ mod tests {
         );
         println!("Can produce Item: {}", can_produce);
         assert!(can_produce, "Should be able to produce items");
-        
+
         // Test 2: Unreachable - Can we have Consumer and Waste simultaneously?
         // This should be unreachable because both come from consuming the same Item
         let both_outcomes = can_reach_constraint_set(
