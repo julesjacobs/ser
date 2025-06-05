@@ -758,21 +758,22 @@ mod tests {
         println!("Producer-Consumer net: Producer+BufferSlot->Item, Item->Consumer+BufferSlot OR Item->Waste");
 
         // Test 1: Reachable - Can we produce an item?
-        let can_produce = can_reach_constraint_set(
+            let can_produce_result = can_reach_constraint_set(
             petri.clone(),
             vec![Constraint::new(vec![(1, "Item")], -1, ConstraintType::NonNegative)],
             out_dir
         );
+       let can_produce = can_produce_result.unwrap(); // panic if Err
         println!("Can produce Item: {}", can_produce);
         assert!(can_produce, "Should be able to produce items");
 
         // Test 2: Unreachable - Can we have Consumer and Waste simultaneously?
-        // This should be unreachable because both come from consuming the same Item
-        let both_outcomes = can_reach_constraint_set(
-            petri,
-            vec![Constraint::new(vec![(1, "Consumer"), (1, "Waste")], -2, ConstraintType::NonNegative)],
-            out_dir
+        let both_outcomes_result = can_reach_constraint_set(
+        petri,
+        vec![Constraint::new(vec![(1, "Consumer"), (1, "Waste")], -2, ConstraintType::NonNegative)],
+        out_dir
         );
+        let both_outcomes = both_outcomes_result.unwrap(); // panic if Err
         println!("Can have Consumer+Waste: {} (competing outcomes)", both_outcomes);
     }
 

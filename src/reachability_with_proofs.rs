@@ -351,7 +351,16 @@ mod tests {
         assert_eq!(Decision::from(false), Decision::No);
         
         // Test Decision to bool conversion
-        assert_eq!(Decision::Yes.into(), true);
-        assert_eq!(Decision::No.into(), false);
+        // assert_eq!(Decision::Yes.into(), true);
+        assert_eq!(
+            <Decision as Into<bool>>::into(Decision::Yes),
+            true
+        );
+        // assert_eq!(Decision::No.into(), false);
+        assert_eq!(
+            <Decision as Into<bool>>::into(Decision::No),
+            false
+        );
+
     }
 }
