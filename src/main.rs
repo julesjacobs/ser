@@ -402,13 +402,13 @@ fn process_json_file(file_path: &str, open_files: bool) {
         .unwrap_or("network");
     let out_dir = format!("out/{}", file_stem);
 
-    // Process the Network System
-    process_ns(&ns, &out_dir, open_files);
-
     // ── Copy this JSON into out/<stem>/<stem>.json ──
     let dst_json = format!("{}/{}.json", out_dir, file_stem);
     fs::create_dir_all(&out_dir).unwrap();
     fs::copy(file_path, &dst_json).unwrap();
+
+    // Process the Network System
+    process_ns(&ns, &out_dir, open_files);
 }
 
 fn process_ser_file(file_path: &str, open_files: bool) {
@@ -475,14 +475,13 @@ fn process_ser_file(file_path: &str, open_files: bool) {
     let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("expr");
     let out_dir = format!("out/{}", file_stem);
 
-    // Process the Network System
-    process_ns(&ns, &out_dir, open_files);
-
-
     // ── Copy this SER into out/<stem>/<stem>.ser ──
     let dst_ser = format!("{}/{}.ser", out_dir, file_stem);
     fs::create_dir_all(&out_dir).unwrap();
     fs::copy(file_path, &dst_ser).unwrap();
+
+    // Process the Network System
+    process_ns(&ns, &out_dir, open_files);
 }
 
 // Recursively process all files in a directory and its subdirectories
