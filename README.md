@@ -38,6 +38,8 @@ the `ISL_PREFIX` environment variable.
 - simpler backward/forward optimizations (instead of Guy's original one)
 
 ## Working examples:
+- ex.ser (serializable, terminates + FALSE)
+- incrdecr.ser (serializable, terminates + FALSE)
 - simple_nonser (NOT serializable, terminates + TRUE)
 - simple_nonser2 (NOT serializable, terminates + TRUE)
 - simple_nonser3 (NOT serializable, terminates + TRUE)
