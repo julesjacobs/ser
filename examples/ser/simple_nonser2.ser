@@ -1,0 +1,1 @@
+request foo { X := 1; y := X; X := 0; y }
