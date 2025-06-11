@@ -337,7 +337,6 @@ fn build_smpt_args(
         "--xml".to_string(), xml_file.to_string(),
         "--show-time".to_string(),
         "--show-model".to_string(),
-        "--check-proof".to_string(),
         "--export-proof".to_string(), proof_file.to_string(),
     ];
     
