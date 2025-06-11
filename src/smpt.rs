@@ -155,8 +155,8 @@ where
 
     // Save files for SMPT
     std::fs::create_dir_all(out_dir).expect("Failed to create output directory");
-    let xml_file_path = format!("{}/smpt_constraints.xml", out_dir);
-    let pnet_file_path = format!("{}/smpt_petri.net", out_dir);
+    let xml_file_path = format!("{}/smpt_constraints_disjunct_{}.xml", out_dir, disjunct_id);
+    let pnet_file_path = format!("{}/smpt_petri_disjunct_{}.net", out_dir, disjunct_id);
 
     std::fs::write(&xml_file_path, &xml).expect("Failed to write SMPT XML");
     std::fs::write(&pnet_file_path, &pnet_content).expect("Failed to write SMPT Petri net");
@@ -169,6 +169,12 @@ where
             if let Some(time) = result.execution_time {
                 println!("Execution time: {}ms", time);
             }
+
+            // Save raw SMPT output to files
+            let stdout_path = format!("{}/smpt_output_disjunct_{}.stdout", out_dir, disjunct_id);
+            let stderr_path = format!("{}/smpt_output_disjunct_{}.stderr", out_dir, disjunct_id);
+            std::fs::write(&stdout_path, &result.raw_stdout).expect("Failed to write SMPT stdout");
+            std::fs::write(&stderr_path, &result.raw_stderr).expect("Failed to write SMPT stderr");
 
             // Add debug entry
             let smpt_call = SmptCall {
@@ -194,12 +200,20 @@ where
 
             Ok(result.is_reachable)
         }
-        Err(e) => {
+        Err((e, result_opt)) => {
             eprintln!("ERROR: Failed to run SMPT: {}", e);
             eprintln!("Generated files for manual verification:");
             eprintln!("  XML: {}", xml_file_path);
             eprintln!("  Net: {}", pnet_file_path);
             eprintln!("Manual command: ./smpt_wrapper.sh -n {} --xml {}", pnet_file_path, xml_file_path);
+            
+            // Save raw SMPT output even on error
+            if let Some(result) = result_opt {
+                let stdout_path = format!("{}/smpt_output_disjunct_{}.stdout", out_dir, disjunct_id);
+                let stderr_path = format!("{}/smpt_output_disjunct_{}.stderr", out_dir, disjunct_id);
+                std::fs::write(&stdout_path, &result.raw_stdout).expect("Failed to write SMPT stdout");
+                std::fs::write(&stderr_path, &result.raw_stderr).expect("Failed to write SMPT stderr");
+            }
 
             // Add debug entry for failed call
             let smpt_call = SmptCall {
@@ -229,6 +243,8 @@ pub struct SmptResult {
     pub execution_time: Option<u64>, // milliseconds
     pub method_used: Option<String>,
     pub model: Option<String>,       // The reachable marking (if not-serializable)
+    pub raw_stdout: String,          // Raw SMPT stdout for debugging
+    pub raw_stderr: String,          // Raw SMPT stderr for debugging
 }
 
 /// Install SMPT tool - returns true if already installed or successfully installed
@@ -289,32 +305,35 @@ pub fn is_smpt_installed() -> bool {
 }
 
 /// Run SMPT on a Petri net file with constraints using the current global timeout
-pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, String> {
+pub fn run_smpt(net_file: &str, xml_file: &str) -> Result<SmptResult, (String, Option<SmptResult>)> {
     run_smpt_with_timeout(net_file, xml_file, Some(get_smpt_timeout()))
 }
 
-pub fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, String> {
+pub fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, (String, Option<SmptResult>)> {
     // First try to run with 1 second timeout
     match run_smpt_with_timeout_prim(net_file, xml_file, Some(1)) {
         Ok(result) => Ok(result),
-        Err(_e) => {
+        Err((_e, result_opt)) => {
             // If it fails, try again with the current global timeout
-            run_smpt_with_timeout_prim(net_file, xml_file, timeout_seconds)
+            match run_smpt_with_timeout_prim(net_file, xml_file, timeout_seconds) {
+                Ok(result) => Ok(result),
+                Err((e2, _)) => Err((e2, result_opt))
+            }
         }
     }
 }
 
 /// Run SMPT on a Petri net file with constraints with optional timeout
-pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, String> {
+pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> Result<SmptResult, (String, Option<SmptResult>)> {
     if !is_smpt_installed() {
-        return Err("SMPT is not installed".to_string());
+        return Err(("SMPT is not installed".to_string(), None));
     }
 
     // Convert paths to absolute paths for wrapper script compatibility
     let abs_net_file = std::fs::canonicalize(net_file)
-        .map_err(|e| format!("Failed to get absolute path for {}: {}", net_file, e))?;
+        .map_err(|e| (format!("Failed to get absolute path for {}: {}", net_file, e), None))?;
     let abs_xml_file = std::fs::canonicalize(xml_file)
-        .map_err(|e| format!("Failed to get absolute path for {}: {}", xml_file, e))?;
+        .map_err(|e| (format!("Failed to get absolute path for {}: {}", xml_file, e), None))?;
 
     // Build command arguments with optional timeout
     let mut args = vec![
@@ -336,7 +355,7 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
         std::process::Command::new("./smpt_wrapper.sh")
             .args(&args)
             .output()
-            .map_err(|e| format!("Failed to execute SMPT wrapper: {}", e))?
+            .map_err(|e| (format!("Failed to execute SMPT wrapper: {}", e), None))?
     } else {
         // For python3 command, use original file paths (not absolute)
         let mut python_args = vec![
@@ -354,11 +373,11 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
         std::process::Command::new("python3")
             .args(&python_args)
             .output()
-            .map_err(|e| format!("Failed to execute SMPT: {}", e))?
+            .map_err(|e| (format!("Failed to execute SMPT: {}", e), None))?
     };
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
 
     // Parse SMPT output
     let is_reachable = if stdout.contains("TRUE") {
@@ -366,14 +385,25 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
     } else if stdout.contains("FALSE") {
         false
     } else {
-        // Check for timeout patterns
-        if output.status.code() == Some(1) && stdout.trim() == "# Hello" {
-            return Err(format!("SMPT timeout: Analysis timed out after {}s. Try increasing timeout or enabling optimizations.", timeout_seconds.unwrap_or(get_smpt_timeout())));
+        // Check for timeout patterns - but still return the raw output
+        let error_msg = if output.status.code() == Some(1) && stdout.trim() == "# Hello" {
+            format!("SMPT timeout: Analysis timed out after {}s. Try increasing timeout or enabling optimizations.", timeout_seconds.unwrap_or(get_smpt_timeout()))
         } else if stdout.contains("# Hello") && stdout.contains("# Bye bye") && !stdout.contains("FORMULA") {
-            return Err(format!("SMPT timeout: Analysis timed out after {}s (completed startup but no results). Try increasing timeout or enabling optimizations.", timeout_seconds.unwrap_or(get_smpt_timeout())));
+            format!("SMPT timeout: Analysis timed out after {}s (completed startup but no results). Try increasing timeout or enabling optimizations.", timeout_seconds.unwrap_or(get_smpt_timeout()))
         } else {
-            return Err(format!("Could not parse SMPT result. stdout: {}, stderr: {}", stdout, stderr));
-        }
+            format!("Could not parse SMPT result. stdout: {}, stderr: {}", stdout, stderr)
+        };
+        
+        // Return error with partial result containing raw output
+        let partial_result = SmptResult {
+            is_reachable: false,
+            execution_time: None,
+            method_used: None,
+            model: None,
+            raw_stdout: stdout.clone(),
+            raw_stderr: stderr,
+        };
+        return Err((error_msg, Some(partial_result)));
     };
 
     // Extract execution time if available
@@ -390,6 +420,8 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
         execution_time,
         method_used,
         model,
+        raw_stdout: stdout.clone(),
+        raw_stderr: stderr,
     })
 }
 
