@@ -335,12 +335,17 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
     let abs_xml_file = std::fs::canonicalize(xml_file)
         .map_err(|e| (format!("Failed to get absolute path for {}: {}", xml_file, e), None))?;
 
+    // Generate absolute proof file path based on the XML file path
+    let proof_file_path = abs_xml_file.to_str().unwrap().replace(".xml", "_proof.txt");
+    
     // Build command arguments with optional timeout
     let mut args = vec![
         "-n", abs_net_file.to_str().unwrap(),
         "--xml", abs_xml_file.to_str().unwrap(),
         "--show-time",
         "--show-model",
+        "--check-proof",  // Add proof checking to show certificate of invariance
+        "--export-proof", &proof_file_path,  // Export the actual proof to a file
         "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
     ];
 
@@ -363,6 +368,8 @@ pub fn run_smpt_with_timeout_prim(net_file: &str, xml_file: &str, timeout_second
             "-n", net_file,
             "--xml", xml_file,
             "--show-time",
+            "--check-proof",  // Add proof checking to show certificate of invariance
+            "--export-proof", &proof_file_path,  // Export the actual proof to a file
             // "--methods", "SMT", "CP", "INDUCTION", "K-INDUCTION", "STATE-EQUATION", "BMC", "PDR-COV", "PDR-REACH", "PDR-REACH-SATURATED"
             "--methods", "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
         ];
