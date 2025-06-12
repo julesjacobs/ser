@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 /// Global debug logger for reachability analysis
 static DEBUG_LOGGER: Mutex<Option<DebugLogger>> = Mutex::new(None);
 
-static OPTIMIZE_ENABLED: AtomicBool = AtomicBool::new(false);
+static OPTIMIZE_ENABLED: AtomicBool = AtomicBool::new(true);
 
 /// Initialize the global debug logger
 pub fn init_debug_logger(program_name: String, program_content: String) {
