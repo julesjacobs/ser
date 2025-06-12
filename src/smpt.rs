@@ -853,7 +853,8 @@ FORMULA reachability-check TRUE TIME 0.403745174407959
             }
         }
 
-        // Test 2: Unreachable - Can we have Consumer and Waste simultaneously?
+        // Test 2: Reachable - Can we have Consumer and Waste simultaneously?
+        // Yes, we can produce multiple items and send them to different outcomes
         let both_outcomes_result = can_reach_constraint_set(
             petri,
             vec![Constraint::new(vec![(1, "Consumer"), (1, "Waste")], -2, ConstraintType::NonNegative)],
@@ -861,11 +862,11 @@ FORMULA reachability-check TRUE TIME 0.403745174407959
             1  // disjunct_id
         );
         match both_outcomes_result.outcome {
-            SmptVerificationOutcome::Unreachable { .. } => {
-                println!("Can have Consumer+Waste: No (unreachable, as expected)");
+            SmptVerificationOutcome::Reachable { trace, .. } => {
+                println!("Can have Consumer+Waste: Yes (reachable), trace: {:?}", trace);
             }
-            SmptVerificationOutcome::Reachable { .. } => {
-                panic!("Should not be able to have competing outcomes");
+            SmptVerificationOutcome::Unreachable { .. } => {
+                panic!("Should be able to have both outcomes by producing multiple items");
             }
             SmptVerificationOutcome::Error { message } => {
                 panic!("SMPT error: {}", message);
