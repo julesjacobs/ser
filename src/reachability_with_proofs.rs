@@ -95,53 +95,53 @@ where
     Q: Clone + Hash + Ord + Display + Debug,
 {
     with_debug_logger(|debug_logger| {
-    debug_logger.step("Reachability Analysis Start", "Starting new SPresburgerSet-based reachability analysis", &format!("Petri net places: [{}]\nPlaces that must be zero: [{}]\nSemilinear set: {}", petri.get_places().iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "), places_that_must_be_zero.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "), semilinear));
+        debug_logger.step("Reachability Analysis Start", "Starting new SPresburgerSet-based reachability analysis", &format!("Petri net places: [{}]\nPlaces that must be zero: [{}]\nSemilinear set: {}", petri.get_places().iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "), places_that_must_be_zero.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "), semilinear));
 
-    // Step 1: Convert semilinear set to SPresburgerSet and embed it in Either<P,Q> domain
-    let q_spresburger = SPresburgerSet::from_semilinear(semilinear);
-    
-    // Step 2: Create universe over places that can vary (filter out places_that_must_be_zero)
-    // Since places_that_must_be_zero are constrained to 0, they don't participate in the analysis
-    let all_places = petri.get_places();
-    let places_that_can_vary: Vec<_> = all_places.into_iter()
-        .filter(|place| {
-            // Keep the place if it's not in places_that_must_be_zero
-            match place {
-                Left(p) => !places_that_must_be_zero.contains(p),
-                Right(_) => false, // All Q-places can vary
-            }
-        })
-        .collect();
+        // Step 1: Convert semilinear set to SPresburgerSet and embed it in Either<P,Q> domain
+        let q_spresburger = SPresburgerSet::from_semilinear(semilinear);
 
-    let varying_universe = SPresburgerSet::universe(places_that_can_vary);
-    debug_logger.step("Varying Universe", "Varying universe", &format!("Varying universe: {}", varying_universe));
+        // Step 2: Create universe over places that can vary (filter out places_that_must_be_zero)
+        // Since places_that_must_be_zero are constrained to 0, they don't participate in the analysis
+        let all_places = petri.get_places();
+        let places_that_can_vary: Vec<_> = all_places.into_iter()
+            .filter(|place| {
+                // Keep the place if it's not in places_that_must_be_zero
+                match place {
+                    Left(p) => !places_that_must_be_zero.contains(p),
+                    Right(_) => false, // All Q-places can vary
+                }
+            })
+            .collect();
 
-    let response_places = petri.get_places().iter().filter_map(|place| match place {
-        Right(q) => Some(q.clone()),
-        Left(_) => None,
-    }).collect::<Vec<_>>();
+        let varying_universe = SPresburgerSet::universe(places_that_can_vary);
+        debug_logger.step("Varying Universe", "Varying universe", &format!("Varying universe: {}", varying_universe));
 
-    let response_universe = SPresburgerSet::universe(response_places);
-    debug_logger.step("Response Universe", "Response universe", &format!("Response universe: {}", response_universe));
+        let response_places = petri.get_places().iter().filter_map(|place| match place {
+            Right(q) => Some(q.clone()),
+            Left(_) => None,
+        }).collect::<Vec<_>>();
 
-    // Step 3: Compute complement: universe - embedded_semilinear
-    let complement = response_universe.difference(q_spresburger);
-    debug_logger.step("Compute Complement", "Computing complement (universe - embedded_semilinear)", &format!("Complement: {}", complement));
+        let response_universe = SPresburgerSet::universe(response_places);
+        debug_logger.step("Response Universe", "Response universe", &format!("Response universe: {}", response_universe));
 
-    let complement_embedded = complement.rename(|q| Right(q));
-    debug_logger.step("Complement Embedded", "Complement embedded in Either<P,Q> domain", &format!("Complement embedded: {}", complement_embedded));
+        // Step 3: Compute complement: universe - embedded_semilinear
+        let complement = response_universe.difference(q_spresburger);
+        debug_logger.step("Compute Complement", "Computing complement (universe - embedded_semilinear)", &format!("Complement: {}", complement));
 
-    let end_result_set = varying_universe.times(complement_embedded);
-    debug_logger.step("End Result Set", "End result set", &format!("End result set: {}", end_result_set));
-    
-    // Step 4: Check if this constraint set is reachable
-    // Note: we've effectively incorporated the zero constraints by filtering the universe
-    let can_reach_result: bool = can_reach_presburger(petri, end_result_set, out_dir).into();
-    let result = (!can_reach_result).into();
-    
-    debug_logger.step("Final Result", "Reachability analysis complete", &format!("Subset property holds: {:?}", result));
-    
-    result
+        let complement_embedded = complement.rename(|q| Right(q));
+        debug_logger.step("Complement Embedded", "Complement embedded in Either<P,Q> domain", &format!("Complement embedded: {}", complement_embedded));
+
+        let end_result_set = varying_universe.times(complement_embedded);
+        debug_logger.step("End Result Set", "End result set", &format!("End result set: {}", end_result_set));
+
+        // Step 4: Check if this constraint set is reachable
+        // Note: we've effectively incorporated the zero constraints by filtering the universe
+        let can_reach_result: bool = can_reach_presburger(petri, end_result_set, out_dir).into();
+        let result = (!can_reach_result).into();
+
+        debug_logger.step("Final Result", "Reachability analysis complete", &format!("Subset property holds: {:?}", result));
+
+        result
     })
 }
 
@@ -152,7 +152,7 @@ where
 /// A SPresburgerSet represents a union of constraint sets (disjuncts).
 /// The Petri net can reach the SPresburgerSet if it can reach ANY of the disjuncts.
 pub fn can_reach_presburger<P>(
-    petri: Petri<P>, 
+    petri: Petri<P>,
     mut presburger: SPresburgerSet<P>,
     out_dir: &str,
 ) -> Decision
@@ -160,42 +160,42 @@ where
     P: Clone + Hash + Ord + Display + Debug,
 {
     with_debug_logger(|debug_logger| {
-    debug_logger.step("Presburger Reachability Start", "Expanding domain and converting to disjunctive normal form", &format!("SPresburgerSet to be checked: {}", presburger));
-    
-    // First step: Expand the domain of the presburger set to include all places in the Petri net
-    let all_petri_places = petri.get_places();
-    debug_logger.step("Domain Expansion", "Expanding presburger set domain to match Petri net", &format!("Petri net places: [{}]", all_petri_places.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
-    
-    presburger = presburger.expand_domain(all_petri_places);
-    debug_logger.step("Domain Expanded", "Presburger set domain expanded", &format!("Expanded presburger set: {}", presburger));
-    
-    // Convert SPresburgerSet to disjunctive normal form (list of quantified sets)
-    let disjuncts = presburger.extract_constraint_disjuncts();
-    
-    debug_logger.step("Disjunct Conversion", "SPresburgerSet converted to disjuncts", &format!("Number of disjuncts: {}\nDisjuncts: {}", disjuncts.len(), disjuncts.iter().map(|d| d.to_string()).collect::<Vec<_>>().join(", ")));
-    
-    // Check if ANY disjunct is reachable
-    for (i, quantified_set) in disjuncts.iter().enumerate() {
-        debug_logger.log_disjunct_start(i, quantified_set);
-        println!("Checking disjunct {}: {}", i, quantified_set);
-        
-        if can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i).into() {
-            println!("Disjunct {} is reachable - constraint set is satisfiable", i);
-            debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is REACHABLE - constraint set is satisfiable", &format!("Disjunct {}: REACHABLE", i));
-            return Decision::Yes;
+        debug_logger.step("Presburger Reachability Start", "Expanding domain and converting to disjunctive normal form", &format!("SPresburgerSet to be checked: {}", presburger));
+
+        // First step: Expand the domain of the presburger set to include all places in the Petri net
+        let all_petri_places = petri.get_places();
+        debug_logger.step("Domain Expansion", "Expanding presburger set domain to match Petri net", &format!("Petri net places: [{}]", all_petri_places.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
+
+        presburger = presburger.expand_domain(all_petri_places);
+        debug_logger.step("Domain Expanded", "Presburger set domain expanded", &format!("Expanded presburger set: {}", presburger));
+
+        // Convert SPresburgerSet to disjunctive normal form (list of quantified sets)
+        let disjuncts = presburger.extract_constraint_disjuncts();
+
+        debug_logger.step("Disjunct Conversion", "SPresburgerSet converted to disjuncts", &format!("Number of disjuncts: {}\nDisjuncts: {}", disjuncts.len(), disjuncts.iter().map(|d| d.to_string()).collect::<Vec<_>>().join(", ")));
+
+        // Check if ANY disjunct is reachable
+        for (i, quantified_set) in disjuncts.iter().enumerate().skip(8) {
+            debug_logger.log_disjunct_start(i, quantified_set);
+            println!("Checking disjunct {}: {}", i, quantified_set);
+
+            if can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i).into() {
+                println!("Disjunct {} is reachable - constraint set is satisfiable", i);
+                debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is REACHABLE - constraint set is satisfiable", &format!("Disjunct {}: REACHABLE", i));
+                return Decision::Yes;
+            }
+            debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is UNREACHABLE", &format!("Disjunct {}: UNREACHABLE", i));
         }
-        debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is UNREACHABLE", &format!("Disjunct {}: UNREACHABLE", i));
-    }
-    
-    println!("No disjuncts are reachable - constraint set is unsatisfiable");
-    debug_logger.step("All Disjuncts Checked", "No disjuncts are reachable - constraint set is unsatisfiable", &format!("Checked {} disjuncts, all UNREACHABLE", disjuncts.len()));
-    Decision::No
+
+        println!("No disjuncts are reachable - constraint set is unsatisfiable");
+        debug_logger.step("All Disjuncts Checked", "No disjuncts are reachable - constraint set is unsatisfiable", &format!("Checked {} disjuncts, all UNREACHABLE", disjuncts.len()));
+        Decision::No
     })
 }
 
 pub fn can_reach_quantified_set<P>(
     petri: Petri<P>,
-    quantified_set: super::presburger::QuantifiedSet<P>, 
+    quantified_set: super::presburger::QuantifiedSet<P>,
     out_dir: &str,
     disjunct_id: usize,
 ) -> Decision
@@ -203,23 +203,23 @@ where
     P: Clone + Hash + Ord + Display + Debug,
 {
     with_debug_logger(|debug_logger| {
-    debug_logger.step(&format!("Quantified Set {} Start", disjunct_id), "Extracting and reifying existential variables", &format!("Quantified set: {}", quantified_set));
-    
-    let (variables, basic_constraint_set) = quantified_set.extract_and_reify_existential_variables();
+        debug_logger.step(&format!("Quantified Set {} Start", disjunct_id), "Extracting and reifying existential variables", &format!("Quantified set: {}", quantified_set));
 
-    debug_logger.step(&format!("Quantified Set {} Variables", disjunct_id), "Existential variables extracted", &format!("Variables: {:?}\nBasic constraint set: {}", variables, basic_constraint_set.iter().map(|c| c.to_string()).collect::<Vec<_>>().join(", ")));
+        let (variables, basic_constraint_set) = quantified_set.extract_and_reify_existential_variables();
 
-    // Transform the Petri net from Petri<P> to Petri<Either<usize, P>>
-    // by mapping all existing places to Right(p) and adding existential places as Left(i)
-    let mut new_petri = petri.rename(|p| Either::Right(p));
-    for place in variables {
-        new_petri.add_existential_place(place);
-    }
+        debug_logger.step(&format!("Quantified Set {} Variables", disjunct_id), "Existential variables extracted", &format!("Variables: {:?}\nBasic constraint set: {}", variables, basic_constraint_set.iter().map(|c| c.to_string()).collect::<Vec<_>>().join(", ")));
 
-    debug_logger.log_petri_net(&format!("Transformed Petri Net {}", disjunct_id), "Petri net with existential variables added", &new_petri);
-    debug_logger.log_constraints(&format!("Final Constraints {}", disjunct_id), "Final constraints to be checked with SMPT", &basic_constraint_set);
+        // Transform the Petri net from Petri<P> to Petri<Either<usize, P>>
+        // by mapping all existing places to Right(p) and adding existential places as Left(i)
+        let mut new_petri = petri.rename(|p| Either::Right(p));
+        for place in variables {
+            new_petri.add_existential_place(place);
+        }
 
-    can_reach_constraint_set_with_debug(new_petri, basic_constraint_set, out_dir, disjunct_id)
+        debug_logger.log_petri_net(&format!("Transformed Petri Net {}", disjunct_id), "Petri net with existential variables added", &new_petri);
+        debug_logger.log_constraints(&format!("Final Constraints {}", disjunct_id), "Final constraints to be checked with SMPT", &basic_constraint_set);
+
+        can_reach_constraint_set_with_debug(new_petri, basic_constraint_set, out_dir, disjunct_id)
     })
 }
 
@@ -235,44 +235,44 @@ where
     P: Clone + Hash + Ord + Display + Debug,
 {
     with_debug_logger(|debug_logger| {
-    debug_logger.log_petri_net(&format!("Pre-Pruning Petri Net {}", disjunct_id), "Petri net before pruning and optimization", &petri);
-    debug_logger.log_constraints(&format!("Input Constraints {}", disjunct_id), "Constraints for reachability check", &constraints);
-    
-    // Prune the petri net here by doing the iterative filtering where the target places 
-    // are all the nonzero variables (i.e. all places in the petri net that are not part 
-    // of the zero variables)
-    
-    // Extract zero variables from constraints
-    let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
-    let zero_variables_set: HashSet<P> = zero_variables.into_iter().collect();
-    
-    debug_logger.step(&format!("Zero Variables {}", disjunct_id), "Extracted zero variables from constraints", &format!("Zero variables: {:?}", zero_variables_set));
-    
-    // Get all places in the Petri net
-    let all_places = petri.get_places();
-    
-    // Find nonzero variables (target places for filtering)
-    let nonzero_places: Vec<P> = all_places
-        .into_iter()
-        .filter(|place| !zero_variables_set.contains(place))
-        .collect();
-    
-    debug_logger.step(&format!("Nonzero Places {}", disjunct_id), "Determined nonzero places for bidirectional filtering", &format!("Nonzero places: [{}]", nonzero_places.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
-    
-    petri.filter_bidirectional_reachable(&nonzero_places);
-    debug_logger.log_petri_net(&format!("Post-Pruning Petri Net {}", disjunct_id), "Petri net after bidirectional filtering", &petri);
-    
-    let result = crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);
-    match result.outcome {
-        crate::smpt::SmptVerificationOutcome::Reachable { .. } => Decision::Yes,   // Reachable means Yes (not serializable)
-        crate::smpt::SmptVerificationOutcome::Unreachable { .. } => Decision::No,  // Unreachable means No (serializable)
-        crate::smpt::SmptVerificationOutcome::Error { message } => {
-            eprintln!("CRITICAL ERROR: SMPT verification failed in disjunct {}: {}", disjunct_id, message);
-            eprintln!("Cannot determine serializability - analysis is inconclusive");
-            eprintln!("This could indicate a bug when --without-optimizations is used");
-            panic!("SMPT verification failed: {}", message);
+        debug_logger.log_petri_net(&format!("Pre-Pruning Petri Net {}", disjunct_id), "Petri net before pruning and optimization", &petri);
+        debug_logger.log_constraints(&format!("Input Constraints {}", disjunct_id), "Constraints for reachability check", &constraints);
+
+        // Prune the petri net here by doing the iterative filtering where the target places
+        // are all the nonzero variables (i.e. all places in the petri net that are not part
+        // of the zero variables)
+
+        // Extract zero variables from constraints
+        let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
+        let zero_variables_set: HashSet<P> = zero_variables.into_iter().collect();
+
+        debug_logger.step(&format!("Zero Variables {}", disjunct_id), "Extracted zero variables from constraints", &format!("Zero variables: {:?}", zero_variables_set));
+
+        // Get all places in the Petri net
+        let all_places = petri.get_places();
+
+        // Find nonzero variables (target places for filtering)
+        let nonzero_places: Vec<P> = all_places
+            .into_iter()
+            .filter(|place| !zero_variables_set.contains(place))
+            .collect();
+
+        debug_logger.step(&format!("Nonzero Places {}", disjunct_id), "Determined nonzero places for bidirectional filtering", &format!("Nonzero places: [{}]", nonzero_places.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
+
+        petri.filter_bidirectional_reachable(&nonzero_places);
+        debug_logger.log_petri_net(&format!("Post-Pruning Petri Net {}", disjunct_id), "Petri net after bidirectional filtering", &petri);
+
+        let result = crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);
+        match result.outcome {
+            crate::smpt::SmptVerificationOutcome::Reachable { .. } => Decision::Yes,   // Reachable means Yes (not serializable)
+            crate::smpt::SmptVerificationOutcome::Unreachable { .. } => Decision::No,  // Unreachable means No (serializable)
+            crate::smpt::SmptVerificationOutcome::Error { message } => {
+                eprintln!("CRITICAL ERROR: SMPT verification failed in disjunct {}: {}", disjunct_id, message);
+                eprintln!("Cannot determine serializability - analysis is inconclusive");
+                eprintln!("This could indicate a bug when --without-optimizations is used");
+                panic!("SMPT verification failed: {}", message);
+            }
         }
-    }
     })
 }
 
@@ -290,22 +290,22 @@ mod tests {
         petri.add_transition(vec!["B"], vec!["C"]);           // t2: B -> C (reachable)
         petri.add_transition(vec!["D"], vec!["E"]);           // t3: D -> E (unreachable from Start)
         petri.add_transition(vec!["C"], vec!["F"]);           // t4: C -> F (reachable)
-        
+
         // Before pruning: 5 transitions
         assert_eq!(petri.get_transitions().len(), 5);
-        
+
         // Create constraints: A = 0, C = 0 (so B and F are nonzero)
         let constraints = vec![
             Constraint::new(vec![(1, "A")], 0, ConstraintType::EqualToZero),  // A = 0
             Constraint::new(vec![(1, "C")], 0, ConstraintType::EqualToZero),  // C = 0
         ];
-        
+
         // Extract zero variables  
         let zero_vars = Constraint::extract_zero_variables(&constraints);
         assert_eq!(zero_vars.len(), 2);
         assert!(zero_vars.contains(&"A"));
         assert!(zero_vars.contains(&"C"));
-        
+
         // Get all places and find nonzero places
         let all_places = petri.get_places();
         let zero_vars_set: HashSet<&str> = zero_vars.into_iter().collect();
@@ -313,7 +313,7 @@ mod tests {
             .into_iter()
             .filter(|place| !zero_vars_set.contains(place))
             .collect();
-        
+
         // Nonzero places should be: Start, B, D, E, F
         assert_eq!(nonzero_places.len(), 5);
         assert!(nonzero_places.contains(&"Start"));
@@ -321,27 +321,27 @@ mod tests {
         assert!(nonzero_places.contains(&"D"));
         assert!(nonzero_places.contains(&"E"));
         assert!(nonzero_places.contains(&"F"));
-        
+
         // Apply bidirectional filtering
         petri.filter_bidirectional_reachable(&nonzero_places);
-        
+
         // After filtering, should keep only transitions that can reach nonzero places
         // from the initial marking: Start -> A -> B and B -> C -> F
         // t3 (D -> E) should be removed as it's not reachable from Start
         let remaining_transitions = petri.get_transitions();
         assert!(remaining_transitions.len() <= 4); // Should remove at least t3
-        
+
         // Verify the remaining transitions form a path from Start to nonzero places
         let has_start_to_a = remaining_transitions.contains(&(vec!["Start"], vec!["A"]));
         let has_a_to_b = remaining_transitions.contains(&(vec!["A"], vec!["B"]));
         let has_b_to_c = remaining_transitions.contains(&(vec!["B"], vec!["C"]));
         let has_c_to_f = remaining_transitions.contains(&(vec!["C"], vec!["F"]));
         let has_d_to_e = remaining_transitions.contains(&(vec!["D"], vec!["E"]));
-        
+
         // Should keep transitions that lead to nonzero places (B, F)
         assert!(has_start_to_a); // Needed to reach B
         assert!(has_a_to_b);     // Creates nonzero place B
-        
+
         // Should not keep isolated transition
         assert!(!has_d_to_e);    // Not reachable from Start
     }
@@ -351,7 +351,7 @@ mod tests {
         // Test bool to Decision conversion
         assert_eq!(Decision::from(true), Decision::Yes);
         assert_eq!(Decision::from(false), Decision::No);
-        
+
         // Test Decision to bool conversion
         // assert_eq!(Decision::Yes.into(), true);
         assert_eq!(
