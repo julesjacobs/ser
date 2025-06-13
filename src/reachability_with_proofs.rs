@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Mutex;
-use std::fs::File;
+use std::str::FromStr;
 use std::io::{BufRead, BufReader};
 
 
@@ -201,9 +201,26 @@ where
 
                 // now `inner` starts immediately after `(and`
                 // e.g. "(= G___ …)(= L____ …)…(= G__X_3_ …)"
-                println!("{}: core constraints = {}", file_name, inner);
-                println!("******************************************");
+                println!("{}:", file_name);
+                // println!("constraints = {}", inner);
+                println!("\n");
 
+                // Peel off both "(and", trim the final "))", and get your core string:
+                let core_str = match peel_two_ands_and_trim(&file_name, inner) {
+                    Some(s) => s,
+                    None => {
+                        // malformed, already logged inside helper
+                        continue;
+                        println!("****************************************************\n");
+                    }
+                };
+                print!("{}\n",core_str);
+               // todo: fix error files (disjunct 5 & 6 in fred.ser)
+               // todo: these generate an invariant but the files are buggy
+                println!("****************************************************\n");
+
+                // split into atom‐strings (drops both “(and” layers and any leading `exists`)
+                let b=3;
             }
 
             //     // parse into a Presburger set
@@ -223,6 +240,50 @@ where
 
         result
     })
+}
+
+
+/// Given the raw SMT‐LIB slice `inner` and the `file_name` (for error messages),
+/// ensure there are exactly two “(and” markers and peel off both layers plus the final `))`,
+/// returning the core string.
+/// Returns `None` (and logs) if anything is malformed.
+fn peel_two_ands_and_trim(
+    file_name: &str,
+    inner: &str,
+) -> Option<String> {
+    // 1) sanity‐check “(and” count
+    let and_count = inner.matches("(and").count();
+    if and_count != 2 {
+        eprintln!(
+            // todo: fix files with wierd (buggy?) invariant with 1 "(and). These are Bool (not..)
+            "{}: unexpected number of “(and” occurrences: found {}, expected 2",
+            file_name, and_count
+        );
+        return None;
+    }
+
+    // 2) start by slicing off through the first “(and)”
+    let first = inner.find("(and").unwrap();
+    // make rem own its data:
+    let mut rem = inner[first + "(and".len()..].to_string();
+
+    // 3) drop the next “(and)” if present
+    if let Some(second) = rem.find("(and") {
+        // split and re-concatenate into a new owned String
+        let before = &rem[..second];
+        let after = &rem[second + "(and".len()..];
+        rem = format!("{}{}", before, after);
+    } else {
+        eprintln!("{}: internal error – second “(and” not found", file_name);
+        return None;
+    }
+
+    // 4) strip trailing "))"
+    if rem.ends_with("))") {
+        rem.truncate(rem.len() - 2);
+    }
+
+    Some(rem.trim().to_string())
 }
 
 
