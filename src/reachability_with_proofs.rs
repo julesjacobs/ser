@@ -8,6 +8,9 @@ use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Mutex;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+
 
 /// Decision enum for reachability analysis results with future proof support
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -138,6 +141,79 @@ where
         // Note: we've effectively incorporated the zero constraints by filtering the universe
         let can_reach_result: bool = can_reach_presburger(petri, end_result_set, out_dir).into();
         let result = (!can_reach_result).into();
+
+        // // todo - new - START
+        // // --- If it turned out serializable (i.e. Decision::Yes), load and parse all SMT-proof certificates ---
+        // if result == Decision::Yes {
+        //     // look for proof files named smpt_constraints_disjunct_<i>_proof.txt
+        //     let certificate_output_files_iter = std::fs::read_dir(out_dir)
+        //         .unwrap()
+        //                     // Drop errors up front
+        //                     .filter_map(Result::ok)
+        //                     // Only keep our proof files
+        //                     .filter(|e| {
+        //                         let fname_os = e.file_name();
+        //                 let name = fname_os.to_string_lossy();
+        //             name.starts_with("smpt_constraints_disjunct_")
+        //             && name.ends_with("_proof.txt")
+        //     })
+        //     // Now log *only* the matching ones
+        //     .inspect(|e| {
+        //         eprintln!("Matched proof file: {}", e.file_name().to_string_lossy());
+        //     });
+        //
+        //     for (i, single_certificate_file) in certificate_output_files_iter.enumerate() {
+        //         // i is the disjunct index
+        //         let path = single_certificate_file.path();
+        //         let file_name = path
+        //             .file_name()
+        //             .unwrap()
+        //             .to_string_lossy()
+        //             .to_string();
+        //
+        //         // load the entire SMT certificate
+        //         let cert_text = std::fs::read_to_string(&path)
+        //             .unwrap_or_else(|e| panic!("Failed to read proof file {}: {}", file_name, e));
+        //
+        //         // 1. Find the start of the `(and`
+        //         let and_pos = cert_text
+        //             .find("(and")
+        //             .expect(&format!("`(and` not found in {}", file_name));
+        //
+        //         // 2. Compute the position _just after_ the "(and"
+        //         let body_start = and_pos + "(and".len();
+        //
+        //         // 3. Find your closing point as before (e.g. the last `)))` before `; Check`)
+        //         let semicolon_check = cert_text.find("; Check").unwrap_or(cert_text.len());
+        //         let closing_pos = cert_text[..semicolon_check]
+        //             .rmatch_indices(")))")
+        //             .next()
+        //             .map(|(idx, _)| idx)
+        //             .expect(&format!("Ending `)))` not found in {}", file_name));
+        //
+        //         // 4. Slice out only what's between, and trim off any leading whitespace/newlines
+        //         let inner = &cert_text[body_start .. closing_pos];
+        //         let inner = inner.trim();
+        //
+        //         // now `inner` starts immediately after `(and`
+        //         // e.g. "(= G___ …)(= L____ …)…(= G__X_3_ …)"
+        //         println!("Disjunct {} ({}): core constraints = {}", i, file_name, inner);
+        //         println!("******************************************");
+        //
+        //     }
+        //
+        //     //     // parse into a Presburger set
+        //     //     // (you'll need to add this helper to SPresburgerSet)
+        //     //     let proof_set: SPresburgerSet<Q> =
+        //     //         SPresburgerSet::from_certificate(&cert_text)
+        //     //             .expect("Invalid SMT certificate format");
+        //     //
+        //     // }
+        //     let a = 2;
+        // }
+        //
+        //
+        // // todo - new - END
 
         debug_logger.step("Final Result", "Reachability analysis complete", &format!("Subset property holds: {:?}", result));
 
