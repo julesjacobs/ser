@@ -123,7 +123,7 @@ impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
 impl<T: Clone + ToString> PresburgerSet<T> {
     pub fn atom(atom: T) -> Self {
         // Create a 1-dimensional integer space (no parameters, 1 set dim)
-        let space = unsafe { isl::isl_space_set_alloc(isl::isl_ctx_alloc(), 0, 1) };
+        let space = unsafe { isl::isl_space_set_alloc(isl::get_ctx(), 0, 1) };
         // Start with the universe of that 1D space (all integer points)
         let mut set_ptr = unsafe { isl::isl_set_universe(space) };
         
@@ -175,7 +175,7 @@ impl<T: Clone> PresburgerSet<T> {
         let n = atoms.len();
         // Allocate an n-dimensional space for the set (0 parameters, n set dims)
         let space =
-            unsafe { isl::isl_space_set_alloc(isl::isl_ctx_alloc(), 0, n as c_uint) };
+            unsafe { isl::isl_space_set_alloc(isl::get_ctx(), 0, n as c_uint) };
         // Start with the universe set of that space (all integer points in Z^n)
         let mut set_ptr = unsafe { isl::isl_set_universe(space) };
         // Constrain each dimension to be >= 0 (non-negative)
@@ -363,7 +363,7 @@ impl<T: Display> Display for PresburgerSet<T> {
 impl<T: Eq + Clone + Ord + Debug + ToString> Kleene for PresburgerSet<T> {
     fn zero() -> Self {
         // For a Kleene algebra, zero represents the empty set
-        let space = unsafe { isl::isl_space_set_alloc(isl::isl_ctx_alloc(), 0, 0) };
+        let space = unsafe { isl::isl_space_set_alloc(isl::get_ctx(), 0, 0) };
         let set_ptr = unsafe { isl::isl_set_empty(space) };
         PresburgerSet {
             isl_set: set_ptr,
@@ -374,7 +374,7 @@ impl<T: Eq + Clone + Ord + Debug + ToString> Kleene for PresburgerSet<T> {
     fn one() -> Self {
         // For a Kleene algebra, one represents the empty string/epsilon
         // In our context, this is a set containing only the zero vector
-        let space = unsafe { isl::isl_space_set_alloc(isl::isl_ctx_alloc(), 0, 0) };
+        let space = unsafe { isl::isl_space_set_alloc(isl::get_ctx(), 0, 0) };
         // Create a universe (all points), then constrain it to just the origin (0)
         let set_ptr = unsafe { isl::isl_set_universe(space) };
 
@@ -717,7 +717,7 @@ impl<T: Clone + Ord + Debug + ToString + Eq + Hash> PresburgerSet<T> {
         let mapping: Vec<T> = all_keys.into_iter().collect();
 
         // Create a context and an empty result set
-        let ctx = unsafe { isl::isl_ctx_alloc() };
+        let ctx = unsafe { isl::get_ctx() };
         let mut result_set: *mut isl::isl_set = std::ptr::null_mut();
 
         // Process each linear set component
@@ -1118,7 +1118,7 @@ mod presburger_equality_tests {
         println!("\n=== Testing Direct Embedding with ISL Functions ===");
         
         unsafe {
-            let ctx = isl::isl_ctx_alloc();
+            let ctx = isl::get_ctx();
             
             // Test 1: Create atom(a) as { [1] } and embed it to { [1, 0] }
             println!("\n--- Test 1: Embed 1D set to 2D ---");
@@ -1280,7 +1280,7 @@ mod presburger_equality_tests {
         println!("\n--- Test 1: Basic preimage operation ---");
         
         unsafe {
-            let ctx = isl::isl_ctx_alloc();
+            let ctx = isl::get_ctx();
             
             // Create a 1D set { [2] } (single point at coordinate 2)
             let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
@@ -1340,7 +1340,7 @@ mod presburger_equality_tests {
         println!("\n--- Test 2: 0-dimensional to 1-dimensional embedding ---");
         
         unsafe {
-            let ctx = isl::isl_ctx_alloc();
+            let ctx = isl::get_ctx();
             
             // Create 0D universe { [] }
             let space_0d = isl::isl_space_set_alloc(ctx, 0, 0);
@@ -1383,7 +1383,7 @@ mod presburger_equality_tests {
         println!("\n--- Test 3: Embedding as zero vector ---");
         
         unsafe {
-            let ctx = isl::isl_ctx_alloc();
+            let ctx = isl::get_ctx();
             
             // Create 0D universe
             let space_0d = isl::isl_space_set_alloc(ctx, 0, 0);
@@ -1415,7 +1415,7 @@ mod presburger_equality_tests {
         println!("\n--- Test 4: Identity and projection maps ---");
         
         unsafe {
-            let ctx = isl::isl_ctx_alloc();
+            let ctx = isl::get_ctx();
             
             // Create 2D set { [1, 0] }
             let space_2d = isl::isl_space_set_alloc(ctx, 0, 2);
@@ -1588,7 +1588,7 @@ mod presburger_equality_tests {
         // The issue: one should be { [0] } not { [i0] }
         // Let's manually check what the zero vector looks like
         let zero_vec = unsafe {
-            let ctx = isl::isl_ctx_alloc();
+            let ctx = isl::get_ctx();
             let space = isl::isl_space_set_alloc(ctx, 0, 1);
             let mut set = isl::isl_set_universe(space);
             set = isl::isl_set_fix_si(set, isl::isl_dim_type_isl_dim_set, 0, 0);
@@ -1814,7 +1814,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
     pub fn from_quantified_sets(sets: &[QuantifiedSet<T>], mapping: Vec<T>) -> Self {
         // Using the ISL context
-        let ctx = unsafe { isl::isl_ctx_alloc() };
+        let ctx = unsafe { isl::get_ctx() };
 
         // Create an empty result set
         let mut result_set: *mut isl::isl_set = std::ptr::null_mut();
