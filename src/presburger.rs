@@ -706,7 +706,7 @@ impl<T: Clone + Ord + Debug + ToString + Eq + Hash> PresburgerSet<T> {
         let mapping: Vec<T> = all_keys.into_iter().collect();
 
         // Create a context and an empty result set
-        let ctx = unsafe { isl::get_ctx() };
+        let ctx = isl::get_ctx();
         let mut result_set: *mut isl::isl_set = std::ptr::null_mut();
 
         // Process each linear set component
@@ -936,7 +936,7 @@ mod presburger_equality_tests {
         println!("atom99 display: {}", atom99);
 
         // Check if they're equal before harmonization (should not be)
-        let equal_before = unsafe {
+        let equal_before = {
             // We can't directly compare without harmonization, so skip this
             false
         };
@@ -1823,7 +1823,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
     pub fn from_quantified_sets(sets: &[QuantifiedSet<T>], mapping: Vec<T>) -> Self {
         // Using the ISL context
-        let ctx = unsafe { isl::get_ctx() };
+        let ctx = isl::get_ctx();
 
         // Create an empty result set
         let mut result_set: *mut isl::isl_set = std::ptr::null_mut();

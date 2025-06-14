@@ -248,7 +248,7 @@ pub fn from_single_constraint_string(input: &str) -> PresburgerSet<String> {
 
             let atom_re = Regex::new(r"\(t(\d+)\)").unwrap();
             let mul_re = Regex::new(r"\(\* t(\d+) (-?\d+)\)").unwrap();
-            let add_re = Regex::new(r"\+").unwrap();
+            let _add_re = Regex::new(r"\+").unwrap();
 
             // Handle (+ t3 (* t4 -1) (* t5 -1))
             for token in rhs.split_whitespace() {

@@ -7,8 +7,6 @@ use either::{Either, Left, Right};
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
-use std::io::BufRead;
-use std::str::FromStr;
 use std::sync::Mutex;
 
 /// Decision enum for reachability analysis results with future proof support
@@ -209,7 +207,7 @@ where
                     eprintln!("Matched proof file: {}", e.file_name().to_string_lossy());
                 });
             println!("******************************************");
-            for (i, single_certificate_file) in certificate_output_files_iter.enumerate() {
+            for (_i, single_certificate_file) in certificate_output_files_iter.enumerate() {
                 // i is the disjunct index
                 let path = single_certificate_file.path();
                 let file_name = path.file_name().unwrap().to_string_lossy().to_string();
@@ -254,7 +252,6 @@ where
                     None => {
                         // malformed, already logged inside helper
                         continue;
-                        println!("****************************************************\n");
                     }
                 };
                 print!("{}\n", core_str);
@@ -263,7 +260,7 @@ where
                 println!("****************************************************\n");
 
                 // split into atom‐strings (drops both “(and” layers and any leading `exists`)
-                let b = 3;
+                let _b = 3;
             }
 
             //     // parse into a Presburger set
@@ -273,7 +270,7 @@ where
             //             .expect("Invalid SMT certificate format");
             //
             // }
-            let a = 2;
+            let _a = 2;
         }
 
         // todo - new - END
@@ -617,8 +614,8 @@ mod tests {
         // Verify the remaining transitions form a path from Start to nonzero places
         let has_start_to_a = remaining_transitions.contains(&(vec!["Start"], vec!["A"]));
         let has_a_to_b = remaining_transitions.contains(&(vec!["A"], vec!["B"]));
-        let has_b_to_c = remaining_transitions.contains(&(vec!["B"], vec!["C"]));
-        let has_c_to_f = remaining_transitions.contains(&(vec!["C"], vec!["F"]));
+        let _has_b_to_c = remaining_transitions.contains(&(vec!["B"], vec!["C"]));
+        let _has_c_to_f = remaining_transitions.contains(&(vec!["C"], vec!["F"]));
         let has_d_to_e = remaining_transitions.contains(&(vec!["D"], vec!["E"]));
 
         // Should keep transitions that lead to nonzero places (B, F)
