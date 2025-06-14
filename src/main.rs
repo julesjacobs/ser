@@ -18,6 +18,7 @@ mod semilinear;
 mod smpt;
 mod spresburger;
 mod utils;
+mod proof_certificate_parser;
 
 use colored::*;
 use parser::Program;
