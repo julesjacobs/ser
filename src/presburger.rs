@@ -244,6 +244,54 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
             mapping: unified_mapping,
         }
     }
+
+    /// Useful for existential quantification. If you want the set of N-tuples `exists t, blah`:
+    ///
+    ///  * First, you make a set of N+1-tuples, where `t` is a component
+    ///  * Then, you call `.project_out(t)` to get the set of N-tuples, without `t`
+    ///
+    /// See also `project_out_test` below
+    pub fn project_out(mut self, variable: T) -> Self {
+        let Some(index) = self.mapping.iter().position(|x| *x == variable) else {
+            return self;
+        };
+        unsafe {
+            self.isl_set = bindings::isl_set_project_out(self.isl_set, bindings::isl_dim_type_isl_dim_set, index as u32, 1);
+            self.mapping.remove(index);
+        }
+        self
+    }
+}
+
+/// Test for `PresburgerSet::project_out`: create the set of even numbers
+#[test]
+fn project_out_test() {
+    let x = Variable::Var("x");
+    let y = Variable::Var("y");
+
+    // `ps` is the set { (x,y) | x = 2y }
+    let qs = QuantifiedSet::new(vec![
+        Constraint {
+            linear_combination: vec![(-1, x), (2, y)],
+            constant_term: 0,
+            constraint_type: ConstraintType::EqualToZero,
+        }
+    ]);
+    let ps = PresburgerSet::from_quantified_sets(&[qs], vec!["x", "y"]);
+
+    // `evens` is the set { x | exists y, x = 2y }
+    let evens = ps.project_out("y");
+    println!("{evens}");
+
+    // Test we got the right thing by comparing to a QuantifiedSet
+    let evens_qs = QuantifiedSet::new(vec![
+        Constraint {
+            linear_combination: vec![(-1, x), (2, Variable::Existential(0))],
+            constant_term: 0,
+            constraint_type: ConstraintType::EqualToZero,
+        }
+    ]);
+    assert_eq!(evens, PresburgerSet::from_quantified_sets(&[evens_qs], vec!["x"]));
 }
 
 impl<T: Eq + Clone + Ord + Debug + ToString> PartialEq for PresburgerSet<T> {
