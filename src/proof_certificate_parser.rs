@@ -1,6 +1,6 @@
+use crate::presburger::{Constraint, ConstraintType, PresburgerSet, QuantifiedSet, Variable};
 use regex::Regex;
-use sexp::{parse, Atom, Sexp}; // ensure the `sexp` crate is included in Cargo.toml: sexp = "0.5"
-use crate::presburger::{Variable, PresburgerSet, QuantifiedSet, Constraint, ConstraintType};
+use sexp::{Atom, Sexp, parse}; // ensure the `sexp` crate is included in Cargo.toml: sexp = "0.5"
 
 /// Expression tree representing logical formula structure
 #[derive(Debug, Clone)]
@@ -38,17 +38,20 @@ pub fn process_formula(input: &str) {
 /// Extracts variable names from a list of SMT-style declarations.
 fn extract_vars(decls: &Sexp) -> Vec<String> {
     match decls {
-        Sexp::List(decl_list) => decl_list.iter().map(|d| {
-            let v = match d {
-                Sexp::List(inner) => inner,
-                _ => panic!("Expected (var Int) pair"),
-            };
-            assert_eq!(v[1], Sexp::Atom(Atom::S("Int".into())));
-            match &v[0] {
-                Sexp::Atom(Atom::S(s)) => s.clone(),
-                _ => panic!("Expected symbol for variable name"),
-            }
-        }).collect(),
+        Sexp::List(decl_list) => decl_list
+            .iter()
+            .map(|d| {
+                let v = match d {
+                    Sexp::List(inner) => inner,
+                    _ => panic!("Expected (var Int) pair"),
+                };
+                assert_eq!(v[1], Sexp::Atom(Atom::S("Int".into())));
+                match &v[0] {
+                    Sexp::Atom(Atom::S(s)) => s.clone(),
+                    _ => panic!("Expected symbol for variable name"),
+                }
+            })
+            .collect(),
         _ => panic!("Expected list of declarations"),
     }
 }
@@ -170,7 +173,12 @@ fn simplify_sum_expr(expr: &Sexp) -> Sexp {
 fn wrap_vars_in_mul(expr: &Sexp) -> Sexp {
     match expr {
         // If it's an atom and not an operator, wrap it as (* var 1)
-        Sexp::Atom(Atom::S(s)) if !["+", "*", "=", ">=", ">", "<", "<=", "and", "or", "not", "=>"].contains(&s.as_str()) => {
+        Sexp::Atom(Atom::S(s))
+            if ![
+                "+", "*", "=", ">=", ">", "<", "<=", "and", "or", "not", "=>",
+            ]
+            .contains(&s.as_str()) =>
+        {
             Sexp::List(vec![
                 Sexp::Atom(Atom::S("*".into())),
                 Sexp::Atom(Atom::S(s.clone())),
@@ -193,11 +201,10 @@ fn wrap_vars_in_mul(expr: &Sexp) -> Sexp {
     }
 }
 
-
 /// Recursively parses and simplifies an S-expression into an expression tree.
 /// Also simplifies leaf expressions involving constant addition.
 fn parse_expr_tree(expr: &Sexp) -> ExprTree {
-    let wrapped = wrap_vars_in_mul(expr);                      // <- Insert here
+    let wrapped = wrap_vars_in_mul(expr); // <- Insert here
     let normalized = normalize_gt_to_ge(&wrapped);
     let maybe_const_sum = try_eval_const_sum(&normalized);
     let simplified = maybe_const_sum.unwrap_or(normalized.clone());
@@ -208,15 +215,9 @@ fn parse_expr_tree(expr: &Sexp) -> ExprTree {
         Sexp::List(list) if !list.is_empty() => {
             if let Sexp::Atom(Atom::S(op)) = &list[0] {
                 match op.as_str() {
-                    "and" => ExprTree::And(
-                        list[1..].iter().map(parse_expr_tree).collect()
-                    ),
-                    "or" => ExprTree::Or(
-                        list[1..].iter().map(parse_expr_tree).collect()
-                    ),
-                    "not" => ExprTree::Not(
-                        Box::new(parse_expr_tree(&list[1]))
-                    ),
+                    "and" => ExprTree::And(list[1..].iter().map(parse_expr_tree).collect()),
+                    "or" => ExprTree::Or(list[1..].iter().map(parse_expr_tree).collect()),
+                    "not" => ExprTree::Not(Box::new(parse_expr_tree(&list[1]))),
                     "=>" => ExprTree::Implies(
                         Box::new(parse_expr_tree(&list[1])),
                         Box::new(parse_expr_tree(&list[2])),
@@ -231,49 +232,48 @@ fn parse_expr_tree(expr: &Sexp) -> ExprTree {
     }
 }
 
-
 // todo new - start
 
 pub fn from_single_constraint_string(input: &str) -> PresburgerSet<String> {
-
     let input = input.trim();
 
     let re_eq = Regex::new(r"\(= ([^\s]+) \((.+)\)\)").unwrap();
     let re_ge = Regex::new(r"\(>= ([^\s]+) (-?\d+)\)").unwrap();
 
-    let (lhs, linear_terms, constant_term, constraint_type) = if let Some(caps) = re_eq.captures(input) {
-        let lhs = caps[1].to_string();
-        let rhs = caps[2].trim();
-        let mut linear_terms: Vec<(i32, String)> = vec![];
+    let (lhs, linear_terms, constant_term, constraint_type) =
+        if let Some(caps) = re_eq.captures(input) {
+            let lhs = caps[1].to_string();
+            let rhs = caps[2].trim();
+            let mut linear_terms: Vec<(i32, String)> = vec![];
 
-        let atom_re = Regex::new(r"\(t(\d+)\)").unwrap();
-        let mul_re = Regex::new(r"\(\* t(\d+) (-?\d+)\)").unwrap();
-        let add_re = Regex::new(r"\+").unwrap();
+            let atom_re = Regex::new(r"\(t(\d+)\)").unwrap();
+            let mul_re = Regex::new(r"\(\* t(\d+) (-?\d+)\)").unwrap();
+            let add_re = Regex::new(r"\+").unwrap();
 
-        // Handle (+ t3 (* t4 -1) (* t5 -1))
-        for token in rhs.split_whitespace() {
-            if token == "+" {
-                continue;
-            } else if let Some(cap) = mul_re.captures(token) {
-                let var = format!("t{}", &cap[1]);
-                let coef = cap[2].parse::<i32>().unwrap();
-                linear_terms.push((coef, var));
-            } else if let Some(cap) = atom_re.captures(token) {
-                let var = format!("t{}", &cap[1]);
-                linear_terms.push((1, var));
+            // Handle (+ t3 (* t4 -1) (* t5 -1))
+            for token in rhs.split_whitespace() {
+                if token == "+" {
+                    continue;
+                } else if let Some(cap) = mul_re.captures(token) {
+                    let var = format!("t{}", &cap[1]);
+                    let coef = cap[2].parse::<i32>().unwrap();
+                    linear_terms.push((coef, var));
+                } else if let Some(cap) = atom_re.captures(token) {
+                    let var = format!("t{}", &cap[1]);
+                    linear_terms.push((1, var));
+                }
             }
-        }
 
-        linear_terms.push((-1, lhs.clone()));
-        (lhs, linear_terms, 0, ConstraintType::EqualToZero)
-    } else if let Some(caps) = re_ge.captures(input) {
-        let lhs = caps[1].to_string();
-        let c = caps[2].parse::<i32>().unwrap();
-        let terms = vec![(1, lhs.clone())];
-        (lhs, terms, -c, ConstraintType::NonNegative)
-    } else {
-        panic!("Unsupported constraint format: {}", input);
-    };
+            linear_terms.push((-1, lhs.clone()));
+            (lhs, linear_terms, 0, ConstraintType::EqualToZero)
+        } else if let Some(caps) = re_ge.captures(input) {
+            let lhs = caps[1].to_string();
+            let c = caps[2].parse::<i32>().unwrap();
+            let terms = vec![(1, lhs.clone())];
+            (lhs, terms, -c, ConstraintType::NonNegative)
+        } else {
+            panic!("Unsupported constraint format: {}", input);
+        };
 
     let mapping: Vec<String> = linear_terms
         .iter()
@@ -296,8 +296,6 @@ pub fn from_single_constraint_string(input: &str) -> PresburgerSet<String> {
     PresburgerSet::from_quantified_sets(&[qs], mapping)
 }
 
-
-
 /// Ensures that any (+ ...) expression includes a constant term.
 /// Traverses recursively through any S-expression.
 fn ensure_constants_in_plus(expr: &Sexp) -> Sexp {
@@ -306,7 +304,10 @@ fn ensure_constants_in_plus(expr: &Sexp) -> Sexp {
             if let Sexp::Atom(Atom::S(op)) = &list[0] {
                 if op == "+" {
                     let mut new_list = list.clone();
-                    let has_const = new_list.iter().skip(1).any(|item| extract_constant(item).is_some());
+                    let has_const = new_list
+                        .iter()
+                        .skip(1)
+                        .any(|item| extract_constant(item).is_some());
                     if !has_const {
                         new_list.push(Sexp::Atom(Atom::I(0)));
                     }
@@ -321,7 +322,6 @@ fn ensure_constants_in_plus(expr: &Sexp) -> Sexp {
         _ => expr.clone(),
     }
 }
-
 
 /// Ensures that the RHS of any (= lhs rhs) expression is a (+ ...) expression,
 /// **except** when rhs is already a constant (Atom::I or numeric Atom::S).
@@ -369,9 +369,6 @@ fn ensure_plus_rhs_for_equals(expr: &Sexp) -> Sexp {
     }
     expr.clone()
 }
-
-
-
 
 // todo new - end
 
@@ -425,9 +422,8 @@ mod tests {
     }
 
     #[test]
-    fn test_tree_structure_output_2(){
-        let input =
-            "(exists ((t0 Int)(t1 Int)(t2 Int)(t3 Int)(t4 Int)(t5 Int)(t6 Int)(t7 Int)\
+    fn test_tree_structure_output_2() {
+        let input = "(exists ((t0 Int)(t1 Int)(t2 Int)(t3 Int)(t4 Int)(t5 Int)(t6 Int)(t7 Int)\
         (t8 Int)(t9 Int)(t10 Int)(t11 Int)(t12 Int)(t13 Int)(t14 Int)(t15 Int)(t16 Int)\
         (t17 Int)(t18 Int)(t19 Int)) \
         (and (>= t0 0)(>= t1 0)(>= t2 0)(>= t3 0)(>= t4 0)(>= t5 0)(>= t6 0)(>= t7 0)\
@@ -456,9 +452,8 @@ mod tests {
     }
 
     #[test]
-    fn test_tree_structure_output_3(){
-        let input =
-            "(exists ((t0 Int)(t1 Int)(t2 Int)(t3 Int)(t4 Int)(t5 Int)(t6 Int)(t7 Int)(t8 Int)(t9 Int)\
+    fn test_tree_structure_output_3() {
+        let input = "(exists ((t0 Int)(t1 Int)(t2 Int)(t3 Int)(t4 Int)(t5 Int)(t6 Int)(t7 Int)(t8 Int)(t9 Int)\
         (t10 Int)(t11 Int)(t12 Int)(t13 Int)(t14 Int)) (and (>= t0 0)(>= t1 0)(>= t2 0)(>= t3 0)\
         (>= t4 0)(>= t5 0)(>= t6 0)(>= t7 0)(>= t8 0)(>= t9 0)(>= t10 0)(>= t11 0)(>= t12 0)\
         (>= t13 0)(>= t14 0) (and (= G___ (+ (* t7 -1) (* t8 -1) 1))\
@@ -480,9 +475,8 @@ mod tests {
     }
 
     #[test]
-    fn test_tree_structure_output_4(){
-        let input =
-            "(exists ((t0 Int)(t1 Int)(t2 Int)(t3 Int)(t4 Int)(t5 Int)(t6 Int)) \
+    fn test_tree_structure_output_4() {
+        let input = "(exists ((t0 Int)(t1 Int)(t2 Int)(t3 Int)(t4 Int)(t5 Int)(t6 Int)) \
         (and (and (and (>= t0 0)(>= t1 0)(>= t2 0)(>= t3 0)(>= t4 0)(>= t5 0)(>= t6 0) \
         (and (= G___ (+ (* t3 -1) t5 1))\
         (= L___full (+ t0 (* t3 -1)))\
@@ -503,9 +497,6 @@ mod tests {
         let tree = parse_expr_tree(&list[2]);
         println!("Test tree structure: {:#?}", tree);
     }
-
-
-
 
     // #[test]
     // fn test_from_leaf_constraint_to_presburger_set(){
@@ -544,10 +535,4 @@ mod tests {
     //     println!("{}", ps2);
     //
     // }
-
-
 }
-
-
-
-

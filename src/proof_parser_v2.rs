@@ -36,18 +36,18 @@ impl AffineExpr {
     /// Add two expressions
     pub fn add(&self, other: &AffineExpr) -> AffineExpr {
         let mut result = self.clone();
-        
+
         // Add the constant
         result.constant += other.constant;
-        
+
         // Add each term
         for (var, coeff) in &other.terms {
             *result.terms.entry(var.clone()).or_insert(0) += coeff;
         }
-        
+
         // Remove zero coefficients
         result.terms.retain(|_, coeff| *coeff != 0);
-        
+
         result
     }
 
@@ -61,14 +61,14 @@ impl AffineExpr {
         if c == 0 {
             return AffineExpr::new();
         }
-        
+
         let mut result = AffineExpr::new();
         result.constant = self.constant * c;
-        
+
         for (var, coeff) in &self.terms {
             result.terms.insert(var.clone(), coeff * c);
         }
-        
+
         result
     }
 
@@ -100,7 +100,8 @@ impl AffineExpr {
     /// Convert to a vector of (coefficient, variable) pairs plus constant
     /// This is useful for converting to presburger constraints
     pub fn to_linear_combination(&self) -> (Vec<(i64, String)>, i64) {
-        let terms: Vec<(i64, String)> = self.terms
+        let terms: Vec<(i64, String)> = self
+            .terms
             .iter()
             .map(|(var, coeff)| (*coeff, var.clone()))
             .collect();
@@ -114,13 +115,13 @@ impl fmt::Display for AffineExpr {
             write!(f, "0")
         } else {
             let mut first = true;
-            
+
             // Write terms in sorted order (BTreeMap ensures this)
             for (var, coeff) in &self.terms {
                 if *coeff == 0 {
                     continue;
                 }
-                
+
                 if !first {
                     write!(f, " ")?;
                     if *coeff >= 0 {
@@ -129,7 +130,7 @@ impl fmt::Display for AffineExpr {
                 } else {
                     first = false;
                 }
-                
+
                 if *coeff == 1 {
                     write!(f, "{}", var)?;
                 } else if *coeff == -1 {
@@ -138,7 +139,7 @@ impl fmt::Display for AffineExpr {
                     write!(f, "{}*{}", coeff, var)?;
                 }
             }
-            
+
             // Write constant
             if self.constant != 0 || self.terms.is_empty() {
                 if !first {
@@ -149,7 +150,7 @@ impl fmt::Display for AffineExpr {
                 }
                 write!(f, "{}", self.constant)?;
             }
-            
+
             Ok(())
         }
     }
@@ -192,19 +193,19 @@ impl fmt::Display for Constraint {
 
 /// Normalized formula (no Not or Implies)
 #[derive(Debug, Clone, PartialEq)]
-pub enum NormalFormula {
+pub enum Formula {
     Constraint(Constraint),
-    And(Vec<NormalFormula>),
-    Or(Vec<NormalFormula>),
-    Exists(String, Box<NormalFormula>),
-    Forall(String, Box<NormalFormula>),
+    And(Vec<Formula>),
+    Or(Vec<Formula>),
+    Exists(String, Box<Formula>),
+    Forall(String, Box<Formula>),
 }
 
-impl fmt::Display for NormalFormula {
+impl fmt::Display for Formula {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            NormalFormula::Constraint(c) => write!(f, "{}", c),
-            NormalFormula::And(formulas) => {
+            Formula::Constraint(c) => write!(f, "{}", c),
+            Formula::And(formulas) => {
                 if formulas.is_empty() {
                     write!(f, "⊤") // true
                 } else {
@@ -218,7 +219,7 @@ impl fmt::Display for NormalFormula {
                     write!(f, ")")
                 }
             }
-            NormalFormula::Or(formulas) => {
+            Formula::Or(formulas) => {
                 if formulas.is_empty() {
                     write!(f, "⊥") // false
                 } else {
@@ -232,10 +233,10 @@ impl fmt::Display for NormalFormula {
                     write!(f, ")")
                 }
             }
-            NormalFormula::Exists(var, body) => {
+            Formula::Exists(var, body) => {
                 write!(f, "∃{}. {}", var, body)
             }
-            NormalFormula::Forall(var, body) => {
+            Formula::Forall(var, body) => {
                 write!(f, "∀{}. {}", var, body)
             }
         }
@@ -248,7 +249,7 @@ pub struct ProofInvariant {
     /// Variables declared in the cert function
     pub variables: Vec<String>,
     /// The invariant formula
-    pub formula: NormalFormula,
+    pub formula: Formula,
 }
 
 /// Parser for SMT-LIB proof certificates
@@ -267,7 +268,11 @@ pub struct ParseError {
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Parse error at position {}: {}", self.position, self.message)
+        write!(
+            f,
+            "Parse error at position {}: {}",
+            self.position, self.message
+        )
     }
 }
 
@@ -345,15 +350,15 @@ impl Parser {
 
     fn parse_atom(&mut self) -> Result<String> {
         self.skip_ws_and_comments();
-        
+
         let mut token = String::new();
-        
+
         // Check for negative numbers
         if self.peek() == Some('-') {
             token.push('-');
             self.advance();
         }
-        
+
         // Collect the rest
         while let Some(ch) = self.peek() {
             if ch.is_whitespace() || ch == '(' || ch == ')' {
@@ -362,7 +367,7 @@ impl Parser {
             token.push(ch);
             self.advance();
         }
-        
+
         if token.is_empty() {
             Err(self.error("Expected atom"))
         } else {
@@ -379,12 +384,12 @@ impl Parser {
     fn peek_atom(&mut self) -> Result<Option<String>> {
         let saved_pos = self.pos;
         self.skip_ws_and_comments();
-        
+
         if self.peek() == Some('(') {
             self.pos = saved_pos;
             return Ok(None);
         }
-        
+
         match self.parse_atom() {
             Ok(atom) => {
                 self.pos = saved_pos;
@@ -400,7 +405,7 @@ impl Parser {
     /// Parse an affine expression
     fn parse_affine_expr(&mut self) -> Result<AffineExpr> {
         self.skip_ws_and_comments();
-        
+
         // Check if it's a list or atom
         if self.peek() != Some('(') {
             // It's an atom - either integer or variable
@@ -411,7 +416,9 @@ impl Parser {
                 // Variables with @ are allowed - they come from SMPT output
                 // Check if variable is declared (without the @suffix if present)
                 let base_var = atom.split('@').next().unwrap_or(&atom);
-                if !self.declared_vars.contains(&base_var.to_string()) && !self.declared_vars.contains(&atom) {
+                if !self.declared_vars.contains(&base_var.to_string())
+                    && !self.declared_vars.contains(&atom)
+                {
                     return Err(self.error(&format!("Undefined variable: {}", atom)));
                 }
                 Ok(AffineExpr::from_var(atom))
@@ -420,17 +427,17 @@ impl Parser {
             // It's a list - parse operation
             self.expect_char('(')?;
             let op = self.parse_atom()?;
-            
+
             match op.as_str() {
                 "+" => {
                     let mut result = AffineExpr::new();
-                    
+
                     // Parse all arguments
                     while self.peek() != Some(')') {
                         let arg = self.parse_affine_expr()?;
                         result = result.add(&arg);
                     }
-                    
+
                     self.expect_char(')')?;
                     Ok(result)
                 }
@@ -445,7 +452,7 @@ impl Parser {
                     let arg1 = self.parse_affine_expr()?;
                     let arg2 = self.parse_affine_expr()?;
                     self.expect_char(')')?;
-                    
+
                     // One must be constant
                     if arg1.is_constant() {
                         Ok(arg2.mul_by_const(arg1.get_constant()))
@@ -455,7 +462,7 @@ impl Parser {
                         Err(self.error("Multiplication requires at least one constant"))
                     }
                 }
-                _ => Err(self.error(&format!("Unknown arithmetic operation: {}", op)))
+                _ => Err(self.error(&format!("Unknown arithmetic operation: {}", op))),
             }
         }
     }
@@ -464,7 +471,7 @@ impl Parser {
     fn parse_constraint(&mut self) -> Result<Constraint> {
         self.expect_char('(')?;
         let op = self.parse_atom()?;
-        
+
         let comp_op = match op.as_str() {
             "=" => CompOp::Eq,
             ">=" => CompOp::Geq,
@@ -473,7 +480,7 @@ impl Parser {
                 let lhs = self.parse_affine_expr()?;
                 let rhs = self.parse_affine_expr()?;
                 self.expect_char(')')?;
-                
+
                 // lhs > rhs becomes lhs - rhs > 0 becomes lhs - rhs - 1 >= 0
                 let mut expr = lhs.sub(&rhs);
                 expr.constant -= 1;
@@ -484,7 +491,7 @@ impl Parser {
                 let lhs = self.parse_affine_expr()?;
                 let rhs = self.parse_affine_expr()?;
                 self.expect_char(')')?;
-                
+
                 // lhs <= rhs becomes rhs - lhs >= 0
                 let expr = rhs.sub(&lhs);
                 return Ok(Constraint::new(expr, CompOp::Geq));
@@ -494,20 +501,20 @@ impl Parser {
                 let lhs = self.parse_affine_expr()?;
                 let rhs = self.parse_affine_expr()?;
                 self.expect_char(')')?;
-                
+
                 // lhs < rhs becomes rhs - lhs > 0 becomes rhs - lhs - 1 >= 0
                 let mut expr = rhs.sub(&lhs);
                 expr.constant -= 1;
                 return Ok(Constraint::new(expr, CompOp::Geq));
             }
-            _ => return Err(self.error(&format!("Unknown comparison operator: {}", op)))
+            _ => return Err(self.error(&format!("Unknown comparison operator: {}", op))),
         };
-        
+
         // For = and >=, parse normally
         let lhs = self.parse_affine_expr()?;
         let rhs = self.parse_affine_expr()?;
         self.expect_char(')')?;
-        
+
         // Convert to expr op 0 form
         let expr = lhs.sub(&rhs);
         Ok(Constraint::new(expr, comp_op))
@@ -517,37 +524,37 @@ impl Parser {
     fn parse_var_list(&mut self) -> Result<Vec<String>> {
         self.expect_char('(')?;
         self.skip_ws_and_comments();
-        
+
         let mut vars = Vec::new();
-        
+
         // Check for empty variable list
         if self.peek() == Some(')') {
             self.advance();
             return Ok(vars); // Empty variable list
         }
-        
+
         while self.peek() != Some(')') {
             self.expect_char('(')?;
             let var_name = self.parse_atom()?;
             let var_type = self.parse_atom()?;
             self.expect_char(')')?;
-            
+
             if var_type != "Int" {
                 return Err(self.error(&format!("Expected Int type, got {}", var_type)));
             }
-            
+
             vars.push(var_name);
             self.skip_ws_and_comments();
         }
-        
+
         self.expect_char(')')?;
         Ok(vars)
     }
 
     /// Negate a normalized formula using De Morgan's laws
-    fn negate_formula(formula: NormalFormula) -> NormalFormula {
+    fn negate_formula(formula: Formula) -> Formula {
         match formula {
-            NormalFormula::Constraint(c) => {
+            Formula::Constraint(c) => {
                 match c.op {
                     CompOp::Eq => {
                         // ¬(expr = 0) becomes (expr > 0) ∨ (expr < 0)
@@ -555,61 +562,57 @@ impl Parser {
                         let pos_expr = c.expr.clone();
                         let mut pos_constraint = Constraint::new(pos_expr, CompOp::Geq);
                         pos_constraint.expr.constant -= 1;
-                        
+
                         let neg_expr = c.expr.negate();
                         let mut neg_constraint = Constraint::new(neg_expr, CompOp::Geq);
                         neg_constraint.expr.constant -= 1;
-                        
-                        NormalFormula::Or(vec![
-                            NormalFormula::Constraint(pos_constraint),
-                            NormalFormula::Constraint(neg_constraint),
+
+                        Formula::Or(vec![
+                            Formula::Constraint(pos_constraint),
+                            Formula::Constraint(neg_constraint),
                         ])
                     }
                     CompOp::Geq => {
                         // ¬(expr >= 0) becomes expr < 0 which is -expr - 1 >= 0
                         let mut neg_expr = c.expr.negate();
                         neg_expr.constant -= 1;
-                        NormalFormula::Constraint(Constraint::new(neg_expr, CompOp::Geq))
+                        Formula::Constraint(Constraint::new(neg_expr, CompOp::Geq))
                     }
                 }
             }
-            NormalFormula::And(formulas) => {
+            Formula::And(formulas) => {
                 // ¬(A ∧ B) = ¬A ∨ ¬B
-                let negated: Vec<NormalFormula> = formulas
-                    .into_iter()
-                    .map(Self::negate_formula)
-                    .collect();
-                NormalFormula::Or(negated)
+                let negated: Vec<Formula> =
+                    formulas.into_iter().map(Self::negate_formula).collect();
+                Formula::Or(negated)
             }
-            NormalFormula::Or(formulas) => {
+            Formula::Or(formulas) => {
                 // ¬(A ∨ B) = ¬A ∧ ¬B
-                let negated: Vec<NormalFormula> = formulas
-                    .into_iter()
-                    .map(Self::negate_formula)
-                    .collect();
-                NormalFormula::And(negated)
+                let negated: Vec<Formula> =
+                    formulas.into_iter().map(Self::negate_formula).collect();
+                Formula::And(negated)
             }
-            NormalFormula::Exists(var, body) => {
+            Formula::Exists(var, body) => {
                 // ¬∃x.P = ∀x.¬P
-                NormalFormula::Forall(var, Box::new(Self::negate_formula(*body)))
+                Formula::Forall(var, Box::new(Self::negate_formula(*body)))
             }
-            NormalFormula::Forall(var, body) => {
+            Formula::Forall(var, body) => {
                 // ¬∀x.P = ∃x.¬P
-                NormalFormula::Exists(var, Box::new(Self::negate_formula(*body)))
+                Formula::Exists(var, Box::new(Self::negate_formula(*body)))
             }
         }
     }
 
     /// Parse a formula
-    fn parse_formula(&mut self) -> Result<NormalFormula> {
+    fn parse_formula(&mut self) -> Result<Formula> {
         self.skip_ws_and_comments();
-        
+
         if self.peek() != Some('(') {
             return Err(self.error("Expected '(' to start formula"));
         }
-        
+
         self.expect_char('(')?;
-        
+
         // Peek ahead to see what we have
         let op = if let Ok(Some(atom)) = self.peek_atom() {
             self.parse_atom()?;
@@ -619,82 +622,82 @@ impl Parser {
             if self.peek() == Some(')') {
                 self.advance();
                 // Empty list - treat as empty AND (true)
-                return Ok(NormalFormula::And(vec![]));
+                return Ok(Formula::And(vec![]));
             }
             return Err(self.error("Expected operator or closing parenthesis"));
         };
-        
+
         match op.as_str() {
             "and" => {
                 self.skip_ws_and_comments();
-                
+
                 // Check for empty (and )
                 if self.peek() == Some(')') {
                     self.advance();
-                    return Ok(NormalFormula::And(vec![])); // Empty AND = true
+                    return Ok(Formula::And(vec![])); // Empty AND = true
                 }
-                
+
                 let mut formulas = Vec::new();
                 while self.peek() != Some(')') {
                     let formula = self.parse_formula()?;
-                    
+
                     // Skip empty AND (true) and empty OR (false) in AND context
                     // According to the test, these should just be ignored
-                    if let NormalFormula::And(ref parts) = formula {
+                    if let Formula::And(ref parts) = formula {
                         if parts.is_empty() {
                             self.skip_ws_and_comments();
                             continue; // Skip empty AND
                         }
                     }
-                    
-                    if let NormalFormula::Or(ref parts) = formula {
+
+                    if let Formula::Or(ref parts) = formula {
                         if parts.is_empty() {
                             self.skip_ws_and_comments();
                             continue; // Skip empty OR
                         }
                     }
-                    
+
                     formulas.push(formula);
                     self.skip_ws_and_comments();
                 }
-                
+
                 self.expect_char(')')?;
-                Ok(NormalFormula::And(formulas))
+                Ok(Formula::And(formulas))
             }
             "or" => {
                 self.skip_ws_and_comments();
-                
+
                 // Check for empty (or )
                 if self.peek() == Some(')') {
                     self.advance();
-                    return Ok(NormalFormula::Or(vec![])); // Empty OR = false
+                    return Ok(Formula::Or(vec![])); // Empty OR = false
                 }
-                
+
                 let mut formulas = Vec::new();
                 while self.peek() != Some(')') {
                     let formula = self.parse_formula()?;
-                    
+
                     // Skip empty OR (false) and empty AND (true) in OR context
-                    if let NormalFormula::Or(ref parts) = formula {
+                    if let Formula::Or(ref parts) = formula {
                         if parts.is_empty() {
                             self.skip_ws_and_comments();
                             continue; // Skip empty OR
                         }
                     }
-                    
-                    if let NormalFormula::And(ref parts) = formula {
+
+                    if let Formula::And(ref parts) = formula {
                         if parts.is_empty() {
                             self.skip_ws_and_comments();
                             continue; // Skip empty AND
                         }
                     }
-                    
+
                     formulas.push(formula);
                     self.skip_ws_and_comments();
                 }
-                
+
                 self.expect_char(')')?;
-                Ok(NormalFormula::Or(formulas))
+                Ok(Formula::Or(formulas))
             }
             "not" => {
                 let inner = self.parse_formula()?;
@@ -705,62 +708,59 @@ impl Parser {
                 let lhs = self.parse_formula()?;
                 let rhs = self.parse_formula()?;
                 self.expect_char(')')?;
-                
+
                 // A => B is ¬A ∨ B
-                Ok(NormalFormula::Or(vec![
-                    Self::negate_formula(lhs),
-                    rhs,
-                ]))
+                Ok(Formula::Or(vec![Self::negate_formula(lhs), rhs]))
             }
             "exists" => {
                 // Save current declared vars
                 let saved_vars = self.declared_vars.clone();
-                
+
                 let vars = self.parse_var_list()?;
                 // Add to declared vars
                 self.declared_vars.extend(vars.clone());
-                
+
                 let body = self.parse_formula()?;
                 self.expect_char(')')?;
-                
+
                 // Restore declared vars
                 self.declared_vars = saved_vars;
-                
+
                 // If no variables, just return the body
                 if vars.is_empty() {
                     return Ok(body);
                 }
-                
+
                 // Convert multiple variables to nested single quantifiers
                 let mut result = body;
                 for var in vars.into_iter().rev() {
-                    result = NormalFormula::Exists(var, Box::new(result));
+                    result = Formula::Exists(var, Box::new(result));
                 }
                 Ok(result)
             }
             "forall" => {
                 // Save current declared vars
                 let saved_vars = self.declared_vars.clone();
-                
+
                 let vars = self.parse_var_list()?;
                 // Add to declared vars
                 self.declared_vars.extend(vars.clone());
-                
+
                 let body = self.parse_formula()?;
                 self.expect_char(')')?;
-                
+
                 // Restore declared vars
                 self.declared_vars = saved_vars;
-                
+
                 // If no variables, just return the body
                 if vars.is_empty() {
                     return Ok(body);
                 }
-                
+
                 // Convert multiple variables to nested single quantifiers
                 let mut result = body;
                 for var in vars.into_iter().rev() {
-                    result = NormalFormula::Forall(var, Box::new(result));
+                    result = Formula::Forall(var, Box::new(result));
                 }
                 Ok(result)
             }
@@ -775,46 +775,46 @@ impl Parser {
                         let lhs = self.parse_affine_expr()?;
                         let rhs = self.parse_affine_expr()?;
                         self.expect_char(')')?;
-                        
+
                         // lhs > rhs becomes lhs - rhs > 0 becomes lhs - rhs - 1 >= 0
                         let mut expr = lhs.sub(&rhs);
                         expr.constant -= 1;
-                        return Ok(NormalFormula::Constraint(Constraint::new(expr, CompOp::Geq)));
+                        return Ok(Formula::Constraint(Constraint::new(expr, CompOp::Geq)));
                     }
                     "<=" => {
                         // Convert <= to >= by negation
                         let lhs = self.parse_affine_expr()?;
                         let rhs = self.parse_affine_expr()?;
                         self.expect_char(')')?;
-                        
+
                         // lhs <= rhs becomes rhs - lhs >= 0
                         let expr = rhs.sub(&lhs);
-                        return Ok(NormalFormula::Constraint(Constraint::new(expr, CompOp::Geq)));
+                        return Ok(Formula::Constraint(Constraint::new(expr, CompOp::Geq)));
                     }
                     "<" => {
                         // Convert < to >= by negation and adjustment
                         let lhs = self.parse_affine_expr()?;
                         let rhs = self.parse_affine_expr()?;
                         self.expect_char(')')?;
-                        
+
                         // lhs < rhs becomes rhs - lhs > 0 becomes rhs - lhs - 1 >= 0
                         let mut expr = rhs.sub(&lhs);
                         expr.constant -= 1;
-                        return Ok(NormalFormula::Constraint(Constraint::new(expr, CompOp::Geq)));
+                        return Ok(Formula::Constraint(Constraint::new(expr, CompOp::Geq)));
                     }
-                    _ => unreachable!()
+                    _ => unreachable!(),
                 };
-                
+
                 // For = and >=, parse normally
                 let lhs = self.parse_affine_expr()?;
                 let rhs = self.parse_affine_expr()?;
                 self.expect_char(')')?;
-                
+
                 // Convert to expr op 0 form
                 let expr = lhs.sub(&rhs);
-                Ok(NormalFormula::Constraint(Constraint::new(expr, comp_op)))
+                Ok(Formula::Constraint(Constraint::new(expr, comp_op)))
             }
-            _ => Err(self.error(&format!("Unknown formula operator: {}", op)))
+            _ => Err(self.error(&format!("Unknown formula operator: {}", op))),
         }
     }
 
@@ -823,14 +823,14 @@ impl Parser {
         let mut cert_found = false;
         let mut variables = Vec::new();
         let mut formula = None;
-        
+
         while self.pos < self.input.len() {
             self.skip_ws_and_comments();
-            
+
             if self.pos >= self.input.len() {
                 break;
             }
-            
+
             // Each top-level form should be a list
             if self.peek() != Some('(') {
                 // If we already found cert, we're done
@@ -839,18 +839,18 @@ impl Parser {
                 }
                 return Err(self.error("Expected '(' at top level"));
             }
-            
+
             // Check if this is define-fun cert
             let saved_pos = self.pos;
             self.advance(); // skip '('
-            
+
             if let Ok(cmd) = self.parse_atom() {
                 if cmd == "define-fun" {
                     if let Ok(name) = self.parse_atom() {
                         if name == "cert" {
                             // Parse the cert function
                             cert_found = true;
-                            
+
                             // Parse parameters
                             self.expect_char('(')?;
                             while self.peek() != Some(')') {
@@ -858,32 +858,37 @@ impl Parser {
                                 let var_name = self.parse_atom()?;
                                 let var_type = self.parse_atom()?;
                                 self.expect_char(')')?;
-                                
+
                                 if var_type != "Int" {
-                                    return Err(self.error(&format!("Expected Int type, got {}", var_type)));
+                                    return Err(
+                                        self.error(&format!("Expected Int type, got {}", var_type))
+                                    );
                                 }
-                                
+
                                 variables.push(var_name);
                             }
                             self.expect_char(')')?;
-                            
+
                             // Parse return type
                             let ret_type = self.parse_atom()?;
                             if ret_type != "Bool" {
-                                return Err(self.error(&format!("Expected Bool return type, got {}", ret_type)));
+                                return Err(self.error(&format!(
+                                    "Expected Bool return type, got {}",
+                                    ret_type
+                                )));
                             }
-                            
+
                             // Set declared variables for body parsing
                             self.declared_vars = variables.clone();
-                            
+
                             // Parse body
                             formula = Some(self.parse_formula()?);
-                            
+
                             // Clear declared variables
                             self.declared_vars.clear();
-                            
+
                             self.expect_char(')')?; // close define-fun
-                            
+
                             // Once we found cert, we can stop parsing
                             break;
                         } else {
@@ -905,11 +910,11 @@ impl Parser {
                 self.skip_form()?;
             }
         }
-        
+
         if !cert_found {
             return Err(self.error("No cert function found in proof file"));
         }
-        
+
         Ok(ProofInvariant {
             variables,
             formula: formula.unwrap(),
@@ -919,11 +924,11 @@ impl Parser {
     /// Skip an S-expression form
     fn skip_form(&mut self) -> Result<()> {
         self.skip_ws_and_comments();
-        
+
         if self.peek() == Some('(') {
             self.advance();
             let mut depth = 1;
-            
+
             while depth > 0 && self.pos < self.input.len() {
                 match self.peek() {
                     Some('(') => {
@@ -942,7 +947,7 @@ impl Parser {
                     }
                 }
             }
-            
+
             if depth > 0 {
                 return Err(self.error("Unclosed parenthesis"));
             }
@@ -950,7 +955,7 @@ impl Parser {
             // Skip atom
             self.parse_atom()?;
         }
-        
+
         Ok(())
     }
 }
@@ -966,18 +971,18 @@ pub fn to_presburger_constraint(
     constraint: &Constraint,
 ) -> crate::presburger::Constraint<crate::presburger::Variable<String>> {
     use crate::presburger::{Constraint as PConstraint, ConstraintType, Variable};
-    
+
     let (terms, constant) = constraint.expr.to_linear_combination();
     let linear_combination: Vec<(i32, Variable<String>)> = terms
         .into_iter()
         .map(|(coeff, var)| (coeff as i32, Variable::Var(var)))
         .collect();
-    
+
     let constraint_type = match constraint.op {
         CompOp::Eq => ConstraintType::EqualToZero,
         CompOp::Geq => ConstraintType::NonNegative,
     };
-    
+
     PConstraint::new(linear_combination, constant as i32, constraint_type)
 }
 
@@ -990,15 +995,18 @@ mod tests {
         let x = AffineExpr::from_var("x".to_string());
         let y = AffineExpr::from_var("y".to_string());
         let five = AffineExpr::from_const(5);
-        
+
         // x + y + 5
         let expr = x.add(&y).add(&five);
         assert_eq!(expr.to_string(), "x + y + 5");
-        
+
         // 2*x - 3*y + 10
-        let expr2 = x.mul_by_const(2).add(&y.mul_by_const(-3)).add(&AffineExpr::from_const(10));
+        let expr2 = x
+            .mul_by_const(2)
+            .add(&y.mul_by_const(-3))
+            .add(&AffineExpr::from_const(10));
         assert_eq!(expr2.to_string(), "2*x -3*y + 10");
-        
+
         // Test subtraction
         let expr3 = x.sub(&y);
         assert_eq!(expr3.to_string(), "x -y");
@@ -1011,13 +1019,13 @@ mod tests {
 (define-fun cert ((x Int)(y Int)) Bool 
   (and (>= x 0) (>= y 0) (= (+ x y) 10)))
 "#;
-        
+
         let result = parse_proof_file(proof).unwrap();
         assert_eq!(result.variables, vec!["x", "y"]);
-        
+
         // Check it's an AND of 3 constraints
         match &result.formula {
-            NormalFormula::And(constraints) => {
+            Formula::And(constraints) => {
                 assert_eq!(constraints.len(), 3);
             }
             _ => panic!("Expected AND formula"),
@@ -1031,7 +1039,7 @@ mod tests {
 (define-fun cert ((x Int)) Bool 
   (>= x y))
 "#;
-        
+
         let result = parse_proof_file(proof);
         assert!(result.is_err());
         assert!(result.unwrap_err().message.contains("Undefined variable"));
@@ -1045,12 +1053,12 @@ mod tests {
 (define-fun cert ((x Int)) Bool 
   (>= x@0 0))
 "#;
-        
+
         let result = parse_proof_file(proof);
         assert!(result.is_ok());
         let inv = result.unwrap();
         match &inv.formula {
-            NormalFormula::Constraint(c) => {
+            Formula::Constraint(c) => {
                 assert_eq!(c.expr.to_string(), "x@0");
             }
             _ => panic!("Expected constraint"),
@@ -1064,10 +1072,10 @@ mod tests {
 (define-fun cert ((x Int)(y Int)) Bool 
   (= (+ (+ x 1) y) 10))
 "#;
-        
+
         let result = parse_proof_file(proof).unwrap();
         match &result.formula {
-            NormalFormula::Constraint(c) => {
+            Formula::Constraint(c) => {
                 assert_eq!(c.expr.to_string(), "x + y -9");
                 assert_eq!(c.op, CompOp::Eq);
             }
@@ -1082,10 +1090,10 @@ mod tests {
 (set-logic LIA)
 (define-fun cert ((x Int)) Bool (> x 5))
 "#;
-        
+
         let result = parse_proof_file(proof).unwrap();
         match &result.formula {
-            NormalFormula::Constraint(c) => {
+            Formula::Constraint(c) => {
                 assert_eq!(c.expr.to_string(), "x -6");
                 assert_eq!(c.op, CompOp::Geq);
             }
@@ -1100,15 +1108,15 @@ mod tests {
 (define-fun cert ((x Int)(y Int)) Bool 
   (=> (>= x 0) (>= y 0)))
 "#;
-        
+
         let result = parse_proof_file(proof).unwrap();
         // Should be (¬(x >= 0) ∨ (y >= 0))
         match &result.formula {
-            NormalFormula::Or(parts) => {
+            Formula::Or(parts) => {
                 assert_eq!(parts.len(), 2);
                 // First part should be ¬(x >= 0) which is -x - 1 >= 0
                 match &parts[0] {
-                    NormalFormula::Constraint(c) => {
+                    Formula::Constraint(c) => {
                         assert_eq!(c.expr.to_string(), "-x -1");
                         assert_eq!(c.op, CompOp::Geq);
                     }
@@ -1126,13 +1134,13 @@ mod tests {
 (define-fun cert ((x Int)) Bool 
   (exists ((t Int)) (and (>= t 0) (= x (* 2 t)))))
 "#;
-        
+
         let result = parse_proof_file(proof).unwrap();
         match &result.formula {
-            NormalFormula::Exists(var, body) => {
+            Formula::Exists(var, body) => {
                 assert_eq!(var, "t");
                 match body.as_ref() {
-                    NormalFormula::And(constraints) => {
+                    Formula::And(constraints) => {
                         assert_eq!(constraints.len(), 2);
                     }
                     _ => panic!("Expected AND in exists body"),
@@ -1149,15 +1157,15 @@ mod tests {
 (define-fun cert ((x Int)) Bool 
   (and (or ) (>= x 0) (and )))
 "#;
-        
+
         let result = parse_proof_file(proof).unwrap();
         match &result.formula {
-            NormalFormula::And(parts) => {
+            Formula::And(parts) => {
                 // We have: empty OR (false), x >= 0, empty AND (true)
                 // Empty lists are skipped during parsing, so we should have just x >= 0
                 assert_eq!(parts.len(), 1);
                 match &parts[0] {
-                    NormalFormula::Constraint(c) => {
+                    Formula::Constraint(c) => {
                         assert_eq!(c.expr.to_string(), "x");
                     }
                     _ => panic!("Expected constraint"),
@@ -1184,7 +1192,10 @@ mod tests {
         let mut failures = Vec::new();
 
         // Function to recursively find proof files
-        fn find_proof_files(dir: &Path, files: &mut Vec<std::path::PathBuf>) -> std::io::Result<()> {
+        fn find_proof_files(
+            dir: &Path,
+            files: &mut Vec<std::path::PathBuf>,
+        ) -> std::io::Result<()> {
             for entry in fs::read_dir(dir)? {
                 let entry = entry?;
                 let path = entry.path();
@@ -1211,24 +1222,24 @@ mod tests {
 
         for file_path in proof_files {
             total_files += 1;
-            
+
             match fs::read_to_string(&file_path) {
-                Ok(content) => {
-                    match parse_proof_file(&content) {
-                        Ok(invariant) => {
-                            successful_parses += 1;
-                            println!("✓ {} ({} vars)", 
-                                file_path.display(), 
-                                invariant.variables.len());
-                        }
-                        Err(e) => {
-                            failed_parses += 1;
-                            let relative_path = file_path.strip_prefix("out/").unwrap_or(&file_path);
-                            failures.push((relative_path.to_path_buf(), e.to_string()));
-                            println!("✗ {}: {}", file_path.display(), e);
-                        }
+                Ok(content) => match parse_proof_file(&content) {
+                    Ok(invariant) => {
+                        successful_parses += 1;
+                        println!(
+                            "✓ {} ({} vars)",
+                            file_path.display(),
+                            invariant.variables.len()
+                        );
                     }
-                }
+                    Err(e) => {
+                        failed_parses += 1;
+                        let relative_path = file_path.strip_prefix("out/").unwrap_or(&file_path);
+                        failures.push((relative_path.to_path_buf(), e.to_string()));
+                        println!("✗ {}: {}", file_path.display(), e);
+                    }
+                },
                 Err(e) => {
                     failed_parses += 1;
                     failures.push((file_path.clone(), format!("Failed to read file: {}", e)));
@@ -1247,14 +1258,18 @@ mod tests {
             for (path, error) in &failures {
                 println!("{}: {}", path.display(), error);
             }
-            
+
             // Check if failures are due to expected reasons
-            let no_cert_failures = failures.iter()
+            let no_cert_failures = failures
+                .iter()
                 .filter(|(_, err)| err.contains("No cert function"))
                 .count();
-            
-            println!("\nFailures due to missing cert function: {}/{}", no_cert_failures, failed_parses);
-            
+
+            println!(
+                "\nFailures due to missing cert function: {}/{}",
+                no_cert_failures, failed_parses
+            );
+
             // Don't fail the test if all errors are expected
             if no_cert_failures < failed_parses {
                 println!("\nUnexpected failures found!");
@@ -1279,7 +1294,10 @@ mod tests {
         }
 
         // Recursively find proof files
-        fn find_proof_files(dir: &Path, files: &mut Vec<std::path::PathBuf>) -> std::io::Result<()> {
+        fn find_proof_files(
+            dir: &Path,
+            files: &mut Vec<std::path::PathBuf>,
+        ) -> std::io::Result<()> {
             for entry in fs::read_dir(dir)? {
                 let entry = entry?;
                 let path = entry.path();
@@ -1300,10 +1318,10 @@ mod tests {
         find_proof_files(out_dir, &mut proof_files).expect("Failed to scan directory");
 
         let mut stats = (0, 0, 0); // (total, success, expected_failures)
-        
+
         for file_path in proof_files {
             stats.0 += 1;
-            
+
             if let Ok(content) = fs::read_to_string(&file_path) {
                 match parse_proof_file(&content) {
                     Ok(_) => stats.1 += 1,
@@ -1319,10 +1337,15 @@ mod tests {
         }
 
         // Basic sanity check
-        assert_eq!(stats.0, stats.1 + stats.2, 
-            "Total files ({}) != successful ({}) + expected failures ({})", 
-            stats.0, stats.1, stats.2);
-        
+        assert_eq!(
+            stats.0,
+            stats.1 + stats.2,
+            "Total files ({}) != successful ({}) + expected failures ({})",
+            stats.0,
+            stats.1,
+            stats.2
+        );
+
         // Ensure we parsed some files successfully
         assert!(stats.1 > 0, "No files were parsed successfully");
     }

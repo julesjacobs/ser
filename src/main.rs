@@ -13,6 +13,7 @@ mod parser;
 mod petri;
 mod presburger;
 mod proof_certificate_parser;
+mod proof_parser_v2;
 mod reachability;
 mod reachability_with_proofs;
 mod semilinear;
