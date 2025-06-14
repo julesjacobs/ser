@@ -13,6 +13,7 @@ pub enum ExprTree {
 }
 
 /// Parses and processes an SMT-LIB-style formula string, extracting variables and building an expression tree.
+/// assume the input starts with exists (...)
 pub fn process_formula(input: &str) {
     let parsed = parse(input).expect("Failed to parse S-expression");
     let list = match parsed {
