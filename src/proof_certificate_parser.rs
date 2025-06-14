@@ -323,8 +323,9 @@ fn ensure_constants_in_plus(expr: &Sexp) -> Sexp {
 }
 
 
-/// Ensures that the RHS of any (= lhs rhs) expression is a (+ ...) expression.
-/// If the RHS is not already a (+ ...), it wraps it as (+ rhs 0).
+/// Ensures that the RHS of any (= lhs rhs) expression is a (+ ...) expression,
+/// **except** when rhs is already a constant (Atom::I or numeric Atom::S).
+/// If the RHS is a non‐plus, non‐constant, it wraps it as (+ rhs 0).
 fn ensure_plus_rhs_for_equals(expr: &Sexp) -> Sexp {
     if let Sexp::List(list) = expr {
         if list.len() == 3 {
@@ -333,35 +334,42 @@ fn ensure_plus_rhs_for_equals(expr: &Sexp) -> Sexp {
                     let lhs = &list[1];
                     let rhs = &list[2];
 
-                    let needs_wrapping = match rhs {
-                        Sexp::List(rhs_list) => {
-                            match rhs_list.first() {
-                                Some(Sexp::Atom(Atom::S(s))) => s != "+",
-                                _ => true,
-                            }
-                        }
-                        _ => true,
-                    };
-
-                    if needs_wrapping {
-                        let wrapped_rhs = Sexp::List(vec![
-                            Sexp::Atom(Atom::S("+".into())),
-                            rhs.clone(),
-                            Sexp::Atom(Atom::I(0)),
-                        ]);
+                    // 1) If rhs is a bare constant, leave it alone:
+                    if extract_constant(rhs).is_some() {
                         return Sexp::List(vec![
                             Sexp::Atom(Atom::S("=".into())),
                             lhs.clone(),
-                            wrapped_rhs,
+                            rhs.clone(),
                         ]);
                     }
+
+                    // 2) If rhs is already a (+ ...) form, leave it alone:
+                    if let Sexp::List(rhs_list) = rhs {
+                        if let Some(Sexp::Atom(Atom::S(s))) = rhs_list.first() {
+                            if s == "+" {
+                                return expr.clone();
+                            }
+                        }
+                    }
+
+                    // 3) Otherwise wrap rhs as (+ rhs 0)
+                    let wrapped_rhs = Sexp::List(vec![
+                        Sexp::Atom(Atom::S("+".into())),
+                        rhs.clone(),
+                        Sexp::Atom(Atom::I(0)),
+                    ]);
+                    return Sexp::List(vec![
+                        Sexp::Atom(Atom::S("=".into())),
+                        lhs.clone(),
+                        wrapped_rhs,
+                    ]);
                 }
             }
         }
     }
-
     expr.clone()
 }
+
 
 
 
@@ -460,7 +468,7 @@ mod tests {
         (= L___c_2_s_1_t_1___19__REQ_main (+ (* t6 -1) t12))\
         (= RESP_main_REQ_19 t6)(= G__T_1_ (+ t7 (* t12 -1) (* t13 -1)))(= G__T_1_X_1_ \
         (+ t8 (* t9 -1) (* t10 -1)))(= G__T_2_X_1_ \
-        (+ t9 t10 t13))(= G__T_2_ t12))))";
+        (+ t9 t10 t13))(= G__T_2_ t12)(= L______while_1___X____1___X__yield____REQ_read 0))))";
 
         let parsed = parse(input).expect("parse error");
         let list = match parsed {
