@@ -246,12 +246,6 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
         }
     }
 
-    /// Computes the complement of the set within the natural-number universe
-    /// (i.e., `N^n` where `n = mapping.len()` and all variables are ≥ 0).
-    pub fn complement(&self) -> Self {
-        let universe = PresburgerSet::universe(self.mapping.clone());
-        universe.difference(self)
-    }
 
     /// Useful for existential quantification. If you want the set of N-tuples `exists t, blah`:
     ///
@@ -276,21 +270,6 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
     }
 }
 
-#[test]
-fn test_complement_of_atom() {
-    let a = PresburgerSet::atom('a');
-    let complement = a.complement();
-
-    println!("atom(a): {}", a);
-    println!("complement: {}", complement);
-
-    // Should not be equal to the atom set
-    assert_ne!(a, complement);
-    // The union of the atom and its complement should be the universe
-    let universe = PresburgerSet::universe(vec!['a']);
-    let recombined = a.union(&complement);
-    assert_eq!(universe, recombined);
-}
 
 /// Test for `PresburgerSet::project_out`: create the set of even numbers
 #[test]
