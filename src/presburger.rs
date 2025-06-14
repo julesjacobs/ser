@@ -1,5 +1,5 @@
 // Use the ISL bindings from the isl module
-use crate::isl::bindings;
+use crate::isl;
 use std::fmt::Debug;
 use std::{
     collections::BTreeSet,
@@ -13,7 +13,7 @@ use either::Either;
 
 #[derive(Debug)]
 pub struct PresburgerSet<T> {
-    isl_set: *mut bindings::isl_set, // raw pointer to the underlying ISL set
+    isl_set: *mut isl::isl_set, // raw pointer to the underlying ISL set
     mapping: Vec<T>,                 // mapping of dimensions to atoms of type T
 }
 
@@ -21,14 +21,14 @@ pub struct PresburgerSet<T> {
 impl<T> Drop for PresburgerSet<T> {
     fn drop(&mut self) {
         if !self.isl_set.is_null() {
-            unsafe { bindings::isl_set_free(self.isl_set) }; // free the ISL set pointer
+            unsafe { isl::isl_set_free(self.isl_set) }; // free the ISL set pointer
         }
     }
 }
 
 impl<T: Clone> Clone for PresburgerSet<T> {
     fn clone(&self) -> Self {
-        let new_ptr = unsafe { bindings::isl_set_copy(self.isl_set) }; // increment refcount or duplicate&#8203;:contentReference[oaicite:1]{index=1}
+        let new_ptr = unsafe { isl::isl_set_copy(self.isl_set) }; // increment refcount or duplicate&#8203;:contentReference[oaicite:1]{index=1}
         PresburgerSet {
             isl_set: new_ptr,
             mapping: self.mapping.clone(),
@@ -47,12 +47,12 @@ impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
 
         // 2. Early exit if already harmonized
         if self.mapping == combined_mapping && other.mapping == combined_mapping {
-            let space1 = unsafe { bindings::isl_set_get_space(self.isl_set) };
-            let space2 = unsafe { bindings::isl_set_get_space(other.isl_set) };
-            let spaces_equal = unsafe { bindings::isl_space_is_equal(space1, space2) == 1 };
+            let space1 = unsafe { isl::isl_set_get_space(self.isl_set) };
+            let space2 = unsafe { isl::isl_set_get_space(other.isl_set) };
+            let spaces_equal = unsafe { isl::isl_space_is_equal(space1, space2) == 1 };
             unsafe {
-                bindings::isl_space_free(space1);
-                bindings::isl_space_free(space2);
+                isl::isl_space_free(space1);
+                isl::isl_space_free(space2);
             }
             if spaces_equal {
                 return;
@@ -70,10 +70,10 @@ impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
 
     /// Embed a set from its current mapping into a target mapping using direct ISL operations
     fn embed_set_to_mapping(
-        mut isl_set: *mut bindings::isl_set,
+        mut isl_set: *mut isl::isl_set,
         current_mapping: &[T],
         target_mapping: &[T],
-    ) -> *mut bindings::isl_set {
+    ) -> *mut isl::isl_set {
         unsafe {
             // Algorithm:
             // 1. For each atom in target_mapping not in current_mapping:
@@ -100,15 +100,15 @@ impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
                 } else {
                     // This atom is missing from current mapping
                     // Insert a dimension at target_pos and constrain it to 0
-                    isl_set = bindings::isl_set_insert_dims(
+                    isl_set = isl::isl_set_insert_dims(
                         isl_set,
-                        bindings::isl_dim_type_isl_dim_set,
+                        isl::isl_dim_type_isl_dim_set,
                         target_pos as c_uint,
                         1
                     );
-                    isl_set = bindings::isl_set_fix_si(
+                    isl_set = isl::isl_set_fix_si(
                         isl_set,
-                        bindings::isl_dim_type_isl_dim_set,
+                        isl::isl_dim_type_isl_dim_set,
                         target_pos as c_uint,
                         0
                     );
@@ -123,14 +123,14 @@ impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
 impl<T: Clone + ToString> PresburgerSet<T> {
     pub fn atom(atom: T) -> Self {
         // Create a 1-dimensional integer space (no parameters, 1 set dim)
-        let space = unsafe { bindings::isl_space_set_alloc(bindings::isl_ctx_alloc(), 0, 1) };
+        let space = unsafe { isl::isl_space_set_alloc(isl::isl_ctx_alloc(), 0, 1) };
         // Start with the universe of that 1D space (all integer points)
-        let mut set_ptr = unsafe { bindings::isl_set_universe(space) };
+        let mut set_ptr = unsafe { isl::isl_set_universe(space) };
         
         // Constrain the single dimension (dim 0) to be exactly 1
         // This represents a unit vector for this atom
         set_ptr =
-            unsafe { bindings::isl_set_fix_si(set_ptr, bindings::isl_dim_type_isl_dim_set, 0, 1) };
+            unsafe { isl::isl_set_fix_si(set_ptr, isl::isl_dim_type_isl_dim_set, 0, 1) };
         
         PresburgerSet {
             isl_set: set_ptr,
@@ -175,15 +175,15 @@ impl<T: Clone> PresburgerSet<T> {
         let n = atoms.len();
         // Allocate an n-dimensional space for the set (0 parameters, n set dims)
         let space =
-            unsafe { bindings::isl_space_set_alloc(bindings::isl_ctx_alloc(), 0, n as c_uint) };
+            unsafe { isl::isl_space_set_alloc(isl::isl_ctx_alloc(), 0, n as c_uint) };
         // Start with the universe set of that space (all integer points in Z^n)
-        let mut set_ptr = unsafe { bindings::isl_set_universe(space) };
+        let mut set_ptr = unsafe { isl::isl_set_universe(space) };
         // Constrain each dimension to be >= 0 (non-negative)
         for dim_index in 0..n {
             set_ptr = unsafe {
-                bindings::isl_set_lower_bound_si(
+                isl::isl_set_lower_bound_si(
                     set_ptr,
-                    bindings::isl_dim_type_isl_dim_set,
+                    isl::isl_dim_type_isl_dim_set,
                     dim_index as c_uint,
                     0,
                 )
@@ -206,7 +206,7 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
         let unified_mapping = a.mapping.clone();
         // Perform the union operation on the underlying isl_set pointers.
         // We pass ownership of a.isl_set and b.isl_set to isl_set_union (so they will be used and freed inside).
-        let result_ptr = unsafe { bindings::isl_set_union(a.isl_set, b.isl_set) };
+        let result_ptr = unsafe { isl::isl_set_union(a.isl_set, b.isl_set) };
         // Prevent a and b from freeing the now-consumed pointers in their Drop
         a.isl_set = ptr::null_mut();
         b.isl_set = ptr::null_mut();
@@ -222,7 +222,7 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
         let mut b = other.clone();
         a.harmonize(&mut b);
         let unified_mapping = a.mapping.clone();
-        let result_ptr = unsafe { bindings::isl_set_intersect(a.isl_set, b.isl_set) };
+        let result_ptr = unsafe { isl::isl_set_intersect(a.isl_set, b.isl_set) };
         a.isl_set = ptr::null_mut();
         b.isl_set = ptr::null_mut();
         PresburgerSet {
@@ -236,7 +236,7 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
         let mut b = other.clone();
         a.harmonize(&mut b);
         let unified_mapping = a.mapping.clone();
-        let result_ptr = unsafe { bindings::isl_set_subtract(a.isl_set, b.isl_set) };
+        let result_ptr = unsafe { isl::isl_set_subtract(a.isl_set, b.isl_set) };
         a.isl_set = ptr::null_mut();
         b.isl_set = ptr::null_mut();
         PresburgerSet {
@@ -264,7 +264,7 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
             return self;
         };
         unsafe {
-            self.isl_set = bindings::isl_set_project_out(self.isl_set, bindings::isl_dim_type_isl_dim_set, index as u32, 1);
+            self.isl_set = isl::isl_set_project_out(self.isl_set, isl::isl_dim_type_isl_dim_set, index as u32, 1);
             self.mapping.remove(index);
         }
         self
@@ -325,7 +325,7 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PartialEq for PresburgerSet<T> {
         let mut b = other.clone();
         a.harmonize(&mut b);
         // isl_set_is_equal returns isl_bool (1 = true, 0 = false, -1 = error)
-        let result_bool = unsafe { bindings::isl_set_is_equal(a.isl_set, b.isl_set) };
+        let result_bool = unsafe { isl::isl_set_is_equal(a.isl_set, b.isl_set) };
         // No need to null out a.isl_set and b.isl_set here, because is_equal does not consume (it uses __isl_keep).
         // We can directly drop a and b, which will free their pointers.
         result_bool == 1 // return true if ISL indicated equality (isl_bool_true)
@@ -337,14 +337,14 @@ impl<T: Eq + Clone + Ord + Debug + ToString> Eq for PresburgerSet<T> {}
 // Implement .is_empty() for PresburgerSet<T>
 impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
     pub fn is_empty(&self) -> bool {
-        unsafe { bindings::isl_set_is_empty(self.isl_set) == 1 }
+        unsafe { isl::isl_set_is_empty(self.isl_set) == 1 }
     }
 }
 
 // Implementing display for PresburgerSet<T> using ISL's to_str function
 impl<T: Display> Display for PresburgerSet<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let str: *mut i8 = unsafe { bindings::isl_set_to_str(self.isl_set) };
+        let str: *mut i8 = unsafe { isl::isl_set_to_str(self.isl_set) };
         let mapping_str = self
             .mapping
             .iter()
@@ -363,8 +363,8 @@ impl<T: Display> Display for PresburgerSet<T> {
 impl<T: Eq + Clone + Ord + Debug + ToString> Kleene for PresburgerSet<T> {
     fn zero() -> Self {
         // For a Kleene algebra, zero represents the empty set
-        let space = unsafe { bindings::isl_space_set_alloc(bindings::isl_ctx_alloc(), 0, 0) };
-        let set_ptr = unsafe { bindings::isl_set_empty(space) };
+        let space = unsafe { isl::isl_space_set_alloc(isl::isl_ctx_alloc(), 0, 0) };
+        let set_ptr = unsafe { isl::isl_set_empty(space) };
         PresburgerSet {
             isl_set: set_ptr,
             mapping: Vec::new(),
@@ -374,9 +374,9 @@ impl<T: Eq + Clone + Ord + Debug + ToString> Kleene for PresburgerSet<T> {
     fn one() -> Self {
         // For a Kleene algebra, one represents the empty string/epsilon
         // In our context, this is a set containing only the zero vector
-        let space = unsafe { bindings::isl_space_set_alloc(bindings::isl_ctx_alloc(), 0, 0) };
+        let space = unsafe { isl::isl_space_set_alloc(isl::isl_ctx_alloc(), 0, 0) };
         // Create a universe (all points), then constrain it to just the origin (0)
-        let set_ptr = unsafe { bindings::isl_set_universe(space) };
+        let set_ptr = unsafe { isl::isl_set_universe(space) };
 
         PresburgerSet {
             isl_set: set_ptr,
@@ -395,7 +395,7 @@ impl<T: Eq + Clone + Ord + Debug + ToString> Kleene for PresburgerSet<T> {
         let mut b = other.clone();
         a.harmonize(&mut b);
         let unified_mapping = a.mapping.clone();
-        let result_ptr = unsafe { bindings::isl_set_sum(a.isl_set, b.isl_set) };
+        let result_ptr = unsafe { isl::isl_set_sum(a.isl_set, b.isl_set) };
         a.isl_set = ptr::null_mut();
         b.isl_set = ptr::null_mut();
         PresburgerSet {
@@ -717,8 +717,8 @@ impl<T: Clone + Ord + Debug + ToString + Eq + Hash> PresburgerSet<T> {
         let mapping: Vec<T> = all_keys.into_iter().collect();
 
         // Create a context and an empty result set
-        let ctx = unsafe { bindings::isl_ctx_alloc() };
-        let mut result_set: *mut bindings::isl_set = std::ptr::null_mut();
+        let ctx = unsafe { isl::isl_ctx_alloc() };
+        let mut result_set: *mut isl::isl_set = std::ptr::null_mut();
 
         // Process each linear set component
         for component in &semilinear_set.components {
@@ -728,7 +728,7 @@ impl<T: Clone + Ord + Debug + ToString + Eq + Hash> PresburgerSet<T> {
             // Parse the ISL set string
             let component_set = unsafe {
                 let cstr = CString::new(set_string).unwrap();
-                bindings::isl_set_read_from_str(ctx, cstr.as_ptr())
+                isl::isl_set_read_from_str(ctx, cstr.as_ptr())
             };
 
             // Union with the result set
@@ -736,15 +736,15 @@ impl<T: Clone + Ord + Debug + ToString + Eq + Hash> PresburgerSet<T> {
                 if result_set.is_null() {
                     result_set = component_set;
                 } else {
-                    result_set = bindings::isl_set_union(result_set, component_set);
+                    result_set = isl::isl_set_union(result_set, component_set);
                 }
             }
         }
 
         // If no components, return the empty set
         if result_set.is_null() || semilinear_set.components.is_empty() {
-            let space = unsafe { bindings::isl_space_set_alloc(ctx, 0, mapping.len() as c_uint) };
-            result_set = unsafe { bindings::isl_set_empty(space) };
+            let space = unsafe { isl::isl_space_set_alloc(ctx, 0, mapping.len() as c_uint) };
+            result_set = unsafe { isl::isl_set_empty(space) };
         }
 
         PresburgerSet {
@@ -962,7 +962,7 @@ mod presburger_equality_tests {
         
         // Check ISL equality after harmonization
         let equal_after = unsafe {
-            bindings::isl_set_is_equal(atom42.isl_set, atom99.isl_set) == 1
+            isl::isl_set_is_equal(atom42.isl_set, atom99.isl_set) == 1
         };
         println!("ISL says equal after harmonization: {}", equal_after);
         
@@ -1017,13 +1017,13 @@ mod presburger_equality_tests {
         
         // Get string representations
         let str42 = unsafe {
-            let str_ptr = bindings::isl_set_to_str(atom42.isl_set);
+            let str_ptr = isl::isl_set_to_str(atom42.isl_set);
             let c_str = std::ffi::CStr::from_ptr(str_ptr);
             c_str.to_string_lossy().into_owned()
         };
         
         let str99 = unsafe {
-            let str_ptr = bindings::isl_set_to_str(atom99.isl_set);
+            let str_ptr = isl::isl_set_to_str(atom99.isl_set);
             let c_str = std::ffi::CStr::from_ptr(str_ptr);
             c_str.to_string_lossy().into_owned()
         };
@@ -1118,31 +1118,31 @@ mod presburger_equality_tests {
         println!("\n=== Testing Direct Embedding with ISL Functions ===");
         
         unsafe {
-            let ctx = bindings::isl_ctx_alloc();
+            let ctx = isl::isl_ctx_alloc();
             
             // Test 1: Create atom(a) as { [1] } and embed it to { [1, 0] }
             println!("\n--- Test 1: Embed 1D set to 2D ---");
             
             // Create 1D set { [1] }
-            let space_1d = bindings::isl_space_set_alloc(ctx, 0, 1);
-            let mut set_1d = bindings::isl_set_universe(space_1d);
-            set_1d = bindings::isl_set_fix_si(set_1d, bindings::isl_dim_type_isl_dim_set, 0, 1);
+            let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
+            let mut set_1d = isl::isl_set_universe(space_1d);
+            set_1d = isl::isl_set_fix_si(set_1d, isl::isl_dim_type_isl_dim_set, 0, 1);
             
             let original_str = {
-                let str_ptr = bindings::isl_set_to_str(set_1d);
+                let str_ptr = isl::isl_set_to_str(set_1d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("Original 1D set: {}", original_str);
             
             // Insert dimension at position 1 (after existing dimension)
-            let set_2d = bindings::isl_set_insert_dims(set_1d, bindings::isl_dim_type_isl_dim_set, 1, 1);
+            let set_2d = isl::isl_set_insert_dims(set_1d, isl::isl_dim_type_isl_dim_set, 1, 1);
             
             // Fix the new dimension to 0
-            let set_embedded = bindings::isl_set_fix_si(set_2d, bindings::isl_dim_type_isl_dim_set, 1, 0);
+            let set_embedded = isl::isl_set_fix_si(set_2d, isl::isl_dim_type_isl_dim_set, 1, 0);
             
             let embedded_str = {
-                let str_ptr = bindings::isl_set_to_str(set_embedded);
+                let str_ptr = isl::isl_set_to_str(set_embedded);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
@@ -1152,18 +1152,18 @@ mod presburger_equality_tests {
             // Test 2: Create another set { [1] } and embed it to { [0, 1] }
             println!("\n--- Test 2: Embed 1D set to different position ---");
             
-            let space_1d2 = bindings::isl_space_set_alloc(ctx, 0, 1);
-            let mut set_1d2 = bindings::isl_set_universe(space_1d2);
-            set_1d2 = bindings::isl_set_fix_si(set_1d2, bindings::isl_dim_type_isl_dim_set, 0, 1);
+            let space_1d2 = isl::isl_space_set_alloc(ctx, 0, 1);
+            let mut set_1d2 = isl::isl_set_universe(space_1d2);
+            set_1d2 = isl::isl_set_fix_si(set_1d2, isl::isl_dim_type_isl_dim_set, 0, 1);
             
             // Insert dimension at position 0 (before existing dimension)
-            let set_2d2 = bindings::isl_set_insert_dims(set_1d2, bindings::isl_dim_type_isl_dim_set, 0, 1);
+            let set_2d2 = isl::isl_set_insert_dims(set_1d2, isl::isl_dim_type_isl_dim_set, 0, 1);
             
             // Fix the new dimension to 0  
-            let set_embedded2 = bindings::isl_set_fix_si(set_2d2, bindings::isl_dim_type_isl_dim_set, 0, 0);
+            let set_embedded2 = isl::isl_set_fix_si(set_2d2, isl::isl_dim_type_isl_dim_set, 0, 0);
             
             let embedded_str2 = {
-                let str_ptr = bindings::isl_set_to_str(set_embedded2);
+                let str_ptr = isl::isl_set_to_str(set_embedded2);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
@@ -1173,13 +1173,13 @@ mod presburger_equality_tests {
             // Test 3: Union of the two embedded sets
             println!("\n--- Test 3: Union of embedded sets ---");
             
-            let union_set = bindings::isl_set_union(
-                bindings::isl_set_copy(set_embedded),
-                bindings::isl_set_copy(set_embedded2)
+            let union_set = isl::isl_set_union(
+                isl::isl_set_copy(set_embedded),
+                isl::isl_set_copy(set_embedded2)
             );
             
             let union_str = {
-                let str_ptr = bindings::isl_set_to_str(union_set);
+                let str_ptr = isl::isl_set_to_str(union_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
@@ -1189,13 +1189,13 @@ mod presburger_equality_tests {
             // Test 4: Minkowski sum
             println!("\n--- Test 4: Minkowski sum of embedded sets ---");
             
-            let sum_set = bindings::isl_set_sum(
-                bindings::isl_set_copy(set_embedded),
-                bindings::isl_set_copy(set_embedded2)
+            let sum_set = isl::isl_set_sum(
+                isl::isl_set_copy(set_embedded),
+                isl::isl_set_copy(set_embedded2)
             );
             
             let sum_str = {
-                let str_ptr = bindings::isl_set_to_str(sum_set);
+                let str_ptr = isl::isl_set_to_str(sum_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
@@ -1203,10 +1203,10 @@ mod presburger_equality_tests {
             println!("Expected: {{ [1, 1] }}");
             
             // Cleanup
-            bindings::isl_set_free(set_embedded);
-            bindings::isl_set_free(set_embedded2);
-            bindings::isl_set_free(union_set);
-            bindings::isl_set_free(sum_set);
+            isl::isl_set_free(set_embedded);
+            isl::isl_set_free(set_embedded2);
+            isl::isl_set_free(union_set);
+            isl::isl_set_free(sum_set);
         }
     }
 
@@ -1280,50 +1280,50 @@ mod presburger_equality_tests {
         println!("\n--- Test 1: Basic preimage operation ---");
         
         unsafe {
-            let ctx = bindings::isl_ctx_alloc();
+            let ctx = isl::isl_ctx_alloc();
             
             // Create a 1D set { [2] } (single point at coordinate 2)
-            let space_1d = bindings::isl_space_set_alloc(ctx, 0, 1);
-            let mut set_1d = bindings::isl_set_universe(space_1d);
-            set_1d = bindings::isl_set_fix_si(set_1d, bindings::isl_dim_type_isl_dim_set, 0, 2);
+            let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
+            let mut set_1d = isl::isl_set_universe(space_1d);
+            set_1d = isl::isl_set_fix_si(set_1d, isl::isl_dim_type_isl_dim_set, 0, 2);
             
             let set_1d_str = {
-                let str_ptr = bindings::isl_set_to_str(set_1d);
+                let str_ptr = isl::isl_set_to_str(set_1d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("Original 1D set: {}", set_1d_str);
             
             // Create a map from 2D space to 1D space: (x,y) -> x+y
-            let space_2d = bindings::isl_space_set_alloc(ctx, 0, 2);
-            let map_space = bindings::isl_space_map_from_domain_and_range(
-                bindings::isl_space_copy(space_2d),
-                bindings::isl_space_copy(bindings::isl_set_get_space(set_1d))
+            let space_2d = isl::isl_space_set_alloc(ctx, 0, 2);
+            let map_space = isl::isl_space_map_from_domain_and_range(
+                isl::isl_space_copy(space_2d),
+                isl::isl_space_copy(isl::isl_set_get_space(set_1d))
             );
             
             // Create affine function: x + y
-            let ls_2d = bindings::isl_local_space_from_space(bindings::isl_space_copy(space_2d));
-            let aff_x = bindings::isl_aff_var_on_domain(
-                bindings::isl_local_space_copy(ls_2d), 
-                bindings::isl_dim_type_isl_dim_set, 
+            let ls_2d = isl::isl_local_space_from_space(isl::isl_space_copy(space_2d));
+            let aff_x = isl::isl_aff_var_on_domain(
+                isl::isl_local_space_copy(ls_2d), 
+                isl::isl_dim_type_isl_dim_set, 
                 0
             );
-            let aff_y = bindings::isl_aff_var_on_domain(
-                bindings::isl_local_space_copy(ls_2d), 
-                bindings::isl_dim_type_isl_dim_set, 
+            let aff_y = isl::isl_aff_var_on_domain(
+                isl::isl_local_space_copy(ls_2d), 
+                isl::isl_dim_type_isl_dim_set, 
                 1
             );
-            let aff_sum = bindings::isl_aff_add(aff_x, aff_y);
+            let aff_sum = isl::isl_aff_add(aff_x, aff_y);
             
-            let aff_list = bindings::isl_aff_list_alloc(ctx, 1);
-            let aff_list = bindings::isl_aff_list_add(aff_list, aff_sum);
-            let ma = bindings::isl_multi_aff_from_aff_list(map_space, aff_list);
+            let aff_list = isl::isl_aff_list_alloc(ctx, 1);
+            let aff_list = isl::isl_aff_list_add(aff_list, aff_sum);
+            let ma = isl::isl_multi_aff_from_aff_list(map_space, aff_list);
             
             // Apply preimage: should give us { [x,y] : x+y = 2 }
-            let result_set = bindings::isl_set_preimage_multi_aff(set_1d, ma);
+            let result_set = isl::isl_set_preimage_multi_aff(set_1d, ma);
             
             let result_str = {
-                let str_ptr = bindings::isl_set_to_str(result_set);
+                let str_ptr = isl::isl_set_to_str(result_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
@@ -1331,43 +1331,43 @@ mod presburger_equality_tests {
             println!("Expected: Set of all (x,y) where x+y=2");
             
             // Cleanup
-            bindings::isl_set_free(result_set);
-            bindings::isl_space_free(space_2d);
-            bindings::isl_local_space_free(ls_2d);
+            isl::isl_set_free(result_set);
+            isl::isl_space_free(space_2d);
+            isl::isl_local_space_free(ls_2d);
         }
         
         // Test 2: Understanding 0-dimensional embedding
         println!("\n--- Test 2: 0-dimensional to 1-dimensional embedding ---");
         
         unsafe {
-            let ctx = bindings::isl_ctx_alloc();
+            let ctx = isl::isl_ctx_alloc();
             
             // Create 0D universe { [] }
-            let space_0d = bindings::isl_space_set_alloc(ctx, 0, 0);
-            let set_0d = bindings::isl_set_universe(space_0d);
+            let space_0d = isl::isl_space_set_alloc(ctx, 0, 0);
+            let set_0d = isl::isl_set_universe(space_0d);
             
             let set_0d_str = {
-                let str_ptr = bindings::isl_set_to_str(set_0d);
+                let str_ptr = isl::isl_set_to_str(set_0d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("Original 0D set: {}", set_0d_str);
             
             // Create map from 1D to 0D: x -> [] (constant map)
-            let space_1d = bindings::isl_space_set_alloc(ctx, 0, 1);
-            let map_space = bindings::isl_space_map_from_domain_and_range(
-                bindings::isl_space_copy(space_1d),
-                bindings::isl_set_get_space(set_0d)
+            let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
+            let map_space = isl::isl_space_map_from_domain_and_range(
+                isl::isl_space_copy(space_1d),
+                isl::isl_set_get_space(set_0d)
             );
             
             // Empty aff_list for 0D range
-            let aff_list = bindings::isl_aff_list_alloc(ctx, 0);
-            let ma = bindings::isl_multi_aff_from_aff_list(map_space, aff_list);
+            let aff_list = isl::isl_aff_list_alloc(ctx, 0);
+            let ma = isl::isl_multi_aff_from_aff_list(map_space, aff_list);
             
-            let result_set = bindings::isl_set_preimage_multi_aff(set_0d, ma);
+            let result_set = isl::isl_set_preimage_multi_aff(set_0d, ma);
             
             let result_str = {
-                let str_ptr = bindings::isl_set_to_str(result_set);
+                let str_ptr = isl::isl_set_to_str(result_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
@@ -1375,28 +1375,28 @@ mod presburger_equality_tests {
             println!("Expected: All of 1D space or error");
             
             // Cleanup
-            bindings::isl_set_free(result_set);
-            bindings::isl_space_free(space_1d);
+            isl::isl_set_free(result_set);
+            isl::isl_space_free(space_1d);
         }
         
         // Test 3: Understanding zero constant embedding
         println!("\n--- Test 3: Embedding as zero vector ---");
         
         unsafe {
-            let ctx = bindings::isl_ctx_alloc();
+            let ctx = isl::isl_ctx_alloc();
             
             // Create 0D universe
-            let space_0d = bindings::isl_space_set_alloc(ctx, 0, 0);
-            let set_0d = bindings::isl_set_universe(space_0d);
+            let space_0d = isl::isl_space_set_alloc(ctx, 0, 0);
+            let set_0d = isl::isl_set_universe(space_0d);
             
             // Create map from 1D to 0D, but we want reverse: 0D to 1D as zero
             // Try a different approach: create 1D zero point and see what preimage does
-            let space_1d = bindings::isl_space_set_alloc(ctx, 0, 1);
-            let mut zero_1d = bindings::isl_set_universe(bindings::isl_space_copy(space_1d));
-            zero_1d = bindings::isl_set_fix_si(zero_1d, bindings::isl_dim_type_isl_dim_set, 0, 0);
+            let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
+            let mut zero_1d = isl::isl_set_universe(isl::isl_space_copy(space_1d));
+            zero_1d = isl::isl_set_fix_si(zero_1d, isl::isl_dim_type_isl_dim_set, 0, 0);
             
             let zero_str = {
-                let str_ptr = bindings::isl_set_to_str(zero_1d);
+                let str_ptr = isl::isl_set_to_str(zero_1d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
@@ -1406,57 +1406,57 @@ mod presburger_equality_tests {
             // This might need a different ISL function
             
             // Cleanup
-            bindings::isl_set_free(set_0d);
-            bindings::isl_set_free(zero_1d);
-            bindings::isl_space_free(space_1d);
+            isl::isl_set_free(set_0d);
+            isl::isl_set_free(zero_1d);
+            isl::isl_space_free(space_1d);
         }
         
         // Test 4: Understanding identity maps
         println!("\n--- Test 4: Identity and projection maps ---");
         
         unsafe {
-            let ctx = bindings::isl_ctx_alloc();
+            let ctx = isl::isl_ctx_alloc();
             
             // Create 2D set { [1, 0] }
-            let space_2d = bindings::isl_space_set_alloc(ctx, 0, 2);
-            let mut set_2d = bindings::isl_set_universe(bindings::isl_space_copy(space_2d));
-            set_2d = bindings::isl_set_fix_si(set_2d, bindings::isl_dim_type_isl_dim_set, 0, 1);
-            set_2d = bindings::isl_set_fix_si(set_2d, bindings::isl_dim_type_isl_dim_set, 1, 0);
+            let space_2d = isl::isl_space_set_alloc(ctx, 0, 2);
+            let mut set_2d = isl::isl_set_universe(isl::isl_space_copy(space_2d));
+            set_2d = isl::isl_set_fix_si(set_2d, isl::isl_dim_type_isl_dim_set, 0, 1);
+            set_2d = isl::isl_set_fix_si(set_2d, isl::isl_dim_type_isl_dim_set, 1, 0);
             
             let set_2d_str = {
-                let str_ptr = bindings::isl_set_to_str(set_2d);
+                let str_ptr = isl::isl_set_to_str(set_2d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("Original 2D set: {}", set_2d_str);
             
             // Create identity map from 2D to 2D
-            let map_space = bindings::isl_space_map_from_domain_and_range(
-                bindings::isl_space_copy(space_2d),
-                bindings::isl_space_copy(space_2d)
+            let map_space = isl::isl_space_map_from_domain_and_range(
+                isl::isl_space_copy(space_2d),
+                isl::isl_space_copy(space_2d)
             );
             
-            let ls = bindings::isl_local_space_from_space(bindings::isl_space_copy(space_2d));
-            let aff_x = bindings::isl_aff_var_on_domain(
-                bindings::isl_local_space_copy(ls), 
-                bindings::isl_dim_type_isl_dim_set, 
+            let ls = isl::isl_local_space_from_space(isl::isl_space_copy(space_2d));
+            let aff_x = isl::isl_aff_var_on_domain(
+                isl::isl_local_space_copy(ls), 
+                isl::isl_dim_type_isl_dim_set, 
                 0
             );
-            let aff_y = bindings::isl_aff_var_on_domain(
-                bindings::isl_local_space_copy(ls), 
-                bindings::isl_dim_type_isl_dim_set, 
+            let aff_y = isl::isl_aff_var_on_domain(
+                isl::isl_local_space_copy(ls), 
+                isl::isl_dim_type_isl_dim_set, 
                 1
             );
             
-            let aff_list = bindings::isl_aff_list_alloc(ctx, 2);
-            let aff_list = bindings::isl_aff_list_add(aff_list, aff_x);
-            let aff_list = bindings::isl_aff_list_add(aff_list, aff_y);
-            let ma = bindings::isl_multi_aff_from_aff_list(map_space, aff_list);
+            let aff_list = isl::isl_aff_list_alloc(ctx, 2);
+            let aff_list = isl::isl_aff_list_add(aff_list, aff_x);
+            let aff_list = isl::isl_aff_list_add(aff_list, aff_y);
+            let ma = isl::isl_multi_aff_from_aff_list(map_space, aff_list);
             
-            let result_set = bindings::isl_set_preimage_multi_aff(set_2d, ma);
+            let result_set = isl::isl_set_preimage_multi_aff(set_2d, ma);
             
             let result_str = {
-                let str_ptr = bindings::isl_set_to_str(result_set);
+                let str_ptr = isl::isl_set_to_str(result_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
@@ -1464,9 +1464,9 @@ mod presburger_equality_tests {
             println!("Expected: Same as original");
             
             // Cleanup
-            bindings::isl_set_free(result_set);
-            bindings::isl_space_free(space_2d);
-            bindings::isl_local_space_free(ls);
+            isl::isl_set_free(result_set);
+            isl::isl_space_free(space_2d);
+            isl::isl_local_space_free(ls);
         }
     }
 
@@ -1588,14 +1588,14 @@ mod presburger_equality_tests {
         // The issue: one should be { [0] } not { [i0] }
         // Let's manually check what the zero vector looks like
         let zero_vec = unsafe {
-            let ctx = bindings::isl_ctx_alloc();
-            let space = bindings::isl_space_set_alloc(ctx, 0, 1);
-            let mut set = bindings::isl_set_universe(space);
-            set = bindings::isl_set_fix_si(set, bindings::isl_dim_type_isl_dim_set, 0, 0);
-            let str_ptr = bindings::isl_set_to_str(set);
+            let ctx = isl::isl_ctx_alloc();
+            let space = isl::isl_space_set_alloc(ctx, 0, 1);
+            let mut set = isl::isl_set_universe(space);
+            set = isl::isl_set_fix_si(set, isl::isl_dim_type_isl_dim_set, 0, 0);
+            let str_ptr = isl::isl_set_to_str(set);
             let c_str = std::ffi::CStr::from_ptr(str_ptr);
             let result = c_str.to_string_lossy().into_owned();
-            bindings::isl_set_free(set);
+            isl::isl_set_free(set);
             result
         };
         println!("  Expected zero vector: {}", zero_vec);
@@ -1649,9 +1649,9 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 
             // Callback for each basic set
             extern "C" fn basic_set_callback<T: Clone + Debug + ToString>(
-                bset: *mut bindings::isl_basic_set,
+                bset: *mut isl::isl_basic_set,
                 user: *mut std::os::raw::c_void,
-            ) -> bindings::isl_stat {
+            ) -> isl::isl_stat {
                 unsafe {
                     let user_data = &mut *(user as *mut UserData<T>);
                     let mapping = &user_data.mapping;
@@ -1662,11 +1662,11 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
                     };
 
                     // Get the dimension information
-                    let space = bindings::isl_basic_set_get_space(bset);
+                    let space = isl::isl_basic_set_get_space(bset);
                     let n_dims =
-                        bindings::isl_space_dim(space, bindings::isl_dim_type_isl_dim_set) as usize;
+                        isl::isl_space_dim(space, isl::isl_dim_type_isl_dim_set) as usize;
                     let n_div =
-                        bindings::isl_space_dim(space, bindings::isl_dim_type_isl_dim_div) as usize;
+                        isl::isl_space_dim(space, isl::isl_dim_type_isl_dim_div) as usize;
 
                     // Define a nested callback for processing each constraint
                     struct ConstraintData<'a, T> {
@@ -1677,15 +1677,15 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
                     }
 
                     extern "C" fn constraint_callback<T: Clone + Debug + ToString>(
-                        constraint: *mut bindings::isl_constraint,
+                        constraint: *mut isl::isl_constraint,
                         user: *mut std::os::raw::c_void,
-                    ) -> bindings::isl_stat {
+                    ) -> isl::isl_stat {
                         unsafe {
                             let constraint_data = &mut *(user as *mut ConstraintData<T>);
 
                             // Determine constraint type
                             let constraint_type =
-                                if bindings::isl_constraint_is_equality(constraint) != 0 {
+                                if isl::isl_constraint_is_equality(constraint) != 0 {
                                     ConstraintType::EqualToZero
                                 } else {
                                     ConstraintType::NonNegative
@@ -1693,9 +1693,9 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 
                             // Get constant term
                             let constant_term = {
-                                let val = bindings::isl_constraint_get_constant_val(constraint);
-                                let result = bindings::isl_val_get_num_si(val);
-                                bindings::isl_val_free(val);
+                                let val = isl::isl_constraint_get_constant_val(constraint);
+                                let result = isl::isl_val_get_num_si(val);
+                                isl::isl_val_free(val);
                                 result as i32
                             };
 
@@ -1708,13 +1708,13 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
                                 constraint_data.mapping.len(),
                             ) {
                                 let coef = {
-                                    let val = bindings::isl_constraint_get_coefficient_val(
+                                    let val = isl::isl_constraint_get_coefficient_val(
                                         constraint,
-                                        bindings::isl_dim_type_isl_dim_set,
+                                        isl::isl_dim_type_isl_dim_set,
                                         k as i32,
                                     );
-                                    let result = bindings::isl_val_get_num_si(val);
-                                    bindings::isl_val_free(val);
+                                    let result = isl::isl_val_get_num_si(val);
+                                    isl::isl_val_free(val);
                                     result as i32
                                 };
 
@@ -1729,13 +1729,13 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
                             // Process existential variables
                             for k in 0..constraint_data.n_div {
                                 let coef = {
-                                    let val = bindings::isl_constraint_get_coefficient_val(
+                                    let val = isl::isl_constraint_get_coefficient_val(
                                         constraint,
-                                        bindings::isl_dim_type_isl_dim_div,
+                                        isl::isl_dim_type_isl_dim_div,
                                         k as i32,
                                     );
-                                    let result = bindings::isl_val_get_num_si(val);
-                                    bindings::isl_val_free(val);
+                                    let result = isl::isl_val_get_num_si(val);
+                                    isl::isl_val_free(val);
                                     result as i32
                                 };
 
@@ -1765,7 +1765,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
                         n_div,
                     };
 
-                    bindings::isl_basic_set_foreach_constraint(
+                    isl::isl_basic_set_foreach_constraint(
                         bset,
                         Some(constraint_callback::<T>),
                         &mut constraint_data as *mut _ as *mut std::os::raw::c_void,
@@ -1775,14 +1775,14 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
                     user_data.result_sets.push(quantified_set);
 
                     // Cleanup
-                    bindings::isl_space_free(space);
+                    isl::isl_space_free(space);
 
                     0 // isl_stat_ok
                 }
             }
 
             // Make a copy of the set and mapping for the callback
-            let set_copy = bindings::isl_set_copy(self.isl_set);
+            let set_copy = isl::isl_set_copy(self.isl_set);
 
             // Prepare user data structure
             let mut user_data = UserData {
@@ -1791,7 +1791,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
             };
 
             // Iterate through each basic set
-            bindings::isl_set_foreach_basic_set(
+            isl::isl_set_foreach_basic_set(
                 set_copy,
                 Some(basic_set_callback::<T>),
                 &mut user_data as *mut _ as *mut std::os::raw::c_void,
@@ -1801,7 +1801,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
             result = user_data.result_sets;
 
             // Clean up
-            bindings::isl_set_free(set_copy);
+            isl::isl_set_free(set_copy);
         }
 
         result
@@ -1814,10 +1814,10 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
     pub fn from_quantified_sets(sets: &[QuantifiedSet<T>], mapping: Vec<T>) -> Self {
         // Using the ISL context
-        let ctx = unsafe { bindings::isl_ctx_alloc() };
+        let ctx = unsafe { isl::isl_ctx_alloc() };
 
         // Create an empty result set
-        let mut result_set: *mut bindings::isl_set = std::ptr::null_mut();
+        let mut result_set: *mut isl::isl_set = std::ptr::null_mut();
 
         // Process each QuantifiedSet (each one becomes a basic set in the result)
         for quantified_set in sets {
@@ -1827,7 +1827,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
             // Parse the ISL set string
             let set = unsafe {
                 let cstr = CString::new(set_string).unwrap();
-                bindings::isl_set_read_from_str(ctx, cstr.as_ptr())
+                isl::isl_set_read_from_str(ctx, cstr.as_ptr())
             };
 
             // Union with the result set
@@ -1835,15 +1835,15 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
                 if result_set.is_null() {
                     result_set = set;
                 } else {
-                    result_set = bindings::isl_set_union(result_set, set);
+                    result_set = isl::isl_set_union(result_set, set);
                 }
             }
         }
 
         // If no constraints, return the universe set
         if result_set.is_null() {
-            let space = unsafe { bindings::isl_space_set_alloc(ctx, 0, mapping.len() as c_uint) };
-            result_set = unsafe { bindings::isl_set_universe(space) };
+            let space = unsafe { isl::isl_space_set_alloc(ctx, 0, mapping.len() as c_uint) };
+            result_set = unsafe { isl::isl_set_universe(space) };
         }
 
         PresburgerSet {
