@@ -9,7 +9,7 @@ use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Mutex;
 use std::str::FromStr;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead};
 
 
 /// Decision enum for reachability analysis results with future proof support
