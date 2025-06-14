@@ -1,6 +1,6 @@
+use crate::presburger::{Constraint, ConstraintType, PresburgerSet, QuantifiedSet, Variable};
 use regex::Regex;
-use sexp::{parse, Atom, Sexp}; // ensure the `sexp` crate is included in Cargo.toml: sexp = "0.5"
-use crate::presburger::{Variable, PresburgerSet, QuantifiedSet, Constraint, ConstraintType};
+use sexp::{Atom, Sexp, parse}; // ensure the `sexp` crate is included in Cargo.toml: sexp = "0.5"
 
 /// Expression tree representing logical formula structure
 #[derive(Debug, Clone)]
@@ -38,17 +38,20 @@ pub fn process_formula(input: &str) {
 /// Extracts variable names from a list of SMT-style declarations.
 fn extract_vars(decls: &Sexp) -> Vec<String> {
     match decls {
-        Sexp::List(decl_list) => decl_list.iter().map(|d| {
-            let v = match d {
-                Sexp::List(inner) => inner,
-                _ => panic!("Expected (var Int) pair"),
-            };
-            assert_eq!(v[1], Sexp::Atom(Atom::S("Int".into())));
-            match &v[0] {
-                Sexp::Atom(Atom::S(s)) => s.clone(),
-                _ => panic!("Expected symbol for variable name"),
-            }
-        }).collect(),
+        Sexp::List(decl_list) => decl_list
+            .iter()
+            .map(|d| {
+                let v = match d {
+                    Sexp::List(inner) => inner,
+                    _ => panic!("Expected (var Int) pair"),
+                };
+                assert_eq!(v[1], Sexp::Atom(Atom::S("Int".into())));
+                match &v[0] {
+                    Sexp::Atom(Atom::S(s)) => s.clone(),
+                    _ => panic!("Expected symbol for variable name"),
+                }
+            })
+            .collect(),
         _ => panic!("Expected list of declarations"),
     }
 }
@@ -170,7 +173,12 @@ fn simplify_sum_expr(expr: &Sexp) -> Sexp {
 fn wrap_vars_in_mul(expr: &Sexp) -> Sexp {
     match expr {
         // If it's an atom and not an operator, wrap it as (* var 1)
-        Sexp::Atom(Atom::S(s)) if !["+", "*", "=", ">=", ">", "<", "<=", "and", "or", "not", "=>"].contains(&s.as_str()) => {
+        Sexp::Atom(Atom::S(s))
+            if ![
+                "+", "*", "=", ">=", ">", "<", "<=", "and", "or", "not", "=>",
+            ]
+            .contains(&s.as_str()) =>
+        {
             Sexp::List(vec![
                 Sexp::Atom(Atom::S("*".into())),
                 Sexp::Atom(Atom::S(s.clone())),
@@ -193,11 +201,10 @@ fn wrap_vars_in_mul(expr: &Sexp) -> Sexp {
     }
 }
 
-
 /// Recursively parses and simplifies an S-expression into an expression tree.
 /// Also simplifies leaf expressions involving constant addition.
 fn parse_expr_tree(expr: &Sexp) -> ExprTree {
-    let wrapped = wrap_vars_in_mul(expr);                      // <- Insert here
+    let wrapped = wrap_vars_in_mul(expr); // <- Insert here
     let normalized = normalize_gt_to_ge(&wrapped);
     let maybe_const_sum = try_eval_const_sum(&normalized);
     let simplified = maybe_const_sum.unwrap_or(normalized.clone());
@@ -223,49 +230,48 @@ fn parse_expr_tree(expr: &Sexp) -> ExprTree {
     }
 }
 
-
 // todo new - start
 
 pub fn from_single_constraint_string(input: &str) -> PresburgerSet<String> {
-
     let input = input.trim();
 
     let re_eq = Regex::new(r"\(= ([^\s]+) \((.+)\)\)").unwrap();
     let re_ge = Regex::new(r"\(>= ([^\s]+) (-?\d+)\)").unwrap();
 
-    let (lhs, linear_terms, constant_term, constraint_type) = if let Some(caps) = re_eq.captures(input) {
-        let lhs = caps[1].to_string();
-        let rhs = caps[2].trim();
-        let mut linear_terms: Vec<(i32, String)> = vec![];
+    let (lhs, linear_terms, constant_term, constraint_type) =
+        if let Some(caps) = re_eq.captures(input) {
+            let lhs = caps[1].to_string();
+            let rhs = caps[2].trim();
+            let mut linear_terms: Vec<(i32, String)> = vec![];
 
-        let atom_re = Regex::new(r"\(t(\d+)\)").unwrap();
-        let mul_re = Regex::new(r"\(\* t(\d+) (-?\d+)\)").unwrap();
-        let add_re = Regex::new(r"\+").unwrap();
+            let atom_re = Regex::new(r"\(t(\d+)\)").unwrap();
+            let mul_re = Regex::new(r"\(\* t(\d+) (-?\d+)\)").unwrap();
+            let add_re = Regex::new(r"\+").unwrap();
 
-        // Handle (+ t3 (* t4 -1) (* t5 -1))
-        for token in rhs.split_whitespace() {
-            if token == "+" {
-                continue;
-            } else if let Some(cap) = mul_re.captures(token) {
-                let var = format!("t{}", &cap[1]);
-                let coef = cap[2].parse::<i32>().unwrap();
-                linear_terms.push((coef, var));
-            } else if let Some(cap) = atom_re.captures(token) {
-                let var = format!("t{}", &cap[1]);
-                linear_terms.push((1, var));
+            // Handle (+ t3 (* t4 -1) (* t5 -1))
+            for token in rhs.split_whitespace() {
+                if token == "+" {
+                    continue;
+                } else if let Some(cap) = mul_re.captures(token) {
+                    let var = format!("t{}", &cap[1]);
+                    let coef = cap[2].parse::<i32>().unwrap();
+                    linear_terms.push((coef, var));
+                } else if let Some(cap) = atom_re.captures(token) {
+                    let var = format!("t{}", &cap[1]);
+                    linear_terms.push((1, var));
+                }
             }
-        }
 
-        linear_terms.push((-1, lhs.clone()));
-        (lhs, linear_terms, 0, ConstraintType::EqualToZero)
-    } else if let Some(caps) = re_ge.captures(input) {
-        let lhs = caps[1].to_string();
-        let c = caps[2].parse::<i32>().unwrap();
-        let terms = vec![(1, lhs.clone())];
-        (lhs, terms, -c, ConstraintType::NonNegative)
-    } else {
-        panic!("Unsupported constraint format: {}", input);
-    };
+            linear_terms.push((-1, lhs.clone()));
+            (lhs, linear_terms, 0, ConstraintType::EqualToZero)
+        } else if let Some(caps) = re_ge.captures(input) {
+            let lhs = caps[1].to_string();
+            let c = caps[2].parse::<i32>().unwrap();
+            let terms = vec![(1, lhs.clone())];
+            (lhs, terms, -c, ConstraintType::NonNegative)
+        } else {
+            panic!("Unsupported constraint format: {}", input);
+        };
 
     let mapping: Vec<String> = linear_terms
         .iter()
@@ -287,7 +293,6 @@ pub fn from_single_constraint_string(input: &str) -> PresburgerSet<String> {
     let qs = QuantifiedSet::new(vec![constraint]);
     PresburgerSet::from_quantified_sets(&[qs], mapping)
 }
-
 
 // todo new - end
 
@@ -340,7 +345,6 @@ mod tests {
         println!("Test tree structure: {:#?}", tree);
     }
 
-
     // #[test]
     // fn test_from_leaf_constraint_to_presburger_set(){
     //     let var_x1 = Variable::Var("x1");
@@ -378,10 +382,4 @@ mod tests {
     //     println!("{}", ps2);
     //
     // }
-
-
 }
-
-
-
-

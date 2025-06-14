@@ -1,17 +1,17 @@
 //! SMPT (Satisfiability Modulo Petri Nets) integration module.
-//! 
+//!
 //! This module provides Rust bindings to the SMPT tool for verifying
 //! reachability properties in Petri nets. It supports:
-//! 
+//!
 //! - Converting Petri nets to SMPT's .net format
 //! - Converting Presburger constraints to SMPT's XML format
 //! - Running SMPT with configurable timeouts and retry logic
 //! - Parsing results including proofs and counterexample traces
-//! 
+//!
 //! # Examples
 //! ```
 //! use smpt::{can_reach_constraint_set, SmptOptions};
-//! 
+//!
 //! let result = can_reach_constraint_set(
 //!     petri,
 //!     constraints,
@@ -20,9 +20,9 @@
 //! )?;
 //! ```
 
+use crate::debug_report::{SmptCall, format_constraints_description};
 use crate::petri::*;
 use crate::presburger::{Constraint, ConstraintType};
-use crate::debug_report::{format_constraints_description, SmptCall};
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
@@ -33,9 +33,7 @@ use std::sync::Mutex;
 // === Constants ===
 const SMPT_WRAPPER_PATH: &str = "./smpt_wrapper.sh";
 const SMPT_PYTHON_MODULE: &str = "smpt";
-const DEFAULT_METHODS: &[&str] = &[
-    "STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"
-];
+const DEFAULT_METHODS: &[&str] = &["STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"];
 
 // === Result Types ===
 
@@ -53,9 +51,7 @@ pub enum SmptVerificationOutcome {
         trace: Vec<usize>,
     },
     /// Verification failed or timed out
-    Error {
-        message: String,
-    },
+    Error { message: String },
 }
 
 /// Result of SMPT verification with proof/counterexample information and raw output
@@ -94,7 +90,6 @@ pub fn set_smpt_timeout(timeout_seconds: u64) {
 }
 
 // === Public Types ===
-
 
 /// Convert a Petri net to SMPT .net format
 /// Produces a textual representation of the Petri net compatible with SMPT tools
@@ -171,21 +166,29 @@ where
 {
     // Get debug logger from global state
     let debug_logger = crate::reachability::get_debug_logger();
-    
+
     // Debug logging
     debug_logger.log_petri_net(
         "SMPT Input Petri Net",
-        &format!("Petri net for disjunct {} before SMPT verification", disjunct_id),
-        &petri
+        &format!(
+            "Petri net for disjunct {} before SMPT verification",
+            disjunct_id
+        ),
+        &petri,
     );
     debug_logger.log_constraints(
         "SMPT Input Constraints",
-        &format!("Constraints for disjunct {} to be verified by SMPT", disjunct_id),
-        &constraints
+        &format!(
+            "Constraints for disjunct {} to be verified by SMPT",
+            disjunct_id
+        ),
+        &constraints,
     );
 
     // Extract places from Petri net to handle missing places in constraints
-    let petri_places: HashSet<String> = petri.get_places().iter()
+    let petri_places: HashSet<String> = petri
+        .get_places()
+        .iter()
         .map(|p| sanitize(&p.to_string()))
         .collect();
 
@@ -199,14 +202,17 @@ where
     std::fs::create_dir_all(out_dir).expect("Failed to create output directory");
     let xml_file_path = format!("{}/smpt_constraints_disjunct_{}.xml", out_dir, disjunct_id);
     let pnet_file_path = format!("{}/smpt_petri_disjunct_{}.net", out_dir, disjunct_id);
-    let _proof_file_path = format!("{}/smpt_constraints_disjunct_{}_proof.txt", out_dir, disjunct_id);
+    let _proof_file_path = format!(
+        "{}/smpt_constraints_disjunct_{}_proof.txt",
+        out_dir, disjunct_id
+    );
 
     std::fs::write(&xml_file_path, &xml).expect("Failed to write SMPT XML");
     std::fs::write(&pnet_file_path, &pnet_content).expect("Failed to write SMPT Petri net");
 
     // Try to run SMPT tool
     let result = run_smpt(&pnet_file_path, &xml_file_path);
-    
+
     // Log the result
     match &result.outcome {
         SmptVerificationOutcome::Unreachable { .. } => {
@@ -220,40 +226,42 @@ where
             eprintln!("Generated files for manual verification:");
             eprintln!("  XML: {}", xml_file_path);
             eprintln!("  Net: {}", pnet_file_path);
-            eprintln!("Manual command: ./smpt_wrapper.sh -n {} --xml {}", pnet_file_path, xml_file_path);
+            eprintln!(
+                "Manual command: ./smpt_wrapper.sh -n {} --xml {}",
+                pnet_file_path, xml_file_path
+            );
         }
     }
-    
+
     // Save raw SMPT output to files if available
     // For now, we need to re-run SMPT to get raw output since we removed SmptResult
     // In a future refactoring, we could include raw output in the verification result
-    
+
     // Add debug entry
     let result_str = match &result.outcome {
         SmptVerificationOutcome::Unreachable { .. } => "UNREACHABLE",
         SmptVerificationOutcome::Reachable { .. } => "REACHABLE",
         SmptVerificationOutcome::Error { message } => message.as_str(),
     };
-    
+
     let smpt_call = SmptCall {
         disjunct_id,
         petri_net_content: pnet_content,
         xml_content: xml,
         result: result_str.to_string(),
-        execution_time_ms: None,  // We measure time externally now
+        execution_time_ms: None, // We measure time externally now
         constraints_description: format_constraints_description(&constraints),
     };
     debug_logger.smpt_call(smpt_call);
-    
+
     // Save raw SMPT output for debugging
     let stdout_path = format!("{}/smpt_output_disjunct_{}.stdout", out_dir, disjunct_id);
     let stderr_path = format!("{}/smpt_output_disjunct_{}.stderr", out_dir, disjunct_id);
     std::fs::write(&stdout_path, &result.raw_stdout).ok();
     std::fs::write(&stderr_path, &result.raw_stderr).ok();
-    
+
     result
 }
-
 
 /// Install SMPT tool - returns true if already installed or successfully installed
 pub fn install_smpt() -> Result<(), String> {
@@ -266,7 +274,9 @@ pub fn install_smpt() -> Result<(), String> {
     println!("1. Install Python 3.7+ and pip");
     println!("2. Install Z3: pip install z3-solver");
     println!("3. Clone SMPT: git clone https://github.com/nicolasAmat/SMPT.git");
-    println!("4. Install SMPT: cd SMPT && python setup.py bdist_wheel && pip install dist/smpt-5.0-py3-none-any.whl");
+    println!(
+        "4. Install SMPT: cd SMPT && python setup.py bdist_wheel && pip install dist/smpt-5.0-py3-none-any.whl"
+    );
     println!("5. Alternative: pip install smpt");
 
     Err("SMPT is not installed. Please follow the installation instructions above.".to_string())
@@ -295,12 +305,12 @@ pub fn ensure_smpt_available() -> bool {
 /// Check if SMPT is installed and available
 pub fn is_smpt_installed() -> bool {
     // Try the wrapper script first
-    if Path::new(SMPT_WRAPPER_PATH).exists() && 
-       Command::new(SMPT_WRAPPER_PATH)
-        .args(["--help"])
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+    if Path::new(SMPT_WRAPPER_PATH).exists()
+        && Command::new(SMPT_WRAPPER_PATH)
+            .args(["--help"])
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false)
     {
         return true;
     }
@@ -319,7 +329,11 @@ fn run_smpt(net_file: &str, xml_file: &str) -> SmptVerificationResult {
 }
 
 /// Run SMPT with a specific timeout
-fn run_smpt_with_timeout(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> SmptVerificationResult {
+fn run_smpt_with_timeout(
+    net_file: &str,
+    xml_file: &str,
+    timeout_seconds: Option<u64>,
+) -> SmptVerificationResult {
     run_smpt_internal(net_file, xml_file, timeout_seconds)
 }
 
@@ -333,25 +347,28 @@ fn build_smpt_args(
     timeout_seconds: Option<u64>,
 ) -> Vec<String> {
     let mut args = vec![
-        "-n".to_string(), net_file.to_string(),
-        "--xml".to_string(), xml_file.to_string(),
+        "-n".to_string(),
+        net_file.to_string(),
+        "--xml".to_string(),
+        xml_file.to_string(),
         "--show-time".to_string(),
         "--show-model".to_string(),
-        "--export-proof".to_string(), proof_file.to_string(),
+        "--export-proof".to_string(),
+        proof_file.to_string(),
     ];
-    
+
     // Add methods
     args.push("--methods".to_string());
     for method in DEFAULT_METHODS {
         args.push(method.to_string());
     }
-    
+
     // Add timeout if specified
     if let Some(timeout) = timeout_seconds.filter(|&t| t > 0) {
         args.push("--timeout".to_string());
         args.push(timeout.to_string());
     }
-    
+
     args
 }
 
@@ -359,20 +376,15 @@ fn build_smpt_args(
 fn execute_smpt(args: &[String]) -> Result<Output, std::io::Error> {
     // Try wrapper script first
     if Path::new(SMPT_WRAPPER_PATH).exists() {
-        Command::new(SMPT_WRAPPER_PATH)
-            .args(args)
-            .output()
+        Command::new(SMPT_WRAPPER_PATH).args(args).output()
     } else {
         // Fall back to python3 -m smpt
         let mut python_args = vec!["-m".to_string(), SMPT_PYTHON_MODULE.to_string()];
         python_args.extend_from_slice(args);
-        
-        Command::new("python3")
-            .args(&python_args)
-            .output()
+
+        Command::new("python3").args(&python_args).output()
     }
 }
-
 
 /// Extract model from SMPT output
 fn extract_model(output: &str) -> Option<String> {
@@ -389,7 +401,7 @@ fn extract_model(output: &str) -> Option<String> {
 /// Extract trace from SMPT output, converting transition IDs to indices
 fn extract_trace(output: &str) -> Vec<usize> {
     let lines: Vec<&str> = output.lines().collect();
-    
+
     for i in 0..lines.len() {
         // Look for BMC or PDR trace markers
         if lines[i].contains("[BMC] Trace") || lines[i].contains("[PDR] Trace") {
@@ -397,22 +409,28 @@ fn extract_trace(output: &str) -> Vec<usize> {
             if i + 1 < lines.len() {
                 let trace_line = lines[i + 1].trim();
                 if !trace_line.is_empty() && trace_line.starts_with('t') {
-                    return trace_line.split_whitespace()
+                    return trace_line
+                        .split_whitespace()
                         .filter_map(|s| {
                             // Extract number from "t0", "t1", etc.
-                            s.strip_prefix('t').and_then(|num| num.parse::<usize>().ok())
+                            s.strip_prefix('t')
+                                .and_then(|num| num.parse::<usize>().ok())
                         })
                         .collect();
                 }
             }
         }
     }
-    
+
     Vec::new()
 }
 
 /// Run SMPT on a Petri net file with constraints with optional timeout (internal implementation)
-fn run_smpt_internal(net_file: &str, xml_file: &str, timeout_seconds: Option<u64>) -> SmptVerificationResult {
+fn run_smpt_internal(
+    net_file: &str,
+    xml_file: &str,
+    timeout_seconds: Option<u64>,
+) -> SmptVerificationResult {
     if !is_smpt_installed() {
         return SmptVerificationResult {
             outcome: SmptVerificationOutcome::Error {
@@ -426,28 +444,32 @@ fn run_smpt_internal(net_file: &str, xml_file: &str, timeout_seconds: Option<u64
     // Convert paths to absolute paths for wrapper script compatibility
     let abs_net_file = match std::fs::canonicalize(net_file) {
         Ok(path) => path,
-        Err(e) => return SmptVerificationResult {
-            outcome: SmptVerificationOutcome::Error {
-                message: format!("Failed to get absolute path for {}: {}", net_file, e),
-            },
-            raw_stdout: String::new(),
-            raw_stderr: String::new(),
+        Err(e) => {
+            return SmptVerificationResult {
+                outcome: SmptVerificationOutcome::Error {
+                    message: format!("Failed to get absolute path for {}: {}", net_file, e),
+                },
+                raw_stdout: String::new(),
+                raw_stderr: String::new(),
+            };
         }
     };
     let abs_xml_file = match std::fs::canonicalize(xml_file) {
         Ok(path) => path,
-        Err(e) => return SmptVerificationResult {
-            outcome: SmptVerificationOutcome::Error {
-                message: format!("Failed to get absolute path for {}: {}", xml_file, e),
-            },
-            raw_stdout: String::new(),
-            raw_stderr: String::new(),
+        Err(e) => {
+            return SmptVerificationResult {
+                outcome: SmptVerificationOutcome::Error {
+                    message: format!("Failed to get absolute path for {}: {}", xml_file, e),
+                },
+                raw_stdout: String::new(),
+                raw_stderr: String::new(),
+            };
         }
     };
 
     // Generate absolute proof file path based on the XML file path
     let proof_file_path = abs_xml_file.to_str().unwrap().replace(".xml", "_proof.txt");
-    
+
     // Build command arguments
     let args = build_smpt_args(
         abs_net_file.to_str().unwrap(),
@@ -455,16 +477,18 @@ fn run_smpt_internal(net_file: &str, xml_file: &str, timeout_seconds: Option<u64
         &proof_file_path,
         timeout_seconds,
     );
-    
+
     // Execute SMPT
     let output = match execute_smpt(&args) {
         Ok(output) => output,
-        Err(e) => return SmptVerificationResult {
-            outcome: SmptVerificationOutcome::Error {
-                message: format!("Failed to execute SMPT: {}", e),
-            },
-            raw_stdout: String::new(),
-            raw_stderr: String::new(),
+        Err(e) => {
+            return SmptVerificationResult {
+                outcome: SmptVerificationOutcome::Error {
+                    message: format!("Failed to execute SMPT: {}", e),
+                },
+                raw_stdout: String::new(),
+                raw_stderr: String::new(),
+            };
         }
     };
 
@@ -475,41 +499,47 @@ fn run_smpt_internal(net_file: &str, xml_file: &str, timeout_seconds: Option<u64
     if stdout.contains("TRUE") {
         // Property is reachable => NOT serializable
         let trace = extract_trace(&stdout);
-        
+
         SmptVerificationResult {
-            outcome: SmptVerificationOutcome::Reachable {
-                trace,
-            },
+            outcome: SmptVerificationOutcome::Reachable { trace },
             raw_stdout: stdout,
             raw_stderr: stderr,
         }
     } else if stdout.contains("FALSE") {
         // Property is unreachable => IS serializable
-        
+
         // Try to read proof certificate if it exists
         let proof_certificate = std::fs::read_to_string(&proof_file_path).ok();
-        
+
         SmptVerificationResult {
-            outcome: SmptVerificationOutcome::Unreachable {
-                proof_certificate,
-            },
+            outcome: SmptVerificationOutcome::Unreachable { proof_certificate },
             raw_stdout: stdout,
             raw_stderr: stderr,
         }
     } else {
         // Check for timeout patterns
         let error_msg = if output.status.code() == Some(1) && stdout.trim() == "# Hello" {
-            format!("SMPT timeout: Analysis timed out after {}s. Try increasing timeout or enabling optimizations.", timeout_seconds.unwrap_or(get_smpt_timeout()))
-        } else if stdout.contains("# Hello") && stdout.contains("# Bye bye") && !stdout.contains("FORMULA") {
-            format!("SMPT timeout: Analysis timed out after {}s (completed startup but no results). Try increasing timeout or enabling optimizations.", timeout_seconds.unwrap_or(get_smpt_timeout()))
+            format!(
+                "SMPT timeout: Analysis timed out after {}s. Try increasing timeout or enabling optimizations.",
+                timeout_seconds.unwrap_or(get_smpt_timeout())
+            )
+        } else if stdout.contains("# Hello")
+            && stdout.contains("# Bye bye")
+            && !stdout.contains("FORMULA")
+        {
+            format!(
+                "SMPT timeout: Analysis timed out after {}s (completed startup but no results). Try increasing timeout or enabling optimizations.",
+                timeout_seconds.unwrap_or(get_smpt_timeout())
+            )
         } else {
-            format!("Could not parse SMPT result. stdout: {}, stderr: {}", stdout, stderr)
+            format!(
+                "Could not parse SMPT result. stdout: {}, stderr: {}",
+                stdout, stderr
+            )
         };
-        
+
         SmptVerificationResult {
-            outcome: SmptVerificationOutcome::Error {
-                message: error_msg,
-            },
+            outcome: SmptVerificationOutcome::Error { message: error_msg },
             raw_stdout: stdout,
             raw_stderr: stderr,
         }
@@ -518,12 +548,11 @@ fn run_smpt_internal(net_file: &str, xml_file: &str, timeout_seconds: Option<u64
 
 // === Conversion Functions ===
 
-
 /// Converts a Vec of presburger Constraints to XML format compatible with SMPT
 pub fn presburger_constraints_to_xml<P: Display>(
     constraints: &[Constraint<P>],
     id: &str,
-    petri_places: &HashSet<String>
+    petri_places: &HashSet<String>,
 ) -> String {
     let mut xml = format!(
         r#"<?xml version='1.0' encoding='utf-8'?>
@@ -579,14 +608,20 @@ use crate::utils::string::sanitize;
 fn place_tokens_or_zero(place_name: &str, petri_places: &HashSet<String>) -> String {
     let sanitized_place = sanitize(place_name);
     if petri_places.contains(&sanitized_place) {
-        format!("<tokens-count><place>{}</place></tokens-count>", sanitized_place)
+        format!(
+            "<tokens-count><place>{}</place></tokens-count>",
+            sanitized_place
+        )
     } else {
         "<integer-constant>0</integer-constant>".to_string()
     }
 }
 
 /// Convert a single presburger Constraint to XML
-pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>, petri_places: &HashSet<String>) -> String {
+pub fn presburger_constraint_to_xml<P: Display>(
+    constraint: &Constraint<P>,
+    petri_places: &HashSet<String>,
+) -> String {
     let mut xml = String::new();
 
     let operator = match constraint.constraint_type() {
@@ -646,7 +681,7 @@ pub fn presburger_constraint_to_xml<P: Display>(constraint: &Constraint<P>, petr
     // Right side (constant term)
     xml.push_str(&format!(
         "  <integer-constant>{}</integer-constant>\n",
-        -constraint.constant_term()  // Note: negated to match constraint semantics
+        -constraint.constant_term() // Note: negated to match constraint semantics
     ));
 
     xml.push_str(&format!("</{}>", operator));
@@ -661,11 +696,7 @@ mod tests {
     #[test]
     fn test_presburger_constraint_to_xml_simple() {
         // Test: x >= 5 (represented as x - 5 >= 0)
-        let constraint = Constraint::new(
-            vec![(1, "x")],
-            -5,
-            ConstraintType::NonNegative,
-        );
+        let constraint = Constraint::new(vec![(1, "x")], -5, ConstraintType::NonNegative);
 
         // Create a set of places that includes 'x'
         let mut petri_places = HashSet::new();
@@ -681,11 +712,8 @@ mod tests {
     #[test]
     fn test_presburger_constraint_to_xml_equality() {
         // Test: 2x + 3y = 10 (represented as 2x + 3y - 10 = 0)
-        let constraint = Constraint::new(
-            vec![(2, "x"), (3, "y")],
-            -10,
-            ConstraintType::EqualToZero,
-        );
+        let constraint =
+            Constraint::new(vec![(2, "x"), (3, "y")], -10, ConstraintType::EqualToZero);
 
         // Create a set of places that includes 'x' and 'y'
         let mut petri_places = HashSet::new();
@@ -794,15 +822,14 @@ t1 t0 t10 t8 t12 t5 t3
 
 FORMULA reachability-check TRUE TIME 0.403745174407959
 # Bye bye"#;
-        
+
         let trace = extract_trace(output);
         assert_eq!(trace, vec![1, 0, 10, 8, 12, 5, 3]);
-        
+
         // Test empty trace
         let no_trace = "# Hello\nFORMULA reachability-check FALSE\n# Bye bye";
         assert_eq!(extract_trace(no_trace), Vec::<usize>::new());
     }
-
 
     #[test]
     fn test_install_smpt_instructions() {
@@ -828,18 +855,24 @@ FORMULA reachability-check TRUE TIME 0.403745174407959
 
         // Create simple but interesting Petri net: Producer-Consumer with buffer
         let mut petri = Petri::new(vec!["Producer", "BufferSlot"]);
-        petri.add_transition(vec!["Producer", "BufferSlot"], vec!["Producer", "Item"]);  // Produce
-        petri.add_transition(vec!["Item"], vec!["Consumer", "BufferSlot"]);             // Consume (creates consumer)
-        petri.add_transition(vec!["Item"], vec!["Waste"]);                              // Alternative: waste the item
+        petri.add_transition(vec!["Producer", "BufferSlot"], vec!["Producer", "Item"]); // Produce
+        petri.add_transition(vec!["Item"], vec!["Consumer", "BufferSlot"]); // Consume (creates consumer)
+        petri.add_transition(vec!["Item"], vec!["Waste"]); // Alternative: waste the item
 
-        println!("Producer-Consumer net: Producer+BufferSlot->Item, Item->Consumer+BufferSlot OR Item->Waste");
+        println!(
+            "Producer-Consumer net: Producer+BufferSlot->Item, Item->Consumer+BufferSlot OR Item->Waste"
+        );
 
         // Test 1: Reachable - Can we produce an item?
         let can_produce_result = can_reach_constraint_set(
             petri.clone(),
-            vec![Constraint::new(vec![(1, "Item")], -1, ConstraintType::NonNegative)],
+            vec![Constraint::new(
+                vec![(1, "Item")],
+                -1,
+                ConstraintType::NonNegative,
+            )],
             out_dir,
-            0  // disjunct_id
+            0, // disjunct_id
         );
         match can_produce_result.outcome {
             SmptVerificationOutcome::Reachable { trace, .. } => {
@@ -857,13 +890,20 @@ FORMULA reachability-check TRUE TIME 0.403745174407959
         // Yes, we can produce multiple items and send them to different outcomes
         let both_outcomes_result = can_reach_constraint_set(
             petri,
-            vec![Constraint::new(vec![(1, "Consumer"), (1, "Waste")], -2, ConstraintType::NonNegative)],
+            vec![Constraint::new(
+                vec![(1, "Consumer"), (1, "Waste")],
+                -2,
+                ConstraintType::NonNegative,
+            )],
             out_dir,
-            1  // disjunct_id
+            1, // disjunct_id
         );
         match both_outcomes_result.outcome {
             SmptVerificationOutcome::Reachable { trace, .. } => {
-                println!("Can have Consumer+Waste: Yes (reachable), trace: {:?}", trace);
+                println!(
+                    "Can have Consumer+Waste: Yes (reachable), trace: {:?}",
+                    trace
+                );
             }
             SmptVerificationOutcome::Unreachable { .. } => {
                 panic!("Should be able to have both outcomes by producing multiple items");
@@ -873,5 +913,4 @@ FORMULA reachability-check TRUE TIME 0.403745174407959
             }
         }
     }
-
 }

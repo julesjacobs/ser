@@ -1,8 +1,8 @@
 //! HTML debugging report generation for serializability analysis
 
-use std::fmt::{Display, Debug};
-use std::hash::Hash;
 use crate::presburger::Constraint;
+use std::fmt::{Debug, Display};
+use std::hash::Hash;
 
 #[derive(Debug, Clone)]
 pub struct SmptCall {
@@ -175,7 +175,11 @@ impl DebugReport {
 </html>"#,
             self.program_name,
             self.program_name,
-            if self.final_result.contains("serializable") && !self.final_result.contains("Not") { "result-success" } else { "result-failure" },
+            if self.final_result.contains("serializable") && !self.final_result.contains("Not") {
+                "result-success"
+            } else {
+                "result-failure"
+            },
             self.final_result,
             self.total_execution_time_ms,
             self.smpt_calls.len(),
@@ -223,8 +227,9 @@ impl DebugReport {
                     "UNREACHABLE" => "result-success",
                     _ => "result-failure",
                 };
-                
-                let time_info = call.execution_time_ms
+
+                let time_info = call
+                    .execution_time_ms
                     .map(|t| format!(" <span class=\"execution-time\">({} ms)</span>", t))
                     .unwrap_or_default();
 
@@ -255,7 +260,7 @@ impl DebugReport {
 
     fn render_timeline(&self) -> String {
         let mut timeline = Vec::new();
-        
+
         // Add algorithm steps
         for step in &self.algorithm_steps {
             timeline.push(format!(
@@ -264,7 +269,7 @@ impl DebugReport {
                 html_escape(&format!("{}: {}", step.step_name, step.description))
             ));
         }
-        
+
         // Add SMPT calls (assuming they happen after algorithm steps)
         for (i, call) in self.smpt_calls.iter().enumerate() {
             timeline.push(format!(
@@ -274,7 +279,7 @@ impl DebugReport {
                 call.result
             ));
         }
-        
+
         timeline.join("\n")
     }
 }
@@ -303,7 +308,11 @@ impl DebugLogger {
 
     pub fn step(&self, step_name: &str, description: &str, details: &str) {
         if let Ok(mut report) = self.report.lock() {
-            report.add_step(step_name.to_string(), description.to_string(), details.to_string());
+            report.add_step(
+                step_name.to_string(),
+                description.to_string(),
+                details.to_string(),
+            );
         }
     }
 
@@ -313,7 +322,12 @@ impl DebugLogger {
         }
     }
 
-    pub fn finalize(&self, result: String, total_time_ms: u64, output_dir: &str) -> Result<(), std::io::Error> {
+    pub fn finalize(
+        &self,
+        result: String,
+        total_time_ms: u64,
+        output_dir: &str,
+    ) -> Result<(), std::io::Error> {
         if let Ok(mut report) = self.report.lock() {
             report.set_final_result(result, total_time_ms);
             let output_path = format!("{}/debug_report.html", output_dir);
@@ -323,85 +337,138 @@ impl DebugLogger {
     }
 
     // Helper methods for common debugging tasks
-    pub fn log_petri_net<P: Clone + PartialEq + Eq + Hash + Display + Debug>(&self, name: &str, description: &str, petri: &crate::petri::Petri<P>) {
+    pub fn log_petri_net<P: Clone + PartialEq + Eq + Hash + Display + Debug>(
+        &self,
+        name: &str,
+        description: &str,
+        petri: &crate::petri::Petri<P>,
+    ) {
         let places = petri.get_places();
         let transitions = petri.get_transitions();
         let initial_marking = petri.get_initial_marking();
-        
+
         // Create a more readable representation
         let mut details = String::new();
-        
+
         // Places section
         details.push_str(&format!("📍 PLACES ({}):\n", places.len()));
         for (i, place) in places.iter().enumerate() {
             details.push_str(&format!("  {}. {}\n", i + 1, place));
         }
-        
+
         // Initial marking section
-        details.push_str(&format!("\n🏁 INITIAL MARKING ({} tokens):\n", initial_marking.len()));
+        details.push_str(&format!(
+            "\n🏁 INITIAL MARKING ({} tokens):\n",
+            initial_marking.len()
+        ));
         let mut token_counts = std::collections::HashMap::new();
         for place in &initial_marking {
             *token_counts.entry(format!("{}", place)).or_insert(0) += 1;
         }
         for (place, count) in token_counts {
-            details.push_str(&format!("  {} ← {} token{}\n", place, count, if count > 1 { "s" } else { "" }));
+            details.push_str(&format!(
+                "  {} ← {} token{}\n",
+                place,
+                count,
+                if count > 1 { "s" } else { "" }
+            ));
         }
-        
+
         // Transitions section
         details.push_str(&format!("\n🔄 TRANSITIONS ({}):\n", transitions.len()));
         for (i, (inputs, outputs)) in transitions.iter().enumerate() {
             let input_str = if inputs.is_empty() {
                 "∅".to_string()
             } else {
-                inputs.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                inputs
+                    .iter()
+                    .map(|p| format!("{}", p))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             };
             let output_str = if outputs.is_empty() {
                 "∅".to_string()
             } else {
-                outputs.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                outputs
+                    .iter()
+                    .map(|p| format!("{}", p))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             };
             details.push_str(&format!("  t{}: [{}] → [{}]\n", i, input_str, output_str));
         }
-        
+
         // Add summary
         details.push_str("\n📊 SUMMARY:\n");
-        details.push_str(&format!("  • {} places, {} transitions\n", places.len(), transitions.len()));
+        details.push_str(&format!(
+            "  • {} places, {} transitions\n",
+            places.len(),
+            transitions.len()
+        ));
         details.push_str(&format!("  • {} initial tokens\n", initial_marking.len()));
-        let reachable_from_initial = transitions.iter().filter(|(inputs, _)| inputs.is_empty()).count();
-        details.push_str(&format!("  • {} transition(s) enabled initially\n", reachable_from_initial));
-        
+        let reachable_from_initial = transitions
+            .iter()
+            .filter(|(inputs, _)| inputs.is_empty())
+            .count();
+        details.push_str(&format!(
+            "  • {} transition(s) enabled initially\n",
+            reachable_from_initial
+        ));
+
         self.step(name, description, &details);
     }
 
-    pub fn log_semilinear_set<T: Eq + Hash + Clone + Ord + Debug + Display>(&self, name: &str, description: &str, set: &crate::semilinear::SemilinearSet<T>) {
+    pub fn log_semilinear_set<T: Eq + Hash + Clone + Ord + Debug + Display>(
+        &self,
+        name: &str,
+        description: &str,
+        set: &crate::semilinear::SemilinearSet<T>,
+    ) {
         let mut details = String::new();
         details.push_str("🔢 SEMILINEAR SET:\n\n");
-        
+
         // Use the existing pretty Display implementation
         details.push_str(&format!("📚 MATHEMATICAL FORM:\n{}\n\n", set));
-        
+
         // Add some structural analysis
         let components = &set.components;
         details.push_str("📊 STRUCTURE ANALYSIS:\n");
-        details.push_str(&format!("  • {} linear set component{}\n", 
-            components.len(), if components.len() > 1 { "s" } else { "" }));
-        
+        details.push_str(&format!(
+            "  • {} linear set component{}\n",
+            components.len(),
+            if components.len() > 1 { "s" } else { "" }
+        ));
+
         for (i, linear_set) in components.iter().enumerate() {
-            details.push_str(&format!("  • Component {}: {} period vector{}, base vector: {}\n", 
-                i + 1, 
+            details.push_str(&format!(
+                "  • Component {}: {} period vector{}, base vector: {}\n",
+                i + 1,
                 linear_set.periods.len(),
-                if linear_set.periods.len() != 1 { "s" } else { "" },
-                if linear_set.base.values.is_empty() { "∅" } else { "non-empty" }
+                if linear_set.periods.len() != 1 {
+                    "s"
+                } else {
+                    ""
+                },
+                if linear_set.base.values.is_empty() {
+                    "∅"
+                } else {
+                    "non-empty"
+                }
             ));
         }
-        
+
         self.step(name, description, &details);
     }
 
-    pub fn log_constraints<P: Display + Debug>(&self, name: &str, description: &str, constraints: &[crate::presburger::Constraint<P>]) {
+    pub fn log_constraints<P: Display + Debug>(
+        &self,
+        name: &str,
+        description: &str,
+        constraints: &[crate::presburger::Constraint<P>],
+    ) {
         let mut details = String::new();
         details.push_str(&format!("⚖️ CONSTRAINTS ({}):\n\n", constraints.len()));
-        
+
         if constraints.is_empty() {
             details.push_str("  (No constraints - always satisfiable)\n");
         } else {
@@ -410,19 +477,31 @@ impl DebugLogger {
             for (i, constraint) in constraints.iter().enumerate() {
                 details.push_str(&format!("  {}. {}\n", i + 1, constraint));
             }
-            
+
             // Analysis
             details.push_str("\n🔍 ANALYSIS:\n");
-            let equality_count = constraints.iter()
-                .filter(|c| matches!(c.constraint_type(), crate::presburger::ConstraintType::EqualToZero))
+            let equality_count = constraints
+                .iter()
+                .filter(|c| {
+                    matches!(
+                        c.constraint_type(),
+                        crate::presburger::ConstraintType::EqualToZero
+                    )
+                })
                 .count();
             let inequality_count = constraints.len() - equality_count;
-            
-            details.push_str(&format!("  • {} equality constraint{}\n", 
-                equality_count, if equality_count != 1 { "s" } else { "" }));
-            details.push_str(&format!("  • {} inequality constraint{}\n", 
-                inequality_count, if inequality_count != 1 { "s" } else { "" }));
-            
+
+            details.push_str(&format!(
+                "  • {} equality constraint{}\n",
+                equality_count,
+                if equality_count != 1 { "s" } else { "" }
+            ));
+            details.push_str(&format!(
+                "  • {} inequality constraint{}\n",
+                inequality_count,
+                if inequality_count != 1 { "s" } else { "" }
+            ));
+
             // Check for obvious contradictions
             let mut has_contradiction = false;
             for constraint in constraints {
@@ -431,92 +510,122 @@ impl DebugLogger {
                     match constraint.constraint_type() {
                         crate::presburger::ConstraintType::EqualToZero => {
                             if rhs != 0 {
-                                details.push_str(&format!("  ⚠️ CONTRADICTION: 0 = {} (impossible!)\n", rhs));
+                                details.push_str(&format!(
+                                    "  ⚠️ CONTRADICTION: 0 = {} (impossible!)\n",
+                                    rhs
+                                ));
                                 has_contradiction = true;
                             }
-                        },
+                        }
                         crate::presburger::ConstraintType::NonNegative => {
                             if rhs < 0 {
-                                details.push_str(&format!("  ⚠️ CONTRADICTION: 0 ≥ {} (impossible!)\n", rhs));
+                                details.push_str(&format!(
+                                    "  ⚠️ CONTRADICTION: 0 ≥ {} (impossible!)\n",
+                                    rhs
+                                ));
                                 has_contradiction = true;
                             }
                         }
                     }
                 }
             }
-            
+
             if !has_contradiction {
                 details.push_str("  ✓ No obvious contradictions detected\n");
             }
         }
-        
+
         self.step(name, description, &details);
     }
 
-    pub fn log_disjunct_start<T: Clone + Display + Debug>(&self, disjunct_id: usize, quantified_set: &crate::presburger::QuantifiedSet<T>) {
+    pub fn log_disjunct_start<T: Clone + Display + Debug>(
+        &self,
+        disjunct_id: usize,
+        quantified_set: &crate::presburger::QuantifiedSet<T>,
+    ) {
         let mut details = String::new();
         details.push_str(&format!("🎯 DISJUNCT {} ANALYSIS:\n\n", disjunct_id));
-        
-        // Use the existing Display implementation 
+
+        // Use the existing Display implementation
         details.push_str(&format!("📐 MATHEMATICAL FORM:\n{}\n\n", quantified_set));
-        
+
         // Add structural analysis
         details.push_str("📊 STRUCTURE:\n");
-        details.push_str(&format!("  • {} constraint{}\n", 
+        details.push_str(&format!(
+            "  • {} constraint{}\n",
             quantified_set.constraints().len(),
-            if quantified_set.constraints().len() != 1 { "s" } else { "" }
+            if quantified_set.constraints().len() != 1 {
+                "s"
+            } else {
+                ""
+            }
         ));
-        
+
         // Check for existential variables
         let has_existentials = quantified_set.constraints().iter().any(|c| {
-            c.linear_combination().iter().any(|(_, var)| {
-                format!("{:?}", var).contains("Existential")
-            })
+            c.linear_combination()
+                .iter()
+                .any(|(_, var)| format!("{:?}", var).contains("Existential"))
         });
-        
+
         if has_existentials {
             details.push_str("  • Contains existential variables (∃)\n");
         } else {
             details.push_str("  • No existential variables\n");
         }
-        
+
         self.step(
             &format!("Disjunct {} Analysis", disjunct_id),
             &format!("Starting analysis of disjunct {}", disjunct_id),
-            &details
+            &details,
         );
     }
 
     /// Log PresburgerSet using its Display implementation
-    pub fn log_presburger_set<T: Clone + Display + Debug>(&self, name: &str, description: &str, pset: &crate::presburger::PresburgerSet<T>) {
+    pub fn log_presburger_set<T: Clone + Display + Debug>(
+        &self,
+        name: &str,
+        description: &str,
+        pset: &crate::presburger::PresburgerSet<T>,
+    ) {
         let mut details = String::new();
         details.push_str("🔢 PRESBURGER SET:\n\n");
-        
+
         // Use the existing Display implementation
         details.push_str(&format!("📚 MATHEMATICAL FORM:\n{}\n\n", pset));
-        
+
         // Add structural analysis
         details.push_str("📊 STRUCTURE:\n");
         details.push_str("  • ISL-based representation with variable mappings\n");
-        
+
         self.step(name, description, &details);
     }
 
     /// Log QuantifiedSet using its Display implementation  
-    pub fn log_quantified_set<T: Clone + Display + Debug>(&self, name: &str, description: &str, qset: &crate::presburger::QuantifiedSet<T>) {
+    pub fn log_quantified_set<T: Clone + Display + Debug>(
+        &self,
+        name: &str,
+        description: &str,
+        qset: &crate::presburger::QuantifiedSet<T>,
+    ) {
         let mut details = String::new();
         details.push_str("⚖️ QUANTIFIED SET:\n\n");
-        
+
         // Use the existing Display implementation
         details.push_str(&format!("📐 MATHEMATICAL FORM:\n{}\n\n", qset));
-        
+
         // Add structural analysis
         details.push_str("📊 STRUCTURE:\n");
-        details.push_str(&format!("  • {} constraint{}\n", 
+        details.push_str(&format!(
+            "  • {} constraint{}\n",
             qset.constraints().len(),
-            if qset.constraints().len() != 1 { "s" } else { "" }
+            if qset.constraints().len() != 1 {
+                "s"
+            } else {
+                ""
+            }
         ));
-        
+
         self.step(name, description, &details);
     }
 }
@@ -552,7 +661,11 @@ pub fn add_debug_smpt_call(call: SmptCall) {
     }
 }
 
-pub fn finalize_debug_report(result: String, total_time_ms: u64, output_dir: &str) -> Result<(), std::io::Error> {
+pub fn finalize_debug_report(
+    result: String,
+    total_time_ms: u64,
+    output_dir: &str,
+) -> Result<(), std::io::Error> {
     if let Some(mutex) = DEBUG_REPORT.get() {
         if let Ok(mut report_opt) = mutex.lock() {
             if let Some(report) = report_opt.as_mut() {
@@ -569,12 +682,13 @@ pub fn format_constraints_description<P: Display>(constraints: &[Constraint<P>])
     if constraints.is_empty() {
         return "No constraints".to_string();
     }
-    
+
     constraints
         .iter()
         .enumerate()
         .map(|(i, constraint)| {
-            let terms: Vec<String> = constraint.linear_combination()
+            let terms: Vec<String> = constraint
+                .linear_combination()
                 .iter()
                 .map(|(coeff, var)| {
                     if *coeff == 1 {
@@ -586,23 +700,22 @@ pub fn format_constraints_description<P: Display>(constraints: &[Constraint<P>])
                     }
                 })
                 .collect();
-            
+
             let lhs = if terms.is_empty() {
                 "0".to_string()
             } else {
                 terms.join(" + ").replace(" + -", " - ")
             };
-            
+
             let rhs = -constraint.constant_term();
-            
+
             let op = match constraint.constraint_type() {
                 crate::presburger::ConstraintType::NonNegative => "≥",
                 crate::presburger::ConstraintType::EqualToZero => "=",
             };
-            
+
             format!("{}. {} {} {}", i + 1, lhs, op, rhs)
         })
         .collect::<Vec<_>>()
         .join("; ")
 }
-

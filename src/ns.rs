@@ -463,13 +463,20 @@ where
             .and_then(|name| name.to_str())
             .unwrap_or("unknown")
             .to_string();
-        
-        crate::reachability::init_debug_logger(program_name.clone(), format!("Network System: {:?}", self));
+
+        crate::reachability::init_debug_logger(
+            program_name.clone(),
+            format!("Network System: {:?}", self),
+        );
         let start_time = std::time::Instant::now();
 
         // Initialize and get reference to debug logger for ns-level logging
         let debug_logger = crate::reachability::get_debug_logger();
-        debug_logger.step("Initialization", "Starting serializability analysis", &format!("Program: {}\nOutput directory: {}", program_name, out_dir));
+        debug_logger.step(
+            "Initialization",
+            "Starting serializability analysis",
+            &format!("Program: {}\nOutput directory: {}", program_name, out_dir),
+        );
 
         let mut places_that_must_be_zero = HashSet::new();
         let petri = ns_to_petri_with_requests(self).rename(|st| match st {
@@ -482,41 +489,80 @@ where
         });
         let places_that_must_be_zero: Vec<_> = places_that_must_be_zero.into_iter().collect();
 
-        debug_logger.log_petri_net("Original Petri Net", "Petri net converted from Network System", &petri);
-        debug_logger.step("Places to Zero", "Places that must be zero for serializability", &format!("Places: [{}]", places_that_must_be_zero.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
+        debug_logger.log_petri_net(
+            "Original Petri Net",
+            "Petri net converted from Network System",
+            &petri,
+        );
+        debug_logger.step(
+            "Places to Zero",
+            "Places that must be zero for serializability",
+            &format!(
+                "Places: [{}]",
+                places_that_must_be_zero
+                    .iter()
+                    .map(|p| p.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
 
         let ser: SemilinearSet<_> = self.serialized_automaton_kleene(|req, resp| {
             SemilinearSet::singleton(SparseVector::unit(Response(req, resp)))
         });
 
-        debug_logger.log_semilinear_set("Serialized Automaton", "Expected serializable behavior as semilinear set", &ser);
+        debug_logger.log_semilinear_set(
+            "Serialized Automaton",
+            "Expected serializable behavior as semilinear set",
+            &ser,
+        );
 
         // Call original version
-        let result_original = crate::reachability::is_petri_reachability_set_subset_of_semilinear_new(
-            petri.clone(),
-            &places_that_must_be_zero,
-            ser.clone(),
-            out_dir,
-        );
-        
+        let result_original =
+            crate::reachability::is_petri_reachability_set_subset_of_semilinear_new(
+                petri.clone(),
+                &places_that_must_be_zero,
+                ser.clone(),
+                out_dir,
+            );
+
         // Call new proof-based version
-        let result_with_proofs = crate::reachability_with_proofs::is_petri_reachability_set_subset_of_semilinear_new(
-            petri,
-            &places_that_must_be_zero,
-            ser,
-            out_dir,
-        );
-        
+        let result_with_proofs =
+            crate::reachability_with_proofs::is_petri_reachability_set_subset_of_semilinear_new(
+                petri,
+                &places_that_must_be_zero,
+                ser,
+                out_dir,
+            );
+
         let total_time = start_time.elapsed().as_millis() as u64;
-        let result_original_str = if result_original { "Serializable" } else { "Not serializable" };
+        let result_original_str = if result_original {
+            "Serializable"
+        } else {
+            "Not serializable"
+        };
         let result_proofs_bool: bool = result_with_proofs.clone().into();
-        let result_proofs_str = if result_proofs_bool { "Serializable" } else { "Not serializable" };
-        
+        let result_proofs_str = if result_proofs_bool {
+            "Serializable"
+        } else {
+            "Not serializable"
+        };
+
         // Report results
         println!("Serializability check results:");
-        println!("  Original method: {}", if result_original { "Serializable" } else { "Not serializable" });
-        println!("  Proof-based method: {:?} ({})", result_with_proofs, result_proofs_str);
-        
+        println!(
+            "  Original method: {}",
+            if result_original {
+                "Serializable"
+            } else {
+                "Not serializable"
+            }
+        );
+        println!(
+            "  Proof-based method: {:?} ({})",
+            result_with_proofs, result_proofs_str
+        );
+
         // Verify consistency
         if result_original != result_proofs_bool {
             eprintln!("WARNING: Results differ between original and proof-based methods!");
@@ -525,12 +571,13 @@ where
         } else {
             println!("✓ Both methods agree on the result");
         }
-        
+
         // Finalize debug report
-        if let Err(e) = debug_logger.finalize(result_original_str.to_string(), total_time, out_dir) {
+        if let Err(e) = debug_logger.finalize(result_original_str.to_string(), total_time, out_dir)
+        {
             eprintln!("Warning: Failed to generate debug report: {}", e);
         }
-        
+
         // Return the original result as the primary result
         result_original
     }

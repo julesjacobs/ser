@@ -231,8 +231,7 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
 
         // Try merging any of the new_components into another
         'outer: loop {
-            let new_components_vec: Vec<LinearSet<K>> =
-                new_components.iter().cloned().collect();
+            let new_components_vec: Vec<LinearSet<K>> = new_components.iter().cloned().collect();
             for new_comp1 in &new_components_vec {
                 for new_comp2 in &new_components_vec {
                     if new_comp1 != new_comp2 {

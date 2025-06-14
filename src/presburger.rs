@@ -14,7 +14,7 @@ use either::Either;
 #[derive(Debug)]
 pub struct PresburgerSet<T> {
     isl_set: *mut isl::isl_set, // raw pointer to the underlying ISL set
-    mapping: Vec<T>,                 // mapping of dimensions to atoms of type T
+    mapping: Vec<T>,            // mapping of dimensions to atoms of type T
 }
 
 // Ensure the ISL set is freed when PresburgerSet goes out of scope
@@ -61,8 +61,9 @@ impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
 
         // 3. Embed each set into the combined space using direct embedding
         self.isl_set = Self::embed_set_to_mapping(self.isl_set, &self.mapping, &combined_mapping);
-        other.isl_set = Self::embed_set_to_mapping(other.isl_set, &other.mapping, &combined_mapping);
-        
+        other.isl_set =
+            Self::embed_set_to_mapping(other.isl_set, &other.mapping, &combined_mapping);
+
         // 4. Update mappings
         self.mapping = combined_mapping.clone();
         other.mapping = combined_mapping;
@@ -83,12 +84,14 @@ impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
             // 2. Handle dimension reordering if needed
 
             let mut current_pos = 0; // Position in the evolving set
-            
+
             for (target_pos, target_atom) in target_mapping.iter().enumerate() {
                 if current_mapping.contains(target_atom) {
                     // This atom exists in current mapping
                     // Check if it's in the right position
-                    if current_pos < current_mapping.len() && &current_mapping[current_pos] == target_atom {
+                    if current_pos < current_mapping.len()
+                        && &current_mapping[current_pos] == target_atom
+                    {
                         // Atom is in correct position, advance
                         current_pos += 1;
                     } else {
@@ -104,13 +107,13 @@ impl<T: Ord + Eq + Clone + Debug + ToString> PresburgerSet<T> {
                         isl_set,
                         isl::isl_dim_type_isl_dim_set,
                         target_pos as c_uint,
-                        1
+                        1,
                     );
                     isl_set = isl::isl_set_fix_si(
                         isl_set,
                         isl::isl_dim_type_isl_dim_set,
                         target_pos as c_uint,
-                        0
+                        0,
                     );
                 }
             }
@@ -126,12 +129,11 @@ impl<T: Clone + ToString> PresburgerSet<T> {
         let space = unsafe { isl::isl_space_set_alloc(isl::get_ctx(), 0, 1) };
         // Start with the universe of that 1D space (all integer points)
         let mut set_ptr = unsafe { isl::isl_set_universe(space) };
-        
+
         // Constrain the single dimension (dim 0) to be exactly 1
         // This represents a unit vector for this atom
-        set_ptr =
-            unsafe { isl::isl_set_fix_si(set_ptr, isl::isl_dim_type_isl_dim_set, 0, 1) };
-        
+        set_ptr = unsafe { isl::isl_set_fix_si(set_ptr, isl::isl_dim_type_isl_dim_set, 0, 1) };
+
         PresburgerSet {
             isl_set: set_ptr,
             mapping: vec![atom], // one dimension corresponding to the single atom
@@ -139,7 +141,7 @@ impl<T: Clone + ToString> PresburgerSet<T> {
     }
 
     /// Rename all variables in this PresburgerSet using the provided function
-    /// 
+    ///
     /// This transforms the mapping from T to U while keeping the underlying ISL set unchanged.
     /// This is much more efficient than converting through semilinear representations.
     pub fn rename<U, F>(mut self, f: F) -> PresburgerSet<U>
@@ -150,7 +152,7 @@ impl<T: Clone + ToString> PresburgerSet<T> {
         // Take ownership of both the ISL set pointer and mapping to avoid double-free
         let isl_set = std::mem::replace(&mut self.isl_set, std::ptr::null_mut());
         let mapping = std::mem::take(&mut self.mapping);
-        
+
         PresburgerSet {
             isl_set,
             mapping: mapping.into_iter().map(f).collect(),
@@ -158,7 +160,7 @@ impl<T: Clone + ToString> PresburgerSet<T> {
     }
 
     /// Iterate over all variables in the mapping
-    /// 
+    ///
     /// This calls the provided function for each variable in the PresburgerSet's mapping.
     pub fn for_each_key<F>(&self, mut f: F)
     where
@@ -174,8 +176,7 @@ impl<T: Clone> PresburgerSet<T> {
     pub fn universe(atoms: Vec<T>) -> Self {
         let n = atoms.len();
         // Allocate an n-dimensional space for the set (0 parameters, n set dims)
-        let space =
-            unsafe { isl::isl_space_set_alloc(isl::get_ctx(), 0, n as c_uint) };
+        let space = unsafe { isl::isl_space_set_alloc(isl::get_ctx(), 0, n as c_uint) };
         // Start with the universe set of that space (all integer points in Z^n)
         let mut set_ptr = unsafe { isl::isl_set_universe(space) };
         // Constrain each dimension to be >= 0 (non-negative)
@@ -252,7 +253,6 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
         universe.difference(self)
     }
 
-
     /// Useful for existential quantification. If you want the set of N-tuples `exists t, blah`:
     ///
     ///  * First, you make a set of N+1-tuples, where `t` is a component
@@ -264,12 +264,16 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
             return self;
         };
         unsafe {
-            self.isl_set = isl::isl_set_project_out(self.isl_set, isl::isl_dim_type_isl_dim_set, index as u32, 1);
+            self.isl_set = isl::isl_set_project_out(
+                self.isl_set,
+                isl::isl_dim_type_isl_dim_set,
+                index as u32,
+                1,
+            );
             self.mapping.remove(index);
         }
         self
     }
-
 }
 
 #[test]
@@ -295,13 +299,11 @@ fn project_out_test() {
     let y = Variable::Var("y");
 
     // `ps` is the set { (x,y) | x = 2y }
-    let qs = QuantifiedSet::new(vec![
-        Constraint {
-            linear_combination: vec![(-1, x), (2, y)],
-            constant_term: 0,
-            constraint_type: ConstraintType::EqualToZero,
-        }
-    ]);
+    let qs = QuantifiedSet::new(vec![Constraint {
+        linear_combination: vec![(-1, x), (2, y)],
+        constant_term: 0,
+        constraint_type: ConstraintType::EqualToZero,
+    }]);
     let ps = PresburgerSet::from_quantified_sets(&[qs], vec!["x", "y"]);
 
     // `evens` is the set { x | exists y, x = 2y }
@@ -309,14 +311,15 @@ fn project_out_test() {
     println!("{evens}");
 
     // Test we got the right thing by comparing to a QuantifiedSet
-    let evens_qs = QuantifiedSet::new(vec![
-        Constraint {
-            linear_combination: vec![(-1, x), (2, Variable::Existential(0))],
-            constant_term: 0,
-            constraint_type: ConstraintType::EqualToZero,
-        }
-    ]);
-    assert_eq!(evens, PresburgerSet::from_quantified_sets(&[evens_qs], vec!["x"]));
+    let evens_qs = QuantifiedSet::new(vec![Constraint {
+        linear_combination: vec![(-1, x), (2, Variable::Existential(0))],
+        constant_term: 0,
+        constraint_type: ConstraintType::EqualToZero,
+    }]);
+    assert_eq!(
+        evens,
+        PresburgerSet::from_quantified_sets(&[evens_qs], vec!["x"])
+    );
 }
 
 impl<T: Eq + Clone + Ord + Debug + ToString> PartialEq for PresburgerSet<T> {
@@ -428,13 +431,15 @@ impl<T: Clone> QuantifiedSet<T> {
     pub fn new(constraints: Vec<Constraint<Variable<T>>>) -> Self {
         QuantifiedSet { constraints }
     }
-    
+
     /// Get the constraints in this quantified set
     pub fn constraints(&self) -> &[Constraint<Variable<T>>] {
         &self.constraints
     }
 
-    pub fn extract_and_reify_existential_variables(&self) -> (Vec<Either<usize, T>>, Vec<Constraint<Either<usize, T>>>) {
+    pub fn extract_and_reify_existential_variables(
+        &self,
+    ) -> (Vec<Either<usize, T>>, Vec<Constraint<Either<usize, T>>>) {
         // Collect all existential variables
         let mut existential_vars = std::collections::BTreeSet::new();
         for constraint in &self.constraints {
@@ -444,15 +449,16 @@ impl<T: Clone> QuantifiedSet<T> {
                 }
             }
         }
-        
+
         // Convert existential variables to Either::Left format
         let existential_places: Vec<Either<usize, T>> = existential_vars
             .into_iter()
             .map(|n| Either::Left(n))
             .collect();
-        
+
         // Transform constraints by converting Variable<T> to Either<usize, T>
-        let transformed_constraints: Vec<Constraint<Either<usize, T>>> = self.constraints
+        let transformed_constraints: Vec<Constraint<Either<usize, T>>> = self
+            .constraints
             .iter()
             .map(|constraint| {
                 let transformed_linear_combination: Vec<(i32, Either<usize, T>)> = constraint
@@ -466,7 +472,7 @@ impl<T: Clone> QuantifiedSet<T> {
                         (*coeff, new_var)
                     })
                     .collect();
-                
+
                 Constraint::new(
                     transformed_linear_combination,
                     constraint.constant_term,
@@ -474,7 +480,7 @@ impl<T: Clone> QuantifiedSet<T> {
                 )
             })
             .collect();
-        
+
         (existential_places, transformed_constraints)
     }
 }
@@ -504,41 +510,45 @@ pub struct Constraint<T> {
 
 impl<T> Constraint<T> {
     /// Create a new constraint
-    pub fn new(linear_combination: Vec<(i32, T)>, constant_term: i32, constraint_type: ConstraintType) -> Self {
+    pub fn new(
+        linear_combination: Vec<(i32, T)>,
+        constant_term: i32,
+        constraint_type: ConstraintType,
+    ) -> Self {
         Constraint {
             linear_combination,
             constant_term,
             constraint_type,
         }
     }
-    
+
     /// Get the linear combination of variables in this constraint
     pub fn linear_combination(&self) -> &[(i32, T)] {
         &self.linear_combination
     }
-    
+
     /// Get the constant term in this constraint
     pub fn constant_term(&self) -> i32 {
         self.constant_term
     }
-    
+
     /// Get the constraint type
     pub fn constraint_type(&self) -> ConstraintType {
         self.constraint_type
     }
-    
+
     /// Extracts all variables from a clause that have constraints of the form "coeff*var = 0"
     /// (EqualToZero with single variable and zero constant term, any coefficient)
-    pub fn extract_zero_variables(clause: &[Constraint<T>]) -> Vec<T> 
+    pub fn extract_zero_variables(clause: &[Constraint<T>]) -> Vec<T>
     where
         T: Clone,
     {
         let mut zero_vars = Vec::new();
 
         for constraint in clause {
-            if constraint.constraint_type == ConstraintType::EqualToZero &&
-                constraint.linear_combination.len() == 1 &&
-                constraint.constant_term == 0
+            if constraint.constraint_type == ConstraintType::EqualToZero
+                && constraint.linear_combination.len() == 1
+                && constraint.constant_term == 0
             {
                 zero_vars.push(constraint.linear_combination[0].1.clone());
             }
@@ -551,10 +561,10 @@ impl<T> Constraint<T> {
     /// This includes:
     /// - Variables with NonNegative constraints where constant_term < 0 (i.e., var >= positive_value)
     /// - Any variables that appear in constraints that are not of the form "var = 0"
-    /// 
+    ///
     /// This is the complement of extract_zero_variables and is useful for identifying
     /// which variables must have nonzero values in the solution.
-    pub fn extract_nonzero_variables(clause: &[Constraint<T>]) -> Vec<T> 
+    pub fn extract_nonzero_variables(clause: &[Constraint<T>]) -> Vec<T>
     where
         T: Clone + Eq + std::hash::Hash,
     {
@@ -664,9 +674,9 @@ impl<T: Display> Display for QuantifiedSet<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Check if there are existential variables
         let has_existentials = self.constraints.iter().any(|c| {
-            c.linear_combination.iter().any(|(_, var)| {
-                matches!(var, Variable::Existential(_))
-            })
+            c.linear_combination
+                .iter()
+                .any(|(_, var)| matches!(var, Variable::Existential(_)))
         });
 
         // Write existential quantifier if needed
@@ -856,7 +866,7 @@ fn test_semilinear_to_presburger_conversion() {
 // INVESTIGATION RESULTS:
 // - The core issue is in the C function `rust_harmonize_sets` in isl_helpers.c
 // - After harmonization, atom(42) and atom(99) both get the representation "{ [1, i1] }"
-// - They should become "{ [1, 0] }" and "{ [0, 1] }" respectively  
+// - They should become "{ [1, 0] }" and "{ [0, 1] }" respectively
 // - This explains why ISL thinks they're equal: they literally have the same constraints
 // - Same-atom equality works fine (atom(42) == atom(42))
 // - The bug affects any mixed-mapping comparisons
@@ -869,25 +879,25 @@ mod presburger_equality_tests {
     #[test]
     fn test_basic_presburger_atom_equality() {
         println!("\n=== Testing Basic Atom Equality ===");
-        
+
         // Test same atoms
         let atom42_a = PresburgerSet::atom(42);
         let atom42_b = PresburgerSet::atom(42);
-        
+
         println!("atom42_a: {:?}", atom42_a);
         println!("atom42_b: {:?}", atom42_b);
         println!("atom42_a == atom42_b: {}", atom42_a == atom42_b);
-        
+
         assert_eq!(atom42_a, atom42_b);
-        
+
         // Test different atoms - THIS IS THE FAILING CASE
         let atom42 = PresburgerSet::atom(42);
         let atom99 = PresburgerSet::atom(99);
-        
+
         println!("atom42: {:?}", atom42);
         println!("atom99: {:?}", atom99);
         println!("atom42 == atom99: {}", atom42 == atom99);
-        
+
         // This should pass but currently fails
         assert_ne!(atom42, atom99);
     }
@@ -895,115 +905,116 @@ mod presburger_equality_tests {
     #[test]
     fn test_presburger_zero_equality() {
         println!("\n=== Testing Zero/Empty Set Equality ===");
-        
+
         let zero_a = PresburgerSet::<i32>::zero();
         let zero_b = PresburgerSet::<i32>::zero();
-        
+
         println!("zero_a: {:?}", zero_a);
         println!("zero_b: {:?}", zero_b);
         println!("zero_a == zero_b: {}", zero_a == zero_b);
-        
+
         assert_eq!(zero_a, zero_b);
     }
 
     #[test]
     fn test_presburger_one_equality() {
         println!("\n=== Testing One/Epsilon Equality ===");
-        
+
         let one_a = PresburgerSet::<i32>::one();
         let one_b = PresburgerSet::<i32>::one();
-        
+
         println!("one_a: {:?}", one_a);
         println!("one_b: {:?}", one_b);
         println!("one_a == one_b: {}", one_a == one_b);
-        
+
         assert_eq!(one_a, one_b);
     }
 
     #[test]
     fn test_presburger_universe_equality() {
         println!("\n=== Testing Universe Set Equality ===");
-        
+
         let vars = vec![1, 2, 3];
         let universe_a = PresburgerSet::universe(vars.clone());
         let universe_b = PresburgerSet::universe(vars);
-        
+
         println!("universe_a: {:?}", universe_a);
         println!("universe_b: {:?}", universe_b);
         println!("universe_a == universe_b: {}", universe_a == universe_b);
-        
+
         assert_eq!(universe_a, universe_b);
     }
 
     #[test]
     fn test_manual_harmonization() {
         println!("\n=== Testing Manual Harmonization ===");
-        
+
         let mut atom42 = PresburgerSet::atom(42);
         let mut atom99 = PresburgerSet::atom(99);
-        
+
         println!("Before harmonization:");
         println!("atom42 display: {}", atom42);
         println!("atom99 display: {}", atom99);
-        
+
         // Check if they're equal before harmonization (should not be)
         let equal_before = unsafe {
             // We can't directly compare without harmonization, so skip this
             false
         };
         println!("Equal before harmonization: {}", equal_before);
-        
+
         // Harmonize manually
         atom42.harmonize(&mut atom99);
-        
+
         println!("After harmonization:");
         println!("atom42 display: {}", atom42);
         println!("atom99 display: {}", atom99);
-        
+
         // Check ISL equality after harmonization
-        let equal_after = unsafe {
-            isl::isl_set_is_equal(atom42.isl_set, atom99.isl_set) == 1
-        };
+        let equal_after = unsafe { isl::isl_set_is_equal(atom42.isl_set, atom99.isl_set) == 1 };
         println!("ISL says equal after harmonization: {}", equal_after);
-        
+
         // They should NOT be equal
-        assert!(!equal_after, "atom(42) and atom(99) should not be equal after harmonization");
+        assert!(
+            !equal_after,
+            "atom(42) and atom(99) should not be equal after harmonization"
+        );
     }
 
     #[test]
     fn test_semilinear_conversion_equality() {
         println!("\n=== Testing Semilinear Conversion Equality ===");
-        
+
         use crate::semilinear::SemilinearSet;
-        
+
         // Create identical semilinear sets
         let semi42_a = SemilinearSet::atom(42);
         let semi42_b = SemilinearSet::atom(42);
-        
+
         // Convert to presburger
         let pres42_a = PresburgerSet::from_semilinear_set(&semi42_a);
         let pres42_b = PresburgerSet::from_semilinear_set(&semi42_b);
-        
+
         println!("semi42_a: {:?}", semi42_a);
         println!("semi42_b: {:?}", semi42_b);
         println!("pres42_a: {:?}", pres42_a);
         println!("pres42_b: {:?}", pres42_b);
-        
+
         println!("semilinear equal: {}", semi42_a == semi42_b);
         println!("presburger equal: {}", pres42_a == pres42_b);
-        
+
         assert_eq!(semi42_a, semi42_b);
         assert_eq!(pres42_a, pres42_b);
-        
+
         // Test different atoms through conversion
         let semi99 = SemilinearSet::atom(99);
         let pres99 = PresburgerSet::from_semilinear_set(&semi99);
-        
+
         println!("semi99: {:?}", semi99);
         println!("pres99: {:?}", pres99);
-        
+
         println!("pres42_a == pres99: {}", pres42_a == pres99);
-        
+
         // This should work
         assert_ne!(pres42_a, pres99);
     }
@@ -1011,26 +1022,26 @@ mod presburger_equality_tests {
     #[test]
     fn test_debug_isl_strings() {
         println!("\n=== Testing ISL String Representations ===");
-        
+
         let atom42 = PresburgerSet::atom(42);
         let atom99 = PresburgerSet::atom(99);
-        
+
         // Get string representations
         let str42 = unsafe {
             let str_ptr = isl::isl_set_to_str(atom42.isl_set);
             let c_str = std::ffi::CStr::from_ptr(str_ptr);
             c_str.to_string_lossy().into_owned()
         };
-        
+
         let str99 = unsafe {
             let str_ptr = isl::isl_set_to_str(atom99.isl_set);
             let c_str = std::ffi::CStr::from_ptr(str_ptr);
             c_str.to_string_lossy().into_owned()
         };
-        
+
         println!("ISL string for atom(42): {}", str42);
         println!("ISL string for atom(99): {}", str99);
-        
+
         // These should be the same for individual atoms (both are { [1] })
         // The difference is in the mapping, not the ISL representation
         assert_eq!(str42, str99);
@@ -1039,19 +1050,19 @@ mod presburger_equality_tests {
     #[test]
     fn test_union_operations() {
         println!("\n=== Testing Union Operations ===");
-        
+
         let atom1 = PresburgerSet::atom(1);
         let atom2 = PresburgerSet::atom(2);
         let atom3 = PresburgerSet::atom(3);
-        
+
         // Create unions in different orders
         let union_abc = atom1.clone().union(&atom2).union(&atom3);
         let union_cba = atom3.clone().union(&atom2).union(&atom1);
-        
+
         println!("union_abc: {}", union_abc);
         println!("union_cba: {}", union_cba);
         println!("unions equal: {}", union_abc == union_cba);
-        
+
         // These should be equal (commutativity of union)
         assert_eq!(union_abc, union_cba);
     }
@@ -1059,88 +1070,103 @@ mod presburger_equality_tests {
     #[test]
     fn test_kleene_operations_understanding() {
         println!("\n=== Understanding Kleene Operations on Presburger Sets ===");
-        
+
         // Test basic atoms and their representations
         println!("\n--- Basic Atoms ---");
         let atom_a = PresburgerSet::atom('a');
-        let atom_b = PresburgerSet::atom('b'); 
+        let atom_b = PresburgerSet::atom('b');
         let atom_c = PresburgerSet::atom('c');
-        
+
         println!("atom(a): {}", atom_a);
         println!("atom(b): {}", atom_b);
         println!("atom(c): {}", atom_c);
-        
+
         // Test zero and one
         println!("\n--- Zero and One ---");
         let zero = PresburgerSet::<char>::zero();
         let one = PresburgerSet::<char>::one();
-        
+
         println!("zero(): {}", zero);
         println!("one(): {}", one);
-        
+
         // Test plus operations (union)
         println!("\n--- Plus Operations (Union) ---");
         let a_plus_b = atom_a.clone().plus(atom_b.clone());
         let a_plus_a = atom_a.clone().plus(atom_a.clone());
-        
+
         println!("atom(a) + atom(b): {}", a_plus_b);
         println!("atom(a) + atom(a): {}", a_plus_a);
-        println!("Should be idempotent: atom(a) == atom(a) + atom(a): {}", atom_a == a_plus_a);
-        
+        println!(
+            "Should be idempotent: atom(a) == atom(a) + atom(a): {}",
+            atom_a == a_plus_a
+        );
+
         // Test times operations (Minkowski sum)
         println!("\n--- Times Operations (Minkowski Sum) ---");
         let a_times_b = atom_a.clone().times(atom_b.clone());
         let a_times_one = atom_a.clone().times(one.clone());
         let a_times_zero = atom_a.clone().times(zero.clone());
-        
+
         println!("atom(a) * atom(b): {}", a_times_b);
         println!("atom(a) * one(): {}", a_times_one);
         println!("atom(a) * zero(): {}", a_times_zero);
-        
-        println!("Identity test: atom(a) == atom(a) * one(): {}", atom_a == a_times_one);
-        println!("Annihilator test: zero() == atom(a) * zero(): {}", zero == a_times_zero);
-        
+
+        println!(
+            "Identity test: atom(a) == atom(a) * one(): {}",
+            atom_a == a_times_one
+        );
+        println!(
+            "Annihilator test: zero() == atom(a) * zero(): {}",
+            zero == a_times_zero
+        );
+
         // Test complex expressions
         println!("\n--- Complex Expressions ---");
         let complex1 = atom_a.clone().plus(atom_b.clone()).times(atom_c.clone());
         println!("(atom(a) + atom(b)) * atom(c): {}", complex1);
-        
+
         // Test distributivity: (a + b) * c = a*c + b*c
         let left_side = atom_a.clone().plus(atom_b.clone()).times(atom_c.clone());
-        let right_side = atom_a.clone().times(atom_c.clone()).plus(atom_b.clone().times(atom_c.clone()));
+        let right_side = atom_a
+            .clone()
+            .times(atom_c.clone())
+            .plus(atom_b.clone().times(atom_c.clone()));
         println!("Left side (a+b)*c: {}", left_side);
         println!("Right side a*c + b*c: {}", right_side);
-        println!("Distributivity: (a+b)*c == a*c + b*c: {}", left_side == right_side);
+        println!(
+            "Distributivity: (a+b)*c == a*c + b*c: {}",
+            left_side == right_side
+        );
     }
 
     #[test]
     fn test_direct_embedding_approach() {
         println!("\n=== Testing Direct Embedding with ISL Functions ===");
-        
+
         unsafe {
             let ctx = isl::get_ctx();
-            
+
             // Test 1: Create atom(a) as { [1] } and embed it to { [1, 0] }
             println!("\n--- Test 1: Embed 1D set to 2D ---");
-            
+
             // Create 1D set { [1] }
             let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
             let mut set_1d = isl::isl_set_universe(space_1d);
             set_1d = isl::isl_set_fix_si(set_1d, isl::isl_dim_type_isl_dim_set, 0, 1);
-            
+
             let original_str = {
                 let str_ptr = isl::isl_set_to_str(set_1d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("Original 1D set: {}", original_str);
-            
+
             // Insert dimension at position 1 (after existing dimension)
             let set_2d = isl::isl_set_insert_dims(set_1d, isl::isl_dim_type_isl_dim_set, 1, 1);
-            
+
             // Fix the new dimension to 0
             let set_embedded = isl::isl_set_fix_si(set_2d, isl::isl_dim_type_isl_dim_set, 1, 0);
-            
+
             let embedded_str = {
                 let str_ptr = isl::isl_set_to_str(set_embedded);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
@@ -1148,20 +1174,20 @@ mod presburger_equality_tests {
             };
             println!("Embedded to 2D: {}", embedded_str);
             println!("Expected: {{ [1, 0] }}");
-            
+
             // Test 2: Create another set { [1] } and embed it to { [0, 1] }
             println!("\n--- Test 2: Embed 1D set to different position ---");
-            
+
             let space_1d2 = isl::isl_space_set_alloc(ctx, 0, 1);
             let mut set_1d2 = isl::isl_set_universe(space_1d2);
             set_1d2 = isl::isl_set_fix_si(set_1d2, isl::isl_dim_type_isl_dim_set, 0, 1);
-            
+
             // Insert dimension at position 0 (before existing dimension)
             let set_2d2 = isl::isl_set_insert_dims(set_1d2, isl::isl_dim_type_isl_dim_set, 0, 1);
-            
-            // Fix the new dimension to 0  
+
+            // Fix the new dimension to 0
             let set_embedded2 = isl::isl_set_fix_si(set_2d2, isl::isl_dim_type_isl_dim_set, 0, 0);
-            
+
             let embedded_str2 = {
                 let str_ptr = isl::isl_set_to_str(set_embedded2);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
@@ -1169,15 +1195,15 @@ mod presburger_equality_tests {
             };
             println!("Embedded to 2D (different position): {}", embedded_str2);
             println!("Expected: {{ [0, 1] }}");
-            
+
             // Test 3: Union of the two embedded sets
             println!("\n--- Test 3: Union of embedded sets ---");
-            
+
             let union_set = isl::isl_set_union(
                 isl::isl_set_copy(set_embedded),
-                isl::isl_set_copy(set_embedded2)
+                isl::isl_set_copy(set_embedded2),
             );
-            
+
             let union_str = {
                 let str_ptr = isl::isl_set_to_str(union_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
@@ -1185,15 +1211,15 @@ mod presburger_equality_tests {
             };
             println!("Union result: {}", union_str);
             println!("Expected: {{ [1, 0]; [0, 1] }}");
-            
+
             // Test 4: Minkowski sum
             println!("\n--- Test 4: Minkowski sum of embedded sets ---");
-            
+
             let sum_set = isl::isl_set_sum(
                 isl::isl_set_copy(set_embedded),
-                isl::isl_set_copy(set_embedded2)
+                isl::isl_set_copy(set_embedded2),
             );
-            
+
             let sum_str = {
                 let str_ptr = isl::isl_set_to_str(sum_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
@@ -1201,7 +1227,7 @@ mod presburger_equality_tests {
             };
             println!("Minkowski sum result: {}", sum_str);
             println!("Expected: {{ [1, 1] }}");
-            
+
             // Cleanup
             isl::isl_set_free(set_embedded);
             isl::isl_set_free(set_embedded2);
@@ -1213,18 +1239,18 @@ mod presburger_equality_tests {
     #[test]
     fn test_harmonization_step_by_step() {
         println!("\n=== Step-by-Step Harmonization Analysis ===");
-        
+
         // Test the exact harmonization process for atom(a) and atom(b)
         println!("\n--- Before Harmonization ---");
         let atom_a = PresburgerSet::atom('a');
         let atom_b = PresburgerSet::atom('b');
-        
+
         println!("atom(a): {} with mapping {:?}", atom_a, atom_a.mapping);
         println!("atom(b): {} with mapping {:?}", atom_b, atom_b.mapping);
-        
+
         // Manual harmonization steps
         println!("\n--- Harmonization Steps ---");
-        
+
         // Step 1: Collect combined mapping
         let mut combined_atoms = std::collections::BTreeSet::new();
         for a in atom_a.mapping.iter().chain(atom_b.mapping.iter()) {
@@ -1232,7 +1258,7 @@ mod presburger_equality_tests {
         }
         let combined_mapping: Vec<char> = combined_atoms.into_iter().collect();
         println!("Combined mapping: {:?}", combined_mapping);
-        
+
         // Step 2: Calculate indices
         let mut a_indices: Vec<std::os::raw::c_int> = Vec::new();
         for atom in &atom_a.mapping {
@@ -1248,25 +1274,31 @@ mod presburger_equality_tests {
         }
         println!("atom(a) indices: {:?}", a_indices);
         println!("atom(b) indices: {:?}", b_indices);
-        
+
         // Step 3: Apply harmonization
         let mut atom_a_copy = atom_a.clone();
         let mut atom_b_copy = atom_b.clone();
-        
+
         atom_a_copy.harmonize(&mut atom_b_copy);
-        
+
         println!("\n--- After Harmonization ---");
-        println!("atom(a): {} with mapping {:?}", atom_a_copy, atom_a_copy.mapping);
-        println!("atom(b): {} with mapping {:?}", atom_b_copy, atom_b_copy.mapping);
-        
+        println!(
+            "atom(a): {} with mapping {:?}",
+            atom_a_copy, atom_a_copy.mapping
+        );
+        println!(
+            "atom(b): {} with mapping {:?}",
+            atom_b_copy, atom_b_copy.mapping
+        );
+
         // Verify the result matches expectations
         println!("\n--- Verification ---");
         println!("Expected atom(a): something like [1, 0]");
         println!("Expected atom(b): something like [0, 1]");
-        
+
         // Test if they're correctly different
         println!("Are they different? {}", atom_a_copy != atom_b_copy);
-        
+
         // Test if operations work correctly after harmonization
         let union_after = atom_a_copy.union(&atom_b_copy);
         println!("Union after harmonization: {}", union_after);
@@ -1275,53 +1307,53 @@ mod presburger_equality_tests {
     #[test]
     fn test_isl_functions_understanding() {
         println!("\n=== Understanding Basic ISL Functions ===");
-        
+
         // Test 1: Understanding isl_set_preimage_multi_aff
         println!("\n--- Test 1: Basic preimage operation ---");
-        
+
         unsafe {
             let ctx = isl::get_ctx();
-            
+
             // Create a 1D set { [2] } (single point at coordinate 2)
             let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
             let mut set_1d = isl::isl_set_universe(space_1d);
             set_1d = isl::isl_set_fix_si(set_1d, isl::isl_dim_type_isl_dim_set, 0, 2);
-            
+
             let set_1d_str = {
                 let str_ptr = isl::isl_set_to_str(set_1d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("Original 1D set: {}", set_1d_str);
-            
+
             // Create a map from 2D space to 1D space: (x,y) -> x+y
             let space_2d = isl::isl_space_set_alloc(ctx, 0, 2);
             let map_space = isl::isl_space_map_from_domain_and_range(
                 isl::isl_space_copy(space_2d),
-                isl::isl_space_copy(isl::isl_set_get_space(set_1d))
+                isl::isl_space_copy(isl::isl_set_get_space(set_1d)),
             );
-            
+
             // Create affine function: x + y
             let ls_2d = isl::isl_local_space_from_space(isl::isl_space_copy(space_2d));
             let aff_x = isl::isl_aff_var_on_domain(
-                isl::isl_local_space_copy(ls_2d), 
-                isl::isl_dim_type_isl_dim_set, 
-                0
+                isl::isl_local_space_copy(ls_2d),
+                isl::isl_dim_type_isl_dim_set,
+                0,
             );
             let aff_y = isl::isl_aff_var_on_domain(
-                isl::isl_local_space_copy(ls_2d), 
-                isl::isl_dim_type_isl_dim_set, 
-                1
+                isl::isl_local_space_copy(ls_2d),
+                isl::isl_dim_type_isl_dim_set,
+                1,
             );
             let aff_sum = isl::isl_aff_add(aff_x, aff_y);
-            
+
             let aff_list = isl::isl_aff_list_alloc(ctx, 1);
             let aff_list = isl::isl_aff_list_add(aff_list, aff_sum);
             let ma = isl::isl_multi_aff_from_aff_list(map_space, aff_list);
-            
+
             // Apply preimage: should give us { [x,y] : x+y = 2 }
             let result_set = isl::isl_set_preimage_multi_aff(set_1d, ma);
-            
+
             let result_str = {
                 let str_ptr = isl::isl_set_to_str(result_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
@@ -1329,43 +1361,43 @@ mod presburger_equality_tests {
             };
             println!("Preimage result: {}", result_str);
             println!("Expected: Set of all (x,y) where x+y=2");
-            
+
             // Cleanup
             isl::isl_set_free(result_set);
             isl::isl_space_free(space_2d);
             isl::isl_local_space_free(ls_2d);
         }
-        
+
         // Test 2: Understanding 0-dimensional embedding
         println!("\n--- Test 2: 0-dimensional to 1-dimensional embedding ---");
-        
+
         unsafe {
             let ctx = isl::get_ctx();
-            
+
             // Create 0D universe { [] }
             let space_0d = isl::isl_space_set_alloc(ctx, 0, 0);
             let set_0d = isl::isl_set_universe(space_0d);
-            
+
             let set_0d_str = {
                 let str_ptr = isl::isl_set_to_str(set_0d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("Original 0D set: {}", set_0d_str);
-            
+
             // Create map from 1D to 0D: x -> [] (constant map)
             let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
             let map_space = isl::isl_space_map_from_domain_and_range(
                 isl::isl_space_copy(space_1d),
-                isl::isl_set_get_space(set_0d)
+                isl::isl_set_get_space(set_0d),
             );
-            
+
             // Empty aff_list for 0D range
             let aff_list = isl::isl_aff_list_alloc(ctx, 0);
             let ma = isl::isl_multi_aff_from_aff_list(map_space, aff_list);
-            
+
             let result_set = isl::isl_set_preimage_multi_aff(set_0d, ma);
-            
+
             let result_str = {
                 let str_ptr = isl::isl_set_to_str(result_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
@@ -1373,88 +1405,88 @@ mod presburger_equality_tests {
             };
             println!("0D->1D preimage result: {}", result_str);
             println!("Expected: All of 1D space or error");
-            
+
             // Cleanup
             isl::isl_set_free(result_set);
             isl::isl_space_free(space_1d);
         }
-        
+
         // Test 3: Understanding zero constant embedding
         println!("\n--- Test 3: Embedding as zero vector ---");
-        
+
         unsafe {
             let ctx = isl::get_ctx();
-            
+
             // Create 0D universe
             let space_0d = isl::isl_space_set_alloc(ctx, 0, 0);
             let set_0d = isl::isl_set_universe(space_0d);
-            
+
             // Create map from 1D to 0D, but we want reverse: 0D to 1D as zero
             // Try a different approach: create 1D zero point and see what preimage does
             let space_1d = isl::isl_space_set_alloc(ctx, 0, 1);
             let mut zero_1d = isl::isl_set_universe(isl::isl_space_copy(space_1d));
             zero_1d = isl::isl_set_fix_si(zero_1d, isl::isl_dim_type_isl_dim_set, 0, 0);
-            
+
             let zero_str = {
                 let str_ptr = isl::isl_set_to_str(zero_1d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("1D zero point: {}", zero_str);
-            
+
             // What we really want is the reverse: embed 0D -> 1D
             // This might need a different ISL function
-            
+
             // Cleanup
             isl::isl_set_free(set_0d);
             isl::isl_set_free(zero_1d);
             isl::isl_space_free(space_1d);
         }
-        
+
         // Test 4: Understanding identity maps
         println!("\n--- Test 4: Identity and projection maps ---");
-        
+
         unsafe {
             let ctx = isl::get_ctx();
-            
+
             // Create 2D set { [1, 0] }
             let space_2d = isl::isl_space_set_alloc(ctx, 0, 2);
             let mut set_2d = isl::isl_set_universe(isl::isl_space_copy(space_2d));
             set_2d = isl::isl_set_fix_si(set_2d, isl::isl_dim_type_isl_dim_set, 0, 1);
             set_2d = isl::isl_set_fix_si(set_2d, isl::isl_dim_type_isl_dim_set, 1, 0);
-            
+
             let set_2d_str = {
                 let str_ptr = isl::isl_set_to_str(set_2d);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
                 c_str.to_string_lossy().into_owned()
             };
             println!("Original 2D set: {}", set_2d_str);
-            
+
             // Create identity map from 2D to 2D
             let map_space = isl::isl_space_map_from_domain_and_range(
                 isl::isl_space_copy(space_2d),
-                isl::isl_space_copy(space_2d)
+                isl::isl_space_copy(space_2d),
             );
-            
+
             let ls = isl::isl_local_space_from_space(isl::isl_space_copy(space_2d));
             let aff_x = isl::isl_aff_var_on_domain(
-                isl::isl_local_space_copy(ls), 
-                isl::isl_dim_type_isl_dim_set, 
-                0
+                isl::isl_local_space_copy(ls),
+                isl::isl_dim_type_isl_dim_set,
+                0,
             );
             let aff_y = isl::isl_aff_var_on_domain(
-                isl::isl_local_space_copy(ls), 
-                isl::isl_dim_type_isl_dim_set, 
-                1
+                isl::isl_local_space_copy(ls),
+                isl::isl_dim_type_isl_dim_set,
+                1,
             );
-            
+
             let aff_list = isl::isl_aff_list_alloc(ctx, 2);
             let aff_list = isl::isl_aff_list_add(aff_list, aff_x);
             let aff_list = isl::isl_aff_list_add(aff_list, aff_y);
             let ma = isl::isl_multi_aff_from_aff_list(map_space, aff_list);
-            
+
             let result_set = isl::isl_set_preimage_multi_aff(set_2d, ma);
-            
+
             let result_str = {
                 let str_ptr = isl::isl_set_to_str(result_set);
                 let c_str = std::ffi::CStr::from_ptr(str_ptr);
@@ -1462,7 +1494,7 @@ mod presburger_equality_tests {
             };
             println!("Identity preimage result: {}", result_str);
             println!("Expected: Same as original");
-            
+
             // Cleanup
             isl::isl_set_free(result_set);
             isl::isl_space_free(space_2d);
@@ -1473,89 +1505,89 @@ mod presburger_equality_tests {
     #[test]
     fn test_harmonization_investigation() {
         println!("\n=== Investigating Harmonization Issues ===");
-        
+
         // Test 1: Basic harmonization that works (different atoms)
         println!("\n--- Test 1: Different atoms (known to work) ---");
         let mut atom42 = PresburgerSet::atom(42);
         let mut atom99 = PresburgerSet::atom(99);
-        
+
         println!("Before harmonization:");
         println!("  atom42: {}", atom42);
         println!("  atom99: {}", atom99);
-        
+
         atom42.harmonize(&mut atom99);
         println!("After harmonization:");
         println!("  atom42: {}", atom42);
         println!("  atom99: {}", atom99);
-        
+
         // Test 2: Harmonization with 0-dimensional set (identity)
         println!("\n--- Test 2: Atom with 0-dimensional identity ---");
         let mut atom1 = PresburgerSet::atom(1);
         let mut one = PresburgerSet::<i32>::one();
-        
+
         println!("Before harmonization:");
         println!("  atom1: {}", atom1);
         println!("  one: {}", one);
         println!("  atom1 dimensions: {}", atom1.mapping.len());
         println!("  one dimensions: {}", one.mapping.len());
-        
+
         atom1.harmonize(&mut one);
         println!("After harmonization:");
         println!("  atom1: {}", atom1);
         println!("  one: {}", one);
         println!("  Combined mapping: {:?}", atom1.mapping);
-        
+
         // Test 3: Empty set harmonization
         println!("\n--- Test 3: Atom with empty set ---");
         let mut atom2 = PresburgerSet::atom(2);
         let mut empty = PresburgerSet::<i32>::zero();
-        
+
         println!("Before harmonization:");
         println!("  atom2: {}", atom2);
         println!("  empty: {}", empty);
-        
+
         atom2.harmonize(&mut empty);
         println!("After harmonization:");
         println!("  atom2: {}", atom2);
         println!("  empty: {}", empty);
-        
+
         // Test 4: Different dimensional sets (universe)
         println!("\n--- Test 4: Atom with universe ---");
         let mut atom3 = PresburgerSet::atom(3);
         let mut universe = PresburgerSet::universe(vec![1, 2, 3]);
-        
+
         println!("Before harmonization:");
         println!("  atom3: {}", atom3);
         println!("  universe: {}", universe);
-        
+
         atom3.harmonize(&mut universe);
         println!("After harmonization:");
         println!("  atom3: {}", atom3);
         println!("  universe: {}", universe);
-        
+
         // Test 5: Two universe sets with different orderings
         println!("\n--- Test 5: Different universe orderings ---");
         let mut universe1 = PresburgerSet::universe(vec![1, 2, 3]);
         let mut universe2 = PresburgerSet::universe(vec![3, 1, 2]);
-        
+
         println!("Before harmonization:");
         println!("  universe1: {}", universe1);
         println!("  universe2: {}", universe2);
-        
+
         universe1.harmonize(&mut universe2);
         println!("After harmonization:");
         println!("  universe1: {}", universe1);
         println!("  universe2: {}", universe2);
-        
+
         // Test 6: Debug the 0-dimensional issue in detail
         println!("\n--- Test 6: Debug 0-dimensional harmonization ---");
         let mut atom = PresburgerSet::atom(42);
         let mut one = PresburgerSet::<i32>::one();
-        
+
         println!("Before harmonization:");
         println!("  atom mapping: {:?}", atom.mapping);
         println!("  one mapping: {:?}", one.mapping);
-        
+
         // Step through the harmonization manually
         let mut combined_atoms = std::collections::BTreeSet::new();
         for a in atom.mapping.iter().chain(one.mapping.iter()) {
@@ -1563,7 +1595,7 @@ mod presburger_equality_tests {
         }
         let combined_mapping: Vec<i32> = combined_atoms.into_iter().collect();
         println!("  combined_mapping: {:?}", combined_mapping);
-        
+
         // Calculate indices
         let mut atom_indices: Vec<std::os::raw::c_int> = Vec::new();
         for a in &atom.mapping {
@@ -1579,12 +1611,12 @@ mod presburger_equality_tests {
         }
         println!("  atom_indices: {:?}", atom_indices);
         println!("  one_indices: {:?}", one_indices);
-        
+
         atom.harmonize(&mut one);
         println!("After harmonization:");
         println!("  atom: {}", atom);
         println!("  one: {}", one);
-        
+
         // The issue: one should be { [0] } not { [i0] }
         // Let's manually check what the zero vector looks like
         let zero_vec = unsafe {
@@ -1600,27 +1632,27 @@ mod presburger_equality_tests {
         };
         println!("  Expected zero vector: {}", zero_vec);
     }
-    
+
     #[test]
     fn test_times_operations() {
         println!("\n=== Testing Times (Minkowski Sum) Operations ===");
-        
+
         let atom1 = PresburgerSet::atom(1);
         let atom2 = PresburgerSet::atom(2);
-        
+
         let sum = atom1.clone().times(atom2.clone());
         println!("atom(1) + atom(2): {}", sum);
-        
+
         // Test with identity
         let one = PresburgerSet::<i32>::one();
         println!("one: {}", one);
-        
+
         let identity_sum = atom1.clone().times(one);
-        
+
         println!("atom(1): {}", atom1);
         println!("atom(1) + one: {}", identity_sum);
         println!("identity holds: {}", atom1 == identity_sum);
-        
+
         // This should hold: a * 1 = a for Minkowski sum (identity property)
         // But this fails because harmonization doesn't properly handle 0-dimensional sets
         // Comment out for now until harmonization is fixed
@@ -1663,10 +1695,8 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 
                     // Get the dimension information
                     let space = isl::isl_basic_set_get_space(bset);
-                    let n_dims =
-                        isl::isl_space_dim(space, isl::isl_dim_type_isl_dim_set) as usize;
-                    let n_div =
-                        isl::isl_space_dim(space, isl::isl_dim_type_isl_dim_div) as usize;
+                    let n_dims = isl::isl_space_dim(space, isl::isl_dim_type_isl_dim_set) as usize;
+                    let n_div = isl::isl_space_dim(space, isl::isl_dim_type_isl_dim_div) as usize;
 
                     // Define a nested callback for processing each constraint
                     struct ConstraintData<'a, T> {
@@ -2375,15 +2405,15 @@ mod tests {
     fn test_extract_zero_variables() {
         // Create constraints: x = 0, 2y = 0, z >= 5, 3w + u = 0
         let constraints = vec![
-            Constraint::new(vec![(1, "x")], 0, ConstraintType::EqualToZero),           // x = 0
-            Constraint::new(vec![(2, "y")], 0, ConstraintType::EqualToZero),           // 2y = 0  
-            Constraint::new(vec![(1, "z")], -5, ConstraintType::NonNegative),          // z >= 5 (not zero constraint)
+            Constraint::new(vec![(1, "x")], 0, ConstraintType::EqualToZero), // x = 0
+            Constraint::new(vec![(2, "y")], 0, ConstraintType::EqualToZero), // 2y = 0
+            Constraint::new(vec![(1, "z")], -5, ConstraintType::NonNegative), // z >= 5 (not zero constraint)
             Constraint::new(vec![(3, "w"), (1, "u")], 0, ConstraintType::EqualToZero), // 3w + u = 0 (multiple vars)
-            Constraint::new(vec![(1, "v")], 1, ConstraintType::EqualToZero),           // v = -1 (non-zero constant)
+            Constraint::new(vec![(1, "v")], 1, ConstraintType::EqualToZero), // v = -1 (non-zero constant)
         ];
 
         let zero_vars = Constraint::extract_zero_variables(&constraints);
-        
+
         // Should extract only "x" and "y" (single variable equal to zero)
         assert_eq!(zero_vars.len(), 2);
         assert!(zero_vars.contains(&"x"));

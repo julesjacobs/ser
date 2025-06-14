@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 
 // mod affine_constraints;
-mod isl;
 mod debug_report;
 mod expr_to_ns;
 mod graphviz;
+mod isl;
 
 mod kleene;
 mod ns;
@@ -12,13 +12,13 @@ mod ns_to_petri;
 mod parser;
 mod petri;
 mod presburger;
+mod proof_certificate_parser;
 mod reachability;
 mod reachability_with_proofs;
 mod semilinear;
 mod smpt;
 mod spresburger;
 mod utils;
-mod proof_certificate_parser;
 
 use colored::*;
 use parser::Program;
@@ -106,10 +106,7 @@ fn main() {
             }
             "--timeout" => {
                 if i + 1 >= args.len() {
-                    eprintln!(
-                        "{}: --timeout requires a value",
-                        "Error".red().bold()
-                    );
+                    eprintln!("{}: --timeout requires a value", "Error".red().bold());
                     print_usage();
                     process::exit(1);
                 }
@@ -301,8 +298,7 @@ where
     // Create a custom method or modify the underlying implementation to use a different viz_type
     // For now, we need to make a direct call to the graphviz module
     let dot_content = petri_with_requests.to_graphviz();
-    match crate::graphviz::save_graphviz(&dot_content, out_dir, "petri_with_requests", open_files)
-    {
+    match crate::graphviz::save_graphviz(&dot_content, out_dir, "petri_with_requests", open_files) {
         Ok(files) => {
             println!(
                 "{} the following Petri net with requests files:",
