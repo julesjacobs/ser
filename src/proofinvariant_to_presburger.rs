@@ -1,11 +1,12 @@
 use crate::kleene::Kleene;
 use crate::presburger::{PresburgerSet, QuantifiedSet};
 use crate::proof_parser::{Constraint as ProofConstraint, Formula, ProofInvariant};
+use std::hash::Hash;
 
 /// Convert a single affine constraint to a PresburgerSet
 /// Note: This only works when T is String since that's what the proof parser uses
 pub fn from_affine_constraint(
-    constraint: &ProofConstraint,
+    constraint: &ProofConstraint<String>,
     mapping: Vec<String>,
 ) -> PresburgerSet<String> {
     // Convert the proof constraint to a presburger constraint
@@ -19,7 +20,7 @@ pub fn from_affine_constraint(
 }
 
 /// Convert a Formula to PresburgerSet
-pub fn formula_to_presburger(formula: &Formula, mapping: &[String]) -> PresburgerSet<String> {
+pub fn formula_to_presburger(formula: &Formula<String>, mapping: &[String]) -> PresburgerSet<String> {
     match formula {
         Formula::Constraint(constraint) => {
             // Use from_affine_constraint for single constraints
@@ -56,7 +57,7 @@ pub fn formula_to_presburger(formula: &Formula, mapping: &[String]) -> Presburge
 
 /// Convert a ProofInvariant to PresburgerSet
 pub fn proof_invariant_to_presburger(
-    proof_invariant: &ProofInvariant,
+    proof_invariant: &ProofInvariant<String>,
     mapping: Vec<String>,
 ) -> PresburgerSet<String> {
     formula_to_presburger(&proof_invariant.formula, &mapping)
@@ -64,7 +65,10 @@ pub fn proof_invariant_to_presburger(
 
 /// Eliminate places forward by constraining them to be zero
 /// This adds the places to the variable list and ANDs the formula with (place = 0) for each place
-pub fn eliminate_forward(proof_invariant: &ProofInvariant, places: &[String]) -> ProofInvariant {
+pub fn eliminate_forward<T>(proof_invariant: &ProofInvariant<T>, places: &[T]) -> ProofInvariant<T>
+where
+    T: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+{
     use crate::proof_parser::{AffineExpr, CompOp};
 
     // Check that none of the places are already in the variable list
@@ -102,7 +106,10 @@ pub fn eliminate_forward(proof_invariant: &ProofInvariant, places: &[String]) ->
 
 /// Eliminate places backward by requiring at least one to be non-zero
 /// This adds the places to the variable list and ORs the formula with (place != 0) for each place
-pub fn eliminate_backward(proof_invariant: &ProofInvariant, places: &[String]) -> ProofInvariant {
+pub fn eliminate_backward<T>(proof_invariant: &ProofInvariant<T>, places: &[T]) -> ProofInvariant<T>
+where
+    T: Clone + PartialEq + Eq + Hash + std::fmt::Display,
+{
     use crate::proof_parser::{AffineExpr, CompOp};
 
     // Check that none of the places are already in the variable list

@@ -1,23 +1,38 @@
 use crate::kleene::Kleene; // <-- bring in zero()
 use crate::presburger::{Constraint as PConstraint, PresburgerSet, QuantifiedSet, Variable};
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::fmt;
 use std::fs;
+use std::hash::Hash;
 use std::path::Path;
 
 /// Affine expression: sum of terms (coefficient * variable) + constant
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AffineExpr {
-    /// Map from variable name to coefficient (BTreeMap for deterministic ordering)
-    terms: BTreeMap<String, i64>,
+pub struct AffineExpr<T: Eq + Hash> {
+    /// Map from variable name to coefficient
+    terms: HashMap<T, i64>,
     constant: i64,
 }
 
-impl AffineExpr {
+impl<T: Eq + Hash> AffineExpr<T> {
+    /// Map variable type from T to U
+    pub fn map<U, F>(self, mut f: F) -> AffineExpr<U>
+    where
+        F: FnMut(T) -> U,
+        U: Eq + Hash,
+    {
+        AffineExpr {
+            terms: self.terms.into_iter().map(|(k, v)| (f(k), v)).collect(),
+            constant: self.constant,
+        }
+    }
+}
+
+impl<T: Clone + Eq + Hash> AffineExpr<T> {
     /// Create a zero expression
     pub fn new() -> Self {
         AffineExpr {
-            terms: BTreeMap::new(),
+            terms: HashMap::new(),
             constant: 0,
         }
     }
@@ -25,20 +40,20 @@ impl AffineExpr {
     /// Create a constant expression
     pub fn from_const(c: i64) -> Self {
         AffineExpr {
-            terms: BTreeMap::new(),
+            terms: HashMap::new(),
             constant: c,
         }
     }
 
     /// Create a variable expression (coefficient 1)
-    pub fn from_var(var: String) -> Self {
-        let mut terms = BTreeMap::new();
+    pub fn from_var(var: T) -> Self {
+        let mut terms = HashMap::new();
         terms.insert(var, 1);
         AffineExpr { terms, constant: 0 }
     }
 
     /// Add two expressions
-    pub fn add(&self, other: &AffineExpr) -> AffineExpr {
+    pub fn add(&self, other: &AffineExpr<T>) -> AffineExpr<T> {
         let mut result = self.clone();
 
         // Add the constant
@@ -56,12 +71,12 @@ impl AffineExpr {
     }
 
     /// Subtract two expressions
-    pub fn sub(&self, other: &AffineExpr) -> AffineExpr {
+    pub fn sub(&self, other: &AffineExpr<T>) -> AffineExpr<T> {
         self.add(&other.negate())
     }
 
     /// Multiply by a constant
-    pub fn mul_by_const(&self, c: i64) -> AffineExpr {
+    pub fn mul_by_const(&self, c: i64) -> AffineExpr<T> {
         if c == 0 {
             return AffineExpr::new();
         }
@@ -77,12 +92,12 @@ impl AffineExpr {
     }
 
     /// Negate the expression
-    pub fn negate(&self) -> AffineExpr {
+    pub fn negate(&self) -> AffineExpr<T> {
         self.mul_by_const(-1)
     }
 
     /// Get coefficient of a variable (0 if not present)
-    pub fn get_coeff(&self, var: &str) -> i64 {
+    pub fn get_coeff(&self, var: &T) -> i64 {
         self.terms.get(var).copied().unwrap_or(0)
     }
 
@@ -92,7 +107,7 @@ impl AffineExpr {
     }
 
     /// Get all variables in the expression
-    pub fn variables(&self) -> Vec<String> {
+    pub fn variables(&self) -> Vec<T> {
         self.terms.keys().cloned().collect()
     }
 
@@ -103,8 +118,8 @@ impl AffineExpr {
 
     /// Convert to a vector of (coefficient, variable) pairs plus constant
     /// This is useful for converting to presburger constraints
-    pub fn to_linear_combination(&self) -> (Vec<(i64, String)>, i64) {
-        let terms: Vec<(i64, String)> = self
+    pub fn to_linear_combination(&self) -> (Vec<(i64, T)>, i64) {
+        let terms: Vec<(i64, T)> = self
             .terms
             .iter()
             .map(|(var, coeff)| (*coeff, var.clone()))
@@ -113,14 +128,14 @@ impl AffineExpr {
     }
 }
 
-impl fmt::Display for AffineExpr {
+impl<T: fmt::Display + Eq + Hash> fmt::Display for AffineExpr<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.terms.is_empty() && self.constant == 0 {
             write!(f, "0")
         } else {
             let mut first = true;
 
-            // Write terms in sorted order (BTreeMap ensures this)
+            // Note: HashMap doesn't guarantee order, but that's okay for display
             for (var, coeff) in &self.terms {
                 if *coeff == 0 {
                     continue;
@@ -178,18 +193,32 @@ impl fmt::Display for CompOp {
 
 /// Linear constraint: expr op 0
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Constraint {
-    pub expr: AffineExpr,
+pub struct Constraint<T: Eq + Hash> {
+    pub expr: AffineExpr<T>,
     pub op: CompOp,
 }
 
-impl Constraint {
-    pub fn new(expr: AffineExpr, op: CompOp) -> Self {
+impl<T: Eq + Hash> Constraint<T> {
+    /// Map variable type from T to U
+    pub fn map<U, F>(self, f: F) -> Constraint<U>
+    where
+        F: FnMut(T) -> U,
+        U: Eq + Hash,
+    {
+        Constraint {
+            expr: self.expr.map(f),
+            op: self.op,
+        }
+    }
+}
+
+impl<T: Clone + Eq + Hash> Constraint<T> {
+    pub fn new(expr: AffineExpr<T>, op: CompOp) -> Self {
         Constraint { expr, op }
     }
 }
 
-impl fmt::Display for Constraint {
+impl<T: fmt::Display + Eq + Hash> fmt::Display for Constraint<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} 0", self.expr, self.op)
     }
@@ -197,15 +226,42 @@ impl fmt::Display for Constraint {
 
 /// Normalized formula (no Not or Implies)
 #[derive(Debug, Clone, PartialEq)]
-pub enum Formula {
-    Constraint(Constraint),
-    And(Vec<Formula>),
-    Or(Vec<Formula>),
-    Exists(String, Box<Formula>),
-    Forall(String, Box<Formula>),
+pub enum Formula<T: Eq + Hash> {
+    Constraint(Constraint<T>),
+    And(Vec<Formula<T>>),
+    Or(Vec<Formula<T>>),
+    Exists(T, Box<Formula<T>>),
+    Forall(T, Box<Formula<T>>),
 }
 
-impl fmt::Display for Formula {
+impl<T: Eq + Hash> Formula<T> {
+    /// Map variable type from T to U
+    pub fn map<U, F>(self, mut f: F) -> Formula<U>
+    where
+        F: FnMut(T) -> U,
+        U: Eq + Hash,
+    {
+        match self {
+            Formula::Constraint(c) => Formula::Constraint(c.map(&mut f)),
+            Formula::And(formulas) => {
+                Formula::And(formulas.into_iter().map(|form| form.map(&mut f)).collect())
+            }
+            Formula::Or(formulas) => {
+                Formula::Or(formulas.into_iter().map(|form| form.map(&mut f)).collect())
+            }
+            Formula::Exists(var, body) => {
+                let new_var = f(var);
+                Formula::Exists(new_var, Box::new(body.map(&mut f)))
+            }
+            Formula::Forall(var, body) => {
+                let new_var = f(var);
+                Formula::Forall(new_var, Box::new(body.map(&mut f)))
+            }
+        }
+    }
+}
+
+impl<T: fmt::Display + Eq + Hash> fmt::Display for Formula<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Formula::Constraint(c) => write!(f, "{}", c),
@@ -249,11 +305,25 @@ impl fmt::Display for Formula {
 
 /// The proof invariant extracted from an SMT-LIB file
 #[derive(Debug, Clone)]
-pub struct ProofInvariant {
+pub struct ProofInvariant<T: Eq + Hash> {
     /// Variables declared in the cert function
-    pub variables: Vec<String>,
+    pub variables: Vec<T>,
     /// The invariant formula
-    pub formula: Formula,
+    pub formula: Formula<T>,
+}
+
+impl<T: Eq + Hash> ProofInvariant<T> {
+    /// Map variable type from T to U
+    pub fn map<U, F>(self, mut f: F) -> ProofInvariant<U>
+    where
+        F: FnMut(T) -> U,
+        U: Eq + Hash,
+    {
+        ProofInvariant {
+            variables: self.variables.into_iter().map(&mut f).collect(),
+            formula: self.formula.map(&mut f),
+        }
+    }
 }
 
 /// Parser for SMT-LIB proof certificates
@@ -407,7 +477,7 @@ impl Parser {
     }
 
     /// Parse an affine expression
-    fn parse_affine_expr(&mut self) -> Result<AffineExpr> {
+    fn parse_affine_expr(&mut self) -> Result<AffineExpr<String>> {
         self.skip_ws_and_comments();
 
         // Check if it's a list or atom
@@ -472,7 +542,7 @@ impl Parser {
     }
 
     /// Parse a constraint (comparison)
-    fn parse_constraint(&mut self) -> Result<Constraint> {
+    fn parse_constraint(&mut self) -> Result<Constraint<String>> {
         self.expect_char('(')?;
         let op = self.parse_atom()?;
 
@@ -556,7 +626,7 @@ impl Parser {
     }
 
     /// Negate a normalized formula using De Morgan's laws
-    fn negate_formula(formula: Formula) -> Formula {
+    fn negate_formula(formula: Formula<String>) -> Formula<String> {
         match formula {
             Formula::Constraint(c) => {
                 match c.op {
@@ -586,13 +656,13 @@ impl Parser {
             }
             Formula::And(formulas) => {
                 // ¬(A ∧ B) = ¬A ∨ ¬B
-                let negated: Vec<Formula> =
+                let negated: Vec<Formula<String>> =
                     formulas.into_iter().map(Self::negate_formula).collect();
                 Formula::Or(negated)
             }
             Formula::Or(formulas) => {
                 // ¬(A ∨ B) = ¬A ∧ ¬B
-                let negated: Vec<Formula> =
+                let negated: Vec<Formula<String>> =
                     formulas.into_iter().map(Self::negate_formula).collect();
                 Formula::And(negated)
             }
@@ -608,7 +678,7 @@ impl Parser {
     }
 
     /// Parse a formula
-    fn parse_formula(&mut self) -> Result<Formula> {
+    fn parse_formula(&mut self) -> Result<Formula<String>> {
         self.skip_ws_and_comments();
 
         // Check for bare atoms first (true/false)
@@ -834,7 +904,7 @@ impl Parser {
     }
 
     /// Parse a complete SMT-LIB file to extract the cert function
-    fn parse_smtlib(&mut self) -> Result<ProofInvariant> {
+    fn parse_smtlib(&mut self) -> Result<ProofInvariant<String>> {
         let mut cert_found = false;
         let mut variables = Vec::new();
         let mut formula = None;
@@ -976,14 +1046,14 @@ impl Parser {
 }
 
 /// Parse a proof file and extract the invariant
-pub fn parse_proof_file(content: &str) -> Result<ProofInvariant> {
+pub fn parse_proof_file(content: &str) -> Result<ProofInvariant<String>> {
     let mut parser = Parser::new(content);
     parser.parse_smtlib()
 }
 
 /// Convert to presburger constraint representation
 pub fn to_presburger_constraint(
-    constraint: &Constraint,
+    constraint: &Constraint<String>,
 ) -> crate::presburger::Constraint<crate::presburger::Variable<String>> {
     use crate::presburger::{Constraint as PConstraint, ConstraintType, Variable};
 
@@ -1002,7 +1072,7 @@ pub fn to_presburger_constraint(
 }
 
 /// Pretty‐print a parsed certificate
-impl fmt::Display for ProofInvariant {
+impl<T: fmt::Display + fmt::Debug + Eq + Hash> fmt::Display for ProofInvariant<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Certificate variables: {:?}", self.variables)?;
         writeln!(f, "Certificate formula:")?;
@@ -1046,7 +1116,7 @@ pub fn print_proof_certificate(content: &str) -> Result<()> {
 }
 
 /// Recursively print a Formula AST with indentation
-fn print_formula_tree(formula: &Formula, indent: usize) {
+fn print_formula_tree<T: fmt::Display + Eq + Hash>(formula: &Formula<T>, indent: usize) {
     let pad = "  ".repeat(indent);
     match formula {
         Formula::Constraint(c) => {
@@ -1080,7 +1150,7 @@ fn print_formula_tree(formula: &Formula, indent: usize) {
 /// - `And` → intersection of children’s sets.
 /// - `Or`  → union of children’s sets.
 /// - `Exists(x, body)` → project out `x` (we push `x` into the mapping before descending).
-fn formula_to_presburger(formula: &Formula, mut mapping: Vec<String>) -> PresburgerSet<String> {
+fn formula_to_presburger(formula: &Formula<String>, mut mapping: Vec<String>) -> PresburgerSet<String> {
     match formula {
         Formula::Constraint(c) => {
             // each leaf constraint → one QuantifiedSet
