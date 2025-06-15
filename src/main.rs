@@ -13,6 +13,7 @@ mod parser;
 mod petri;
 mod presburger;
 mod proof_parser;
+mod proofinvariant_to_presburger;
 mod reachability;
 mod reachability_with_proofs;
 mod semilinear;
