@@ -17,21 +17,18 @@ pub struct AffineExpr<T: Eq + Hash> {
 
 impl<T: Eq + Hash> AffineExpr<T> {
     /// Map variable type from T to U
-    pub fn map<U, F>(self, mut f: F) -> AffineExpr<U>
+    pub fn rename_vars<U, F>(self, mut f: F) -> AffineExpr<U>
     where
-        F: FnMut(T) -> U,
+        F: FnMut(Variable<T>) -> Variable<U>,
         U: Eq + Hash,
     {
         AffineExpr {
-            terms: self.terms.into_iter().map(|(var, coeff)| {
-                let new_var = match var {
-                    Variable::Var(t) => Variable::Var(f(t)),
-                    Variable::Existential(n) => Variable::Existential(n),
-                };
-                (new_var, coeff)
-            }).collect(),
+            terms: self.terms.into_iter().map(|(var, coeff)| (f(var), coeff)).collect(),
             constant: self.constant,
         }
+    }
+    pub fn map<U: Eq + Hash>(self, mut f: impl FnMut(T) -> U) -> AffineExpr<U> {
+        self.rename_vars(|x| x.map(&mut f))
     }
 }
 
@@ -246,15 +243,19 @@ pub struct Constraint<T: Eq + Hash> {
 
 impl<T: Eq + Hash> Constraint<T> {
     /// Map variable type from T to U
-    pub fn map<U, F>(self, f: F) -> Constraint<U>
+    pub fn rename_vars<U, F>(self, f: F) -> Constraint<U>
     where
-        F: FnMut(T) -> U,
+        F: FnMut(Variable<T>) -> Variable<U>,
         U: Eq + Hash,
     {
         Constraint {
-            expr: self.expr.map(f),
+            expr: self.expr.rename_vars(f),
             op: self.op,
         }
+    }
+
+    pub fn map<U: Eq + Hash>(self, mut f: impl FnMut(T) -> U) -> Constraint<U> {
+        self.rename_vars(|v| v.map(&mut f))
     }
 }
 
@@ -296,28 +297,32 @@ pub enum Formula<T: Eq + Hash> {
 
 impl<T: Eq + Hash> Formula<T> {
     /// Map variable type from T to U
-    pub fn map<U, F>(self, mut f: F) -> Formula<U>
+    pub fn rename_vars<U, F>(self, f: &mut F) -> Formula<U>
     where
-        F: FnMut(T) -> U,
+        F: FnMut(Variable<T>) -> Variable<U>,
         U: Eq + Hash,
     {
         match self {
-            Formula::Constraint(c) => Formula::Constraint(c.map(&mut f)),
+            Formula::Constraint(c) => Formula::Constraint(c.rename_vars(f)),
             Formula::And(formulas) => {
-                Formula::And(formulas.into_iter().map(|form| form.map(&mut f)).collect())
+                Formula::And(formulas.into_iter().map(|form| form.rename_vars(f)).collect())
             }
             Formula::Or(formulas) => {
-                Formula::Or(formulas.into_iter().map(|form| form.map(&mut f)).collect())
+                Formula::Or(formulas.into_iter().map(|form| form.rename_vars(f)).collect())
             }
             Formula::Exists(idx, body) => {
                 // Bound variable index remains the same
-                Formula::Exists(idx, Box::new(body.map(&mut f)))
+                Formula::Exists(idx, Box::new(body.rename_vars(f)))
             }
             Formula::Forall(idx, body) => {
                 // Bound variable index remains the same
-                Formula::Forall(idx, Box::new(body.map(&mut f)))
+                Formula::Forall(idx, Box::new(body.rename_vars(f)))
             }
         }
+    }
+
+    pub fn map<U: Eq + Hash>(self, mut f: impl FnMut(T) -> U) -> Formula<U> {
+        self.rename_vars(&mut |v| v.map(&mut f))
     }
 }
 

@@ -254,9 +254,7 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
     ///
     /// See also `project_out_test` below
     pub fn project_out(mut self, variable: T) -> Self {
-        let Some(index) = self.mapping.iter().position(|x| *x == variable) else {
-            return self;
-        };
+        let index = self.mapping.iter().position(|x| *x == variable).expect("Trying to project out a variable that's not there");
         unsafe {
             self.isl_set = isl::isl_set_project_out(
                 self.isl_set,
@@ -475,6 +473,15 @@ impl<T: Display> Display for Variable<T> {
         match self {
             Variable::Var(t) => write!(f, "V{}", t),
             Variable::Existential(n) => write!(f, "E{}", n),
+        }
+    }
+}
+
+impl<T> Variable<T> {
+    pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> Variable<U> {
+        match self {
+            Variable::Var(t) => Variable::Var(f(t)),
+            Variable::Existential(n) => Variable::Existential(n),
         }
     }
 }

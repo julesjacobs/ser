@@ -1,5 +1,5 @@
 use crate::kleene::Kleene;
-use crate::presburger::{PresburgerSet, QuantifiedSet};
+use crate::presburger::{PresburgerSet, QuantifiedSet, Variable};
 use crate::proof_parser::{Constraint as ProofConstraint, Formula, ProofInvariant};
 use either::Either;
 use std::hash::Hash;
@@ -46,8 +46,24 @@ pub fn formula_to_presburger(formula: &Formula<String>, mapping: &[String]) -> P
                 .unwrap_or_else(|| PresburgerSet::<String>::zero())
         }
 
-        Formula::Exists(_, _) => {
-            unreachable!("Existential quantification not supported in PresburgerSet conversion")
+        &Formula::Exists(id, ref form) => {
+            // Generate a fresh name + use it
+            let mut name = format!("tmp{id}");
+            while mapping.contains(&name) {
+                name += "_fresh";
+            }
+            let new_form = form.clone().rename_vars(&mut |v| {
+                if v == Variable::Existential(id) {
+                    Variable::Var(name.clone())
+                } else {
+                    v
+                }
+            });
+            let mut new_mapping = mapping.to_owned();
+            new_mapping.push(name.clone());
+
+            // Recursive call + project out the existential variable
+            formula_to_presburger(&new_form, &new_mapping).project_out(name)
         }
 
         Formula::Forall(_, _) => {
@@ -230,7 +246,6 @@ mod tests {
     use either::{Left, Right};
 
     #[test]
-    #[ignore] // TODO: Fix recursion issue with Either types
     fn test_existentially_quantify() {
         // Create a proof invariant with mixed Left/Right variables
         let expr1 = AffineExpr::from_var(Left(0));
