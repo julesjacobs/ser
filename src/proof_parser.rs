@@ -1,7 +1,11 @@
 use std::fs;
 use std::fmt;
 use std::path::Path;
+use crate::kleene::Kleene;               // <-- bring in zero()
 use std::collections::BTreeMap;
+use crate::presburger::{PresburgerSet, QuantifiedSet, Constraint as PConstraint, Variable};
+
+
 
 /// Affine expression: sum of terms (coefficient * variable) + constant
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1064,6 +1068,63 @@ fn print_formula_tree(formula: &Formula, indent: usize) {
     }
 }
 
+
+/// Recursively convert a normalized `Formula` into a `PresburgerSet<String>`.
+/// - Leaves yield a single‐constraint `QuantifiedSet<String>`.
+/// - `And` → intersection of children’s sets.
+/// - `Or`  → union of children’s sets.
+/// - `Exists(x, body)` → project out `x` (we push `x` into the mapping before descending).
+fn formula_to_presburger(
+    formula: &Formula,
+    mut mapping: Vec<String>,
+) -> PresburgerSet<String> {
+    match formula {
+        Formula::Constraint(c) => {
+            // each leaf constraint → one QuantifiedSet
+            let pcon: PConstraint<Variable<String>> = to_presburger_constraint(c);
+            let qs = QuantifiedSet::new(vec![pcon]);
+            PresburgerSet::from_quantified_sets(&[qs], mapping)
+        }
+        Formula::And(children) => {
+            // intersection of all children
+            let mut iter = children.iter()
+                .map(|f| formula_to_presburger(f, mapping.clone()));
+            let first = iter
+                .next()
+                .unwrap_or_else(|| PresburgerSet::universe(mapping.clone()));
+            iter.fold(first, |acc, next| acc.intersection(&next))
+        }
+        Formula::Or(children) => {
+            // union of all children
+            let mut iter = children.iter()
+                .map(|f| formula_to_presburger(f, mapping.clone()));
+            let first = iter
+                .next()
+                .unwrap_or_else(|| PresburgerSet::zero());
+            iter.fold(first, |acc, next| acc.union(&next))
+        }
+        Formula::Exists(var, body) => {
+            // introduce `var` as an existential dimension, then project it out
+            mapping.push(var.clone());
+            let set = formula_to_presburger(body, mapping);
+            set.project_out(var.clone())
+        }
+        Formula::Forall(_, _) => {
+            panic!("`Forall` → Presburger not implemented");
+        }
+    }
+}
+
+/// Parse a certificate from disk and build its Presburger set.
+pub fn parse_and_build_presburger_set<P: AsRef<Path>>(
+    path: P,
+) -> std::result::Result<PresburgerSet<String>, Box<dyn std::error::Error>> {
+    let txt = fs::read_to_string(path)?;
+    let inv = parse_proof_file(&txt)?;
+    // start with the vector of _parameters_ as the initial mapping
+    Ok(formula_to_presburger(&inv.formula, inv.variables.clone()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1459,3 +1520,20 @@ fn test_parse_and_print_specific_proof_file() {
         _ => {}
     }
 }
+
+#[test]
+fn test_parse_and_build_set() {
+    let proof_path = Path::new(
+        "out/simple_nonser2_turned_ser_with_locks/smpt_constraints_disjunct_0_proof.txt"
+    );
+    assert!(proof_path.exists());
+
+    let set = parse_and_build_presburger_set(proof_path)
+        .expect("parse_and_build_presburger_set failed");
+
+    println!("Resulting Presburger set:\n{}", set);
+    assert!(!set.is_empty());
+}
+
+
+
