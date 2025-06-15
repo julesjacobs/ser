@@ -328,6 +328,10 @@ where
     /// 1. Flipping the net (reversing all transitions)
     /// 2. Running forward reachability from target places
     /// 3. Flipping back to original orientation
+    /// Iteratively filter the Petri net using alternating forward and backward reachability
+    /// Returns two vectors of transitions:
+    /// 1. `removed_forward` — transitions deleted in the forward filtering steps
+    /// 2. `removed_backward` — transitions deleted in the backward filtering steps
     pub fn filter_backwards_reachable(&mut self, target_places: &[Place]) {
         // Step 1: Flip the net
         self.flip();
@@ -347,11 +351,18 @@ where
     /// 2. Can reach the target places (backward reachability)
     ///
     /// The algorithm alternates between these filters until no more transitions are removed.
-    pub fn filter_bidirectional_reachable(&mut self, target_places: &[Place]) {
+        pub fn filter_bidirectional_reachable(
+            &mut self,
+            target_places: &[Place],
+        ) -> (Vec<(Vec<Place>, Vec<Place>)>, Vec<(Vec<Place>, Vec<Place>)>) {
         // If the user passed --without-optimizations, skip the entire pruning step
         if !crate::reachability::optimize_enabled() {
-            return;
+            return (Vec::new(), Vec::new());
         }
+
+        // track which transitions each pass deletes
+        let mut removed_forward = Vec::new();
+        let mut removed_backward = Vec::new();
 
         let initial_places = self.initial_marking.clone();
         let mut previous_count = self.transitions.len();
@@ -361,10 +372,18 @@ where
             iteration += 1;
 
             // Step 1: Filter forward from initial marking
+            let before_forward = self.transitions.clone();
             self.filter_reachable(&initial_places);
+            for tr in before_forward.into_iter().filter(|tr| !self.transitions.contains(&tr)) {
+                removed_forward.push(tr);
+            }
 
             // Step 2: Filter backward from target places
+            let before_backward = self.transitions.clone();
             self.filter_backwards_reachable(target_places);
+            for tr in before_backward.into_iter().filter(|tr| !self.transitions.contains(&tr)) {
+                removed_backward.push(tr);
+            }
             let after_backward = self.transitions.len();
 
             // Check if we've reached a fixed point (no changes)
@@ -381,6 +400,7 @@ where
                 break;
             }
         }
+        (removed_forward, removed_backward)
     }
 }
 
