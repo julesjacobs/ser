@@ -51,10 +51,22 @@ This plan outlines the implementation of proof certificate support in the serial
 ### 4.1 Change Decision enum to carry proof/trace data
 ```rust
 pub enum Decision<P> {
-    Yes { trace: Vec<usize> },
-    No { proof: Option<ProofInvariant<P>> },
+    Yes { trace: Vec<usize> },        // We found a counterexample/trace
+    No { proof: Option<ProofInvariant<P>> },  // We have a proof/certificate
 }
 ```
+
+**CRITICAL DESIGN DECISION**: The Yes/No variants are based on the TYPE of evidence we have, NOT the intuitive answer to the function's question:
+- `Decision::Yes` = We have a TRACE/COUNTEREXAMPLE (execution that violates the property)
+- `Decision::No` = We have a PROOF/CERTIFICATE (invariant that establishes the property)
+
+This means:
+- `can_reach_constraint_set`: 
+  - Returns `Yes { trace }` when constraints ARE reachable (we have a trace)
+  - Returns `No { proof }` when constraints are NOT reachable (we have a proof of unreachability)
+- `is_petri_reachability_set_subset_of_semilinear`:
+  - Returns `Yes { trace }` when subset property FAILS (not serializable - we have a counterexample trace)
+  - Returns `No { proof }` when subset property HOLDS (serializable - we have a proof certificate)
 
 ### 4.2 Update function signatures bottom-up
 - Start with `can_reach_constraint_set` in smpt.rs - return the parsed proof
