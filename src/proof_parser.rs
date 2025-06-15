@@ -1,11 +1,9 @@
-use std::fs;
-use std::fmt;
-use std::path::Path;
-use crate::kleene::Kleene;               // <-- bring in zero()
+use crate::kleene::Kleene; // <-- bring in zero()
+use crate::presburger::{Constraint as PConstraint, PresburgerSet, QuantifiedSet, Variable};
 use std::collections::BTreeMap;
-use crate::presburger::{PresburgerSet, QuantifiedSet, Constraint as PConstraint, Variable};
-
-
+use std::fmt;
+use std::fs;
+use std::path::Path;
 
 /// Affine expression: sum of terms (coefficient * variable) + constant
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -618,9 +616,11 @@ impl Parser {
             // Try to parse an atom
             if let Ok(atom) = self.parse_atom() {
                 match atom.as_str() {
-                    "true" => return Ok(Formula::And(vec![])),  // Empty AND
-                    "false" => return Ok(Formula::Or(vec![])),   // Empty OR
-                    _ => return Err(self.error(&format!("Expected formula, found atom '{}'", atom))),
+                    "true" => return Ok(Formula::And(vec![])), // Empty AND
+                    "false" => return Ok(Formula::Or(vec![])), // Empty OR
+                    _ => {
+                        return Err(self.error(&format!("Expected formula, found atom '{}'", atom)));
+                    }
                 }
             }
             return Err(self.error("Expected '(' to start formula"));
@@ -1001,7 +1001,6 @@ pub fn to_presburger_constraint(
     PConstraint::new(linear_combination, constant as i32, constraint_type)
 }
 
-
 /// Pretty‐print a parsed certificate
 impl fmt::Display for ProofInvariant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -1046,7 +1045,6 @@ pub fn print_proof_certificate(content: &str) -> Result<()> {
     Ok(())
 }
 
-
 /// Recursively print a Formula AST with indentation
 fn print_formula_tree(formula: &Formula, indent: usize) {
     let pad = "  ".repeat(indent);
@@ -1077,16 +1075,12 @@ fn print_formula_tree(formula: &Formula, indent: usize) {
     }
 }
 
-
 /// Recursively convert a normalized `Formula` into a `PresburgerSet<String>`.
 /// - Leaves yield a single‐constraint `QuantifiedSet<String>`.
 /// - `And` → intersection of children’s sets.
 /// - `Or`  → union of children’s sets.
 /// - `Exists(x, body)` → project out `x` (we push `x` into the mapping before descending).
-fn formula_to_presburger(
-    formula: &Formula,
-    mut mapping: Vec<String>,
-) -> PresburgerSet<String> {
+fn formula_to_presburger(formula: &Formula, mut mapping: Vec<String>) -> PresburgerSet<String> {
     match formula {
         Formula::Constraint(c) => {
             // each leaf constraint → one QuantifiedSet
@@ -1096,7 +1090,8 @@ fn formula_to_presburger(
         }
         Formula::And(children) => {
             // intersection of all children
-            let mut iter = children.iter()
+            let mut iter = children
+                .iter()
                 .map(|f| formula_to_presburger(f, mapping.clone()));
             let first = iter
                 .next()
@@ -1105,11 +1100,10 @@ fn formula_to_presburger(
         }
         Formula::Or(children) => {
             // union of all children
-            let mut iter = children.iter()
+            let mut iter = children
+                .iter()
                 .map(|f| formula_to_presburger(f, mapping.clone()));
-            let first = iter
-                .next()
-                .unwrap_or_else(|| PresburgerSet::zero());
+            let first = iter.next().unwrap_or_else(|| PresburgerSet::zero());
             iter.fold(first, |acc, next| acc.union(&next))
         }
         Formula::Exists(var, body) => {
@@ -1577,19 +1571,17 @@ mod tests {
     }
 }
 
-
-
 #[test]
 fn test_parse_and_print_specific_proof_file() {
-    let proof_path = Path::new("out/simple_nonser2_turned_ser_with_locks/smpt_constraints_disjunct_0_proof.txt");
+    let proof_path =
+        Path::new("out/simple_nonser2_turned_ser_with_locks/smpt_constraints_disjunct_0_proof.txt");
     assert!(
         proof_path.exists(),
         "Test fixture not found: {}",
         proof_path.display()
     );
 
-    let content =
-        fs::read_to_string(proof_path).expect("Failed to read proof file for test");
+    let content = fs::read_to_string(proof_path).expect("Failed to read proof file for test");
 
     // Parse normally...
     let inv = parse_proof_file(&content).expect("parse_proof_file failed");
@@ -1610,17 +1602,13 @@ fn test_parse_and_print_specific_proof_file() {
 
 #[test]
 fn test_parse_and_build_set() {
-    let proof_path = Path::new(
-        "out/simple_nonser2_turned_ser_with_locks/smpt_constraints_disjunct_0_proof.txt"
-    );
+    let proof_path =
+        Path::new("out/simple_nonser2_turned_ser_with_locks/smpt_constraints_disjunct_0_proof.txt");
     assert!(proof_path.exists());
 
-    let set = parse_and_build_presburger_set(proof_path)
-        .expect("parse_and_build_presburger_set failed");
+    let set =
+        parse_and_build_presburger_set(proof_path).expect("parse_and_build_presburger_set failed");
 
     println!("Resulting Presburger set:\n{}", set);
     assert!(!set.is_empty());
 }
-
-
-

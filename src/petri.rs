@@ -269,7 +269,7 @@ where
     /// Returns a list of places that were removed (initial list of places minus final list of places).
     pub fn filter_reachable(&mut self, initial_places: &[Place]) -> Vec<Place> {
         self.remove_identity_transitions();
-        
+
         // Collect all places that appear in the Petri net before filtering
         let mut all_places_before: HashSet<Place> = HashSet::new();
         for (inputs, outputs) in &self.transitions {
@@ -277,7 +277,7 @@ where
             all_places_before.extend(outputs.iter().cloned());
         }
         all_places_before.extend(initial_places.iter().cloned());
-        
+
         let mut reachable_places: HashSet<Place> = initial_places.iter().cloned().collect();
         let mut reachable_transitions: HashSet<usize> = HashSet::new();
         let mut worklist: Vec<Place> = initial_places.to_vec();
@@ -318,20 +318,20 @@ where
             .filter(|(idx, _)| reachable_transitions.contains(idx))
             .map(|(_, transition)| transition.clone())
             .collect();
-        
+
         // Collect all places that remain after filtering
         let mut all_places_after: HashSet<Place> = HashSet::new();
         for (inputs, outputs) in &self.transitions {
             all_places_after.extend(inputs.iter().cloned());
             all_places_after.extend(outputs.iter().cloned());
         }
-        
+
         // Calculate removed places: places that were in the net before but not after
         let removed_places: Vec<Place> = all_places_before
             .difference(&all_places_after)
             .cloned()
             .collect();
-        
+
         removed_places
     }
 
@@ -379,10 +379,10 @@ where
     /// 2. Can reach the target places (backward reachability)
     ///
     /// The algorithm alternates between these filters until no more transitions are removed.
-        pub fn filter_bidirectional_reachable(
-            &mut self,
-            target_places: &[Place],
-        ) -> (Vec<(Vec<Place>, Vec<Place>)>, Vec<(Vec<Place>, Vec<Place>)>) {
+    pub fn filter_bidirectional_reachable(
+        &mut self,
+        target_places: &[Place],
+    ) -> (Vec<(Vec<Place>, Vec<Place>)>, Vec<(Vec<Place>, Vec<Place>)>) {
         // If the user passed --without-optimizations, skip the entire pruning step
         if !crate::reachability::optimize_enabled() {
             return (Vec::new(), Vec::new());
@@ -402,14 +402,20 @@ where
             // Step 1: Filter forward from initial marking
             let before_forward = self.transitions.clone();
             self.filter_reachable(&initial_places);
-            for tr in before_forward.into_iter().filter(|tr| !self.transitions.contains(&tr)) {
+            for tr in before_forward
+                .into_iter()
+                .filter(|tr| !self.transitions.contains(&tr))
+            {
                 removed_forward.push(tr);
             }
 
             // Step 2: Filter backward from target places
             let before_backward = self.transitions.clone();
             self.filter_backwards_reachable(target_places);
-            for tr in before_backward.into_iter().filter(|tr| !self.transitions.contains(&tr)) {
+            for tr in before_backward
+                .into_iter()
+                .filter(|tr| !self.transitions.contains(&tr))
+            {
                 removed_backward.push(tr);
             }
             let after_backward = self.transitions.len();

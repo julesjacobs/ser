@@ -246,7 +246,6 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
         }
     }
 
-
     /// Useful for existential quantification. If you want the set of N-tuples `exists t, blah`:
     ///
     ///  * First, you make a set of N+1-tuples, where `t` is a component
@@ -269,7 +268,6 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
         self
     }
 }
-
 
 /// Test for `PresburgerSet::project_out`: create the set of even numbers
 #[test]

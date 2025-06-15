@@ -394,7 +394,8 @@ where
             ),
         );
 
-        let (_removed_forward, _removed_backward) = petri.filter_bidirectional_reachable(&nonzero_places);
+        let (_removed_forward, _removed_backward) =
+            petri.filter_bidirectional_reachable(&nonzero_places);
         debug_logger.log_petri_net(
             &format!("Post-Pruning Petri Net {}", disjunct_id),
             "Petri net after bidirectional filtering",
@@ -466,7 +467,8 @@ mod tests {
         assert!(nonzero_places.contains(&"F"));
 
         // Apply bidirectional filtering
-        let (_removed_forward, _removed_backward) = petri.filter_bidirectional_reachable(&nonzero_places);
+        let (_removed_forward, _removed_backward) =
+            petri.filter_bidirectional_reachable(&nonzero_places);
 
         // After filtering, should keep only transitions that can reach nonzero places
         // from the initial marking: Start -> A -> B and B -> C -> F
