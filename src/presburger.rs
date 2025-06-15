@@ -1,6 +1,7 @@
 // Use the ISL bindings from the isl module
 use crate::isl;
 use std::fmt::Debug;
+use std::hash::Hash;
 use std::{
     collections::BTreeSet,
     ffi::{CStr, CString, c_uint},
@@ -462,7 +463,7 @@ impl<T: Clone> QuantifiedSet<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Variable<T> {
     Var(T),
     Existential(usize),
@@ -676,8 +677,6 @@ impl<T: Display> Display for QuantifiedSet<T> {
 // Implement conversions between SemilinearSet and PresburgerSet
 
 use crate::semilinear::{LinearSet, SemilinearSet};
-use std::hash::Hash;
-
 impl<T: Clone + Ord + Debug + ToString + Eq + Hash> PresburgerSet<T> {
     /// Convert a SemilinearSet to a PresburgerSet
     ///

@@ -1,5 +1,6 @@
 use crate::kleene::Kleene; // <-- bring in zero()
 use crate::presburger::{Constraint as PConstraint, PresburgerSet, QuantifiedSet, Variable};
+use either::Either;
 use std::collections::HashMap;
 use std::fmt;
 use std::fs;
@@ -9,8 +10,8 @@ use std::path::Path;
 /// Affine expression: sum of terms (coefficient * variable) + constant
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AffineExpr<T: Eq + Hash> {
-    /// Map from variable name to coefficient
-    terms: HashMap<T, i64>,
+    /// Map from variable to coefficient
+    terms: HashMap<Variable<T>, i64>,
     constant: i64,
 }
 
@@ -22,7 +23,13 @@ impl<T: Eq + Hash> AffineExpr<T> {
         U: Eq + Hash,
     {
         AffineExpr {
-            terms: self.terms.into_iter().map(|(k, v)| (f(k), v)).collect(),
+            terms: self.terms.into_iter().map(|(var, coeff)| {
+                let new_var = match var {
+                    Variable::Var(t) => Variable::Var(f(t)),
+                    Variable::Existential(n) => Variable::Existential(n),
+                };
+                (new_var, coeff)
+            }).collect(),
             constant: self.constant,
         }
     }
@@ -48,7 +55,7 @@ impl<T: Clone + Eq + Hash> AffineExpr<T> {
     /// Create a variable expression (coefficient 1)
     pub fn from_var(var: T) -> Self {
         let mut terms = HashMap::new();
-        terms.insert(var, 1);
+        terms.insert(Variable::Var(var), 1);
         AffineExpr { terms, constant: 0 }
     }
 
@@ -98,7 +105,7 @@ impl<T: Clone + Eq + Hash> AffineExpr<T> {
 
     /// Get coefficient of a variable (0 if not present)
     pub fn get_coeff(&self, var: &T) -> i64 {
-        self.terms.get(var).copied().unwrap_or(0)
+        self.terms.get(&Variable::Var(var.clone())).copied().unwrap_or(0)
     }
 
     /// Get the constant term
@@ -106,9 +113,14 @@ impl<T: Clone + Eq + Hash> AffineExpr<T> {
         self.constant
     }
 
-    /// Get all variables in the expression
+    /// Get all variables in the expression (only non-existential ones)
     pub fn variables(&self) -> Vec<T> {
-        self.terms.keys().cloned().collect()
+        self.terms.keys()
+            .filter_map(|var| match var {
+                Variable::Var(v) => Some(v.clone()),
+                Variable::Existential(_) => None,
+            })
+            .collect()
     }
 
     /// Check if this is a constant expression (no variables)
@@ -118,8 +130,8 @@ impl<T: Clone + Eq + Hash> AffineExpr<T> {
 
     /// Convert to a vector of (coefficient, variable) pairs plus constant
     /// This is useful for converting to presburger constraints
-    pub fn to_linear_combination(&self) -> (Vec<(i64, T)>, i64) {
-        let terms: Vec<(i64, T)> = self
+    pub fn to_linear_combination(&self) -> (Vec<(i64, Variable<T>)>, i64) {
+        let terms: Vec<(i64, Variable<T>)> = self
             .terms
             .iter()
             .map(|(var, coeff)| (*coeff, var.clone()))
@@ -150,12 +162,26 @@ impl<T: fmt::Display + Eq + Hash> fmt::Display for AffineExpr<T> {
                     first = false;
                 }
 
-                if *coeff == 1 {
-                    write!(f, "{}", var)?;
-                } else if *coeff == -1 {
-                    write!(f, "-{}", var)?;
-                } else {
-                    write!(f, "{}*{}", coeff, var)?;
+                // Custom display for Variable<T> to avoid the "V" prefix in tests
+                match var {
+                    Variable::Var(t) => {
+                        if *coeff == 1 {
+                            write!(f, "{}", t)?;
+                        } else if *coeff == -1 {
+                            write!(f, "-{}", t)?;
+                        } else {
+                            write!(f, "{}*{}", coeff, t)?;
+                        }
+                    }
+                    Variable::Existential(n) => {
+                        if *coeff == 1 {
+                            write!(f, "E{}", n)?;
+                        } else if *coeff == -1 {
+                            write!(f, "-E{}", n)?;
+                        } else {
+                            write!(f, "{}*E{}", coeff, n)?;
+                        }
+                    }
                 }
             }
 
@@ -171,6 +197,26 @@ impl<T: fmt::Display + Eq + Hash> fmt::Display for AffineExpr<T> {
             }
 
             Ok(())
+        }
+    }
+}
+
+impl<L, R> AffineExpr<Either<L, R>>
+where
+    L: Eq + Hash,
+    R: Eq + Hash,
+{
+    /// Project from AffineExpr<Either<L, R>> to AffineExpr<R>
+    pub fn project_right(self) -> AffineExpr<R> {
+        AffineExpr {
+            terms: self.terms.into_iter()
+                .filter_map(|(var, coeff)| match var {
+                    Variable::Var(Either::Left(_)) => None,
+                    Variable::Var(Either::Right(r)) => Some((Variable::Var(r), coeff)),
+                    Variable::Existential(n) => Some((Variable::Existential(n), coeff)),
+                })
+                .collect(),
+            constant: self.constant,
         }
     }
 }
@@ -218,6 +264,20 @@ impl<T: Clone + Eq + Hash> Constraint<T> {
     }
 }
 
+impl<L, R> Constraint<Either<L, R>>
+where
+    L: Eq + Hash,
+    R: Eq + Hash,
+{
+    /// Project from Constraint<Either<L, R>> to Constraint<R>
+    pub fn project_right(self) -> Constraint<R> {
+        Constraint {
+            expr: self.expr.project_right(),
+            op: self.op,
+        }
+    }
+}
+
 impl<T: fmt::Display + Eq + Hash> fmt::Display for Constraint<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} 0", self.expr, self.op)
@@ -230,8 +290,8 @@ pub enum Formula<T: Eq + Hash> {
     Constraint(Constraint<T>),
     And(Vec<Formula<T>>),
     Or(Vec<Formula<T>>),
-    Exists(T, Box<Formula<T>>),
-    Forall(T, Box<Formula<T>>),
+    Exists(usize, Box<Formula<T>>),  // Bound variable index
+    Forall(usize, Box<Formula<T>>),  // Bound variable index
 }
 
 impl<T: Eq + Hash> Formula<T> {
@@ -249,15 +309,61 @@ impl<T: Eq + Hash> Formula<T> {
             Formula::Or(formulas) => {
                 Formula::Or(formulas.into_iter().map(|form| form.map(&mut f)).collect())
             }
-            Formula::Exists(var, body) => {
-                let new_var = f(var);
-                Formula::Exists(new_var, Box::new(body.map(&mut f)))
+            Formula::Exists(idx, body) => {
+                // Bound variable index remains the same
+                Formula::Exists(idx, Box::new(body.map(&mut f)))
             }
-            Formula::Forall(var, body) => {
-                let new_var = f(var);
-                Formula::Forall(new_var, Box::new(body.map(&mut f)))
+            Formula::Forall(idx, body) => {
+                // Bound variable index remains the same
+                Formula::Forall(idx, Box::new(body.map(&mut f)))
             }
         }
+    }
+}
+
+impl<L, R> Formula<Either<L, R>>
+where
+    L: Eq + Hash,
+    R: Eq + Hash,
+{
+    /// Project from Formula<Either<L, R>> to Formula<R>
+    /// when all Left values should not exist
+    /// Using manual recursion to avoid infinite type recursion
+    pub fn project_right(self) -> Formula<R> {
+        // We need to manually implement this to avoid the map function
+        fn project_formula<L, R>(formula: Formula<Either<L, R>>) -> Formula<R>
+        where
+            L: Eq + Hash,
+            R: Eq + Hash,
+        {
+            match formula {
+                Formula::Constraint(c) => Formula::Constraint(c.project_right()),
+                Formula::And(formulas) => {
+                    let mut projected = Vec::new();
+                    for f in formulas {
+                        projected.push(project_formula(f));
+                    }
+                    Formula::And(projected)
+                }
+                Formula::Or(formulas) => {
+                    let mut projected = Vec::new();
+                    for f in formulas {
+                        projected.push(project_formula(f));
+                    }
+                    Formula::Or(projected)
+                }
+                Formula::Exists(idx, body) => {
+                    // Bound variable index remains the same
+                    Formula::Exists(idx, Box::new(project_formula(*body)))
+                }
+                Formula::Forall(idx, body) => {
+                    // Bound variable index remains the same
+                    Formula::Forall(idx, Box::new(project_formula(*body)))
+                }
+            }
+        }
+        
+        project_formula(self)
     }
 }
 
@@ -293,11 +399,11 @@ impl<T: fmt::Display + Eq + Hash> fmt::Display for Formula<T> {
                     write!(f, ")")
                 }
             }
-            Formula::Exists(var, body) => {
-                write!(f, "∃{}. {}", var, body)
+            Formula::Exists(idx, body) => {
+                write!(f, "∃e{}. {}", idx, body)
             }
-            Formula::Forall(var, body) => {
-                write!(f, "∀{}. {}", var, body)
+            Formula::Forall(idx, body) => {
+                write!(f, "∀e{}. {}", idx, body)
             }
         }
     }
@@ -323,6 +429,112 @@ impl<T: Eq + Hash> ProofInvariant<T> {
             variables: self.variables.into_iter().map(&mut f).collect(),
             formula: self.formula.map(&mut f),
         }
+    }
+}
+
+impl<L, R> ProofInvariant<Either<L, R>>
+where
+    L: Eq + Hash,
+    R: Eq + Hash,
+{
+    /// Project from ProofInvariant<Either<L, R>> to ProofInvariant<R> 
+    /// when all Left values should not exist
+    pub fn project_right(self) -> ProofInvariant<R> {
+        ProofInvariant {
+            variables: self.variables.into_iter()
+                .filter_map(|v| match v {
+                    Either::Left(_) => None,
+                    Either::Right(r) => Some(r),
+                })
+                .collect(),
+            formula: self.formula.project_right(),
+        }
+    }
+}
+
+// Smart constructors for quantification
+
+impl<T: Clone + Eq + Hash> Formula<T> {
+    /// Find the maximum existential variable index used in the formula
+    fn max_existential_index(&self) -> Option<usize> {
+        match self {
+            Formula::Constraint(c) => {
+                c.expr.terms.keys()
+                    .filter_map(|var| match var {
+                        Variable::Existential(n) => Some(*n),
+                        _ => None,
+                    })
+                    .max()
+            }
+            Formula::And(formulas) | Formula::Or(formulas) => {
+                formulas.iter()
+                    .filter_map(|f| f.max_existential_index())
+                    .max()
+            }
+            Formula::Exists(idx, body) => {
+                let body_max = body.max_existential_index();
+                Some(match body_max {
+                    Some(n) => n.max(*idx),
+                    None => *idx,
+                })
+            }
+            Formula::Forall(idx, body) => {
+                let body_max = body.max_existential_index();
+                Some(match body_max {
+                    Some(n) => n.max(*idx),
+                    None => *idx,
+                })
+            }
+        }
+    }
+    
+    /// Substitute all occurrences of Var(old_var) with new_var in the formula
+    fn substitute_var(&self, old_var: &T, new_var: Variable<T>) -> Self {
+        match self {
+            Formula::Constraint(c) => {
+                let mut new_terms = HashMap::new();
+                for (var, coeff) in &c.expr.terms {
+                    let new_var_key = match var {
+                        Variable::Var(v) if v == old_var => new_var.clone(),
+                        _ => var.clone(),
+                    };
+                    new_terms.insert(new_var_key, *coeff);
+                }
+                Formula::Constraint(Constraint {
+                    expr: AffineExpr {
+                        terms: new_terms,
+                        constant: c.expr.constant,
+                    },
+                    op: c.op,
+                })
+            }
+            Formula::And(formulas) => {
+                Formula::And(formulas.iter().map(|f| f.substitute_var(old_var, new_var.clone())).collect())
+            }
+            Formula::Or(formulas) => {
+                Formula::Or(formulas.iter().map(|f| f.substitute_var(old_var, new_var.clone())).collect())
+            }
+            Formula::Exists(idx, body) => {
+                Formula::Exists(*idx, Box::new(body.substitute_var(old_var, new_var)))
+            }
+            Formula::Forall(idx, body) => {
+                Formula::Forall(*idx, Box::new(body.substitute_var(old_var, new_var)))
+            }
+        }
+    }
+    
+    /// Create an existentially quantified formula
+    pub fn mk_exists(self, var_to_bind: T) -> Self {
+        let fresh_idx = self.max_existential_index().map(|n| n + 1).unwrap_or(0);
+        let substituted = self.substitute_var(&var_to_bind, Variable::Existential(fresh_idx));
+        Formula::Exists(fresh_idx, Box::new(substituted))
+    }
+    
+    /// Create a universally quantified formula
+    pub fn mk_forall(self, var_to_bind: T) -> Self {
+        let fresh_idx = self.max_existential_index().map(|n| n + 1).unwrap_or(0);
+        let substituted = self.substitute_var(&var_to_bind, Variable::Existential(fresh_idx));
+        Formula::Forall(fresh_idx, Box::new(substituted))
     }
 }
 
@@ -816,10 +1028,10 @@ impl Parser {
                     return Ok(body);
                 }
 
-                // Convert multiple variables to nested single quantifiers
+                // Convert multiple variables to nested single quantifiers using smart constructor
                 let mut result = body;
                 for var in vars.into_iter().rev() {
-                    result = Formula::Exists(var, Box::new(result));
+                    result = result.mk_exists(var);
                 }
                 Ok(result)
             }
@@ -842,10 +1054,10 @@ impl Parser {
                     return Ok(body);
                 }
 
-                // Convert multiple variables to nested single quantifiers
+                // Convert multiple variables to nested single quantifiers using smart constructor
                 let mut result = body;
                 for var in vars.into_iter().rev() {
-                    result = Formula::Forall(var, Box::new(result));
+                    result = result.mk_forall(var);
                 }
                 Ok(result)
             }
@@ -1060,7 +1272,7 @@ pub fn to_presburger_constraint(
     let (terms, constant) = constraint.expr.to_linear_combination();
     let linear_combination: Vec<(i32, Variable<String>)> = terms
         .into_iter()
-        .map(|(coeff, var)| (coeff as i32, Variable::Var(var)))
+        .map(|(coeff, var)| (coeff as i32, var))
         .collect();
 
     let constraint_type = match constraint.op {
@@ -1134,12 +1346,12 @@ fn print_formula_tree<T: fmt::Display + Eq + Hash>(formula: &Formula<T>, indent:
                 print_formula_tree(child, indent + 1);
             }
         }
-        Formula::Exists(var, body) => {
-            println!("{}Exists {}", pad, var);
+        Formula::Exists(idx, body) => {
+            println!("{}Exists e{}", pad, idx);
             print_formula_tree(body, indent + 1);
         }
-        Formula::Forall(var, body) => {
-            println!("{}Forall {}", pad, var);
+        Formula::Forall(idx, body) => {
+            println!("{}Forall e{}", pad, idx);
             print_formula_tree(body, indent + 1);
         }
     }
@@ -1150,7 +1362,7 @@ fn print_formula_tree<T: fmt::Display + Eq + Hash>(formula: &Formula<T>, indent:
 /// - `And` → intersection of children’s sets.
 /// - `Or`  → union of children’s sets.
 /// - `Exists(x, body)` → project out `x` (we push `x` into the mapping before descending).
-fn formula_to_presburger(formula: &Formula<String>, mut mapping: Vec<String>) -> PresburgerSet<String> {
+fn formula_to_presburger(formula: &Formula<String>, mapping: Vec<String>) -> PresburgerSet<String> {
     match formula {
         Formula::Constraint(c) => {
             // each leaf constraint → one QuantifiedSet
@@ -1176,11 +1388,10 @@ fn formula_to_presburger(formula: &Formula<String>, mut mapping: Vec<String>) ->
             let first = iter.next().unwrap_or_else(|| PresburgerSet::zero());
             iter.fold(first, |acc, next| acc.union(&next))
         }
-        Formula::Exists(var, body) => {
-            // introduce `var` as an existential dimension, then project it out
-            mapping.push(var.clone());
-            let set = formula_to_presburger(body, mapping);
-            set.project_out(var.clone())
+        Formula::Exists(_idx, body) => {
+            // Existential variables are already handled in the constraints
+            // Just process the body - the existential variables will be in the QuantifiedSet
+            formula_to_presburger(body, mapping)
         }
         Formula::Forall(_, _) => {
             panic!("`Forall` → Presburger not implemented");
@@ -1349,8 +1560,9 @@ mod tests {
 
         let result = parse_proof_file(proof).unwrap();
         match &result.formula {
-            Formula::Exists(var, body) => {
-                assert_eq!(var, "t");
+            Formula::Exists(idx, body) => {
+                // The existential variable should have index 0
+                assert_eq!(*idx, 0);
                 match body.as_ref() {
                     Formula::And(constraints) => {
                         assert_eq!(constraints.len(), 2);

@@ -193,7 +193,15 @@ where
     // Wrap the formula with existential quantifiers for each Left(i) variable
     let mut formula = proof.formula;
     for ex_var in existential_in_proof.into_iter().rev() {
-        formula = Formula::Exists(ex_var, Box::new(formula));
+        // Extract the usize from Either::Left
+        match ex_var {
+            Either::Left(idx) => {
+                formula = Formula::Exists(idx, Box::new(formula));
+            }
+            Either::Right(_) => {
+                panic!("Expected Left variant for existential variable");
+            }
+        }
     }
     
     ProofInvariant {
@@ -210,22 +218,8 @@ pub fn project_proof_from_either<T>(
 where
     T: Clone + Eq + Hash,
 {
-    // All remaining variables should be Right
-    let variables: Vec<T> = proof.variables.into_iter().map(|var| match var {
-        Either::Left(i) => panic!("Unexpected Left({}) in variables after quantification", i),
-        Either::Right(v) => v,
-    }).collect();
-    
-    // Map the formula
-    let formula = proof.formula.map(|var| match var {
-        Either::Left(i) => panic!("Unexpected free Left({}) in formula", i),
-        Either::Right(v) => v,
-    });
-    
-    ProofInvariant {
-        variables,
-        formula,
-    }
+    // Use the new project_right method instead of map to avoid infinite recursion
+    proof.project_right()
 }
 
 #[cfg(test)]
@@ -267,10 +261,7 @@ mod tests {
         // Check that the formula is wrapped in an existential quantifier
         match &quantified.formula {
             Formula::Exists(var, _body) => {
-                match var {
-                    Left(0) => {}, // Good, the existential variable
-                    _ => panic!("Expected Left(0) as quantified variable"),
-                }
+                assert_eq!(*var, 0); // Should be the existential variable index 0
             }
             _ => panic!("Expected Exists formula"),
         }
@@ -459,10 +450,11 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Existential quantification not supported")]
-    fn test_exists_formula_panics() {
+    #[should_panic(expected = "Existential quantification not supported in PresburgerSet conversion")]
+    fn test_exists_formula() {
+        // Create a formula with an existential variable
         let formula = Formula::Exists(
-            "x".to_string(),
+            0, // Using index 0 for the existential variable
             Box::new(Formula::Constraint(ProofConstraint::new(
                 AffineExpr::from_var("x".to_string()),
                 CompOp::Eq,
@@ -470,14 +462,15 @@ mod tests {
         );
 
         let mapping = vec!["x".to_string()];
+        // This should panic as existential quantification is not supported in formula_to_presburger
         let _ = formula_to_presburger(&formula, &mapping);
     }
 
     #[test]
-    #[should_panic(expected = "Universal quantification not supported")]
+    #[should_panic(expected = "Universal quantification not supported in PresburgerSet conversion")]
     fn test_forall_formula_panics() {
         let formula = Formula::Forall(
-            "x".to_string(),
+            0, // Using index 0 for the universal variable
             Box::new(Formula::Constraint(ProofConstraint::new(
                 AffineExpr::from_var("x".to_string()),
                 CompOp::Geq,

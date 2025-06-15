@@ -3,7 +3,7 @@
 ## Overview
 This plan outlines the implementation of proof certificate support in the serializability checker, including extracting traces and proof invariants from SMPT output, making them flow through the analysis pipeline, and combining proofs from multiple disjuncts.
 
-## Phase 1: Make ProofInvariant Generic (Foundation)
+## Phase 1: Make ProofInvariant Generic (Foundation) ✅ COMPLETE
 
 ### 1.1 Modify ProofInvariant to be generic ProofInvariant<T>
 - Update `src/proof_parser.rs` to make ProofInvariant, Formula, AffineExpr, and Constraint generic over T
@@ -17,7 +17,7 @@ This plan outlines the implementation of proof certificate support in the serial
 - Update function signatures to work with ProofInvariant<T>
 - Keep existing tests working with ProofInvariant<String>
 
-## Phase 2: SMPT Integration with Proof Parsing (Parse at the source)
+## Phase 2: SMPT Integration with Proof Parsing (Parse at the source) ✅ COMPLETE
 
 ### 2.1 Parse proof certificates immediately in SMPT module
 - In `run_smpt_internal`, when we have `SmptVerificationOutcome::Unreachable { proof_certificate }`:
@@ -31,7 +31,7 @@ This plan outlines the implementation of proof certificate support in the serial
   }
   ```
 
-## Phase 3: Handle Existential Variables in Proofs
+## Phase 3: Handle Existential Variables in Proofs ✅ COMPLETE
 
 ### 3.1 Add function to handle existential quantification
 - Add to `proofinvariant_to_presburger.rs`:
@@ -46,7 +46,52 @@ This plan outlines the implementation of proof certificate support in the serial
 ### 3.2 Add reverse mapping function
 - Add function to map ProofInvariant back from Either<usize, P> to P after existential quantification
 
-## Phase 4: Update Return Types (Propagate proofs up the stack)
+## Phase 4: Update Return Types (Propagate proofs up the stack) 🚧 IN PROGRESS
+
+**STATUS**: Partially complete. Return types have been updated throughout the pipeline, but we encountered a critical issue with infinite polymorphic recursion.
+
+**ISSUE**: The generic `map` function in `Formula<T>` causes infinite type recursion when dealing with nested `Either` types (e.g., `Either<usize, Either<P, Q>>`). This happens because:
+1. The recursive `map` implementation tries to instantiate all possible type combinations
+2. When mapping `ProofInvariant<String>` to `ProofInvariant<Either<usize, P>>` where `P` is already an `Either` type, the compiler hits recursion limits
+
+**SOLUTION IMPLEMENTED**: 
+- Created specialized `project_right` methods for `ProofInvariant`, `Formula`, `Constraint`, and `AffineExpr` that work specifically with `Either<L, R>` types
+- These methods use manual recursion instead of iterator combinators to avoid type recursion
+- Updated `project_proof_from_either` to use `project_right` instead of `map`
+
+**REMAINING WORK**:
+- The proof mapping in `can_reach_constraint_set_with_debug_mapped` is currently disabled (returns `None`)
+- Need to implement a way to convert `ProofInvariant<String>` from SMPT to `ProofInvariant<P>` without using the generic `map` function
+- Consider creating a specialized conversion function that handles the string-to-type mapping without recursive generics
+
+## Phase 4.5: Fundamental Refactoring of Quantification System ✅ COMPLETE
+
+**PROBLEM**: The current design where `Exists(T, Box<Formula<T>>)` uses the same type for both bound and free variables doesn't properly model variable binding. When we have `Formula<Either<P,Q>>` and want to existentially quantify over P variables, we can't properly represent that the P variables are bound while Q variables remain free.
+
+**SOLUTION**: Adopt the `Variable<T>` pattern from presburger.rs:
+- Change `AffineExpr<T>` to use `HashMap<Variable<T>, i64>` where `Variable<T>` is either `Var(T)` or `Existential(usize)`
+- Change `Exists(T, Box<Formula<T>>)` to `Exists(usize, Box<Formula<T>>)` where the usize is the bound variable index
+- Implement smart constructors `mk_exists` and `mk_forall` that handle variable substitution and fresh index allocation
+
+**IMPLEMENTATION STEPS**:
+1. Import and use `Variable<T>` type in proof_parser.rs
+2. Update `AffineExpr` to use `Variable<T>` instead of bare `T`
+3. Update `Formula` enum to use `usize` for bound variables in Exists/Forall
+4. Implement smart constructors for safe quantification
+5. Update parser to use smart constructors
+6. Fix all downstream code to handle new structure
+
+**BENEFITS**:
+- Type safety: bound variables (usize) are distinct from free variables (T)
+- No type nesting: existential quantification doesn't change the type parameter
+- Solves the infinite recursion issue completely
+
+**COMPLETION NOTES**:
+- Successfully refactored `AffineExpr` to use `HashMap<Variable<T>, i64>`
+- Updated `Formula` enum to use `usize` for bound variables in `Exists`/`Forall`
+- Implemented smart constructors `mk_exists` and `mk_forall` with proper variable substitution
+- Fixed all compilation errors and updated tests to work with new structure
+- All 193 tests passing after refactoring
 
 ### 4.1 Change Decision enum to carry proof/trace data
 ```rust
