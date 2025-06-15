@@ -10,6 +10,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
+use std::collections::HashMap;
+use crate::petri::Petri;
+use crate::reachability_with_proofs::Decision;
+use crate::ns_to_petri::ReqPetriState;
+use colored::*;
 
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
@@ -517,6 +522,9 @@ where
             &ser,
         );
 
+        // clone here so we can still use it below
+        let petri_for_trace = petri.clone();
+
         // Call original version
         let result_original =
             crate::reachability::is_petri_reachability_set_subset_of_semilinear_new(
@@ -529,9 +537,9 @@ where
         // Call new proof-based version
         let result_with_proofs =
             crate::reachability_with_proofs::is_petri_reachability_set_subset_of_semilinear_new(
-                petri,
+                petri.clone(),
                 &places_that_must_be_zero,
-                ser,
+                ser.clone(),
                 out_dir,
             );
 
@@ -605,6 +613,7 @@ where
                     println!("{}   Transition sequence:{}", YELLOW, RESET);
                     println!("      {:?}", trace);
                     println!("{}   This trace demonstrates a non-serializable execution{}", YELLOW, RESET);
+                    print_counterexample_trace(&petri_for_trace, trace);
                 }
             }
         }
@@ -630,6 +639,110 @@ where
         result_original
     }
 }
+
+
+/// Prints a counterexample trace step-by-step on the given Petri net.
+fn print_counterexample_trace<P>(petri: &Petri<P>, trace: &[usize])
+where
+    P: Clone + Eq + PartialEq + Hash + std::fmt::Debug,
+{
+    // Header
+    println!("{}", "❌ COUNTEREXAMPLE TRACE FOUND".bold().red());
+
+    if trace.is_empty() {
+        // Empty trace
+        println!("{}", "(Empty trace – violation at initial state)".yellow());
+    } else {
+        // Raw sequence
+        println!("{}", format!("Raw transition sequence: {:?}", trace).yellow());
+
+        // Replay
+        let transitions = petri.get_transitions();
+        let mut marking = petri.get_initial_marking();
+        println!("{}", format!("Step 0 – initial marking: {:?}", marking).yellow());
+
+        for (i, &t_idx) in trace.iter().enumerate() {
+            let (inputs, outputs) = &transitions[t_idx];
+
+            // consume inputs
+            for p in inputs {
+                if let Some(pos) = marking.iter().position(|x| x == p) {
+                    marking.remove(pos);
+                }
+            }
+            // produce outputs
+            marking.extend(outputs.clone());
+
+            println!(
+                "{}",
+                format!(
+                    "Step {} – fired t{}: inputs={:?}, outputs={:?}, marking={:?}",
+                    i + 1, t_idx, inputs, outputs, marking
+                )
+                    .yellow()
+            );
+        }
+
+        // Final marking summary
+        let total_tokens = marking.len();
+        let mut counts: HashMap<&P, usize> = HashMap::new();
+        for p in &marking {
+            *counts.entry(p).or_insert(0) += 1;
+        }
+        let unique_places = counts.len();
+        println!(
+            "{}",
+            format!(
+                "Final marking has {} token(s) across {} place(s)",
+                total_tokens, unique_places
+            )
+                .yellow()
+        );
+        println!("{}", "Places with tokens:".yellow());
+        for (place, count) in &counts {
+            println!(
+                "{}",
+                format!("{:?}: {} token(s)", place, count).yellow()
+            );
+        }
+
+        // todo add start
+
+        // cyan separator
+        println!("{}", "================================================================================
+".cyan());
+
+        // for each place, look for the Debug pattern "Right(Response(...), resp)" and extract
+        for (place, &cnt) in &counts {
+            let s = format!("{:?}", place);
+            // matches: Right(Response(ExprRequest { name: "foo" }, 0))
+            if let Some(inner) = s
+                .strip_prefix("Right(Response(")
+                .and_then(|s| s.strip_suffix(")"))
+            {
+                // inner == "ExprRequest { name: \"foo\" }, 0"
+                // split into [ "ExprRequest { name: \"foo\" }", "0" ]
+                let mut parts = inner.rsplitn(2, "), ");
+                let resp = parts.next().unwrap_or("").trim();
+                let req = parts.next().unwrap_or("").trim().trim_start_matches('(');
+                println!(
+                    "{}",
+                    format!("request: \"{}\", response: {} (X {})", req, resp, cnt).cyan()
+                );
+            }
+        }
+
+        // todo add end
+
+        // Conclusion
+        println!(
+            "{}",
+            "This trace demonstrates a non-serializable execution".yellow()
+        );
+    }
+}
+
+
 
 #[cfg(test)]
 mod tests {
