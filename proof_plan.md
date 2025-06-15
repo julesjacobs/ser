@@ -31,9 +31,24 @@ This plan outlines the implementation of proof certificate support in the serial
   }
   ```
 
-## Phase 3: Update Return Types (Propagate proofs up the stack)
+## Phase 3: Handle Existential Variables in Proofs
 
-### 3.1 Change Decision enum to carry proof/trace data
+### 3.1 Add function to handle existential quantification
+- Add to `proofinvariant_to_presburger.rs`:
+  ```rust
+  pub fn existentially_quantify<T>(proof: ProofInvariant<Either<usize, T>>, existential_vars: &[usize]) -> ProofInvariant<T>
+  ```
+- This function should:
+  - Filter out existential variables (Left(i)) from the variable list
+  - Wrap the formula in Exists quantifiers for each existential variable
+  - Map remaining variables from Either<usize, T> to just T
+
+### 3.2 Add reverse mapping function
+- Add function to map ProofInvariant back from Either<usize, P> to P after existential quantification
+
+## Phase 4: Update Return Types (Propagate proofs up the stack)
+
+### 4.1 Change Decision enum to carry proof/trace data
 ```rust
 pub enum Decision<P> {
     Yes { trace: Vec<usize> },
@@ -41,16 +56,19 @@ pub enum Decision<P> {
 }
 ```
 
-### 3.2 Update function signatures bottom-up
+### 4.2 Update function signatures bottom-up
 - Start with `can_reach_constraint_set` in smpt.rs - return the parsed proof
 - Update `can_reach_constraint_set_with_debug` to propagate proof/trace
-- Update `can_reach_quantified_set` to handle ProofInvariant<Either<usize, P>>
+- Update `can_reach_quantified_set` to:
+  - Handle ProofInvariant<Either<usize, P>> from SMPT
+  - Apply existential quantification for Left(i) variables
+  - Return ProofInvariant<P>
 - Update `can_reach_presburger` to collect and combine proofs from disjuncts
 - Update top-level `is_petri_reachability_set_subset_of_semilinear_new`
 
-## Phase 4: Implement Recursive Pruning with Proof Modification
+## Phase 5: Implement Recursive Pruning with Proof Modification
 
-### 4.1 Create recursive pruning that modifies proofs
+### 5.1 Create recursive pruning that modifies proofs
 - Replace `filter_bidirectional_reachable` with a recursive version that:
   - Takes a ProofInvariant as input
   - Does 1 forward step, collecting removed places
@@ -60,25 +78,25 @@ pub enum Decision<P> {
   - Recurses up to 10 times or until fixed point
   - Returns the modified ProofInvariant
 
-### 4.2 Thread proof through the pruning process
+### 5.2 Thread proof through the pruning process
 - In `can_reach_constraint_set_with_debug`:
   - Start with an initial ProofInvariant (universe over all places)
   - Pass it through recursive pruning
   - Use the modified proof when calling SMPT
   - Combine SMPT's proof with the pruning-modified proof
 
-## Phase 5: Combine Disjunct Proofs
+## Phase 6: Combine Disjunct Proofs
 
-### 5.1 Implement proof combination in can_reach_presburger
+### 6.1 Implement proof combination in can_reach_presburger
 - When checking multiple disjuncts:
   - If all are unreachable, AND their proofs together
   - If any is reachable, return its trace
 - Handle ProofInvariant variable renaming for consistency
 - Return combined proof in Decision::No
 
-## Phase 6: Testing and Polish
+## Phase 7: Testing and Polish
 
-### 6.1 Comprehensive testing strategy
+### 7.1 Comprehensive testing strategy
 - Unit tests for generic ProofInvariant operations
 - Test proof parsing with actual SMPT output files
 - Integration tests for full pipeline with known .ser examples
