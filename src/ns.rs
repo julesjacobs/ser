@@ -566,6 +566,51 @@ where
             result_proofs_str
         );
 
+        // Print proof or counterexample details with color
+        println!();
+        
+        // ANSI color codes
+        const CYAN: &str = "\x1b[36m";
+        const GREEN: &str = "\x1b[32m";
+        const RED: &str = "\x1b[31m";
+        const YELLOW: &str = "\x1b[33m";
+        const BOLD: &str = "\x1b[1m";
+        const RESET: &str = "\x1b[0m";
+        
+        println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
+        println!("{}{}PROOF/COUNTEREXAMPLE DETAILS:{}", BOLD, CYAN, RESET);
+        println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
+        
+        match &result_with_proofs {
+            crate::reachability_with_proofs::Decision::Proof { proof } => {
+                if let Some(p) = proof {
+                    println!("{}{}✅ PROOF CERTIFICATE FOUND{}", BOLD, GREEN, RESET);
+                    println!("{}   Variables:{}", YELLOW, RESET);
+                    // Pretty print variables
+                    for (i, var) in p.variables.iter().enumerate() {
+                        println!("      {}{}: {}{}", YELLOW, i, format!("{}", var), RESET);
+                    }
+                    println!("{}   Formula:{}", YELLOW, RESET);
+                    println!("      {}", p.formula);
+                } else {
+                    println!("{}{}✅ PROOF: Program is serializable{} (no explicit certificate available)", 
+                            BOLD, GREEN, RESET);
+                }
+            }
+            crate::reachability_with_proofs::Decision::CounterExample { trace } => {
+                println!("{}{}❌ COUNTEREXAMPLE TRACE FOUND{}", BOLD, RED, RESET);
+                if trace.is_empty() {
+                    println!("{}   (Empty trace - violation found at initial state){}", YELLOW, RESET);
+                } else {
+                    println!("{}   Transition sequence:{}", YELLOW, RESET);
+                    println!("      {:?}", trace);
+                    println!("{}   This trace demonstrates a non-serializable execution{}", YELLOW, RESET);
+                }
+            }
+        }
+        println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
+        println!();
+
         // Verify consistency
         if result_original != result_proofs_bool {
             eprintln!("WARNING: Results differ between original and proof-based methods!");

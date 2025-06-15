@@ -24,6 +24,7 @@ use crate::debug_report::{SmptCall, format_constraints_description};
 use crate::petri::*;
 use crate::presburger::{Constraint, ConstraintType};
 use crate::proof_parser::{ProofInvariant, parse_proof_file};
+use colored::*;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
@@ -219,10 +220,10 @@ where
     // Log the result
     match &result.outcome {
         SmptVerificationOutcome::Unreachable { .. } => {
-            println!("SMPT result: UNREACHABLE");
+            println!("  {} SMPT result: {}", "→".bright_black(), "UNREACHABLE".bright_black());
         }
         SmptVerificationOutcome::Reachable { .. } => {
-            println!("SMPT result: REACHABLE");
+            println!("  {} SMPT result: {}", "→".bright_black(), "REACHABLE".yellow().bold());
         }
         SmptVerificationOutcome::Error { message } => {
             eprintln!("ERROR: Failed to run SMPT: {}", message);

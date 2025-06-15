@@ -220,7 +220,8 @@ where
     }
 
     // Generate GraphViz output for the Network System
-    println!("{}", "Generating GraphViz visualization...".cyan().bold());
+    println!();
+    println!("{} {}", "🎨".cyan(), "Generating GraphViz visualization...".cyan().bold());
 
     match ns.save_graphviz(out_dir, open_files) {
         Ok(files) => {
@@ -243,8 +244,10 @@ where
     }
 
     // Convert to Petri net
+    println!();
     println!(
-        "{}",
+        "{} {}",
+        "🔄".cyan(),
         "Converting to Petri net and generating visualization..."
             .cyan()
             .bold()
@@ -288,8 +291,10 @@ where
     }
 
     // Convert to Petri net with requests
+    println!();
     println!(
-        "{}",
+        "{} {}",
+        "🔄".cyan(),
         "Converting to Petri net with requests and generating visualization..."
             .cyan()
             .bold()
@@ -357,15 +362,36 @@ where
     }
 
     // Check serializability
-    println!("{}", "Checking serializability...".cyan().bold());
-    let serializable = ns.is_serializable(out_dir);
+    println!();
     println!(
-        "Serializable: {}",
-        if serializable {
-            "Yes".green().bold()
-        } else {
-            "No".red().bold()
-        }
+        "{}",
+        "────────────────────────────────────────────────────────────".bright_black()
+    );
+    println!("{} {}", "🔍".yellow(), "SERIALIZABILITY ANALYSIS".yellow().bold());
+    println!(
+        "{}",
+        "────────────────────────────────────────────────────────────".bright_black()
+    );
+    let serializable = ns.is_serializable(out_dir);
+    println!();
+    println!(
+        "{}",
+        "════════════════════════════════════════════════════════════".bright_black()
+    );
+    println!(
+        "{} {}",
+        if serializable { "✅" } else { "❌" },
+        format!("RESULT: {}",
+            if serializable {
+                "SERIALIZABLE".green().bold()
+            } else {
+                "NOT SERIALIZABLE".red().bold()
+            }
+        )
+    );
+    println!(
+        "{}",
+        "════════════════════════════════════════════════════════════".bright_black()
     );
 }
 
@@ -411,11 +437,12 @@ fn process_json_file(file_path: &str, open_files: bool) {
 }
 
 fn process_ser_file(file_path: &str, open_files: bool) {
+    println!();
     println!(
         "{}",
-        "----------------------------------------".blue().bold()
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".blue().bold()
     );
-    println!("{} {}", "Processing Ser file:".blue().bold(), file_path);
+    println!("{} {} {}", "📄".blue(), "Processing Ser file:".blue().bold(), file_path.cyan());
 
     let content = match fs::read_to_string(file_path) {
         Ok(content) => content,

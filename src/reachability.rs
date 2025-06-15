@@ -3,6 +3,7 @@ use crate::kleene::Kleene;
 use crate::petri::*;
 use crate::semilinear::*;
 use crate::spresburger::SPresburgerSet;
+use colored::*;
 use either::{Either, Left, Right};
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};
@@ -394,8 +395,34 @@ where
             ),
         );
 
-        let (_removed_forward, _removed_backward) =
+        let (removed_forward, removed_backward) =
             petri.filter_bidirectional_reachable(&nonzero_places);
+        
+        // Pretty print removed transitions if any were removed
+        if !removed_forward.is_empty() || !removed_backward.is_empty() {
+            println!("  {} Pruning results:", "✂️".bright_black());
+            if !removed_forward.is_empty() {
+                println!("    {} Forward-removed transitions: {}", "➡️".bright_black(), 
+                    removed_forward.len());
+                for (pre, post) in &removed_forward {
+                    println!("      {} [{}] → [{}]", "-".red(),
+                        pre.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "),
+                        post.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")
+                    );
+                }
+            }
+            if !removed_backward.is_empty() {
+                println!("    {} Backward-removed transitions: {}", "⬅️".bright_black(),
+                    removed_backward.len());
+                for (pre, post) in &removed_backward {
+                    println!("      {} [{}] → [{}]", "-".red(),
+                        pre.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "),
+                        post.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")
+                    );
+                }
+            }
+        }
+        
         debug_logger.log_petri_net(
             &format!("Post-Pruning Petri Net {}", disjunct_id),
             "Petri net after bidirectional filtering",
