@@ -104,8 +104,8 @@ impl<T: Clone + Eq + Hash> AffineExpr<T> {
     }
 
     /// Get coefficient of a variable (0 if not present)
-    pub fn get_coeff(&self, var: &T) -> i64 {
-        self.terms.get(&Variable::Var(var.clone())).copied().unwrap_or(0)
+    pub fn get_coeff(&self, var: &Variable<T>) -> i64 {
+        self.terms.get(var).copied().unwrap_or(0)
     }
 
     /// Get the constant term
@@ -1283,6 +1283,113 @@ pub fn to_presburger_constraint(
     PConstraint::new(linear_combination, constant as i32, constraint_type)
 }
 
+/// Map a ProofInvariant<String> to ProofInvariant<P> using a name mapping
+/// This is a specialized function to avoid the infinite recursion issue with nested Either types
+pub fn map_proof_variables<P>(
+    proof: ProofInvariant<String>,
+    name_to_place: &std::collections::HashMap<String, P>,
+) -> Option<ProofInvariant<P>>
+where
+    P: Clone + Eq + Hash,
+{
+    // Map variables
+    let mut mapped_variables = Vec::new();
+    for var_name in proof.variables {
+        match name_to_place.get(&var_name) {
+            Some(place) => mapped_variables.push(place.clone()),
+            None => return None, // Variable not found in mapping
+        }
+    }
+    
+    // Map formula recursively
+    let mapped_formula = map_formula_variables(proof.formula, name_to_place)?;
+    
+    Some(ProofInvariant {
+        variables: mapped_variables,
+        formula: mapped_formula,
+    })
+}
+
+/// Helper function to map Formula<String> to Formula<P>
+fn map_formula_variables<P>(
+    formula: Formula<String>,
+    name_to_place: &std::collections::HashMap<String, P>,
+) -> Option<Formula<P>>
+where
+    P: Clone + Eq + Hash,
+{
+    match formula {
+        Formula::Constraint(constraint) => {
+            let mapped_constraint = map_constraint_variables(constraint, name_to_place)?;
+            Some(Formula::Constraint(mapped_constraint))
+        }
+        Formula::And(formulas) => {
+            let mut mapped = Vec::new();
+            for f in formulas {
+                mapped.push(map_formula_variables(f, name_to_place)?);
+            }
+            Some(Formula::And(mapped))
+        }
+        Formula::Or(formulas) => {
+            let mut mapped = Vec::new();
+            for f in formulas {
+                mapped.push(map_formula_variables(f, name_to_place)?);
+            }
+            Some(Formula::Or(mapped))
+        }
+        Formula::Exists(idx, body) => {
+            let mapped_body = map_formula_variables(*body, name_to_place)?;
+            Some(Formula::Exists(idx, Box::new(mapped_body)))
+        }
+        Formula::Forall(idx, body) => {
+            let mapped_body = map_formula_variables(*body, name_to_place)?;
+            Some(Formula::Forall(idx, Box::new(mapped_body)))
+        }
+    }
+}
+
+/// Helper function to map Constraint<String> to Constraint<P>
+fn map_constraint_variables<P>(
+    constraint: Constraint<String>,
+    name_to_place: &std::collections::HashMap<String, P>,
+) -> Option<Constraint<P>>
+where
+    P: Clone + Eq + Hash,
+{
+    let mapped_expr = map_affine_expr_variables(constraint.expr, name_to_place)?;
+    Some(Constraint {
+        expr: mapped_expr,
+        op: constraint.op,
+    })
+}
+
+/// Helper function to map AffineExpr<String> to AffineExpr<P>
+fn map_affine_expr_variables<P>(
+    expr: AffineExpr<String>,
+    name_to_place: &std::collections::HashMap<String, P>,
+) -> Option<AffineExpr<P>>
+where
+    P: Clone + Eq + Hash,
+{
+    let mut mapped_terms = HashMap::new();
+    
+    for (var, coeff) in expr.terms {
+        let mapped_var = match var {
+            Variable::Var(name) => {
+                let place = name_to_place.get(&name)?;
+                Variable::Var(place.clone())
+            }
+            Variable::Existential(idx) => Variable::Existential(idx),
+        };
+        mapped_terms.insert(mapped_var, coeff);
+    }
+    
+    Some(AffineExpr {
+        terms: mapped_terms,
+        constant: expr.constant,
+    })
+}
+
 /// Pretty‐print a parsed certificate
 impl<T: fmt::Display + fmt::Debug + Eq + Hash> fmt::Display for ProofInvariant<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -1421,18 +1528,27 @@ mod tests {
 
         // x + y + 5
         let expr = x.add(&y).add(&five);
-        assert_eq!(expr.to_string(), "x + y + 5");
+        // Check components instead of string representation due to HashMap ordering
+        assert_eq!(expr.get_coeff(&Variable::Var("x".to_string())), 1);
+        assert_eq!(expr.get_coeff(&Variable::Var("y".to_string())), 1);
+        assert_eq!(expr.get_constant(), 5);
 
         // 2*x - 3*y + 10
         let expr2 = x
             .mul_by_const(2)
             .add(&y.mul_by_const(-3))
             .add(&AffineExpr::from_const(10));
-        assert_eq!(expr2.to_string(), "2*x -3*y + 10");
+        // Check components instead of string representation due to HashMap ordering
+        assert_eq!(expr2.get_coeff(&Variable::Var("x".to_string())), 2);
+        assert_eq!(expr2.get_coeff(&Variable::Var("y".to_string())), -3);
+        assert_eq!(expr2.get_constant(), 10);
 
         // Test subtraction
         let expr3 = x.sub(&y);
-        assert_eq!(expr3.to_string(), "x -y");
+        // Check components instead of string representation due to HashMap ordering
+        assert_eq!(expr3.get_coeff(&Variable::Var("x".to_string())), 1);
+        assert_eq!(expr3.get_coeff(&Variable::Var("y".to_string())), -1);
+        assert_eq!(expr3.get_constant(), 0);
     }
 
     #[test]
@@ -1499,7 +1615,10 @@ mod tests {
         let result = parse_proof_file(proof).unwrap();
         match &result.formula {
             Formula::Constraint(c) => {
-                assert_eq!(c.expr.to_string(), "x + y -9");
+                // Check components instead of string representation due to HashMap ordering
+                assert_eq!(c.expr.get_coeff(&Variable::Var("x".to_string())), 1);
+                assert_eq!(c.expr.get_coeff(&Variable::Var("y".to_string())), 1);
+                assert_eq!(c.expr.get_constant(), -9);
                 assert_eq!(c.op, CompOp::Eq);
             }
             _ => panic!("Expected constraint"),

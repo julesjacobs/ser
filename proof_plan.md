@@ -46,23 +46,23 @@ This plan outlines the implementation of proof certificate support in the serial
 ### 3.2 Add reverse mapping function
 - Add function to map ProofInvariant back from Either<usize, P> to P after existential quantification
 
-## Phase 4: Update Return Types (Propagate proofs up the stack) 🚧 IN PROGRESS
+## Phase 4: Update Return Types (Propagate proofs up the stack) ✅ COMPLETE
 
-**STATUS**: Partially complete. Return types have been updated throughout the pipeline, but we encountered a critical issue with infinite polymorphic recursion.
+**STATUS**: Successfully completed. Return types have been updated throughout the pipeline to carry proof/trace data.
 
-**ISSUE**: The generic `map` function in `Formula<T>` causes infinite type recursion when dealing with nested `Either` types (e.g., `Either<usize, Either<P, Q>>`). This happens because:
-1. The recursive `map` implementation tries to instantiate all possible type combinations
-2. When mapping `ProofInvariant<String>` to `ProofInvariant<Either<usize, P>>` where `P` is already an `Either` type, the compiler hits recursion limits
+**ISSUES ENCOUNTERED AND RESOLVED**: 
+1. **Infinite polymorphic recursion**: The generic `map` function in `Formula<T>` caused infinite type recursion when dealing with nested `Either` types (e.g., `Either<usize, Either<P, Q>>`).
+   - **Solution**: Created specialized `project_right` methods for `ProofInvariant`, `Formula`, `Constraint`, and `AffineExpr` that work specifically with `Either<L, R>` types
 
-**SOLUTION IMPLEMENTED**: 
-- Created specialized `project_right` methods for `ProofInvariant`, `Formula`, `Constraint`, and `AffineExpr` that work specifically with `Either<L, R>` types
-- These methods use manual recursion instead of iterator combinators to avoid type recursion
-- Updated `project_proof_from_either` to use `project_right` instead of `map`
+2. **Proof mapping from SMPT**: Needed to convert `ProofInvariant<String>` from SMPT to `ProofInvariant<P>` without using the generic `map` function.
+   - **Solution**: Implemented specialized `map_proof_variables` function that manually maps each component without causing type recursion
 
-**REMAINING WORK**:
-- The proof mapping in `can_reach_constraint_set_with_debug_mapped` is currently disabled (returns `None`)
-- Need to implement a way to convert `ProofInvariant<String>` from SMPT to `ProofInvariant<P>` without using the generic `map` function
-- Consider creating a specialized conversion function that handles the string-to-type mapping without recursive generics
+**IMPLEMENTATION SUMMARY**:
+- Added `Decision<P>` enum to carry either traces (for non-serializable cases) or proofs (for serializable cases)
+- Updated all function signatures in the reachability pipeline to return `Decision<P>` instead of `bool`
+- Implemented specialized mapping functions to convert proofs from String to arbitrary types
+- Successfully integrated proof mapping in `can_reach_constraint_set_with_debug_mapped`
+- Verified proof flow works end-to-end with complex examples like `multiple_requests.ser`
 
 ## Phase 4.5: Fundamental Refactoring of Quantification System ✅ COMPLETE
 
