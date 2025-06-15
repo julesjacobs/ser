@@ -966,6 +966,52 @@ pub fn parse_proof_file(content: &str) -> Result<ProofInvariant> {
     parser.parse_smtlib()
 }
 
+
+/// Pretty‐print a parsed certificate
+impl fmt::Display for ProofInvariant {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Certificate variables: {:?}", self.variables)?;
+        writeln!(f, "Certificate formula:")?;
+
+        match &self.formula {
+            Formula::And(parts) if parts.len() > 1 => {
+                writeln!(f, "(")?;
+                for (i, part) in parts.iter().enumerate() {
+                    write!(f, "    ({})", part)?;
+                    if i + 1 < parts.len() {
+                        writeln!(f, " ∧")?;
+                    } else {
+                        writeln!(f)?; // last line, just newline
+                    }
+                }
+                write!(f, ")")
+            }
+            Formula::Or(parts) if parts.len() > 1 => {
+                writeln!(f, "(")?;
+                for (i, part) in parts.iter().enumerate() {
+                    write!(f, "    ({})", part)?;
+                    if i + 1 < parts.len() {
+                        writeln!(f, " ∨")?;
+                    } else {
+                        writeln!(f)?;
+                    }
+                }
+                write!(f, ")")
+            }
+            // fallback to the plain Display (no extra parens / lines)
+            other => write!(f, "{}", other),
+        }
+    }
+}
+
+/// Parse the given SMT-LIB text and print its `cert` function to stdout
+pub fn print_proof_certificate(content: &str) -> Result<()> {
+    let inv = parse_proof_file(content)?;
+    println!("{}", inv);
+    Ok(())
+}
+
+
 /// Convert to presburger constraint representation
 pub fn to_presburger_constraint(
     constraint: &Constraint,
@@ -1348,5 +1394,39 @@ mod tests {
 
         // Ensure we parsed some files successfully
         assert!(stats.1 > 0, "No files were parsed successfully");
+    }
+}
+
+
+
+#[test]
+fn test_parse_and_print_specific_proof_file() {
+    use std::fs;
+    use std::path::Path;
+
+    // adjust this path to point at one of your real proof files
+    let proof_path = Path::new("out/less_simple_ser/smpt_constraints_disjunct_0_proof.txt");
+    assert!(
+        proof_path.exists(),
+        "Test fixture not found: {}",
+        proof_path.display()
+    );
+
+    let content =
+        fs::read_to_string(proof_path).expect("Failed to read proof file for test");
+
+    // This will parse *and* print the certificate to stdout
+    print_proof_certificate(&content).expect("print_proof_certificate failed");
+
+    // And still allow us to inspect the parsed invariant:
+    let inv = parse_proof_file(&content).unwrap();
+    assert!(!inv.variables.is_empty(), "No variables parsed");
+
+    // Ensure the top‐level formula isn't trivially empty
+    match inv.formula {
+        Formula::And(ref parts) | Formula::Or(ref parts) => {
+            assert!(!parts.is_empty(), "Parsed an empty conjunct/disjunct");
+        }
+        _ => {}
     }
 }
