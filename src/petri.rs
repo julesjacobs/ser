@@ -269,10 +269,10 @@ where
     ///
     /// Returns a list of places that were removed (initial list of places minus final list of places).
     pub fn filter_reachable(&mut self, initial_places: &[Place]) -> Vec<Place> {
-        self.remove_identity_transitions();
-
         // Get all places that appear in the Petri net before filtering
         let all_places_before: HashSet<Place> = self.get_places().into_iter().collect();
+
+        self.remove_identity_transitions();
 
         let mut reachable_places: HashSet<Place> = initial_places.iter().cloned().collect();
         let mut reachable_transitions: HashSet<usize> = HashSet::new();

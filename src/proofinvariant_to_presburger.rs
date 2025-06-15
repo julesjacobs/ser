@@ -73,7 +73,7 @@ where
     use crate::proof_parser::{AffineExpr, CompOp};
 
     // Check that none of the places are already in the variable list
-    // todo - are we sure we want this? (Guy)
+    // todo - are we sure we want this? (Guy) - Yes (Jules)
     for place in places {
         assert!(
             !proof_invariant.variables.contains(place),
