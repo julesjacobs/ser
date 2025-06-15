@@ -23,6 +23,7 @@
 use crate::debug_report::{SmptCall, format_constraints_description};
 use crate::petri::*;
 use crate::presburger::{Constraint, ConstraintType};
+use crate::proof_parser::{ProofInvariant, parse_proof_file};
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
@@ -44,6 +45,8 @@ pub enum SmptVerificationOutcome {
     Unreachable {
         /// Proof certificate if available
         proof_certificate: Option<String>,
+        /// Parsed proof invariant if parsing succeeded
+        parsed_proof: Option<ProofInvariant<String>>,
     },
     /// The constraint set is reachable (program is not serializable)
     Reachable {
@@ -510,9 +513,23 @@ fn run_smpt_internal(
 
         // Try to read proof certificate if it exists
         let proof_certificate = std::fs::read_to_string(&proof_file_path).ok();
+        
+        // Try to parse the proof certificate
+        let parsed_proof = proof_certificate.as_ref().and_then(|cert| {
+            match parse_proof_file(cert) {
+                Ok(proof) => Some(proof),
+                Err(e) => {
+                    eprintln!("Warning: Failed to parse proof certificate: {:?}", e);
+                    None
+                }
+            }
+        });
 
         SmptVerificationResult {
-            outcome: SmptVerificationOutcome::Unreachable { proof_certificate },
+            outcome: SmptVerificationOutcome::Unreachable { 
+                proof_certificate,
+                parsed_proof,
+            },
             raw_stdout: stdout,
             raw_stderr: stderr,
         }
@@ -838,6 +855,36 @@ FORMULA reachability-check TRUE TIME 0.403745174407959
             let result = install_smpt();
             assert!(result.is_err());
             assert!(result.unwrap_err().contains("not installed"));
+        }
+    }
+
+    #[test]
+    fn test_proof_parsing_integration() {
+        // Test that proof certificates are parsed when available
+        use crate::proof_parser::Formula;
+        
+        // Create a mock proof certificate content
+        let mock_proof = r#"
+        (define-fun cert ((G__X_1_ Int) (RESP_read_REQ_1 Int)) Bool
+            (and (>= G__X_1_ 0) (>= RESP_read_REQ_1 0)))
+        "#;
+        
+        // Parse it
+        match parse_proof_file(mock_proof) {
+            Ok(proof) => {
+                assert_eq!(proof.variables.len(), 2);
+                assert!(proof.variables.contains(&"G__X_1_".to_string()));
+                assert!(proof.variables.contains(&"RESP_read_REQ_1".to_string()));
+                
+                // Check that it's an And formula with constraints
+                match &proof.formula {
+                    Formula::And(formulas) => {
+                        assert_eq!(formulas.len(), 2);
+                    }
+                    _ => panic!("Expected And formula"),
+                }
+            }
+            Err(e) => panic!("Failed to parse proof: {:?}", e),
         }
     }
 
