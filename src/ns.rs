@@ -641,11 +641,15 @@ where
     }
 }
 
+fn display_vec<T : Display>(v: &[T]) -> String {
+    v.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", ")
+}
+
 
 /// Prints a counterexample trace step-by-step on the given Petri net.
 fn print_counterexample_trace<P>(petri: &Petri<P>, trace: &[usize])
 where
-    P: Clone + Eq + PartialEq + Hash + std::fmt::Debug,
+    P: Clone + Eq + PartialEq + Hash + std::fmt::Display,
 {
     // Header
     println!("{}", "❌ COUNTEREXAMPLE TRACE FOUND".bold().red());
@@ -660,7 +664,7 @@ where
         // Replay
         let transitions = petri.get_transitions();
         let mut marking = petri.get_initial_marking();
-        println!("{}", format!("Step 0 – initial marking: {:?}", marking).yellow());
+        println!("{}", format!("Step 0 – initial marking: {}", display_vec(&marking)).yellow());
 
         for (i, &t_idx) in trace.iter().enumerate() {
             let (inputs, outputs) = &transitions[t_idx];
@@ -677,8 +681,11 @@ where
             println!(
                 "{}",
                 format!(
-                    "Step {} – fired t{}: inputs={:?}, outputs={:?}, marking={:?}",
-                    i + 1, t_idx, inputs, outputs, marking
+                    "Step {} – fired t{}: inputs={}, outputs={}, marking={}",
+                    i + 1, t_idx, 
+                    display_vec(inputs), 
+                    display_vec(outputs), 
+                    display_vec(&marking)
                 )
                     .yellow()
             );
@@ -703,7 +710,7 @@ where
         for (place, count) in &counts {
             println!(
                 "{}",
-                format!("{:?}: {} token(s)", place, count).yellow()
+                format!("{}: {} token(s)", place, count).yellow()
             );
         }
 
@@ -718,7 +725,7 @@ where
         println!("{}", "❌ COUNTEREXAMPLE:".bold().red());
         // for each place, look for the Debug pattern "Right(Response(...), resp)" and extract
         for (place, &cnt) in &counts {
-            let s = format!("{:?}", place);
+            let s = format!("{}", place);
             // matches: Right(Response(ExprRequest { name: "foo" }, 0))
             if let Some(inner) = s
                 .strip_prefix("Right(Response(")
