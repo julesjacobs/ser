@@ -1,5 +1,7 @@
-use std::collections::BTreeMap;
+use std::fs;
 use std::fmt;
+use std::path::Path;
+use std::collections::BTreeMap;
 
 /// Affine expression: sum of terms (coefficient * variable) + constant
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1032,7 +1034,35 @@ pub fn print_proof_certificate(content: &str) -> Result<()> {
 }
 
 
-
+/// Recursively print a Formula AST with indentation
+fn print_formula_tree(formula: &Formula, indent: usize) {
+    let pad = "  ".repeat(indent);
+    match formula {
+        Formula::Constraint(c) => {
+            println!("{}Constraint: {}", pad, c);
+        }
+        Formula::And(children) => {
+            println!("{}And", pad);
+            for child in children {
+                print_formula_tree(child, indent + 1);
+            }
+        }
+        Formula::Or(children) => {
+            println!("{}Or", pad);
+            for child in children {
+                print_formula_tree(child, indent + 1);
+            }
+        }
+        Formula::Exists(var, body) => {
+            println!("{}Exists {}", pad, var);
+            print_formula_tree(body, indent + 1);
+        }
+        Formula::Forall(var, body) => {
+            println!("{}Forall {}", pad, var);
+            print_formula_tree(body, indent + 1);
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -1403,11 +1433,7 @@ mod tests {
 
 #[test]
 fn test_parse_and_print_specific_proof_file() {
-    use std::fs;
-    use std::path::Path;
-
-    // adjust this path to point at one of your real proof files
-    let proof_path = Path::new("out/less_simple_ser/smpt_constraints_disjunct_0_proof.txt");
+    let proof_path = Path::new("out/simple_nonser2_turned_ser_with_locks/smpt_constraints_disjunct_0_proof.txt");
     assert!(
         proof_path.exists(),
         "Test fixture not found: {}",
@@ -1417,14 +1443,15 @@ fn test_parse_and_print_specific_proof_file() {
     let content =
         fs::read_to_string(proof_path).expect("Failed to read proof file for test");
 
-    // This will parse *and* print the certificate to stdout
-    print_proof_certificate(&content).expect("print_proof_certificate failed");
+    // Parse normally...
+    let inv = parse_proof_file(&content).expect("parse_proof_file failed");
+
+    // Now print the tree from root to leaves:
+    println!("\n=== Parsed Formula Tree ===");
+    print_formula_tree(&inv.formula, 0);
 
     // And still allow us to inspect the parsed invariant:
-    let inv = parse_proof_file(&content).unwrap();
     assert!(!inv.variables.is_empty(), "No variables parsed");
-
-    // Ensure the top‐level formula isn't trivially empty
     match inv.formula {
         Formula::And(ref parts) | Formula::Or(ref parts) => {
             assert!(!parts.is_empty(), "Parsed an empty conjunct/disjunct");
