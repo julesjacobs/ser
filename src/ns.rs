@@ -15,6 +15,7 @@ use crate::petri::Petri;
 use crate::reachability_with_proofs::Decision;
 use crate::ns_to_petri::ReqPetriState;
 use colored::*;
+use regex::*;
 
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
@@ -706,12 +707,15 @@ where
             );
         }
 
-        // todo add start
-
+        // Conclusion
+        println!(
+            "{}",
+            "This trace demonstrates a non-serializable execution, with the following outputs".yellow()
+        );
         // cyan separator
         println!("{}", "================================================================================
-".cyan());
-
+        ".cyan());
+        println!("{}", "❌ COUNTEREXAMPLE:".bold().red());
         // for each place, look for the Debug pattern "Right(Response(...), resp)" and extract
         for (place, &cnt) in &counts {
             let s = format!("{:?}", place);
@@ -720,28 +724,39 @@ where
                 .strip_prefix("Right(Response(")
                 .and_then(|s| s.strip_suffix(")"))
             {
-                // inner == "ExprRequest { name: \"foo\" }, 0"
-                // split into [ "ExprRequest { name: \"foo\" }", "0" ]
                 let mut parts = inner.rsplitn(2, "), ");
-                let resp = parts.next().unwrap_or("").trim();
-                let req = parts.next().unwrap_or("").trim().trim_start_matches('(');
-                println!(
-                    "{}",
-                    format!("request: \"{}\", response: {} (X {})", req, resp, cnt).cyan()
-                );
+                let packet = parts.next().unwrap_or("").trim();
+                if let Some((name, resp)) = extract_name_and_value(&format!("{:?}", packet)) {
+                    // For example, packet == "ExprRequest { name: \"foo\" }, 0" -> will split into [ "foo", "0" ]
+                    // name == "foo", resp == 1
+                    println!("request: \"{}\", response: {} ({} packet)", name, resp, cnt);
+                }
             }
         }
-
-        // todo add end
-
-        // Conclusion
-        println!(
-            "{}",
-            "This trace demonstrates a non-serializable execution".yellow()
-        );
     }
 }
 
+
+
+
+/// Given something like `"ExprRequest { name: \"foo\" }, 0)"`,
+/// returns Some(("foo", 0)) or None.
+fn extract_name_and_value(s: &str) -> Option<(String, usize)> {
+    // 1) Trim any surrounding quotes:
+    let inner = s.trim().trim_matches('"').trim();
+
+    // 2) Turn `\"` into plain `"` so our split-on-quote works:
+    let unescaped = inner.replace("\\\"", "\"");
+
+    // 3) Grab the request name between the first pair of real quotes:
+    let name = unescaped.split('"').nth(1)?.to_string();
+
+    // 4) Grab the number after the comma and before the `)`:
+    let num_part = unescaped.splitn(2, ',').nth(1)?.trim();
+    let num = num_part.trim_end_matches(')').parse::<usize>().ok()?;
+
+    Some((name, num))
+}
 
 
 #[cfg(test)]
