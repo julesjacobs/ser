@@ -457,6 +457,7 @@ where
     Resp: Clone + Ord + Hash + Display + Debug,
 {
     /// Check if the network system is serializable using both methods and report results
+    #[must_use]
     pub fn is_serializable(&self, out_dir: &str) -> bool {
         use crate::ns_to_petri::*;
         use ReqPetriState::*;
@@ -623,7 +624,16 @@ where
                         "{}   This trace demonstrates a non-serializable execution{}",
                         YELLOW, RESET
                     );
-                    print_counterexample_trace(&petri_for_trace, trace);
+                    let mut response_places_in_petri_for_trace = vec![];
+                    for p in petri_for_trace.get_places() {
+                        match p {
+                            Right(Response(_, _)) => {
+                                response_places_in_petri_for_trace.push(p);
+                            }
+                            _ => (),
+                        }
+                    }
+                    print_counterexample_trace(&petri_for_trace, trace, &response_places_in_petri_for_trace);
                 }
             }
         }
@@ -658,7 +668,7 @@ fn display_vec<T: Display>(v: &[T]) -> String {
 }
 
 /// Prints a counterexample trace step-by-step on the given Petri net.
-fn print_counterexample_trace<P>(petri: &Petri<P>, trace: &[usize])
+fn print_counterexample_trace<P>(petri: &Petri<P>, trace: &[usize], response_places: &[P])
 where
     P: Clone + Eq + PartialEq + Hash + std::fmt::Display,
 {
@@ -745,20 +755,10 @@ where
         println!("{}", "❌ COUNTEREXAMPLE:".bold().red());
         // for each place, look for the Debug pattern "Right(Response(...), resp)" and extract
         for (place, &cnt) in &counts {
-            let s = format!("{}", place);
-            // matches: Right(Response(ExprRequest { name: "foo" }, 0))
-            if let Some(inner) = s
-                .strip_prefix("Right(Response(")
-                .and_then(|s| s.strip_suffix(")"))
-            {
-                let mut parts = inner.rsplitn(2, "), ");
-                let packet = parts.next().unwrap_or("").trim();
-                if let Some((name, resp)) = extract_name_and_value(&format!("{:?}", packet)) {
-                    // For example, packet == "ExprRequest { name: \"foo\" }, 0" -> will split into [ "foo", "0" ]
-                    // name == "foo", resp == 1
-                    println!("request: \"{}\", response: {} ({} packet)", name, resp, cnt);
-                }
+            if !response_places.contains(place) {
+                continue;
             }
+            println!("request-response: {} (count: {})", place, cnt);
         }
     }
 }
