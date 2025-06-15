@@ -315,11 +315,11 @@ where
             .map(|(_, transition)| transition.clone())
             .collect();
 
+        // Filter initial marking to keep only places that still exist in the net
+        self.initial_marking.retain(|place| reachable_places.contains(place));
+
         // Get all places that remain after filtering transitions
         let all_places_after: HashSet<Place> = self.get_places().into_iter().collect();
-
-        // Filter initial marking to keep only places that still exist in the net
-        self.initial_marking.retain(|place| all_places_after.contains(place));
 
         // Calculate removed places: places that were in the net before but not after
         let removed_places: Vec<Place> = all_places_before
