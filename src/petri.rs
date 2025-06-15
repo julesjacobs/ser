@@ -262,6 +262,7 @@ where
     /// Takes a list of initially reachable places and modifies the Petri net by:
     /// - Finding all transitions that can fire (all preconditions are reachable)
     /// - Removing all unreachable transitions from self.transitions
+    /// - Removing unreachable places from self.initial_marking
     ///
     /// A transition is reachable (can fire) if all its precondition places are reachable.
     /// When a transition can fire, all its postcondition places become reachable.
@@ -270,13 +271,8 @@ where
     pub fn filter_reachable(&mut self, initial_places: &[Place]) -> Vec<Place> {
         self.remove_identity_transitions();
 
-        // Collect all places that appear in the Petri net before filtering
-        let mut all_places_before: HashSet<Place> = HashSet::new();
-        for (inputs, outputs) in &self.transitions {
-            all_places_before.extend(inputs.iter().cloned());
-            all_places_before.extend(outputs.iter().cloned());
-        }
-        all_places_before.extend(initial_places.iter().cloned());
+        // Get all places that appear in the Petri net before filtering
+        let all_places_before: HashSet<Place> = self.get_places().into_iter().collect();
 
         let mut reachable_places: HashSet<Place> = initial_places.iter().cloned().collect();
         let mut reachable_transitions: HashSet<usize> = HashSet::new();
@@ -319,12 +315,11 @@ where
             .map(|(_, transition)| transition.clone())
             .collect();
 
-        // Collect all places that remain after filtering
-        let mut all_places_after: HashSet<Place> = HashSet::new();
-        for (inputs, outputs) in &self.transitions {
-            all_places_after.extend(inputs.iter().cloned());
-            all_places_after.extend(outputs.iter().cloned());
-        }
+        // Get all places that remain after filtering transitions
+        let all_places_after: HashSet<Place> = self.get_places().into_iter().collect();
+
+        // Filter initial marking to keep only places that still exist in the net
+        self.initial_marking.retain(|place| all_places_after.contains(place));
 
         // Calculate removed places: places that were in the net before but not after
         let removed_places: Vec<Place> = all_places_before

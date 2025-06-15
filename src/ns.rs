@@ -541,11 +541,10 @@ where
         } else {
             "Not serializable"
         };
-        let result_proofs_bool: bool = result_with_proofs.clone().into();
-        let result_proofs_str = if result_proofs_bool {
-            "Serializable"
-        } else {
-            "Not serializable"
+        // Determine the proof-based result based on Decision variant
+        let (result_proofs_bool, result_proofs_str) = match &result_with_proofs {
+            crate::reachability_with_proofs::Decision::Proof { .. } => (true, "Serializable"),
+            crate::reachability_with_proofs::Decision::CounterExample { .. } => (false, "Not serializable"),
         };
 
         // Report results
@@ -559,8 +558,12 @@ where
             }
         );
         println!(
-            "  Proof-based method: {:?} ({})",
-            result_with_proofs, result_proofs_str
+            "  Proof-based method: {} ({})",
+            match &result_with_proofs {
+                crate::reachability_with_proofs::Decision::Proof { .. } => "Proof",
+                crate::reachability_with_proofs::Decision::CounterExample { .. } => "CounterExample",
+            },
+            result_proofs_str
         );
 
         // Verify consistency

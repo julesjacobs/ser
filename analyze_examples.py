@@ -100,9 +100,9 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
             original_result = "Not serializable"
         
         # Check proof-based method results
-        if "Proof-based method: Yes" in output:
+        if "Proof-based method: Proof" in output:
             proof_result = "Serializable"
-        elif "Proof-based method: No" in output:
+        elif "Proof-based method: CounterExample" in output:
             proof_result = "Not serializable"
     else:
         # Process failed - check if due to timeout
