@@ -746,21 +746,22 @@ where
         "
             .cyan()
         );
-        println!("{}", "❌ COUNTEREXAMPLE:".bold().red());
+        print!("{}", "❌ COUNTEREXAMPLE request/responses: ".bold().red());
         // for each place, look for the Debug pattern "Right(Response(...), resp)" and extract
         for (place, &cnt) in &counts {
             use crate::ns_to_petri::ReqPetriState::Response;
             match place {
                 Right(Response(req, resp)) => {
                     if cnt == 1 {
-                        println!("request/response: {req}/{resp}");
+                        print!("{req}/{resp} ");
                     } else {
-                        println!("request/response: {req}/{resp} × {cnt}");
+                        print!("({req}/{resp})^{cnt} ");
                     }
                 }
                 _ => (),
             }
         }
+        println!();
     }
 }
 
