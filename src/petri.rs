@@ -265,8 +265,19 @@ where
     ///
     /// A transition is reachable (can fire) if all its precondition places are reachable.
     /// When a transition can fire, all its postcondition places become reachable.
-    pub fn filter_reachable(&mut self, initial_places: &[Place]) {
+    ///
+    /// Returns a list of places that were removed (initial list of places minus final list of places).
+    pub fn filter_reachable(&mut self, initial_places: &[Place]) -> Vec<Place> {
         self.remove_identity_transitions();
+        
+        // Collect all places that appear in the Petri net before filtering
+        let mut all_places_before: HashSet<Place> = HashSet::new();
+        for (inputs, outputs) in &self.transitions {
+            all_places_before.extend(inputs.iter().cloned());
+            all_places_before.extend(outputs.iter().cloned());
+        }
+        all_places_before.extend(initial_places.iter().cloned());
+        
         let mut reachable_places: HashSet<Place> = initial_places.iter().cloned().collect();
         let mut reachable_transitions: HashSet<usize> = HashSet::new();
         let mut worklist: Vec<Place> = initial_places.to_vec();
@@ -307,12 +318,27 @@ where
             .filter(|(idx, _)| reachable_transitions.contains(idx))
             .map(|(_, transition)| transition.clone())
             .collect();
+        
+        // Collect all places that remain after filtering
+        let mut all_places_after: HashSet<Place> = HashSet::new();
+        for (inputs, outputs) in &self.transitions {
+            all_places_after.extend(inputs.iter().cloned());
+            all_places_after.extend(outputs.iter().cloned());
+        }
+        
+        // Calculate removed places: places that were in the net before but not after
+        let removed_places: Vec<Place> = all_places_before
+            .difference(&all_places_after)
+            .cloned()
+            .collect();
+        
+        removed_places
     }
 
     /// Filter the Petri net to keep only transitions reachable from the initial marking
-    pub fn filter_reachable_from_initial(&mut self) {
+    pub fn filter_reachable_from_initial(&mut self) -> Vec<Place> {
         let initial_marking = self.initial_marking.clone();
-        self.filter_reachable(&initial_marking);
+        self.filter_reachable(&initial_marking)
     }
 
     /// Flip the Petri net by reversing all transitions (input becomes output, output becomes input)
@@ -332,15 +358,17 @@ where
     /// Returns two vectors of transitions:
     /// 1. `removed_forward` — transitions deleted in the forward filtering steps
     /// 2. `removed_backward` — transitions deleted in the backward filtering steps
-    pub fn filter_backwards_reachable(&mut self, target_places: &[Place]) {
+    pub fn filter_backwards_reachable(&mut self, target_places: &[Place]) -> Vec<Place> {
         // Step 1: Flip the net
         self.flip();
 
         // Step 2: Run forward reachability from target places
-        self.filter_reachable(target_places);
+        let places = self.filter_reachable(target_places);
 
         // Step 3: Flip back to original orientation
         self.flip();
+
+        places
     }
 
     /// Iteratively filter the Petri net using alternating forward and backward reachability
@@ -742,7 +770,7 @@ mod tests {
 
         // Test 1: Forward-only filtering
         let mut petri_forward = petri_original.clone();
-        petri_forward.filter_reachable_from_initial();
+        let _removed_places = petri_forward.filter_reachable_from_initial();
         println!(
             "Forward-only filtering: {} transitions remain",
             petri_forward.transitions.len()
