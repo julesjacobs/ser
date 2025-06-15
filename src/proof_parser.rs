@@ -613,7 +613,16 @@ impl Parser {
     fn parse_formula(&mut self) -> Result<Formula> {
         self.skip_ws_and_comments();
 
+        // Check for bare atoms first (true/false)
         if self.peek() != Some('(') {
+            // Try to parse an atom
+            if let Ok(atom) = self.parse_atom() {
+                match atom.as_str() {
+                    "true" => return Ok(Formula::And(vec![])),  // Empty AND
+                    "false" => return Ok(Formula::Or(vec![])),   // Empty OR
+                    _ => return Err(self.error(&format!("Expected formula, found atom '{}'", atom))),
+                }
+            }
             return Err(self.error("Expected '(' to start formula"));
         }
 
@@ -1311,6 +1320,84 @@ mod tests {
                 }
             }
             _ => panic!("Expected AND"),
+        }
+    }
+
+    #[test]
+    fn test_true_false_constants() {
+        // Test parsing 'true' constant
+        let proof_true = r#"
+(set-logic LIA)
+(define-fun cert ((x Int)) Bool true)
+"#;
+
+        let result = parse_proof_file(proof_true).unwrap();
+        match &result.formula {
+            Formula::And(parts) => {
+                assert_eq!(parts.len(), 0, "true should be empty AND");
+            }
+            _ => panic!("Expected AND for true"),
+        }
+
+        // Test parsing 'false' constant
+        let proof_false = r#"
+(set-logic LIA)
+(define-fun cert ((x Int)) Bool false)
+"#;
+
+        let result = parse_proof_file(proof_false).unwrap();
+        match &result.formula {
+            Formula::Or(parts) => {
+                assert_eq!(parts.len(), 0, "false should be empty OR");
+            }
+            _ => panic!("Expected OR for false"),
+        }
+
+        // Test true and false in context
+        let proof_mixed = r#"
+(set-logic LIA)
+(define-fun cert ((x Int)) Bool 
+  (and true (>= x 0) false))
+"#;
+
+        let result = parse_proof_file(proof_mixed).unwrap();
+        match &result.formula {
+            Formula::And(parts) => {
+                // true is skipped, false is skipped in AND context
+                // Should have just x >= 0
+                assert_eq!(parts.len(), 1);
+                match &parts[0] {
+                    Formula::Constraint(c) => {
+                        assert_eq!(c.expr.to_string(), "x");
+                    }
+                    _ => panic!("Expected constraint"),
+                }
+            }
+            _ => panic!("Expected AND"),
+        }
+
+        // Test OR with true and false
+        let proof_or = r#"
+(set-logic LIA)  
+(define-fun cert ((x Int)) Bool
+  (or false (= x 5) true))
+"#;
+
+        let result = parse_proof_file(proof_or).unwrap();
+        match &result.formula {
+            Formula::Or(parts) => {
+                // false is skipped, true is skipped in OR context
+                // Should have just x = 5
+                assert_eq!(parts.len(), 1);
+                match &parts[0] {
+                    Formula::Constraint(c) => {
+                        assert_eq!(c.expr.to_string(), "x -5");
+                        assert_eq!(c.op, CompOp::Eq);
+                    }
+                    _ => panic!("Expected constraint"),
+                }
+            }
+            _ => panic!("Expected OR"),
         }
     }
 
