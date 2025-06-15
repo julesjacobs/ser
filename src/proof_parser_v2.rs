@@ -966,6 +966,26 @@ pub fn parse_proof_file(content: &str) -> Result<ProofInvariant> {
     parser.parse_smtlib()
 }
 
+/// Convert to presburger constraint representation
+pub fn to_presburger_constraint(
+    constraint: &Constraint,
+) -> crate::presburger::Constraint<crate::presburger::Variable<String>> {
+    use crate::presburger::{Constraint as PConstraint, ConstraintType, Variable};
+
+    let (terms, constant) = constraint.expr.to_linear_combination();
+    let linear_combination: Vec<(i32, Variable<String>)> = terms
+        .into_iter()
+        .map(|(coeff, var)| (coeff as i32, Variable::Var(var)))
+        .collect();
+
+    let constraint_type = match constraint.op {
+        CompOp::Eq => ConstraintType::EqualToZero,
+        CompOp::Geq => ConstraintType::NonNegative,
+    };
+
+    PConstraint::new(linear_combination, constant as i32, constraint_type)
+}
+
 
 /// Pretty‐print a parsed certificate
 impl fmt::Display for ProofInvariant {
@@ -1012,25 +1032,7 @@ pub fn print_proof_certificate(content: &str) -> Result<()> {
 }
 
 
-/// Convert to presburger constraint representation
-pub fn to_presburger_constraint(
-    constraint: &Constraint,
-) -> crate::presburger::Constraint<crate::presburger::Variable<String>> {
-    use crate::presburger::{Constraint as PConstraint, ConstraintType, Variable};
 
-    let (terms, constant) = constraint.expr.to_linear_combination();
-    let linear_combination: Vec<(i32, Variable<String>)> = terms
-        .into_iter()
-        .map(|(coeff, var)| (coeff as i32, Variable::Var(var)))
-        .collect();
-
-    let constraint_type = match constraint.op {
-        CompOp::Eq => ConstraintType::EqualToZero,
-        CompOp::Geq => ConstraintType::NonNegative,
-    };
-
-    PConstraint::new(linear_combination, constant as i32, constraint_type)
-}
 
 #[cfg(test)]
 mod tests {
