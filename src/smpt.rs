@@ -357,8 +357,10 @@ fn build_smpt_args(
         xml_file.to_string(),
         "--show-time".to_string(),
         "--show-model".to_string(),
-        "--export-proof".to_string(),
-        proof_file.to_string(),
+        "--debug".to_string(),
+        // TODO: Temporarily disable proof flags to enable trace output
+        // "--export-proof".to_string(),
+        // proof_file.to_string(),
     ];
 
     // Add methods
@@ -403,9 +405,11 @@ fn extract_model(output: &str) -> Option<String> {
 }
 
 /// Extract trace from SMPT output, converting transition IDs to indices
+/// Looks for traces in the output itself or in associated .scn files
 fn extract_trace(output: &str) -> Vec<usize> {
     let lines: Vec<&str> = output.lines().collect();
 
+    // First, look for traces in the output itself (traditional format)
     for i in 0..lines.len() {
         // Look for BMC or PDR trace markers
         if lines[i].contains("[BMC] Trace") || lines[i].contains("[PDR] Trace") {
@@ -502,7 +506,25 @@ fn run_smpt_internal(
     // Parse SMPT output
     if stdout.contains("TRUE") {
         // Property is reachable => NOT serializable
-        let trace = extract_trace(&stdout);
+        let mut trace = extract_trace(&stdout);
+        
+        // If no trace found in stdout, try to read from .scn file
+        if trace.is_empty() {
+            let scn_file_path = proof_file_path.replace(".txt", ".txt.scn");
+            if let Ok(scn_content) = std::fs::read_to_string(&scn_file_path) {
+                let trace_line = scn_content.trim();
+                if !trace_line.is_empty() && trace_line.starts_with('t') {
+                    trace = trace_line
+                        .split_whitespace()
+                        .filter_map(|s| {
+                            // Extract number from "t0", "t1", etc.
+                            s.strip_prefix('t')
+                                .and_then(|num| num.parse::<usize>().ok())
+                        })
+                        .collect();
+                }
+            }
+        }
 
         SmptVerificationResult {
             outcome: SmptVerificationOutcome::Reachable { trace },
