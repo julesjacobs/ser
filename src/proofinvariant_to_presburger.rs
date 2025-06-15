@@ -559,4 +559,30 @@ mod tests {
             _ => panic!("Expected OR formula"),
         }
     }
+
+    #[test]
+    fn test_true_false_formulas() {
+        // Test that true (empty AND) converts to universe
+        let true_formula = Formula::And(vec![]);
+        let mapping = vec!["x".to_string(), "y".to_string()];
+        let ps_true = formula_to_presburger(&true_formula, &mapping);
+        
+        println!("True formula as PresburgerSet: {}", ps_true);
+        assert!(!ps_true.is_empty());
+        
+        // Compare with explicit universe
+        let universe = PresburgerSet::universe(mapping.clone());
+        assert_eq!(ps_true, universe);
+        
+        // Test that false (empty OR) converts to empty set
+        let false_formula = Formula::Or(vec![]);
+        let ps_false = formula_to_presburger(&false_formula, &mapping);
+        
+        println!("False formula as PresburgerSet: {}", ps_false);
+        assert!(ps_false.is_empty());
+        
+        // Compare with explicit empty set
+        let empty = PresburgerSet::<String>::zero();
+        assert_eq!(ps_false, empty);
+    }
 }
