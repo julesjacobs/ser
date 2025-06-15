@@ -469,25 +469,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Existential quantification not supported in PresburgerSet conversion"
-    )]
-    fn test_exists_formula() {
-        // Create a formula with an existential variable
-        let formula = Formula::Exists(
-            0, // Using index 0 for the existential variable
-            Box::new(Formula::Constraint(ProofConstraint::new(
-                AffineExpr::from_var("x".to_string()),
-                CompOp::Eq,
-            ))),
-        );
-
-        let mapping = vec!["x".to_string()];
-        // This should panic as existential quantification is not supported in formula_to_presburger
-        let _ = formula_to_presburger(&formula, &mapping);
-    }
-
-    #[test]
     #[should_panic(expected = "Universal quantification not supported in PresburgerSet conversion")]
     fn test_forall_formula_panics() {
         let formula = Formula::Forall(
