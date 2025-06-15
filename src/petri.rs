@@ -250,7 +250,7 @@ impl<P: Clone + PartialEq + Eq + Hash> Petri<P> {
 
 impl<Place> Petri<Place>
 where
-    Place: Clone + PartialEq + Eq + Hash,
+    Place: Clone + PartialEq + Eq + Hash + std::fmt::Debug,
 {
     /// Remove transitions where input places are exactly the same as output places
     pub fn remove_identity_transitions(&mut self) {
@@ -320,6 +320,10 @@ where
 
         // Get all places that remain after filtering transitions
         let all_places_after: HashSet<Place> = self.get_places().into_iter().collect();
+
+        let all_places_after_plus_initial: HashSet<Place> = all_places_after.clone().into_iter().chain(initial_places.iter().cloned()).collect();
+
+        assert_eq!(reachable_places, all_places_after_plus_initial);
 
         // Calculate removed places: places that were in the net before but not after
         let removed_places: Vec<Place> = all_places_before
