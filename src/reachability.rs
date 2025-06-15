@@ -405,20 +405,36 @@ where
                 println!("    {} Forward-removed transitions: {}", "➡️".bright_black(), 
                     removed_forward.len());
                 for (pre, post) in &removed_forward {
-                    println!("      {} [{}] → [{}]", "-".red(),
-                        pre.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "),
-                        post.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")
-                    );
+                    // Format places using their Display implementation to get pretty names
+                    let pre_str = if pre.is_empty() {
+                        "∅".to_string()
+                    } else {
+                        pre.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                    };
+                    let post_str = if post.is_empty() {
+                        "∅".to_string()
+                    } else {
+                        post.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                    };
+                    println!("      {} {} → {}", "-".red(), pre_str, post_str);
                 }
             }
             if !removed_backward.is_empty() {
                 println!("    {} Backward-removed transitions: {}", "⬅️".bright_black(),
                     removed_backward.len());
                 for (pre, post) in &removed_backward {
-                    println!("      {} [{}] → [{}]", "-".red(),
-                        pre.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "),
-                        post.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")
-                    );
+                    // Format places using their Display implementation to get pretty names
+                    let pre_str = if pre.is_empty() {
+                        "∅".to_string()
+                    } else {
+                        pre.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                    };
+                    let post_str = if post.is_empty() {
+                        "∅".to_string()
+                    } else {
+                        post.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                    };
+                    println!("      {} {} → {}", "-".red(), pre_str, post_str);
                 }
             }
         }

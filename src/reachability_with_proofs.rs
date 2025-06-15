@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Mutex;
+use colored::*;
 
 /// Decision enum for reachability analysis results with proof/trace support
 #[derive(Debug, Clone)]
@@ -502,10 +503,24 @@ where
                       iteration, transitions_before, transitions_after, 
                       transitions_before - transitions_after);
             if !removed_forward.is_empty() {
-                eprintln!("  Forward removed places: {:?}", removed_forward);
+                eprint!("{}", "  Forward removed places: ".green());
+                for (i, place) in removed_forward.iter().enumerate() {
+                    if i > 0 {
+                        eprint!(", ");
+                    }
+                    eprint!("{}", place);
+                }
+                eprintln!();
             }
             if !removed_backward.is_empty() {
-                eprintln!("  Backward removed places: {:?}", removed_backward);
+                eprint!("{}", "  Backward removed places: ".green());
+                for (i, place) in removed_backward.iter().enumerate() {
+                    if i > 0 {
+                        eprint!(", ");
+                    }
+                    eprint!("{}", place);
+                }
+                eprintln!();
             }
         }
         
