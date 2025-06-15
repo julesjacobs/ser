@@ -397,48 +397,66 @@ where
 
         let (removed_forward, removed_backward) =
             petri.filter_bidirectional_reachable(&nonzero_places);
-        
+
         // Pretty print removed transitions if any were removed
         if !removed_forward.is_empty() || !removed_backward.is_empty() {
             println!("  {} Pruning results:", "✂️".bright_black());
             if !removed_forward.is_empty() {
-                println!("    {} Forward-removed transitions: {}", "➡️".bright_black(), 
-                    removed_forward.len());
+                println!(
+                    "    {} Forward-removed transitions: {}",
+                    "➡️".bright_black(),
+                    removed_forward.len()
+                );
                 for (pre, post) in &removed_forward {
                     // Format places using their Display implementation to get pretty names
                     let pre_str = if pre.is_empty() {
                         "∅".to_string()
                     } else {
-                        pre.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                        pre.iter()
+                            .map(|p| format!("{}", p))
+                            .collect::<Vec<_>>()
+                            .join(", ")
                     };
                     let post_str = if post.is_empty() {
                         "∅".to_string()
                     } else {
-                        post.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                        post.iter()
+                            .map(|p| format!("{}", p))
+                            .collect::<Vec<_>>()
+                            .join(", ")
                     };
                     println!("      {} {} → {}", "-".red(), pre_str, post_str);
                 }
             }
             if !removed_backward.is_empty() {
-                println!("    {} Backward-removed transitions: {}", "⬅️".bright_black(),
-                    removed_backward.len());
+                println!(
+                    "    {} Backward-removed transitions: {}",
+                    "⬅️".bright_black(),
+                    removed_backward.len()
+                );
                 for (pre, post) in &removed_backward {
                     // Format places using their Display implementation to get pretty names
                     let pre_str = if pre.is_empty() {
                         "∅".to_string()
                     } else {
-                        pre.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                        pre.iter()
+                            .map(|p| format!("{}", p))
+                            .collect::<Vec<_>>()
+                            .join(", ")
                     };
                     let post_str = if post.is_empty() {
                         "∅".to_string()
                     } else {
-                        post.iter().map(|p| format!("{}", p)).collect::<Vec<_>>().join(", ")
+                        post.iter()
+                            .map(|p| format!("{}", p))
+                            .collect::<Vec<_>>()
+                            .join(", ")
                     };
                     println!("      {} {} → {}", "-".red(), pre_str, post_str);
                 }
             }
         }
-        
+
         debug_logger.log_petri_net(
             &format!("Post-Pruning Petri Net {}", disjunct_id),
             "Petri net after bidirectional filtering",

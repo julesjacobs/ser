@@ -220,10 +220,18 @@ where
     // Log the result
     match &result.outcome {
         SmptVerificationOutcome::Unreachable { .. } => {
-            println!("  {} SMPT result: {}", "→".bright_black(), "UNREACHABLE".bright_black());
+            println!(
+                "  {} SMPT result: {}",
+                "→".bright_black(),
+                "UNREACHABLE".bright_black()
+            );
         }
         SmptVerificationOutcome::Reachable { .. } => {
-            println!("  {} SMPT result: {}", "→".bright_black(), "REACHABLE".yellow().bold());
+            println!(
+                "  {} SMPT result: {}",
+                "→".bright_black(),
+                "REACHABLE".yellow().bold()
+            );
         }
         SmptVerificationOutcome::Error { message } => {
             eprintln!("ERROR: Failed to run SMPT: {}", message);
@@ -347,7 +355,7 @@ fn run_smpt_with_timeout(
 fn build_smpt_args(
     net_file: &str,
     xml_file: &str,
-    proof_file: &str,
+    _proof_file: &str,
     timeout_seconds: Option<u64>,
 ) -> Vec<String> {
     let mut args = vec![
@@ -507,7 +515,7 @@ fn run_smpt_internal(
     if stdout.contains("TRUE") {
         // Property is reachable => NOT serializable
         let mut trace = extract_trace(&stdout);
-        
+
         // If no trace found in stdout, try to read from .scn file
         if trace.is_empty() {
             let scn_file_path = proof_file_path.replace(".txt", ".txt.scn");
@@ -536,20 +544,21 @@ fn run_smpt_internal(
 
         // Try to read proof certificate if it exists
         let proof_certificate = std::fs::read_to_string(&proof_file_path).ok();
-        
+
         // Try to parse the proof certificate
-        let parsed_proof = proof_certificate.as_ref().and_then(|cert| {
-            match parse_proof_file(cert) {
-                Ok(proof) => Some(proof),
-                Err(e) => {
-                    eprintln!("Warning: Failed to parse proof certificate: {:?}", e);
-                    None
-                }
-            }
-        });
+        let parsed_proof =
+            proof_certificate
+                .as_ref()
+                .and_then(|cert| match parse_proof_file(cert) {
+                    Ok(proof) => Some(proof),
+                    Err(e) => {
+                        eprintln!("Warning: Failed to parse proof certificate: {:?}", e);
+                        None
+                    }
+                });
 
         SmptVerificationResult {
-            outcome: SmptVerificationOutcome::Unreachable { 
+            outcome: SmptVerificationOutcome::Unreachable {
                 proof_certificate,
                 parsed_proof,
             },
@@ -885,20 +894,20 @@ FORMULA reachability-check TRUE TIME 0.403745174407959
     fn test_proof_parsing_integration() {
         // Test that proof certificates are parsed when available
         use crate::proof_parser::Formula;
-        
+
         // Create a mock proof certificate content
         let mock_proof = r#"
         (define-fun cert ((G__X_1_ Int) (RESP_read_REQ_1 Int)) Bool
             (and (>= G__X_1_ 0) (>= RESP_read_REQ_1 0)))
         "#;
-        
+
         // Parse it
         match parse_proof_file(mock_proof) {
             Ok(proof) => {
                 assert_eq!(proof.variables.len(), 2);
                 assert!(proof.variables.contains(&"G__X_1_".to_string()));
                 assert!(proof.variables.contains(&"RESP_read_REQ_1".to_string()));
-                
+
                 // Check that it's an And formula with constraints
                 match &proof.formula {
                     Formula::And(formulas) => {

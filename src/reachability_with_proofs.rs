@@ -4,12 +4,12 @@ use crate::petri::*;
 use crate::proof_parser::ProofInvariant;
 use crate::semilinear::*;
 use crate::spresburger::SPresburgerSet;
+use colored::*;
 use either::{Either, Left, Right};
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Mutex;
-use colored::*;
 
 /// Decision enum for reachability analysis results with proof/trace support
 #[derive(Debug, Clone)]
@@ -20,14 +20,13 @@ pub enum Decision<P: Eq + Hash> {
 
 impl<P: Eq + Hash> From<bool> for Decision<P> {
     fn from(b: bool) -> Self {
-        if b { 
-            Decision::CounterExample { trace: vec![] } 
-        } else { 
+        if b {
+            Decision::CounterExample { trace: vec![] }
+        } else {
             Decision::Proof { proof: None }
         }
     }
 }
-
 
 /// Global debug logger for reachability analysis
 static DEBUG_LOGGER: Mutex<Option<DebugLogger>> = Mutex::new(None);
@@ -42,7 +41,10 @@ pub fn init_debug_logger(program_name: String, program_content: String) {
 pub fn get_debug_logger() -> DebugLogger {
     let mut guard = DEBUG_LOGGER.lock().unwrap();
     if guard.is_none() {
-        *guard = Some(DebugLogger::new("default".to_string(), "No program content".to_string()));
+        *guard = Some(DebugLogger::new(
+            "default".to_string(),
+            "No program content".to_string(),
+        ));
     }
     guard.as_ref().unwrap().clone()
 }
@@ -67,14 +69,17 @@ where
     P: Clone + Hash + Ord + Display + Debug,
     Q: Clone + Hash + Ord + Display + Debug,
 {
-    is_petri_reachability_set_subset_of_semilinear_new(petri, places_that_must_be_zero, semilinear, out_dir)
+    is_petri_reachability_set_subset_of_semilinear_new(
+        petri,
+        places_that_must_be_zero,
+        semilinear,
+        out_dir,
+    )
 }
 
 //=============================================================================
 // NEW ARCHITECTURE - REACHABILITY CHECKING WITH SPRESBURGER SETS
 //=============================================================================
-
-
 
 /// NEW IMPLEMENTATION: Checks if the reachability set of a Petri net is a subset of a semilinear set
 /// using the new SPresburgerSet-based architecture.
@@ -93,73 +98,121 @@ where
     Q: Clone + Hash + Ord + Display + Debug,
 {
     with_debug_logger(|debug_logger| {
-    debug_logger.step("Reachability Analysis Start", "Starting new SPresburgerSet-based reachability analysis", &format!("Petri net places: [{}]\nPlaces that must be zero: [{}]\nSemilinear set: {}", petri.get_places().iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "), places_that_must_be_zero.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", "), semilinear));
+        debug_logger.step(
+            "Reachability Analysis Start",
+            "Starting new SPresburgerSet-based reachability analysis",
+            &format!(
+                "Petri net places: [{}]\nPlaces that must be zero: [{}]\nSemilinear set: {}",
+                petri
+                    .get_places()
+                    .iter()
+                    .map(|p| p.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                places_that_must_be_zero
+                    .iter()
+                    .map(|p| p.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                semilinear
+            ),
+        );
 
-    // Step 1: Convert semilinear set to SPresburgerSet and embed it in Either<P,Q> domain
-    let q_spresburger = SPresburgerSet::from_semilinear(semilinear);
-    
-    // Step 2: Create universe over places that can vary (filter out places_that_must_be_zero)
-    // Since places_that_must_be_zero are constrained to 0, they don't participate in the analysis
-    let all_places = petri.get_places();
-    let places_that_can_vary: Vec<_> = all_places.into_iter()
-        .filter(|place| {
-            // Keep the place if it's not in places_that_must_be_zero
-            match place {
-                Left(p) => !places_that_must_be_zero.contains(p),
-                Right(_) => false, // All Q-places can vary
+        // Step 1: Convert semilinear set to SPresburgerSet and embed it in Either<P,Q> domain
+        let q_spresburger = SPresburgerSet::from_semilinear(semilinear);
+
+        // Step 2: Create universe over places that can vary (filter out places_that_must_be_zero)
+        // Since places_that_must_be_zero are constrained to 0, they don't participate in the analysis
+        let all_places = petri.get_places();
+        let places_that_can_vary: Vec<_> = all_places
+            .into_iter()
+            .filter(|place| {
+                // Keep the place if it's not in places_that_must_be_zero
+                match place {
+                    Left(p) => !places_that_must_be_zero.contains(p),
+                    Right(_) => false, // All Q-places can vary
+                }
+            })
+            .collect();
+
+        let varying_universe = SPresburgerSet::universe(places_that_can_vary);
+        debug_logger.step(
+            "Varying Universe",
+            "Varying universe",
+            &format!("Varying universe: {}", varying_universe),
+        );
+
+        let response_places = petri
+            .get_places()
+            .iter()
+            .filter_map(|place| match place {
+                Right(q) => Some(q.clone()),
+                Left(_) => None,
+            })
+            .collect::<Vec<_>>();
+
+        let response_universe = SPresburgerSet::universe(response_places);
+        debug_logger.step(
+            "Response Universe",
+            "Response universe",
+            &format!("Response universe: {}", response_universe),
+        );
+
+        // Step 3: Compute complement: universe - embedded_semilinear
+        let complement = response_universe.difference(q_spresburger);
+        debug_logger.step(
+            "Compute Complement",
+            "Computing complement (universe - embedded_semilinear)",
+            &format!("Complement: {}", complement),
+        );
+
+        let complement_embedded = complement.rename(|q| Right(q));
+        debug_logger.step(
+            "Complement Embedded",
+            "Complement embedded in Either<P,Q> domain",
+            &format!("Complement embedded: {}", complement_embedded),
+        );
+
+        let end_result_set = varying_universe.times(complement_embedded);
+        debug_logger.step(
+            "End Result Set",
+            "End result set",
+            &format!("End result set: {}", end_result_set),
+        );
+
+        // Step 4: Check if this constraint set is reachable
+        // Note: we've effectively incorporated the zero constraints by filtering the universe
+        let can_reach_decision = can_reach_presburger(petri, end_result_set, out_dir);
+
+        // IMPORTANT: Decision variants are based on the TYPE of evidence, not the answer:
+        // - If complement IS reachable: subset property FAILS, we have a counterexample trace → Decision::CounterExample
+        // - If complement is NOT reachable: subset property HOLDS, we have a proof → Decision::Proof
+        let result = match can_reach_decision {
+            Decision::CounterExample { trace } => {
+                // Complement is reachable, so subset property does NOT hold
+                // We have a trace showing non-serializability
+                debug_logger.step(
+                    "Final Result",
+                    "Subset property FAILS - NOT serializable",
+                    &format!("Found counterexample trace: {:?}", trace),
+                );
+                Decision::CounterExample { trace }
             }
-        })
-        .collect();
+            Decision::Proof { proof } => {
+                // Complement is unreachable, so subset property HOLDS
+                // We have a proof of serializability
+                debug_logger.step(
+                    "Final Result",
+                    "Subset property HOLDS - IS serializable",
+                    &format!("Have proof certificate: {}", proof.is_some()),
+                );
+                Decision::Proof { proof }
+            }
+        };
 
-    let varying_universe = SPresburgerSet::universe(places_that_can_vary);
-    debug_logger.step("Varying Universe", "Varying universe", &format!("Varying universe: {}", varying_universe));
-
-    let response_places = petri.get_places().iter().filter_map(|place| match place {
-        Right(q) => Some(q.clone()),
-        Left(_) => None,
-    }).collect::<Vec<_>>();
-
-    let response_universe = SPresburgerSet::universe(response_places);
-    debug_logger.step("Response Universe", "Response universe", &format!("Response universe: {}", response_universe));
-
-    // Step 3: Compute complement: universe - embedded_semilinear
-    let complement = response_universe.difference(q_spresburger);
-    debug_logger.step("Compute Complement", "Computing complement (universe - embedded_semilinear)", &format!("Complement: {}", complement));
-
-    let complement_embedded = complement.rename(|q| Right(q));
-    debug_logger.step("Complement Embedded", "Complement embedded in Either<P,Q> domain", &format!("Complement embedded: {}", complement_embedded));
-
-    let end_result_set = varying_universe.times(complement_embedded);
-    debug_logger.step("End Result Set", "End result set", &format!("End result set: {}", end_result_set));
-    
-    // Step 4: Check if this constraint set is reachable
-    // Note: we've effectively incorporated the zero constraints by filtering the universe
-    let can_reach_decision = can_reach_presburger(petri, end_result_set, out_dir);
-    
-    // IMPORTANT: Decision variants are based on the TYPE of evidence, not the answer:
-    // - If complement IS reachable: subset property FAILS, we have a counterexample trace → Decision::CounterExample
-    // - If complement is NOT reachable: subset property HOLDS, we have a proof → Decision::Proof
-    let result = match can_reach_decision {
-        Decision::CounterExample { trace } => {
-            // Complement is reachable, so subset property does NOT hold
-            // We have a trace showing non-serializability
-            debug_logger.step("Final Result", "Subset property FAILS - NOT serializable", 
-                            &format!("Found counterexample trace: {:?}", trace));
-            Decision::CounterExample { trace }
-        }
-        Decision::Proof { proof } => {
-            // Complement is unreachable, so subset property HOLDS
-            // We have a proof of serializability
-            debug_logger.step("Final Result", "Subset property HOLDS - IS serializable", 
-                            &format!("Have proof certificate: {}", proof.is_some()));
-            Decision::Proof { proof }
-        }
-    };
-    
-    result
+        result
     })
 }
-
 
 /// Checks if a Petri net can reach any state satisfying the given SPresburgerSet constraints.
 ///
@@ -167,7 +220,7 @@ where
 /// A SPresburgerSet represents a union of constraint sets (disjuncts).
 /// The Petri net can reach the SPresburgerSet if it can reach ANY of the disjuncts.
 pub fn can_reach_presburger<P>(
-    petri: Petri<P>, 
+    petri: Petri<P>,
     mut presburger: SPresburgerSet<P>,
     out_dir: &str,
 ) -> Decision<P>
@@ -175,81 +228,130 @@ where
     P: Clone + Hash + Ord + Display + Debug,
 {
     with_debug_logger(|debug_logger| {
-    debug_logger.step("Presburger Reachability Start", "Expanding domain and converting to disjunctive normal form", &format!("SPresburgerSet to be checked: {}", presburger));
-    
-    // First step: Expand the domain of the presburger set to include all places in the Petri net
-    let all_petri_places = petri.get_places();
-    debug_logger.step("Domain Expansion", "Expanding presburger set domain to match Petri net", &format!("Petri net places: [{}]", all_petri_places.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
-    
-    presburger = presburger.expand_domain(all_petri_places);
-    debug_logger.step("Domain Expanded", "Presburger set domain expanded", &format!("Expanded presburger set: {}", presburger));
-    
-    // Convert SPresburgerSet to disjunctive normal form (list of quantified sets)
-    let disjuncts = presburger.extract_constraint_disjuncts();
-    
-    debug_logger.step("Disjunct Conversion", "SPresburgerSet converted to disjuncts", &format!("Number of disjuncts: {}\nDisjuncts: {}", disjuncts.len(), disjuncts.iter().map(|d| d.to_string()).collect::<Vec<_>>().join(", ")));
-    
-    // Check if ANY disjunct is reachable, collecting proofs along the way
-    let mut disjunct_proofs = Vec::new();
-    
-    for (i, quantified_set) in disjuncts.iter().enumerate() {
-        debug_logger.log_disjunct_start(i, quantified_set);
-        println!("Checking disjunct {}: {}", i, quantified_set);
-        
-        match can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i) {
-            Decision::CounterExample { trace } => {
-                println!("Disjunct {} is reachable - constraint set is satisfiable", i);
-                debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is REACHABLE - constraint set is satisfiable", &format!("Disjunct {}: REACHABLE", i));
-                return Decision::CounterExample { trace };
-            }
-            Decision::Proof { proof } => {
-                debug_logger.step(&format!("Disjunct {} Result", i), "Disjunct is UNREACHABLE", &format!("Disjunct {}: UNREACHABLE", i));
-                if let Some(p) = proof {
-                    disjunct_proofs.push(p);
+        debug_logger.step(
+            "Presburger Reachability Start",
+            "Expanding domain and converting to disjunctive normal form",
+            &format!("SPresburgerSet to be checked: {}", presburger),
+        );
+
+        // First step: Expand the domain of the presburger set to include all places in the Petri net
+        let all_petri_places = petri.get_places();
+        debug_logger.step(
+            "Domain Expansion",
+            "Expanding presburger set domain to match Petri net",
+            &format!(
+                "Petri net places: [{}]",
+                all_petri_places
+                    .iter()
+                    .map(|p| p.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+
+        presburger = presburger.expand_domain(all_petri_places);
+        debug_logger.step(
+            "Domain Expanded",
+            "Presburger set domain expanded",
+            &format!("Expanded presburger set: {}", presburger),
+        );
+
+        // Convert SPresburgerSet to disjunctive normal form (list of quantified sets)
+        let disjuncts = presburger.extract_constraint_disjuncts();
+
+        debug_logger.step(
+            "Disjunct Conversion",
+            "SPresburgerSet converted to disjuncts",
+            &format!(
+                "Number of disjuncts: {}\nDisjuncts: {}",
+                disjuncts.len(),
+                disjuncts
+                    .iter()
+                    .map(|d| d.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+
+        // Check if ANY disjunct is reachable, collecting proofs along the way
+        let mut disjunct_proofs = Vec::new();
+
+        for (i, quantified_set) in disjuncts.iter().enumerate() {
+            debug_logger.log_disjunct_start(i, quantified_set);
+            println!("Checking disjunct {}: {}", i, quantified_set);
+
+            match can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i) {
+                Decision::CounterExample { trace } => {
+                    println!(
+                        "Disjunct {} is reachable - constraint set is satisfiable",
+                        i
+                    );
+                    debug_logger.step(
+                        &format!("Disjunct {} Result", i),
+                        "Disjunct is REACHABLE - constraint set is satisfiable",
+                        &format!("Disjunct {}: REACHABLE", i),
+                    );
+                    return Decision::CounterExample { trace };
+                }
+                Decision::Proof { proof } => {
+                    debug_logger.step(
+                        &format!("Disjunct {} Result", i),
+                        "Disjunct is UNREACHABLE",
+                        &format!("Disjunct {}: UNREACHABLE", i),
+                    );
+                    if let Some(p) = proof {
+                        disjunct_proofs.push(p);
+                    }
                 }
             }
         }
-    }
-    
-    println!("No disjuncts are reachable - constraint set is unsatisfiable");
-    debug_logger.step("All Disjuncts Checked", "No disjuncts are reachable - constraint set is unsatisfiable", &format!("Checked {} disjuncts, all UNREACHABLE", disjuncts.len()));
-    
-    // Combine all disjunct proofs by ANDing them together
-    let combined_proof = if disjunct_proofs.is_empty() {
-        None
-    } else if disjunct_proofs.len() == 1 {
-        disjunct_proofs.into_iter().next()
-    } else {
-        // Combine multiple proofs by creating an AND formula
-        use crate::proof_parser::Formula;
-        
-        // Collect all variables from all proofs
-        let mut all_variables = std::collections::HashSet::new();
-        for proof in &disjunct_proofs {
-            all_variables.extend(proof.variables.iter().cloned());
+
+        println!("No disjuncts are reachable - constraint set is unsatisfiable");
+        debug_logger.step(
+            "All Disjuncts Checked",
+            "No disjuncts are reachable - constraint set is unsatisfiable",
+            &format!("Checked {} disjuncts, all UNREACHABLE", disjuncts.len()),
+        );
+
+        // Combine all disjunct proofs by ANDing them together
+        let combined_proof = if disjunct_proofs.is_empty() {
+            None
+        } else if disjunct_proofs.len() == 1 {
+            disjunct_proofs.into_iter().next()
+        } else {
+            // Combine multiple proofs by creating an AND formula
+            use crate::proof_parser::Formula;
+
+            // Collect all variables from all proofs
+            let mut all_variables = std::collections::HashSet::new();
+            for proof in &disjunct_proofs {
+                all_variables.extend(proof.variables.iter().cloned());
+            }
+
+            // Create AND of all formulas
+            let formulas: Vec<Formula<P>> = disjunct_proofs
+                .into_iter()
+                .map(|proof| proof.formula)
+                .collect();
+
+            let combined_formula = Formula::And(formulas);
+            let combined_variables: Vec<P> = all_variables.into_iter().collect();
+
+            Some(ProofInvariant {
+                variables: combined_variables,
+                formula: combined_formula,
+            })
+        };
+
+        Decision::Proof {
+            proof: combined_proof,
         }
-        
-        // Create AND of all formulas
-        let formulas: Vec<Formula<P>> = disjunct_proofs.into_iter()
-            .map(|proof| proof.formula)
-            .collect();
-        
-        let combined_formula = Formula::And(formulas);
-        let combined_variables: Vec<P> = all_variables.into_iter().collect();
-        
-        Some(ProofInvariant {
-            variables: combined_variables,
-            formula: combined_formula,
-        })
-    };
-    
-    Decision::Proof { proof: combined_proof }
     })
 }
 
 pub fn can_reach_quantified_set<P>(
     petri: Petri<P>,
-    quantified_set: super::presburger::QuantifiedSet<P>, 
+    quantified_set: super::presburger::QuantifiedSet<P>,
     out_dir: &str,
     disjunct_id: usize,
 ) -> Decision<P>
@@ -257,61 +359,95 @@ where
     P: Clone + Hash + Ord + Display + Debug,
 {
     with_debug_logger(|debug_logger| {
-    debug_logger.step(&format!("Quantified Set {} Start", disjunct_id), "Extracting and reifying existential variables", &format!("Quantified set: {}", quantified_set));
-    
-    let (existential_places, basic_constraint_set) = quantified_set.extract_and_reify_existential_variables();
-    
-    // Extract just the usize indices from the Either<usize, P> type
-    let existential_indices: Vec<usize> = existential_places.iter()
-        .filter_map(|place| match place {
-            Either::Left(idx) => Some(*idx),
-            Either::Right(_) => None,
-        })
-        .collect();
+        debug_logger.step(
+            &format!("Quantified Set {} Start", disjunct_id),
+            "Extracting and reifying existential variables",
+            &format!("Quantified set: {}", quantified_set),
+        );
 
-    debug_logger.step(&format!("Quantified Set {} Variables", disjunct_id), "Existential variables extracted", &format!("Variables: {:?}\nBasic constraint set: {}", existential_indices, basic_constraint_set.iter().map(|c| c.to_string()).collect::<Vec<_>>().join(", ")));
+        let (existential_places, basic_constraint_set) =
+            quantified_set.extract_and_reify_existential_variables();
 
-    // Transform the Petri net from Petri<P> to Petri<Either<usize, P>>
-    // by mapping all existing places to Right(p) and adding existential places as Left(i)
-    let mut new_petri = petri.rename(|p| Either::Right(p));
-    for idx in &existential_indices {
-        new_petri.add_existential_place(Either::Left(*idx));
-    }
+        // Extract just the usize indices from the Either<usize, P> type
+        let existential_indices: Vec<usize> = existential_places
+            .iter()
+            .filter_map(|place| match place {
+                Either::Left(idx) => Some(*idx),
+                Either::Right(_) => None,
+            })
+            .collect();
 
-    debug_logger.log_petri_net(&format!("Transformed Petri Net {}", disjunct_id), "Petri net with existential variables added", &new_petri);
-    debug_logger.log_constraints(&format!("Final Constraints {}", disjunct_id), "Final constraints to be checked with SMPT", &basic_constraint_set);
+        debug_logger.step(
+            &format!("Quantified Set {} Variables", disjunct_id),
+            "Existential variables extracted",
+            &format!(
+                "Variables: {:?}\nBasic constraint set: {}",
+                existential_indices,
+                basic_constraint_set
+                    .iter()
+                    .map(|c| c.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
 
-    // Build mapping from sanitized names to Either<usize, P> for proof conversion
-    let mut name_to_place: std::collections::HashMap<String, Either<usize, P>> = std::collections::HashMap::new();
-    for place in new_petri.get_places() {
-        let sanitized_name = crate::utils::string::sanitize(&place.to_string());
-        name_to_place.insert(sanitized_name, place);
-    }
-
-    // Get the result with Either<usize, P> type
-    let result = can_reach_constraint_set_with_debug_mapped(new_petri, basic_constraint_set, out_dir, disjunct_id, name_to_place);
-    
-    // Handle existential quantification for proofs
-    match result {
-        Decision::CounterExample { trace } => Decision::CounterExample { trace },
-        Decision::Proof { proof } => {
-            // If we have a proof, we need to existentially quantify and project
-            let final_proof = proof.map(|p| {
-                use crate::proofinvariant_to_presburger::{existentially_quantify_keep_either, project_proof_from_either};
-                
-                // First quantify over the existential variables (indices)
-                let quantified = existentially_quantify_keep_either(p, &existential_indices);
-                
-                // Then project from Either<usize, P> to P
-                project_proof_from_either(quantified)
-            });
-            
-            Decision::Proof { proof: final_proof }
+        // Transform the Petri net from Petri<P> to Petri<Either<usize, P>>
+        // by mapping all existing places to Right(p) and adding existential places as Left(i)
+        let mut new_petri = petri.rename(|p| Either::Right(p));
+        for idx in &existential_indices {
+            new_petri.add_existential_place(Either::Left(*idx));
         }
-    }
+
+        debug_logger.log_petri_net(
+            &format!("Transformed Petri Net {}", disjunct_id),
+            "Petri net with existential variables added",
+            &new_petri,
+        );
+        debug_logger.log_constraints(
+            &format!("Final Constraints {}", disjunct_id),
+            "Final constraints to be checked with SMPT",
+            &basic_constraint_set,
+        );
+
+        // Build mapping from sanitized names to Either<usize, P> for proof conversion
+        let mut name_to_place: std::collections::HashMap<String, Either<usize, P>> =
+            std::collections::HashMap::new();
+        for place in new_petri.get_places() {
+            let sanitized_name = crate::utils::string::sanitize(&place.to_string());
+            name_to_place.insert(sanitized_name, place);
+        }
+
+        // Get the result with Either<usize, P> type
+        let result = can_reach_constraint_set_with_debug_mapped(
+            new_petri,
+            basic_constraint_set,
+            out_dir,
+            disjunct_id,
+            name_to_place,
+        );
+
+        // Handle existential quantification for proofs
+        match result {
+            Decision::CounterExample { trace } => Decision::CounterExample { trace },
+            Decision::Proof { proof } => {
+                // If we have a proof, we need to existentially quantify and project
+                let final_proof = proof.map(|p| {
+                    use crate::proofinvariant_to_presburger::{
+                        existentially_quantify_keep_either, project_proof_from_either,
+                    };
+
+                    // First quantify over the existential variables (indices)
+                    let quantified = existentially_quantify_keep_either(p, &existential_indices);
+
+                    // Then project from Either<usize, P> to P
+                    project_proof_from_either(quantified)
+                });
+
+                Decision::Proof { proof: final_proof }
+            }
+        }
     })
 }
-
 
 /// Reachability check with constraints using SMPT with pruning and debug logging
 pub fn can_reach_constraint_set_with_debug<P>(
@@ -325,7 +461,13 @@ where
 {
     // Build default mapping (sanitized name maps to itself when P = String)
     let name_to_place = std::collections::HashMap::new();
-    can_reach_constraint_set_with_debug_mapped(petri, constraints, out_dir, disjunct_id, name_to_place)
+    can_reach_constraint_set_with_debug_mapped(
+        petri,
+        constraints,
+        out_dir,
+        disjunct_id,
+        name_to_place,
+    )
 }
 
 /// Reachability check with constraints using SMPT with pruning, debug logging, and name mapping
@@ -340,51 +482,80 @@ where
     P: Clone + Hash + Ord + Display + Debug,
 {
     with_debug_logger(|debug_logger| {
-    debug_logger.log_petri_net(&format!("Pre-Pruning Petri Net {}", disjunct_id), "Petri net before pruning and optimization", &petri);
-    debug_logger.log_constraints(&format!("Input Constraints {}", disjunct_id), "Constraints for reachability check", &constraints);
-    
-    // Extract zero variables from constraints
-    let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
-    let zero_variables_set: HashSet<P> = zero_variables.into_iter().collect();
-    
-    debug_logger.step(&format!("Zero Variables {}", disjunct_id), "Extracted zero variables from constraints", &format!("Zero variables: {:?}", zero_variables_set));
-    
-    // Get all places in the Petri net
-    let all_places = petri.get_places();
-    
-    // Find nonzero variables (target places for filtering)
-    let nonzero_places: Vec<P> = all_places.clone()
-        .into_iter()
-        .filter(|place| !zero_variables_set.contains(place))
-        .collect();
-    
-    debug_logger.step(&format!("Nonzero Places {}", disjunct_id), "Determined nonzero places for bidirectional filtering", &format!("Nonzero places: [{}]", nonzero_places.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(", ")));
-    
-    // Check if optimization is enabled
-    if crate::reachability::optimize_enabled() {
-        // Use recursive approach with pruning and proof translation
-        debug_logger.step(&format!("Starting Recursive Pruning {}", disjunct_id), 
-                         "Using recursive approach for pruning with proof translation", 
-                         "");
-        
-        can_reach_constraint_set_recursive_with_proof(
-            petri,
-            constraints,
-            &nonzero_places,
-            out_dir,
-            disjunct_id,
-            name_to_place,
-            0, // Start at iteration 0
-        )
-    } else {
-        // Optimization disabled, call SMPT directly without pruning
-        debug_logger.step(&format!("Pruning Skipped {}", disjunct_id), 
-                         "Optimization disabled, calling SMPT directly", 
-                         "");
-        
-        let result = crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);
-        convert_smpt_result_to_decision(result, &name_to_place)
-    }
+        debug_logger.log_petri_net(
+            &format!("Pre-Pruning Petri Net {}", disjunct_id),
+            "Petri net before pruning and optimization",
+            &petri,
+        );
+        debug_logger.log_constraints(
+            &format!("Input Constraints {}", disjunct_id),
+            "Constraints for reachability check",
+            &constraints,
+        );
+
+        // Extract zero variables from constraints
+        let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
+        let zero_variables_set: HashSet<P> = zero_variables.into_iter().collect();
+
+        debug_logger.step(
+            &format!("Zero Variables {}", disjunct_id),
+            "Extracted zero variables from constraints",
+            &format!("Zero variables: {:?}", zero_variables_set),
+        );
+
+        // Get all places in the Petri net
+        let all_places = petri.get_places();
+
+        // Find nonzero variables (target places for filtering)
+        let nonzero_places: Vec<P> = all_places
+            .clone()
+            .into_iter()
+            .filter(|place| !zero_variables_set.contains(place))
+            .collect();
+
+        debug_logger.step(
+            &format!("Nonzero Places {}", disjunct_id),
+            "Determined nonzero places for bidirectional filtering",
+            &format!(
+                "Nonzero places: [{}]",
+                nonzero_places
+                    .iter()
+                    .map(|p| p.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+
+        // Check if optimization is enabled
+        if crate::reachability::optimize_enabled() {
+            // Use recursive approach with pruning and proof translation
+            debug_logger.step(
+                &format!("Starting Recursive Pruning {}", disjunct_id),
+                "Using recursive approach for pruning with proof translation",
+                "",
+            );
+
+            can_reach_constraint_set_recursive_with_proof(
+                petri,
+                constraints,
+                &nonzero_places,
+                out_dir,
+                disjunct_id,
+                name_to_place,
+                0, // Start at iteration 0
+            )
+        } else {
+            // Optimization disabled, call SMPT directly without pruning
+            debug_logger.step(
+                &format!("Pruning Skipped {}", disjunct_id),
+                "Optimization disabled, calling SMPT directly",
+                "",
+            );
+
+            let result =
+                crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);
+            convert_smpt_result_to_decision(result, &name_to_place)
+        }
     })
 }
 
@@ -397,7 +568,7 @@ where
     P: Clone + Hash + Ord + Display + Debug,
 {
     use crate::smpt::SmptVerificationOutcome;
-    
+
     match result.outcome {
         SmptVerificationOutcome::Reachable { trace } => Decision::CounterExample { trace },
         SmptVerificationOutcome::Unreachable { parsed_proof, .. } => {
@@ -411,7 +582,7 @@ where
                     crate::proof_parser::map_proof_variables(string_proof, &name_to_place)
                 }
             });
-            
+
             Decision::Proof { proof }
         }
         SmptVerificationOutcome::Error { message } => {
@@ -424,7 +595,7 @@ where
 }
 
 /// Recursive reachability check with pruning and proof translation
-/// 
+///
 /// This function implements the recursive approach where:
 /// 1. Pruning happens top-down (forward->backward on each recursive call)
 /// 2. Proof translation happens bottom-up (backward->forward as we return)
@@ -442,48 +613,52 @@ where
 {
     with_debug_logger(|debug_logger| {
         debug_logger.step(
-            &format!("Recursive Iteration {} for Disjunct {}", iteration, disjunct_id),
+            &format!(
+                "Recursive Iteration {} for Disjunct {}",
+                iteration, disjunct_id
+            ),
             "Starting recursive pruning iteration",
-            &format!("Petri net has {} transitions", petri.get_transitions().len())
+            &format!(
+                "Petri net has {} transitions",
+                petri.get_transitions().len()
+            ),
         );
-        
+
         // Safety check to prevent infinite recursion
         if iteration > 100 {
             eprintln!("WARNING: Pruning recursion exceeded 100 iterations, stopping");
-            let result = crate::smpt::can_reach_constraint_set(
-                petri, constraints, out_dir, disjunct_id
-            );
+            let result =
+                crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);
             return convert_smpt_result_to_decision(result, &name_to_place);
         }
-        
+
         // Check if optimization is enabled - if not, go directly to base case
         if !crate::reachability::optimize_enabled() {
             debug_logger.step(
                 &format!("Optimization Disabled - Iteration {}", iteration),
                 "Optimization is disabled, skipping pruning",
-                ""
+                "",
             );
-            
-            let result = crate::smpt::can_reach_constraint_set(
-                petri, constraints, out_dir, disjunct_id
-            );
-            
+
+            let result =
+                crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);
+
             return convert_smpt_result_to_decision(result, &name_to_place);
         }
-        
+
         // Get initial marking for forward pruning
         let initial_places = petri.get_initial_marking();
-        
+
         // Track the number of transitions before pruning
         let transitions_before = petri.get_transitions().len();
-        
+
         // Attempt one round of pruning
         let removed_forward = petri.filter_reachable(&initial_places);
         let removed_backward = petri.filter_backwards_reachable(target_places);
-        
+
         // Track the number of transitions after pruning
         let transitions_after = petri.get_transitions().len();
-        
+
         debug_logger.step(
             &format!("Pruning Results - Iteration {}", iteration),
             "Completed one round of bidirectional pruning",
@@ -494,14 +669,18 @@ where
                 transitions_before - transitions_after,
                 removed_forward.len(),
                 removed_backward.len()
-            )
+            ),
         );
-        
+
         // Debug: Print removed places and transition count
         if iteration < 5 || transitions_before != transitions_after {
-            eprintln!("Iteration {}: Transitions {} -> {} (removed {})", 
-                      iteration, transitions_before, transitions_after, 
-                      transitions_before - transitions_after);
+            eprintln!(
+                "Iteration {}: Transitions {} -> {} (removed {})",
+                iteration,
+                transitions_before,
+                transitions_after,
+                transitions_before - transitions_after
+            );
             if !removed_forward.is_empty() {
                 eprint!("{}", "  Forward removed places: ".green());
                 for (i, place) in removed_forward.iter().enumerate() {
@@ -523,40 +702,47 @@ where
                 eprintln!();
             }
         }
-        
+
         // Check if we're at base case (no transitions were removed)
         if transitions_before == transitions_after {
             // BASE CASE: No more pruning possible, run SMPT
             debug_logger.step(
                 &format!("Base Case Reached - Iteration {}", iteration),
                 "No transitions removed (fixed point reached), running SMPT",
-                &format!("Final Petri net has {} transitions", petri.get_transitions().len())
+                &format!(
+                    "Final Petri net has {} transitions",
+                    petri.get_transitions().len()
+                ),
             );
-            
-            let result = crate::smpt::can_reach_constraint_set(
-                petri, constraints, out_dir, disjunct_id
-            );
-            
+
+            let result =
+                crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);
+
             return convert_smpt_result_to_decision(result, &name_to_place);
         }
-        
+
         // RECURSIVE CASE: Some pruning occurred
         debug_logger.step(
             &format!("Recursive Case - Iteration {}", iteration),
             "Pruning occurred, making recursive call",
-            ""
+            "",
         );
-        
+
         let decision = can_reach_constraint_set_recursive_with_proof(
-            petri, constraints, target_places, out_dir, 
-            disjunct_id, name_to_place, iteration + 1
+            petri,
+            constraints,
+            target_places,
+            out_dir,
+            disjunct_id,
+            name_to_place,
+            iteration + 1,
         );
-        
+
         // Transform the proof on the way back up
         match decision {
             Decision::Proof { proof: Some(mut p) } => {
                 use crate::proofinvariant_to_presburger::{eliminate_backward, eliminate_forward};
-                
+
                 debug_logger.step(
                     &format!("Proof Translation - Iteration {}", iteration),
                     "Applying proof eliminations in reverse order",
@@ -564,9 +750,9 @@ where
                         "Applying {} backward eliminations, {} forward eliminations",
                         removed_backward.len(),
                         removed_forward.len()
-                    )
+                    ),
                 );
-                
+
                 // Apply eliminations in REVERSE order of pruning
                 if !removed_backward.is_empty() {
                     p = eliminate_backward(&p, &removed_backward);
@@ -590,27 +776,27 @@ mod tests {
     fn test_petri_net_pruning_with_zero_constraints() {
         // Create a Petri net: Start -> A -> B -> C, with unreachable D -> E
         let mut petri = Petri::new(vec!["Start"]);
-        petri.add_transition(vec!["Start"], vec!["A"]);       // t0: Start -> A (reachable)
-        petri.add_transition(vec!["A"], vec!["B"]);           // t1: A -> B (reachable)  
-        petri.add_transition(vec!["B"], vec!["C"]);           // t2: B -> C (reachable)
-        petri.add_transition(vec!["D"], vec!["E"]);           // t3: D -> E (unreachable from Start)
-        petri.add_transition(vec!["C"], vec!["F"]);           // t4: C -> F (reachable)
-        
+        petri.add_transition(vec!["Start"], vec!["A"]); // t0: Start -> A (reachable)
+        petri.add_transition(vec!["A"], vec!["B"]); // t1: A -> B (reachable)  
+        petri.add_transition(vec!["B"], vec!["C"]); // t2: B -> C (reachable)
+        petri.add_transition(vec!["D"], vec!["E"]); // t3: D -> E (unreachable from Start)
+        petri.add_transition(vec!["C"], vec!["F"]); // t4: C -> F (reachable)
+
         // Before pruning: 5 transitions
         assert_eq!(petri.get_transitions().len(), 5);
-        
+
         // Create constraints: A = 0, C = 0 (so B and F are nonzero)
         let constraints = vec![
-            Constraint::new(vec![(1, "A")], 0, ConstraintType::EqualToZero),  // A = 0
-            Constraint::new(vec![(1, "C")], 0, ConstraintType::EqualToZero),  // C = 0
+            Constraint::new(vec![(1, "A")], 0, ConstraintType::EqualToZero), // A = 0
+            Constraint::new(vec![(1, "C")], 0, ConstraintType::EqualToZero), // C = 0
         ];
-        
-        // Extract zero variables  
+
+        // Extract zero variables
         let zero_vars = Constraint::extract_zero_variables(&constraints);
         assert_eq!(zero_vars.len(), 2);
         assert!(zero_vars.contains(&"A"));
         assert!(zero_vars.contains(&"C"));
-        
+
         // Get all places and find nonzero places
         let all_places = petri.get_places();
         let zero_vars_set: HashSet<&str> = zero_vars.into_iter().collect();
@@ -618,7 +804,7 @@ mod tests {
             .into_iter()
             .filter(|place| !zero_vars_set.contains(place))
             .collect();
-        
+
         // Nonzero places should be: Start, B, D, E, F
         assert_eq!(nonzero_places.len(), 5);
         assert!(nonzero_places.contains(&"Start"));
@@ -626,29 +812,29 @@ mod tests {
         assert!(nonzero_places.contains(&"D"));
         assert!(nonzero_places.contains(&"E"));
         assert!(nonzero_places.contains(&"F"));
-        
+
         // Apply bidirectional filtering
         petri.filter_bidirectional_reachable(&nonzero_places);
-        
+
         // After filtering, should keep only transitions that can reach nonzero places
         // from the initial marking: Start -> A -> B and B -> C -> F
         // t3 (D -> E) should be removed as it's not reachable from Start
         let remaining_transitions = petri.get_transitions();
         assert!(remaining_transitions.len() <= 4); // Should remove at least t3
-        
+
         // Verify the remaining transitions form a path from Start to nonzero places
         let has_start_to_a = remaining_transitions.contains(&(vec!["Start"], vec!["A"]));
         let has_a_to_b = remaining_transitions.contains(&(vec!["A"], vec!["B"]));
         let _has_b_to_c = remaining_transitions.contains(&(vec!["B"], vec!["C"]));
         let _has_c_to_f = remaining_transitions.contains(&(vec!["C"], vec!["F"]));
         let has_d_to_e = remaining_transitions.contains(&(vec!["D"], vec!["E"]));
-        
+
         // Should keep transitions that lead to nonzero places (B, F)
         assert!(has_start_to_a); // Needed to reach B
-        assert!(has_a_to_b);     // Creates nonzero place B
-        
+        assert!(has_a_to_b); // Creates nonzero place B
+
         // Should not keep isolated transition
-        assert!(!has_d_to_e);    // Not reachable from Start
+        assert!(!has_d_to_e); // Not reachable from Start
     }
 
     #[test]
@@ -659,15 +845,17 @@ mod tests {
             Decision::CounterExample { trace } => assert_eq!(trace, Vec::<usize>::new()),
             _ => panic!("Expected CounterExample variant"),
         }
-        
+
         let no_decision: Decision<String> = Decision::from(false);
         match no_decision {
             Decision::Proof { proof } => assert!(proof.is_none()),
             _ => panic!("Expected Proof variant"),
         }
-        
+
         // Test Decision creation
-        let _counter_example_decision: Decision<String> = Decision::CounterExample { trace: vec![1, 2, 3] };
+        let _counter_example_decision: Decision<String> = Decision::CounterExample {
+            trace: vec![1, 2, 3],
+        };
         let _proof_decision: Decision<String> = Decision::Proof { proof: None };
     }
 }

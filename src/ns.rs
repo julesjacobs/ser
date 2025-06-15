@@ -5,17 +5,15 @@
 // - Responses (L -> Resp): Server responses from a local state
 // - Transitions (L,G -> L',G'): State transitions between local and global states
 
+use crate::ns_to_petri::ReqPetriState;
+use crate::petri::Petri;
+use colored::*;
 use either::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
-use std::collections::HashMap;
-use crate::petri::Petri;
-use crate::reachability_with_proofs::Decision;
-use crate::ns_to_petri::ReqPetriState;
-use colored::*;
-use regex::*;
 
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
@@ -553,7 +551,9 @@ where
         // Determine the proof-based result based on Decision variant
         let (result_proofs_bool, result_proofs_str) = match &result_with_proofs {
             crate::reachability_with_proofs::Decision::Proof { .. } => (true, "Serializable"),
-            crate::reachability_with_proofs::Decision::CounterExample { .. } => (false, "Not serializable"),
+            crate::reachability_with_proofs::Decision::CounterExample { .. } => {
+                (false, "Not serializable")
+            }
         };
 
         // Report results
@@ -570,14 +570,15 @@ where
             "  Proof-based method: {} ({})",
             match &result_with_proofs {
                 crate::reachability_with_proofs::Decision::Proof { .. } => "Proof",
-                crate::reachability_with_proofs::Decision::CounterExample { .. } => "CounterExample",
+                crate::reachability_with_proofs::Decision::CounterExample { .. } =>
+                    "CounterExample",
             },
             result_proofs_str
         );
 
         // Print proof or counterexample details with color
         println!();
-        
+
         // ANSI color codes
         const CYAN: &str = "\x1b[36m";
         const GREEN: &str = "\x1b[32m";
@@ -585,11 +586,11 @@ where
         const YELLOW: &str = "\x1b[33m";
         const BOLD: &str = "\x1b[1m";
         const RESET: &str = "\x1b[0m";
-        
+
         println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
         println!("{}{}PROOF/COUNTEREXAMPLE DETAILS:{}", BOLD, CYAN, RESET);
         println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
-        
+
         match &result_with_proofs {
             crate::reachability_with_proofs::Decision::Proof { proof } => {
                 if let Some(p) = proof {
@@ -602,18 +603,26 @@ where
                     println!("{}   Formula:{}", YELLOW, RESET);
                     println!("      {}", p.formula);
                 } else {
-                    println!("{}{}✅ PROOF: Program is serializable{} (no explicit certificate available)", 
-                            BOLD, GREEN, RESET);
+                    println!(
+                        "{}{}✅ PROOF: Program is serializable{} (no explicit certificate available)",
+                        BOLD, GREEN, RESET
+                    );
                 }
             }
             crate::reachability_with_proofs::Decision::CounterExample { trace } => {
                 println!("{}{}❌ COUNTEREXAMPLE TRACE FOUND{}", BOLD, RED, RESET);
                 if trace.is_empty() {
-                    println!("{}   (Empty trace - violation found at initial state){}", YELLOW, RESET);
+                    println!(
+                        "{}   (Empty trace - violation found at initial state){}",
+                        YELLOW, RESET
+                    );
                 } else {
                     println!("{}   Transition sequence:{}", YELLOW, RESET);
                     println!("      {:?}", trace);
-                    println!("{}   This trace demonstrates a non-serializable execution{}", YELLOW, RESET);
+                    println!(
+                        "{}   This trace demonstrates a non-serializable execution{}",
+                        YELLOW, RESET
+                    );
                     print_counterexample_trace(&petri_for_trace, trace);
                 }
             }
@@ -641,10 +650,12 @@ where
     }
 }
 
-fn display_vec<T : Display>(v: &[T]) -> String {
-    v.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", ")
+fn display_vec<T: Display>(v: &[T]) -> String {
+    v.iter()
+        .map(|x| x.to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
 }
-
 
 /// Prints a counterexample trace step-by-step on the given Petri net.
 fn print_counterexample_trace<P>(petri: &Petri<P>, trace: &[usize])
@@ -659,12 +670,18 @@ where
         println!("{}", "(Empty trace – violation at initial state)".yellow());
     } else {
         // Raw sequence
-        println!("{}", format!("Raw transition sequence: {:?}", trace).yellow());
+        println!(
+            "{}",
+            format!("Raw transition sequence: {:?}", trace).yellow()
+        );
 
         // Replay
         let transitions = petri.get_transitions();
         let mut marking = petri.get_initial_marking();
-        println!("{}", format!("Step 0 – initial marking: {}", display_vec(&marking)).yellow());
+        println!(
+            "{}",
+            format!("Step 0 – initial marking: {}", display_vec(&marking)).yellow()
+        );
 
         for (i, &t_idx) in trace.iter().enumerate() {
             let (inputs, outputs) = &transitions[t_idx];
@@ -682,12 +699,13 @@ where
                 "{}",
                 format!(
                     "Step {} – fired t{}: inputs={}, outputs={}, marking={}",
-                    i + 1, t_idx, 
-                    display_vec(inputs), 
-                    display_vec(outputs), 
+                    i + 1,
+                    t_idx,
+                    display_vec(inputs),
+                    display_vec(outputs),
                     display_vec(&marking)
                 )
-                    .yellow()
+                .yellow()
             );
         }
 
@@ -704,24 +722,26 @@ where
                 "Final marking has {} token(s) across {} place(s)",
                 total_tokens, unique_places
             )
-                .yellow()
+            .yellow()
         );
         println!("{}", "Places with tokens:".yellow());
         for (place, count) in &counts {
-            println!(
-                "{}",
-                format!("{}: {} token(s)", place, count).yellow()
-            );
+            println!("{}", format!("{}: {} token(s)", place, count).yellow());
         }
 
         // Conclusion
         println!(
             "{}",
-            "This trace demonstrates a non-serializable execution, with the following outputs".yellow()
+            "This trace demonstrates a non-serializable execution, with the following outputs"
+                .yellow()
         );
         // cyan separator
-        println!("{}", "================================================================================
-        ".cyan());
+        println!(
+            "{}",
+            "================================================================================
+        "
+            .cyan()
+        );
         println!("{}", "❌ COUNTEREXAMPLE:".bold().red());
         // for each place, look for the Debug pattern "Right(Response(...), resp)" and extract
         for (place, &cnt) in &counts {
@@ -743,9 +763,6 @@ where
     }
 }
 
-
-
-
 /// Given something like `"ExprRequest { name: \"foo\" }, 0)"`,
 /// returns Some(("foo", 0)) or None.
 fn extract_name_and_value(s: &str) -> Option<(String, usize)> {
@@ -764,7 +781,6 @@ fn extract_name_and_value(s: &str) -> Option<(String, usize)> {
 
     Some((name, num))
 }
-
 
 #[cfg(test)]
 mod tests {

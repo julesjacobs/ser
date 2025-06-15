@@ -316,12 +316,17 @@ where
             .collect();
 
         // Filter initial marking to keep only places that still exist in the net
-        self.initial_marking.retain(|place| reachable_places.contains(place));
+        self.initial_marking
+            .retain(|place| reachable_places.contains(place));
 
         // Get all places that remain after filtering transitions
         let all_places_after: HashSet<Place> = self.get_places().into_iter().collect();
 
-        let all_places_after_plus_initial: HashSet<Place> = all_places_after.clone().into_iter().chain(initial_places.iter().cloned()).collect();
+        let all_places_after_plus_initial: HashSet<Place> = all_places_after
+            .clone()
+            .into_iter()
+            .chain(initial_places.iter().cloned())
+            .collect();
 
         assert_eq!(reachable_places, all_places_after_plus_initial);
 

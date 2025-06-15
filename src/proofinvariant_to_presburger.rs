@@ -21,7 +21,10 @@ pub fn from_affine_constraint(
 }
 
 /// Convert a Formula to PresburgerSet
-pub fn formula_to_presburger(formula: &Formula<String>, mapping: &[String]) -> PresburgerSet<String> {
+pub fn formula_to_presburger(
+    formula: &Formula<String>,
+    mapping: &[String],
+) -> PresburgerSet<String> {
     match formula {
         Formula::Constraint(constraint) => {
             // Use from_affine_constraint for single constraints
@@ -176,8 +179,7 @@ where
     }
 }
 
-
-/// Existentially quantify over the given variables 
+/// Existentially quantify over the given variables
 /// This function wraps the formula in existential quantifiers but keeps the Either type
 /// to avoid type mismatches. The actual projection happens later.
 pub fn existentially_quantify_keep_either<T>(
@@ -190,7 +192,7 @@ where
     // Separate variables into existential (Left) and regular (Right)
     let mut existential_in_proof = Vec::new();
     let mut remaining_vars = Vec::new();
-    
+
     for var in proof.variables {
         match &var {
             Either::Left(i) => {
@@ -198,7 +200,10 @@ where
                     existential_in_proof.push(var);
                 } else {
                     // This shouldn't happen - Left variables should all be existential
-                    panic!("Found Left({}) variable that's not in existential_vars list", i);
+                    panic!(
+                        "Found Left({}) variable that's not in existential_vars list",
+                        i
+                    );
                 }
             }
             Either::Right(_) => {
@@ -206,7 +211,7 @@ where
             }
         }
     }
-    
+
     // Wrap the formula with existential quantifiers for each Left(i) variable
     let mut formula = proof.formula;
     for ex_var in existential_in_proof.into_iter().rev() {
@@ -220,7 +225,7 @@ where
             }
         }
     }
-    
+
     ProofInvariant {
         variables: remaining_vars,
         formula,
@@ -229,9 +234,7 @@ where
 
 /// Project a ProofInvariant from Either<usize, T> to T
 /// This assumes all Left variables have been existentially quantified
-pub fn project_proof_from_either<T>(
-    proof: ProofInvariant<Either<usize, T>>,
-) -> ProofInvariant<T>
+pub fn project_proof_from_either<T>(proof: ProofInvariant<Either<usize, T>>) -> ProofInvariant<T>
 where
     T: Clone + Eq + Hash,
 {
@@ -250,30 +253,30 @@ mod tests {
         // Create a proof invariant with mixed Left/Right variables
         let expr1 = AffineExpr::from_var(Left(0));
         let constraint1 = ProofConstraint::new(expr1, CompOp::Eq);
-        
+
         let expr2 = AffineExpr::from_var(Right("x".to_string()));
         let constraint2 = ProofConstraint::new(expr2, CompOp::Geq);
-        
+
         let formula = Formula::And(vec![
             Formula::Constraint(constraint1),
             Formula::Constraint(constraint2),
         ]);
-        
+
         let proof = ProofInvariant {
             variables: vec![Left(0), Right("x".to_string())],
             formula,
         };
-        
+
         // First, existentially quantify over variable 0 (keeping Either type)
         let quantified = existentially_quantify_keep_either(proof, &[0]);
-        
+
         // Check that only the Right variable remains in the variables list
         assert_eq!(quantified.variables.len(), 1);
         match &quantified.variables[0] {
             Right(v) => assert_eq!(v, "x"),
             Left(_) => panic!("Expected Right variable"),
         }
-        
+
         // Check that the formula is wrapped in an existential quantifier
         match &quantified.formula {
             Formula::Exists(var, _body) => {
@@ -281,7 +284,7 @@ mod tests {
             }
             _ => panic!("Expected Exists formula"),
         }
-        
+
         // Now project to remove Either
         let final_proof = project_proof_from_either(quantified);
         assert_eq!(final_proof.variables, vec!["x".to_string()]);
@@ -466,7 +469,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Existential quantification not supported in PresburgerSet conversion")]
+    #[should_panic(
+        expected = "Existential quantification not supported in PresburgerSet conversion"
+    )]
     fn test_exists_formula() {
         // Create a formula with an existential variable
         let formula = Formula::Exists(

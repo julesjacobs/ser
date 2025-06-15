@@ -23,7 +23,11 @@ impl<T: Eq + Hash> AffineExpr<T> {
         U: Eq + Hash,
     {
         AffineExpr {
-            terms: self.terms.into_iter().map(|(var, coeff)| (f(var), coeff)).collect(),
+            terms: self
+                .terms
+                .into_iter()
+                .map(|(var, coeff)| (f(var), coeff))
+                .collect(),
             constant: self.constant,
         }
     }
@@ -112,7 +116,8 @@ impl<T: Clone + Eq + Hash> AffineExpr<T> {
 
     /// Get all variables in the expression (only non-existential ones)
     pub fn variables(&self) -> Vec<T> {
-        self.terms.keys()
+        self.terms
+            .keys()
             .filter_map(|var| match var {
                 Variable::Var(v) => Some(v.clone()),
                 Variable::Existential(_) => None,
@@ -206,7 +211,9 @@ where
     /// Project from AffineExpr<Either<L, R>> to AffineExpr<R>
     pub fn project_right(self) -> AffineExpr<R> {
         AffineExpr {
-            terms: self.terms.into_iter()
+            terms: self
+                .terms
+                .into_iter()
                 .filter_map(|(var, coeff)| match var {
                     Variable::Var(Either::Left(_)) => None,
                     Variable::Var(Either::Right(r)) => Some((Variable::Var(r), coeff)),
@@ -291,8 +298,8 @@ pub enum Formula<T: Eq + Hash> {
     Constraint(Constraint<T>),
     And(Vec<Formula<T>>),
     Or(Vec<Formula<T>>),
-    Exists(usize, Box<Formula<T>>),  // Bound variable index
-    Forall(usize, Box<Formula<T>>),  // Bound variable index
+    Exists(usize, Box<Formula<T>>), // Bound variable index
+    Forall(usize, Box<Formula<T>>), // Bound variable index
 }
 
 impl<T: Eq + Hash> Formula<T> {
@@ -304,12 +311,18 @@ impl<T: Eq + Hash> Formula<T> {
     {
         match self {
             Formula::Constraint(c) => Formula::Constraint(c.rename_vars(f)),
-            Formula::And(formulas) => {
-                Formula::And(formulas.into_iter().map(|form| form.rename_vars(f)).collect())
-            }
-            Formula::Or(formulas) => {
-                Formula::Or(formulas.into_iter().map(|form| form.rename_vars(f)).collect())
-            }
+            Formula::And(formulas) => Formula::And(
+                formulas
+                    .into_iter()
+                    .map(|form| form.rename_vars(f))
+                    .collect(),
+            ),
+            Formula::Or(formulas) => Formula::Or(
+                formulas
+                    .into_iter()
+                    .map(|form| form.rename_vars(f))
+                    .collect(),
+            ),
             Formula::Exists(idx, body) => {
                 // Bound variable index remains the same
                 Formula::Exists(idx, Box::new(body.rename_vars(f)))
@@ -367,7 +380,7 @@ where
                 }
             }
         }
-        
+
         project_formula(self)
     }
 }
@@ -442,11 +455,13 @@ where
     L: Eq + Hash,
     R: Eq + Hash,
 {
-    /// Project from ProofInvariant<Either<L, R>> to ProofInvariant<R> 
+    /// Project from ProofInvariant<Either<L, R>> to ProofInvariant<R>
     /// when all Left values should not exist
     pub fn project_right(self) -> ProofInvariant<R> {
         ProofInvariant {
-            variables: self.variables.into_iter()
+            variables: self
+                .variables
+                .into_iter()
                 .filter_map(|v| match v {
                     Either::Left(_) => None,
                     Either::Right(r) => Some(r),
@@ -463,19 +478,19 @@ impl<T: Clone + Eq + Hash> Formula<T> {
     /// Find the maximum existential variable index used in the formula
     fn max_existential_index(&self) -> Option<usize> {
         match self {
-            Formula::Constraint(c) => {
-                c.expr.terms.keys()
-                    .filter_map(|var| match var {
-                        Variable::Existential(n) => Some(*n),
-                        _ => None,
-                    })
-                    .max()
-            }
-            Formula::And(formulas) | Formula::Or(formulas) => {
-                formulas.iter()
-                    .filter_map(|f| f.max_existential_index())
-                    .max()
-            }
+            Formula::Constraint(c) => c
+                .expr
+                .terms
+                .keys()
+                .filter_map(|var| match var {
+                    Variable::Existential(n) => Some(*n),
+                    _ => None,
+                })
+                .max(),
+            Formula::And(formulas) | Formula::Or(formulas) => formulas
+                .iter()
+                .filter_map(|f| f.max_existential_index())
+                .max(),
             Formula::Exists(idx, body) => {
                 let body_max = body.max_existential_index();
                 Some(match body_max {
@@ -492,7 +507,7 @@ impl<T: Clone + Eq + Hash> Formula<T> {
             }
         }
     }
-    
+
     /// Substitute all occurrences of Var(old_var) with new_var in the formula
     fn substitute_var(&self, old_var: &T, new_var: Variable<T>) -> Self {
         match self {
@@ -513,12 +528,18 @@ impl<T: Clone + Eq + Hash> Formula<T> {
                     op: c.op,
                 })
             }
-            Formula::And(formulas) => {
-                Formula::And(formulas.iter().map(|f| f.substitute_var(old_var, new_var.clone())).collect())
-            }
-            Formula::Or(formulas) => {
-                Formula::Or(formulas.iter().map(|f| f.substitute_var(old_var, new_var.clone())).collect())
-            }
+            Formula::And(formulas) => Formula::And(
+                formulas
+                    .iter()
+                    .map(|f| f.substitute_var(old_var, new_var.clone()))
+                    .collect(),
+            ),
+            Formula::Or(formulas) => Formula::Or(
+                formulas
+                    .iter()
+                    .map(|f| f.substitute_var(old_var, new_var.clone()))
+                    .collect(),
+            ),
             Formula::Exists(idx, body) => {
                 Formula::Exists(*idx, Box::new(body.substitute_var(old_var, new_var)))
             }
@@ -527,14 +548,14 @@ impl<T: Clone + Eq + Hash> Formula<T> {
             }
         }
     }
-    
+
     /// Create an existentially quantified formula
     pub fn mk_exists(self, var_to_bind: T) -> Self {
         let fresh_idx = self.max_existential_index().map(|n| n + 1).unwrap_or(0);
         let substituted = self.substitute_var(&var_to_bind, Variable::Existential(fresh_idx));
         Formula::Exists(fresh_idx, Box::new(substituted))
     }
-    
+
     /// Create a universally quantified formula
     pub fn mk_forall(self, var_to_bind: T) -> Self {
         let fresh_idx = self.max_existential_index().map(|n| n + 1).unwrap_or(0);
@@ -1305,10 +1326,10 @@ where
             None => return None, // Variable not found in mapping
         }
     }
-    
+
     // Map formula recursively
     let mapped_formula = map_formula_variables(proof.formula, name_to_place)?;
-    
+
     Some(ProofInvariant {
         variables: mapped_variables,
         formula: mapped_formula,
@@ -1377,7 +1398,7 @@ where
     P: Clone + Eq + Hash,
 {
     let mut mapped_terms = HashMap::new();
-    
+
     for (var, coeff) in expr.terms {
         let mapped_var = match var {
             Variable::Var(name) => {
@@ -1388,7 +1409,7 @@ where
         };
         mapped_terms.insert(mapped_var, coeff);
     }
-    
+
     Some(AffineExpr {
         terms: mapped_terms,
         constant: expr.constant,

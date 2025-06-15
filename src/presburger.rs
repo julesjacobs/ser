@@ -254,7 +254,11 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
     ///
     /// See also `project_out_test` below
     pub fn project_out(mut self, variable: T) -> Self {
-        let index = self.mapping.iter().position(|x| *x == variable).expect("Trying to project out a variable that's not there");
+        let index = self
+            .mapping
+            .iter()
+            .position(|x| *x == variable)
+            .expect("Trying to project out a variable that's not there");
         unsafe {
             self.isl_set = isl::isl_set_project_out(
                 self.isl_set,

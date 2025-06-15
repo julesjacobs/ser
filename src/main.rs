@@ -21,7 +21,6 @@ mod smpt;
 mod spresburger;
 mod utils;
 
-
 use colored::*;
 use parser::Program;
 use parser::Request;
@@ -221,7 +220,11 @@ where
 
     // Generate GraphViz output for the Network System
     println!();
-    println!("{} {}", "🎨".cyan(), "Generating GraphViz visualization...".cyan().bold());
+    println!(
+        "{} {}",
+        "🎨".cyan(),
+        "Generating GraphViz visualization...".cyan().bold()
+    );
 
     match ns.save_graphviz(out_dir, open_files) {
         Ok(files) => {
@@ -367,7 +370,11 @@ where
         "{}",
         "────────────────────────────────────────────────────────────".bright_black()
     );
-    println!("{} {}", "🔍".yellow(), "SERIALIZABILITY ANALYSIS".yellow().bold());
+    println!(
+        "{} {}",
+        "🔍".yellow(),
+        "SERIALIZABILITY ANALYSIS".yellow().bold()
+    );
     println!(
         "{}",
         "────────────────────────────────────────────────────────────".bright_black()
@@ -381,7 +388,8 @@ where
     println!(
         "{} {}",
         if serializable { "✅" } else { "❌" },
-        format!("RESULT: {}",
+        format!(
+            "RESULT: {}",
             if serializable {
                 "SERIALIZABLE".green().bold()
             } else {
@@ -440,9 +448,16 @@ fn process_ser_file(file_path: &str, open_files: bool) {
     println!();
     println!(
         "{}",
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".blue().bold()
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            .blue()
+            .bold()
     );
-    println!("{} {} {}", "📄".blue(), "Processing Ser file:".blue().bold(), file_path.cyan());
+    println!(
+        "{} {} {}",
+        "📄".blue(),
+        "Processing Ser file:".blue().bold(),
+        file_path.cyan()
+    );
 
     let content = match fs::read_to_string(file_path) {
         Ok(content) => content,
