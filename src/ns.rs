@@ -624,16 +624,7 @@ where
                         "{}   This trace demonstrates a non-serializable execution{}",
                         YELLOW, RESET
                     );
-                    let mut response_places_in_petri_for_trace = vec![];
-                    for p in petri_for_trace.get_places() {
-                        match p {
-                            Right(Response(_, _)) => {
-                                response_places_in_petri_for_trace.push(p);
-                            }
-                            _ => (),
-                        }
-                    }
-                    print_counterexample_trace(&petri_for_trace, trace, &response_places_in_petri_for_trace);
+                    print_counterexample_trace(&petri_for_trace, trace);
                 }
             }
         }
@@ -668,9 +659,12 @@ fn display_vec<T: Display>(v: &[T]) -> String {
 }
 
 /// Prints a counterexample trace step-by-step on the given Petri net.
-fn print_counterexample_trace<P>(petri: &Petri<P>, trace: &[usize], response_places: &[P])
+fn print_counterexample_trace<L, G, Req, Resp>(petri: &Petri<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>, trace: &[usize])
 where
-    P: Clone + Eq + PartialEq + Hash + std::fmt::Display,
+    L: Clone + Eq + PartialEq + Hash + std::fmt::Display,
+    G: Clone + Eq + PartialEq + Hash + std::fmt::Display,
+    Req: Clone + Eq + PartialEq + Hash + std::fmt::Display,
+    Resp: Clone + Eq + PartialEq + Hash + std::fmt::Display,
 {
     // Header
     println!("{}", "❌ COUNTEREXAMPLE TRACE FOUND".bold().red());
@@ -721,7 +715,7 @@ where
 
         // Final marking summary
         let total_tokens = marking.len();
-        let mut counts: HashMap<&P, usize> = HashMap::new();
+        let mut counts = HashMap::new();
         for p in &marking {
             *counts.entry(p).or_insert(0) += 1;
         }
@@ -755,10 +749,17 @@ where
         println!("{}", "❌ COUNTEREXAMPLE:".bold().red());
         // for each place, look for the Debug pattern "Right(Response(...), resp)" and extract
         for (place, &cnt) in &counts {
-            if !response_places.contains(place) {
-                continue;
+            use crate::ns_to_petri::ReqPetriState::Response;
+            match place {
+                Right(Response(req, resp)) => {
+                    if cnt == 1 {
+                        println!("request/response: {req}/{resp}");
+                    } else {
+                        println!("request/response: {req}/{resp} × {cnt}");
+                    }
+                }
+                _ => (),
             }
-            println!("request-response: {} (count: {})", place, cnt);
         }
     }
 }
