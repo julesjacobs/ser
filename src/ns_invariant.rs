@@ -37,6 +37,16 @@ impl<Req: Display, L: Display, Resp: Display> Display for RequestStatePair<Req, 
     }
 }
 
+/// Wrapper struct for (Req, Resp) pairs to implement Display
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct CompletedRequestPair<Req, Resp>(pub Req, pub Resp);
+
+impl<Req: Display, Resp: Display> Display for CompletedRequestPair<Req, Resp> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}/{}", self.0, self.1)
+    }
+}
+
 /// NS-level invariant structure that captures per-global-state invariants
 #[derive(Clone, Debug)]
 pub struct NSInvariant<G, L, Req, Resp>
@@ -59,8 +69,37 @@ where
     Req: Display + Eq + Hash + Display,
     Resp: Display + Eq + Hash + Display,
 {
+    /// Project an invariant for a specific global state to only completed requests
+    pub fn project_to_completed(&self, global_state: &G) -> Option<ProofInvariant<CompletedRequestPair<Req, Resp>>>
+    where
+        L: Clone,
+        Req: Clone,
+        Resp: Clone,
+    {
+        self.global_invariants.get(global_state).map(|full_invariant| {
+            // Create a projection that maps InFlight to 0 and Completed to the pair
+            full_invariant.substitute(|pair| {
+                match &pair.1 {
+                    RequestState::InFlight(_) => {
+                        // Map InFlight requests to 0
+                        Either::Right(0)
+                    }
+                    RequestState::Completed(resp) => {
+                        // Map Completed requests to CompletedRequestPair
+                        Either::Left(CompletedRequestPair(pair.0.clone(), resp.clone()))
+                    }
+                }
+            })
+        })
+    }
+    
     /// Pretty print the NS invariant
-    pub fn pretty_print(&self) {
+    pub fn pretty_print(&self)
+    where
+        L: Clone,
+        Req: Clone,
+        Resp: Clone,
+    {
         println!("NS-Level Invariants per Global State:");
         println!("=====================================");
         
@@ -68,7 +107,7 @@ where
             println!("\nGlobal State: {}", global_state);
             println!("-------------");
             
-            // Print variables
+            // Print full invariant variables
             println!("Variables:");
             for (i, pair) in invariant.variables.iter().enumerate() {
                 println!("  [{}] {}", i, pair);
@@ -76,6 +115,16 @@ where
             
             // Print formula
             println!("Formula: {}", invariant.formula);
+            
+            // Print projected invariant
+            if let Some(projected) = self.project_to_completed(global_state) {
+                println!("\nProjected (Completed Requests Only):");
+                println!("Variables:");
+                for (i, pair) in projected.variables.iter().enumerate() {
+                    println!("  [{}] {}", i, pair);
+                }
+                println!("Formula: {}", projected.formula);
+            }
         }
     }
 }
