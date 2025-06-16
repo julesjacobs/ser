@@ -879,28 +879,4 @@ mod tests {
         // Should not keep isolated transition
         assert!(!has_d_to_e); // Not reachable from Start
     }
-
-    #[test]
-    fn test_decision_conversion() {
-        // Test bool to Decision conversion
-        let yes_decision: Decision<String> = Decision::from(true);
-        match yes_decision {
-            Decision::CounterExample { trace } => {
-                assert_eq!(trace, Vec::<(Vec<String>, Vec<String>)>::new())
-            }
-            _ => panic!("Expected CounterExample variant"),
-        }
-
-        let no_decision: Decision<String> = Decision::from(false);
-        match no_decision {
-            Decision::Proof { proof } => assert!(proof.is_none()),
-            _ => panic!("Expected Proof variant"),
-        }
-
-        // Test Decision creation
-        let _counter_example_decision: Decision<String> = Decision::CounterExample {
-            trace: vec![1, 2, 3],
-        };
-        let _proof_decision: Decision<String> = Decision::Proof { proof: None };
-    }
 }

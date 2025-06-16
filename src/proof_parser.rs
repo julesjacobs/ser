@@ -177,11 +177,11 @@ impl<T: fmt::Display + Eq + Hash> fmt::Display for AffineExpr<T> {
                     }
                     Variable::Existential(n) => {
                         if *coeff == 1 {
-                            write!(f, "E{}", n)?;
+                            write!(f, "e{}", n)?;
                         } else if *coeff == -1 {
-                            write!(f, "-E{}", n)?;
+                            write!(f, "-e{}", n)?;
                         } else {
-                            write!(f, "{}*E{}", coeff, n)?;
+                            write!(f, "{}*e{}", coeff, n)?;
                         }
                     }
                 }
