@@ -448,6 +448,31 @@ impl<T: Eq + Hash> ProofInvariant<T> {
             formula: self.formula.map(&mut f),
         }
     }
+    
+    /// Substitute variables according to a mapping function
+    /// The mapping returns Either::Left(Q) for a new variable or Either::Right(i32) for a constant
+    pub fn substitute<Q, F>(&self, mut mapping: F) -> ProofInvariant<Q>
+    where
+        F: FnMut(&T) -> Either<Q, i32>,
+        Q: Clone + Eq + Hash,
+        T: Clone,
+    {
+        // Map variables list, keeping only Left (new variables)
+        let new_variables: Vec<Q> = self.variables.iter()
+            .filter_map(|var| match mapping(var) {
+                Either::Left(q) => Some(q),
+                Either::Right(_) => None, // Constants don't appear in variable list
+            })
+            .collect();
+        
+        // Recursively substitute in the formula
+        let new_formula = substitute_in_formula(&self.formula, &mut mapping);
+        
+        ProofInvariant {
+            variables: new_variables,
+            formula: new_formula,
+        }
+    }
 }
 
 impl<L, R> ProofInvariant<Either<L, R>>
@@ -468,6 +493,67 @@ where
                 })
                 .collect(),
             formula: self.formula.project_right(),
+        }
+    }
+}
+
+/// Helper function to substitute variables in a formula
+/// Mapping returns Either::Left(Q) for a new variable or Either::Right(i32) for a constant
+fn substitute_in_formula<T, Q, F>(formula: &Formula<T>, mapping: &mut F) -> Formula<Q>
+where
+    T: Clone + Eq + Hash,
+    Q: Clone + Eq + Hash,
+    F: FnMut(&T) -> Either<Q, i32>,
+{
+    match formula {
+        Formula::Constraint(c) => {
+            // Substitute in the affine expression
+            let mut new_terms = HashMap::new();
+            let mut new_constant = c.expr.constant;
+            
+            for (var, coeff) in &c.expr.terms {
+                match var {
+                    Variable::Var(v) => {
+                        match mapping(v) {
+                            Either::Left(q) => {
+                                // Variable maps to new variable
+                                *new_terms.entry(Variable::Var(q)).or_insert(0) += coeff;
+                            }
+                            Either::Right(constant_val) => {
+                                // Variable maps to constant - add to constant term
+                                new_constant += coeff * constant_val as i64;
+                            }
+                        }
+                    }
+                    Variable::Existential(n) => {
+                        // Existential variables are preserved
+                        new_terms.insert(Variable::Existential(*n), *coeff);
+                    }
+                }
+            }
+            
+            // Remove zero coefficients
+            new_terms.retain(|_, coeff| *coeff != 0);
+            
+            Formula::Constraint(Constraint {
+                expr: AffineExpr {
+                    terms: new_terms,
+                    constant: new_constant,
+                },
+                op: c.op,
+            })
+        }
+        Formula::And(formulas) => {
+            Formula::And(formulas.iter().map(|f| substitute_in_formula(f, mapping)).collect())
+        }
+        Formula::Or(formulas) => {
+            Formula::Or(formulas.iter().map(|f| substitute_in_formula(f, mapping)).collect())
+        }
+        Formula::Exists(idx, body) => {
+            Formula::Exists(*idx, Box::new(substitute_in_formula(body, mapping)))
+        }
+        Formula::Forall(idx, body) => {
+            Formula::Forall(*idx, Box::new(substitute_in_formula(body, mapping)))
         }
     }
 }

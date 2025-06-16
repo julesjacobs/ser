@@ -596,8 +596,20 @@ where
             crate::reachability_with_proofs::Decision::Proof { proof } => {
                 if let Some(p) = proof {
                     println!("{}{}✅ PROOF CERTIFICATE FOUND{}", BOLD, GREEN, RESET);
+                    
+                    // Translate to NS-level invariant
+                    println!();
+                    println!("{}Translating proof to NS-level invariants...{}", YELLOW, RESET);
+                    let ns_invariant = crate::ns_invariant::translate_petri_proof_to_ns(p.clone(), self);
+                    
+                    // Pretty print NS-level invariants
+                    println!();
+                    ns_invariant.pretty_print();
+                    
+                    // Also show original Petri net proof for debugging
+                    println!();
+                    println!("{}Original Petri net proof:{}", YELLOW, RESET);
                     println!("{}   Variables:{}", YELLOW, RESET);
-                    // Pretty print variables
                     for (i, var) in p.variables.iter().enumerate() {
                         println!("      {}{}: {}{}", YELLOW, i, format!("{}", var), RESET);
                     }
