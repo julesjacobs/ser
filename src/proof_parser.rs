@@ -535,19 +535,74 @@ where
             // Remove zero coefficients
             new_terms.retain(|_, coeff| *coeff != 0);
             
-            Formula::Constraint(Constraint {
-                expr: AffineExpr {
-                    terms: new_terms,
-                    constant: new_constant,
-                },
-                op: c.op,
-            })
+            // Check if this is a degenerate constraint (only constant term)
+            if new_terms.is_empty() {
+                // Evaluate the constant constraint
+                match c.op {
+                    CompOp::Eq => {
+                        if new_constant == 0 {
+                            // 0 = 0 is always true, return a tautology
+                            // We'll represent this as an empty And
+                            Formula::And(vec![])
+                        } else {
+                            // c = 0 where c != 0 is always false
+                            // We'll represent this as an empty Or
+                            Formula::Or(vec![])
+                        }
+                    }
+                    CompOp::Geq => {
+                        if new_constant >= 0 {
+                            // c >= 0 where c >= 0 is always true
+                            Formula::And(vec![])
+                        } else {
+                            // c >= 0 where c < 0 is always false
+                            Formula::Or(vec![])
+                        }
+                    }
+                }
+            } else {
+                Formula::Constraint(Constraint {
+                    expr: AffineExpr {
+                        terms: new_terms,
+                        constant: new_constant,
+                    },
+                    op: c.op,
+                })
+            }
         }
         Formula::And(formulas) => {
-            Formula::And(formulas.iter().map(|f| substitute_in_formula(f, mapping)).collect())
+            let mut simplified = Vec::new();
+            for f in formulas {
+                let subst = substitute_in_formula(f, mapping);
+                match subst {
+                    // Empty And is true, so ignore it in an And
+                    Formula::And(inner) if inner.is_empty() => {}
+                    // Empty Or is false, so the whole And becomes false
+                    Formula::Or(inner) if inner.is_empty() => return Formula::Or(vec![]),
+                    // Flatten nested Ands
+                    Formula::And(inner) => simplified.extend(inner),
+                    // Keep other formulas
+                    other => simplified.push(other),
+                }
+            }
+            Formula::And(simplified)
         }
         Formula::Or(formulas) => {
-            Formula::Or(formulas.iter().map(|f| substitute_in_formula(f, mapping)).collect())
+            let mut simplified = Vec::new();
+            for f in formulas {
+                let subst = substitute_in_formula(f, mapping);
+                match subst {
+                    // Empty Or is false, so ignore it in an Or
+                    Formula::Or(inner) if inner.is_empty() => {}
+                    // Empty And is true, so the whole Or becomes true
+                    Formula::And(inner) if inner.is_empty() => return Formula::And(vec![]),
+                    // Flatten nested Ors
+                    Formula::Or(inner) => simplified.extend(inner),
+                    // Keep other formulas
+                    other => simplified.push(other),
+                }
+            }
+            Formula::Or(simplified)
         }
         Formula::Exists(idx, body) => {
             Formula::Exists(*idx, Box::new(substitute_in_formula(body, mapping)))
