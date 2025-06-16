@@ -362,7 +362,7 @@ where
 fn build_smpt_args(
     net_file: &str,
     xml_file: &str,
-    _proof_file: &str,
+    proof_file: &str,
     timeout_seconds: Option<u64>,
 ) -> Vec<String> {
     let mut args = vec![
@@ -373,9 +373,8 @@ fn build_smpt_args(
         "--show-time".to_string(),
         "--show-model".to_string(),
         "--debug".to_string(),
-        // TODO: Temporarily disable proof flags to enable trace output
-        // "--export-proof".to_string(),
-        // proof_file.to_string(),
+        "--export-proof".to_string(),
+        proof_file.to_string(),
     ];
 
     // Add methods
@@ -393,18 +392,61 @@ fn build_smpt_args(
     args
 }
 
-/// Execute SMPT command
-fn execute_smpt(args: &[String]) -> Result<Output, std::io::Error> {
-    // Try wrapper script first
-    if Path::new(SMPT_WRAPPER_PATH).exists() {
-        Command::new(SMPT_WRAPPER_PATH).args(args).output()
+/// Execute SMPT command with file-based output to avoid broken pipe errors
+fn execute_smpt(args: &[String], stdout_path: &str, stderr_path: &str) -> Result<Output, std::io::Error> {
+    use std::fs::File;
+    use std::process::Stdio;
+    
+    // Create output files
+    let stdout_file = File::create(stdout_path)?;
+    let stderr_file = File::create(stderr_path)?;
+    
+    // Build the command
+    let mut cmd = if Path::new(SMPT_WRAPPER_PATH).exists() {
+        let mut cmd = Command::new(SMPT_WRAPPER_PATH);
+        cmd.args(args);
+        cmd
     } else {
         // Fall back to python3 -m smpt
         let mut python_args = vec!["-m".to_string(), SMPT_PYTHON_MODULE.to_string()];
         python_args.extend_from_slice(args);
+        
+        let mut cmd = Command::new("python3");
+        cmd.args(&python_args);
+        cmd
+    };
+    
+    // Configure to write to files instead of pipes
+    cmd.stdout(Stdio::from(stdout_file));
+    cmd.stderr(Stdio::from(stderr_file));
+    cmd.stdin(Stdio::null()); // Explicitly close stdin
+    
+    // Execute and wait for completion
+    let status = cmd.status()?;
+    
+    // Read the files back
+    let stdout = std::fs::read(stdout_path)?;
+    let stderr = std::fs::read(stderr_path)?;
+    
+    Ok(Output {
+        status,
+        stdout,
+        stderr,
+    })
+}
 
-        Command::new("python3").args(&python_args).output()
-    }
+/// Filter out harmless Python cleanup errors from stderr
+fn filter_python_cleanup_errors(stderr: &str) -> String {
+    stderr
+        .lines()
+        .filter(|line| {
+            // Filter out Python's broken pipe errors during cleanup
+            !line.contains("Exception ignored in:") 
+                && !line.contains("BrokenPipeError") 
+                && !line.contains("<_io.BufferedWriter")
+        })
+        .collect::<Vec<&str>>()
+        .join("\n")
 }
 
 /// Extract model from SMPT output
@@ -508,6 +550,10 @@ where
 
     // Generate absolute proof file path based on the XML file path
     let proof_file_path = abs_xml_file.to_str().unwrap().replace(".xml", "_proof.txt");
+    
+    // Generate stdout/stderr file paths based on the XML file path
+    let stdout_path = abs_xml_file.to_str().unwrap().replace(".xml", ".stdout");
+    let stderr_path = abs_xml_file.to_str().unwrap().replace(".xml", ".stderr");
 
     // Build command arguments
     let args = build_smpt_args(
@@ -518,7 +564,7 @@ where
     );
 
     // Execute SMPT
-    let output = match execute_smpt(&args) {
+    let output = match execute_smpt(&args, &stdout_path, &stderr_path) {
         Ok(output) => output,
         Err(e) => {
             return SmptVerificationResult {
@@ -532,7 +578,10 @@ where
     };
 
     let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
-    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    let mut stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    
+    // Filter out harmless Python cleanup errors
+    stderr = filter_python_cleanup_errors(&stderr);
 
     // Parse SMPT output
     if stdout.contains("TRUE") {
