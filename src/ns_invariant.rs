@@ -163,8 +163,10 @@ where
                         Either::Left(RequestStatePair(req.clone(), RequestState::InFlight(l.clone())))
                     }
                     ReqPetriState::Request(_) => {
-                        // Requests are always 0 in serializable execution
-                        Either::Right(0)
+                        // This is problematic, we don't yet support requests in the RequestStatePair
+                        // Need to think about how to fix this.
+                        // Maybe we should reachitect the data structures to make everything smoother.
+                        unreachable!("Request found in Left - not implemented yet!")
                     }
                     ReqPetriState::Response(_, _) => {
                         panic!("Response found in Left - this should be unreachable!");
