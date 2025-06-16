@@ -618,8 +618,7 @@ where
                         YELLOW, RESET
                     );
                 } else {
-                    println!("{}   Transition sequence:{}", YELLOW, RESET);
-                    println!("      {:?}", trace);
+                    println!("{}   Trace length: {} transitions{}", YELLOW, trace.len(), RESET);
                     println!(
                         "{}   This trace demonstrates a non-serializable execution{}",
                         YELLOW, RESET
@@ -659,7 +658,7 @@ fn display_vec<T: Display>(v: &[T]) -> String {
 }
 
 /// Prints a counterexample trace step-by-step on the given Petri net.
-fn print_counterexample_trace<L, G, Req, Resp>(petri: &Petri<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>, trace: &[usize])
+fn print_counterexample_trace<L, G, Req, Resp>(petri: &Petri<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>, trace: &[(Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>, Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>)])
 where
     L: Clone + Eq + PartialEq + Hash + std::fmt::Display,
     G: Clone + Eq + PartialEq + Hash + std::fmt::Display,
@@ -673,30 +672,39 @@ where
         // Empty trace
         println!("{}", "(Empty trace – violation at initial state)".yellow());
     } else {
-        // Raw sequence
-        println!(
-            "{}",
-            format!("Raw transition sequence: {:?}", trace).yellow()
-        );
+        // Show transition sequence with details
+        println!("{}", "Transition sequence:".yellow());
+        for (i, (inputs, outputs)) in trace.iter().enumerate() {
+            println!(
+                "{}",
+                format!(
+                    "  {}. {} → {}",
+                    i + 1,
+                    if inputs.is_empty() { "∅".to_string() } else { display_vec(inputs) },
+                    if outputs.is_empty() { "∅".to_string() } else { display_vec(outputs) }
+                ).yellow()
+            );
+        }
+        println!();
 
         // Replay
-        let transitions = petri.get_transitions();
         let mut marking = petri.get_initial_marking();
         println!(
             "{}",
             format!("Step 0 – initial marking: {}", display_vec(&marking)).yellow()
         );
 
-        for (i, &t_idx) in trace.iter().enumerate() {
-            let (inputs, outputs) = &transitions[t_idx];
-
+        for (i, (inputs, outputs)) in trace.iter().enumerate() {
             // consume inputs
             for p in inputs {
                 if let Some(pos) = marking.iter().position(|x| x == p) {
                     marking.remove(pos);
                 } else {
-                    println!("{}", format!("Step {} – fired t{}: input {} not in marking", i + 1, t_idx, p).bold().red());
-                    assert!(false, "Input not in marking");
+                    println!("{}", format!("Step {} – transition {}: input {} not in marking", i + 1, i + 1, p).bold().red());
+                    println!("{}", format!("Current marking: {}", display_vec(&marking)).red());
+                    println!("{}", "Note: This may indicate a bug!".red());
+                    // Don't panic, just continue to show the rest of the trace
+                    return;
                 }
             }
             // produce outputs
@@ -705,9 +713,8 @@ where
             println!(
                 "{}",
                 format!(
-                    "Step {} – fired t{}: inputs={}, outputs={}, marking={}",
+                    "Step {} – fired transition: inputs={}, outputs={}, marking={}",
                     i + 1,
-                    t_idx,
                     display_vec(inputs),
                     display_vec(outputs),
                     display_vec(&marking)

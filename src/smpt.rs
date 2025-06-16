@@ -41,7 +41,7 @@ const DEFAULT_METHODS: &[&str] = &["STATE-EQUATION", "BMC", "K-INDUCTION", "SMT"
 
 /// Inner verification result type
 #[derive(Debug, Clone)]
-pub enum SmptVerificationOutcome {
+pub enum SmptVerificationOutcome<P> {
     /// The constraint set is unreachable (program is serializable)
     Unreachable {
         /// Proof certificate if available
@@ -51,8 +51,8 @@ pub enum SmptVerificationOutcome {
     },
     /// The constraint set is reachable (program is not serializable)
     Reachable {
-        /// Counterexample trace (sequence of transition indices from the Petri net)
-        trace: Vec<usize>,
+        /// Counterexample trace as a sequence of transitions (input places, output places)
+        trace: Vec<(Vec<P>, Vec<P>)>,
     },
     /// Verification failed or timed out
     Error { message: String },
@@ -60,9 +60,9 @@ pub enum SmptVerificationOutcome {
 
 /// Result of SMPT verification with proof/counterexample information and raw output
 #[derive(Debug, Clone)]
-pub struct SmptVerificationResult {
+pub struct SmptVerificationResult<P> {
     /// The verification outcome
-    pub outcome: SmptVerificationOutcome,
+    pub outcome: SmptVerificationOutcome<P>,
     /// Raw SMPT stdout for debugging
     pub raw_stdout: String,
     /// Raw SMPT stderr for debugging
@@ -164,7 +164,7 @@ pub fn can_reach_constraint_set<P>(
     constraints: Vec<Constraint<P>>,
     out_dir: &str,
     disjunct_id: usize,
-) -> SmptVerificationResult
+) -> SmptVerificationResult<P>
 where
     P: Clone + Hash + Ord + Display + Debug,
 {
@@ -214,8 +214,8 @@ where
     std::fs::write(&xml_file_path, &xml).expect("Failed to write SMPT XML");
     std::fs::write(&pnet_file_path, &pnet_content).expect("Failed to write SMPT Petri net");
 
-    // Try to run SMPT tool
-    let result = run_smpt(&pnet_file_path, &xml_file_path);
+    // Try to run SMPT tool with the Petri net for trace mapping
+    let result = run_smpt(&pnet_file_path, &xml_file_path, &petri);
 
     // Log the result
     match &result.outcome {
@@ -336,17 +336,24 @@ pub fn is_smpt_installed() -> bool {
 }
 
 /// Run SMPT on a Petri net file with constraints using the current global timeout
-fn run_smpt(net_file: &str, xml_file: &str) -> SmptVerificationResult {
-    run_smpt_with_timeout(net_file, xml_file, Some(get_smpt_timeout()))
+fn run_smpt<P>(net_file: &str, xml_file: &str, petri: &Petri<P>) -> SmptVerificationResult<P>
+where
+    P: Clone + Hash + Ord + Display + Debug,
+{
+    run_smpt_with_timeout(net_file, xml_file, Some(get_smpt_timeout()), petri)
 }
 
 /// Run SMPT with a specific timeout
-fn run_smpt_with_timeout(
+fn run_smpt_with_timeout<P>(
     net_file: &str,
     xml_file: &str,
     timeout_seconds: Option<u64>,
-) -> SmptVerificationResult {
-    run_smpt_internal(net_file, xml_file, timeout_seconds)
+    petri: &Petri<P>,
+) -> SmptVerificationResult<P>
+where
+    P: Clone + Hash + Ord + Display + Debug,
+{
+    run_smpt_internal(net_file, xml_file, timeout_seconds, petri)
 }
 
 // === Helper Functions ===
@@ -412,9 +419,9 @@ fn extract_model(output: &str) -> Option<String> {
     None
 }
 
-/// Extract trace from SMPT output, converting transition IDs to indices
+/// Extract trace from SMPT output as transition indices
 /// Looks for traces in the output itself or in associated .scn files
-fn extract_trace(output: &str) -> Vec<usize> {
+fn extract_trace_indices(output: &str) -> Vec<usize> {
     let lines: Vec<&str> = output.lines().collect();
 
     // First, look for traces in the output itself (traditional format)
@@ -441,12 +448,28 @@ fn extract_trace(output: &str) -> Vec<usize> {
     Vec::new()
 }
 
+/// Convert trace indices to actual transitions (input places, output places)
+fn indices_to_transitions<P>(indices: Vec<usize>, petri: &Petri<P>) -> Vec<(Vec<P>, Vec<P>)>
+where
+    P: Clone + PartialEq + Eq + Hash,
+{
+    let transitions = petri.get_transitions();
+    indices
+        .into_iter()
+        .map(|idx| transitions[idx].clone())
+        .collect()
+}
+
 /// Run SMPT on a Petri net file with constraints with optional timeout (internal implementation)
-fn run_smpt_internal(
+fn run_smpt_internal<P>(
     net_file: &str,
     xml_file: &str,
     timeout_seconds: Option<u64>,
-) -> SmptVerificationResult {
+    petri: &Petri<P>,
+) -> SmptVerificationResult<P>
+where
+    P: Clone + Hash + Ord + Display + Debug,
+{
     if !is_smpt_installed() {
         return SmptVerificationResult {
             outcome: SmptVerificationOutcome::Error {
@@ -514,15 +537,15 @@ fn run_smpt_internal(
     // Parse SMPT output
     if stdout.contains("TRUE") {
         // Property is reachable => NOT serializable
-        let mut trace = extract_trace(&stdout);
+        let mut trace_indices = extract_trace_indices(&stdout);
 
         // If no trace found in stdout, try to read from .scn file
-        if trace.is_empty() {
+        if trace_indices.is_empty() {
             let scn_file_path = proof_file_path.replace(".txt", ".txt.scn");
             if let Ok(scn_content) = std::fs::read_to_string(&scn_file_path) {
                 let trace_line = scn_content.trim();
                 if !trace_line.is_empty() && trace_line.starts_with('t') {
-                    trace = trace_line
+                    trace_indices = trace_line
                         .split_whitespace()
                         .filter_map(|s| {
                             // Extract number from "t0", "t1", etc.
@@ -533,6 +556,9 @@ fn run_smpt_internal(
                 }
             }
         }
+
+        // Convert indices to actual transitions
+        let trace = indices_to_transitions(trace_indices, petri);
 
         SmptVerificationResult {
             outcome: SmptVerificationOutcome::Reachable { trace },
@@ -861,7 +887,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_trace() {
+    fn test_extract_trace_indices() {
         let output = r#"# Hello
 ####################
 [BMC] Trace
@@ -872,12 +898,12 @@ t1 t0 t10 t8 t12 t5 t3
 FORMULA reachability-check TRUE TIME 0.403745174407959
 # Bye bye"#;
 
-        let trace = extract_trace(output);
+        let trace = extract_trace_indices(output);
         assert_eq!(trace, vec![1, 0, 10, 8, 12, 5, 3]);
 
         // Test empty trace
         let no_trace = "# Hello\nFORMULA reachability-check FALSE\n# Bye bye";
-        assert_eq!(extract_trace(no_trace), Vec::<usize>::new());
+        assert_eq!(extract_trace_indices(no_trace), Vec::<usize>::new());
     }
 
     #[test]
