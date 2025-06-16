@@ -131,6 +131,24 @@ impl<K: Eq + Hash + Clone + Ord> LinearSet<K> {
             periods: self.periods.into_iter().map(|p| p.rename(&mut f)).collect(),
         }
     }
+
+    /// Optimize the linear set by deduplicating period vectors, without changing its semantic
+    /// meaning.
+    pub fn dedup_periods(&mut self) {
+        // iteratively remove periods that are linear combinations of others
+        'fixpoint: loop {
+            // try to find an index i such that periods[i] is a linear combination of the other periods
+            for i in 0..self.periods.len() {
+                let mut other_periods = self.periods.clone();
+                other_periods.remove(i);
+                if is_nonnegative_combination(&self.periods[i], &other_periods) {
+                    self.periods.remove(i);
+                    continue 'fixpoint;
+                }
+            }
+            break;
+        }
+    }
 }
 
 /// Display a linear set as a string of the form "base(period1 + period2 + ...)*"
@@ -183,72 +201,28 @@ impl<K: Eq + Hash + Clone + Ord + std::fmt::Display> std::fmt::Display for Semil
     }
 }
 
-fn dedup_periods<K: Eq + Hash + Clone + Ord>(
-    mut periods: Vec<SparseVector<K>>,
-) -> Vec<SparseVector<K>> {
-    // iteratively remove periods that are linear combinations of others
-    'outer: loop {
-        // try to find an index i such that periods[i] is a linear combination of the other periods
-        for i in 0..periods.len() {
-            let mut other_periods = periods.clone();
-            other_periods.remove(i);
-            if is_nonnegative_combination(&periods[i], &other_periods) {
-                periods.remove(i);
-                continue 'outer;
-            }
-        }
-        break;
-    }
-    periods
-}
-
 impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Create a new semilinear set from a list of LinearSet components.
-    pub fn new(components: Vec<LinearSet<K>>) -> Self {
-        // Filter out duplicate linear set components
-        let mut new_components = HashSet::new();
-        for lin in components {
-            // Filter out duplicate period vectors
-            let mut new_periods = HashSet::new();
-            for p in lin.periods {
-                new_periods.insert(p);
-            }
-            new_components.insert(LinearSet {
-                base: lin.base,
-                periods: dedup_periods(new_periods.into_iter().collect()),
-            });
+    pub fn new(mut components: Vec<LinearSet<K>>) -> Self {
+        // Filter out duplicate period vectors
+        for lin in &mut components {
+            lin.dedup_periods();
         }
-        // // Filter out by linear_set_subset
-        // let mut new_components2: Vec<LinearSet<K>> = Vec::new();
-        // for comp in new_components.iter() {
-        //     if !new_components
-        //         .iter()
-        //         .any(|c| linear_set_subset(&comp, c) && comp != c)
-        //     {
-        //         new_components2.push(comp.clone());
-        //     }
-        // }
 
         // Try merging any of the new_components into another
-        'outer: loop {
-            let new_components_vec: Vec<LinearSet<K>> = new_components.iter().cloned().collect();
-            for new_comp1 in &new_components_vec {
-                for new_comp2 in &new_components_vec {
-                    if new_comp1 != new_comp2 {
-                        if let Some(merged) = try_merge_linear_sets(new_comp1, new_comp2) {
-                            new_components.remove(new_comp1);
-                            new_components.remove(new_comp2);
-                            new_components.insert(merged);
-                            continue 'outer;
-                        }
+        'fixpoint: loop {
+            for i in 0..components.len() {
+                for j in i+1..components.len() {
+                    if let Some(merged) = try_merge_linear_sets(&components[i], &components[j]) {
+                        components[i] = merged;
+                        components.swap_remove(j);
+                        continue 'fixpoint;
                     }
                 }
             }
             break;
         }
-        SemilinearSet {
-            components: new_components.into_iter().collect(),
-        }
+        SemilinearSet { components }
     }
 
     /// Check if the semilinear set is empty.
@@ -523,85 +497,68 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
     }
 
     fn star(self) -> Self {
-        let mut result_components = Vec::new();
-
-        // We can add the bases without periods, and the periods of components with zero base as extra periods to all components of the starred result
+        // Lots of heuristic optimizations to prevent blow up.
+        // As a reminder, a linear set looks like:  b(p1+...+pN)*  and a SLS is a union of these.
+        //
+        // 1. Pull out linear sets with zero base.
+        //      (p* + ...)* = p*(...)*
+        //
+        // 2. Remove redundant periods.
+        //      p*(b(p+q)* + ...)* = p*(bq* + ...)*
+        //
+        // 3. Pull out bases with no periods.
+        //      (b + ...)* = b*(...)*
+        //
+        // 4. Lastly, for any combinations that are left, we have to do the slow thing of
+        //      (bp* + ...)* = bb*p*(...)* + (...)*
+        //    recursively.
         let mut extra_periods = HashSet::new();
 
-        let mut components_with_both = Vec::new();
-        // Add all components with zero base to extra_periods, and with nonzero base to components_with_both
-        for comp in &self.components {
+        // 1. Pull out linear sets with zero base.
+        let mut components = self.components;
+        components.retain(|comp| {
             if comp.base.is_zero() {
                 for p in &comp.periods {
                     extra_periods.insert(p.clone());
                 }
+                false
             } else {
-                components_with_both.push(comp.clone());
+                true
             }
-        }
+        });
 
+        // 2+3. Remove redundant periods, and pull out bases with no periods.
         loop {
-            // THIS IS WRONG:
-            // // We remove periods that appear in all components_with_both and add them to extra_periods
-            // for comp in &components_with_both {
-            //     for p in &comp.periods {
-            //         // We check if the period is in all components_with_both
-            //         if components_with_both.iter().all(|c| c.periods.contains(p)) {
-            //             extra_periods.insert(p.clone());
-            //         }
-            //     }
-            // }
-            // for p in &extra_periods {
-            //     // We remove the period from all components_with_both
-            //     components_with_both.iter_mut().for_each(|c| {
-            //         if let Some(index) = c.periods.iter().position(|x| x == p) {
-            //             c.periods.remove(index);
-            //         }
-            //     });
-            // }
-            components_with_both.iter_mut().for_each(|c| {
-                c.periods.retain(|p| !extra_periods.contains(p));
-                // let periods_copy = c.periods.clone();
-                // c.periods.retain(|p| {
-                //     let mut periods: Vec<_> = extra_periods.iter().map(|p| p.clone()).collect();
-                //     // Also add periods_copy to periods, except for p
-                //     for p2 in &periods_copy {
-                //         if p2 != p {
-                //             periods.push(p2.clone());
-                //         }
-                //     }
-                //     !is_nonnegative_combination(p, &periods)
-                // });
-            });
-
-            // If we find components with no periods, we add their base to extra_periods
-            let mut new_components = Vec::new();
-            for comp in &components_with_both {
+            let mut modified = false;
+            components.retain_mut(|comp| {
+                // Remove redundant periods.
+                // TODO: this could, in fact, be strengthened to p \in extra_periods*
+                comp.periods.retain(|p| !extra_periods.contains(p));
+                // If the component has no periods, we add its base to extra_periods
                 if comp.periods.is_empty() {
                     extra_periods.insert(comp.base.clone());
+                    modified = true;
+                    false
                 } else {
-                    new_components.push(comp.clone());
+                    true
                 }
-            }
-            if new_components.len() == components_with_both.len() {
+            });
+            if !modified {
                 break;
             }
-            components_with_both = new_components;
         }
 
+        // 4. Slow, recursive thing (but not actually implemented recursively)
+        let mut result_components = Vec::new();
         // We use bit masks to iterate over all non-empty subsets of components
-        let n = components_with_both.len();
-        // assert that the size is not too large
-        debug_assert!(
-            n <= 30,
-            "Number of components in semilinear set is too large"
-        );
+        let n = components.len();
+        assert!(n <= 30, "Number of components in semilinear set is too large");
         for mask in 0..(1 << n) {
             // Determine subset X for this mask
             let mut subset_base = SparseVector::new();
             let mut subset_periods: Vec<SparseVector<K>> = Vec::new();
 
-            for (i, comp) in components_with_both.iter().enumerate().take(n) {
+            for (i, comp) in components.iter().enumerate() {
                 if mask & (1 << i) != 0 {
                     // add this component's base to subset_base
                     subset_base = subset_base.add(&comp.base);
@@ -701,12 +658,8 @@ mod tests {
         // Define the ground truth using the semilinear set constructors
         let ground_truth_a_star = SemilinearSet::new(vec![
             LinearSet {
-                base: SparseVector::unit("a"),
-                periods: vec![SparseVector::unit("a")],
-            },
-            LinearSet {
                 base: SparseVector::new(),
-                periods: vec![],
+                periods: vec![SparseVector::unit("a")],
             },
         ]);
 
