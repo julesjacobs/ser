@@ -450,7 +450,9 @@ where
                         (transformed_inputs, transformed_outputs)
                     })
                     .collect();
-                Decision::CounterExample { trace: transformed_trace }
+                Decision::CounterExample {
+                    trace: transformed_trace,
+                }
             }
             Decision::Proof { proof } => {
                 // If we have a proof, we need to existentially quantify and project
@@ -883,7 +885,9 @@ mod tests {
         // Test bool to Decision conversion
         let yes_decision: Decision<String> = Decision::from(true);
         match yes_decision {
-            Decision::CounterExample { trace } => assert_eq!(trace, Vec::<(Vec<String>, Vec<String>)>::new()),
+            Decision::CounterExample { trace } => {
+                assert_eq!(trace, Vec::<(Vec<String>, Vec<String>)>::new())
+            }
             _ => panic!("Expected CounterExample variant"),
         }
 

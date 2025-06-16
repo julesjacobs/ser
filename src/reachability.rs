@@ -284,16 +284,16 @@ where
 }
 
 /// Check if a Petri net can reach any state satisfying a quantified constraint set.
-/// 
+///
 /// This function handles existentially quantified variables by adding them as fresh places
 /// to the Petri net and checking reachability of the resulting constraint system.
-/// 
+///
 /// # Arguments
 /// * `petri` - The Petri net to analyze
 /// * `quantified_set` - Set with existentially quantified variables and constraints
 /// * `out_dir` - Directory for debug output
 /// * `disjunct_id` - Identifier for this disjunct (for debug output)
-/// 
+///
 /// # Returns
 /// `true` if the Petri net can reach a state satisfying the constraints
 pub fn can_reach_quantified_set<P>(
@@ -353,20 +353,20 @@ where
 
 /// Reachability check with constraints using SMPT with pruning and debug logging
 /// Check if a Petri net can reach a state satisfying the given constraints.
-/// 
+///
 /// This is the core reachability checking function that interfaces with the SMPT
 /// verification tool. It converts constraints to SMPT format and analyzes reachability.
-/// 
+///
 /// # Arguments
 /// * `petri` - The Petri net to analyze
 /// * `constraints` - List of linear constraints that must be satisfied
 /// * `out_dir` - Directory for debug output and SMPT files
 /// * `disjunct_id` - Identifier for this disjunct (for logging)
-/// 
+///
 /// # Returns
 /// `true` if constraints are reachable (program is NOT serializable)
 /// `false` if constraints are unreachable (program IS serializable)
-/// 
+///
 /// # Panics
 /// Panics if SMPT verification fails, as we cannot safely assume serializability
 pub fn can_reach_constraint_set_with_debug<P>(

@@ -219,7 +219,7 @@ where
             process::exit(1);
         }
     }
-    
+
     // Create the output directory
     if let Err(err) = utils::file::ensure_dir_exists(out_dir) {
         eprintln!(
@@ -449,7 +449,7 @@ fn process_json_file(file_path: &str, open_files: bool) {
 
     // Process the Network System
     process_ns(&ns, &out_dir, open_files);
-    
+
     // Copy this JSON into out/<stem>/<stem>.json after processing
     let dst_json = format!("{}/{}.json", out_dir, file_stem);
     if let Err(err) = fs::copy(file_path, &dst_json) {
@@ -531,7 +531,7 @@ fn process_ser_file(file_path: &str, open_files: bool) {
 
     // Process the Network System
     process_ns(&ns, &out_dir, open_files);
-    
+
     // Copy this SER into out/<stem>/<stem>.ser after processing
     let dst_ser = format!("{}/{}.ser", out_dir, file_stem);
     if let Err(err) = fs::copy(file_path, &dst_ser) {

@@ -618,7 +618,12 @@ where
                         YELLOW, RESET
                     );
                 } else {
-                    println!("{}   Trace length: {} transitions{}", YELLOW, trace.len(), RESET);
+                    println!(
+                        "{}   Trace length: {} transitions{}",
+                        YELLOW,
+                        trace.len(),
+                        RESET
+                    );
                     println!(
                         "{}   This trace demonstrates a non-serializable execution{}",
                         YELLOW, RESET
@@ -658,8 +663,13 @@ fn display_vec<T: Display>(v: &[T]) -> String {
 }
 
 /// Prints a counterexample trace step-by-step on the given Petri net.
-fn print_counterexample_trace<L, G, Req, Resp>(petri: &Petri<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>, trace: &[(Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>, Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>)])
-where
+fn print_counterexample_trace<L, G, Req, Resp>(
+    petri: &Petri<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
+    trace: &[(
+        Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
+        Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
+    )],
+) where
     L: Clone + Eq + PartialEq + Hash + std::fmt::Display,
     G: Clone + Eq + PartialEq + Hash + std::fmt::Display,
     Req: Clone + Eq + PartialEq + Hash + std::fmt::Display,
@@ -680,9 +690,18 @@ where
                 format!(
                     "  {}. {} → {}",
                     i + 1,
-                    if inputs.is_empty() { "∅".to_string() } else { display_vec(inputs) },
-                    if outputs.is_empty() { "∅".to_string() } else { display_vec(outputs) }
-                ).yellow()
+                    if inputs.is_empty() {
+                        "∅".to_string()
+                    } else {
+                        display_vec(inputs)
+                    },
+                    if outputs.is_empty() {
+                        "∅".to_string()
+                    } else {
+                        display_vec(outputs)
+                    }
+                )
+                .yellow()
             );
         }
         println!();
@@ -700,8 +719,21 @@ where
                 if let Some(pos) = marking.iter().position(|x| x == p) {
                     marking.remove(pos);
                 } else {
-                    println!("{}", format!("Step {} – transition {}: input {} not in marking", i + 1, i + 1, p).bold().red());
-                    println!("{}", format!("Current marking: {}", display_vec(&marking)).red());
+                    println!(
+                        "{}",
+                        format!(
+                            "Step {} – transition {}: input {} not in marking",
+                            i + 1,
+                            i + 1,
+                            p
+                        )
+                        .bold()
+                        .red()
+                    );
+                    println!(
+                        "{}",
+                        format!("Current marking: {}", display_vec(&marking)).red()
+                    );
                     println!("{}", "Note: This may indicate a bug!".red());
                     // Don't panic, just continue to show the rest of the trace
                     return;
