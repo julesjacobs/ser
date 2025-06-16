@@ -694,6 +694,9 @@ where
             for p in inputs {
                 if let Some(pos) = marking.iter().position(|x| x == p) {
                     marking.remove(pos);
+                } else {
+                    println!("{}", format!("Step {} – fired t{}: input {} not in marking", i + 1, t_idx, p).bold().red());
+                    assert!(false, "Input not in marking");
                 }
             }
             // produce outputs
