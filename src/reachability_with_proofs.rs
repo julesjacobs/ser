@@ -18,16 +18,6 @@ pub enum Decision<P: Eq + Hash> {
     Proof { proof: Option<ProofInvariant<P>> },
 }
 
-impl<P: Eq + Hash> From<bool> for Decision<P> {
-    fn from(b: bool) -> Self {
-        if b {
-            Decision::CounterExample { trace: vec![] }
-        } else {
-            Decision::Proof { proof: None }
-        }
-    }
-}
-
 /// Global debug logger for reachability analysis
 static DEBUG_LOGGER: Mutex<Option<DebugLogger>> = Mutex::new(None);
 
