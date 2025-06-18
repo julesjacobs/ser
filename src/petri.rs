@@ -387,7 +387,7 @@ where
         &mut self,
         target_places: &[Place],
     ) -> (Vec<(Vec<Place>, Vec<Place>)>, Vec<(Vec<Place>, Vec<Place>)>) {
-        // If the user passed --without-optimizations, skip the entire pruning step
+        // If the user passed --without-bidirectional, skip the entire pruning step
         if !crate::reachability::optimize_enabled() {
             return (Vec::new(), Vec::new());
         }

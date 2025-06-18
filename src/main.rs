@@ -44,7 +44,7 @@ fn print_usage() {
     );
     println!(
         "  {}   Disable optimizations (default: optimizations ON)",
-        "--without-optimizations".green()
+        "--without-bidirectional".green()
     );
     println!(
         "  {}               Check SMPT installation status",
@@ -102,7 +102,7 @@ fn main() {
                 smpt::ensure_smpt_available();
                 process::exit(0);
             }
-            "--without-optimizations" => {
+            "--without-bidirectional" => {
                 optimize_enabled = false;
                 i += 1;
             }
@@ -129,6 +129,23 @@ fn main() {
                         process::exit(1);
                     }
                 }
+            }
+            "--without-remove-redundant-parts" => {
+                semilinear::set_remove_redundant_parts(false);
+                i += 1;
+            }
+            "--without-remove-redundant-sets" => {
+                semilinear::set_remove_redundant_sets(false);
+                i += 1;
+            }
+            "--without-generate-less" => {
+                semilinear::set_generate_less(false);
+                kleene::set_generate_less(false);
+                i += 1;
+            }
+            "--without-smart-kleene-order" => {
+                kleene::set_smart_kleene_order(false);
+                i += 1;
             }
             _ => {
                 // If it's not a recognized flag, it must be the path

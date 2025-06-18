@@ -2,7 +2,7 @@
 
 Serializability checker.
 
-cargo run PATH_TO_SER_FILE  [--timeout seconds] [--without-optimizations] -> runs a single file
+cargo run PATH_TO_SER_FILE  [--timeout seconds] [--without-bidirectional] -> runs a single file
 ./analyze_examples.sh [--timeout seconds] -> runs all examples
 
 

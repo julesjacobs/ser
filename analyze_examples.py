@@ -57,7 +57,7 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
     if timeout_arg:
         cmd.extend(['--timeout', str(timeout_arg)])
     if not with_optimizations:
-        cmd.append('--without-optimizations')
+        cmd.append('--without-bidirectional')
     cmd.append(str(file_path))
     
     # Use time command to get CPU timing
@@ -304,7 +304,7 @@ def main():
         f.write("- ⚠️ **Error**: Analysis failed\n")
         f.write("- ⏱️ **SMPT Timeout**: SMPT verification timed out\n")
         f.write("- ⚠️ **Inconsistent**: Results differ between optimized and non-optimized runs (serious issue)\n\n")
-        f.write("**Note**: Each example is analyzed twice - once with optimizations (default) and once with `--without-optimizations` flag. The table shows results for all four combinations: Optimized Original/Proof methods and Non-optimized Original/Proof methods. CPU times compare performance impact of optimizations.\n\n")
+        f.write("**Note**: Each example is analyzed twice - once with optimizations (default) and once with `--without-bidirectional` flag. The table shows results for all four combinations: Optimized Original/Proof methods and Non-optimized Original/Proof methods. CPU times compare performance impact of optimizations.\n\n")
         f.write("---\n\n")
         f.write("*Report generated automatically by analyze_examples.py*\n")
     
