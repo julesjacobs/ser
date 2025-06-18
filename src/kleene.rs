@@ -7,6 +7,25 @@
 
 use std::collections::{HashMap, HashSet};
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
+static GENERATE_LESS: AtomicBool = AtomicBool::new(true);
+
+
+pub fn set_generate_less(on: bool) {
+    GENERATE_LESS.store(on, Ordering::SeqCst);
+}
+
+
+
+static SMART_ORDER: AtomicBool = AtomicBool::new(true);
+
+pub fn set_smart_kleene_order(on: bool) {
+    SMART_ORDER.store(on, Ordering::SeqCst);
+}
+
+
+
 pub trait Kleene {
     fn zero() -> Self;
     fn one() -> Self;
@@ -64,24 +83,39 @@ impl<T> Kleene for Regex<T> {
         Regex::One
     }
     fn plus(self, other: Self) -> Self {
-        match (self, other) {
-            (Regex::Zero, x) | (x, Regex::Zero) => x,
-            (a, b) => Regex::Plus(Box::new(a), Box::new(b)),
-        }
+       if GENERATE_LESS.load(Ordering::SeqCst) {
+           match (self, other) {
+               (Regex::Zero, x) | (x, Regex::Zero) => x,
+               (a, b) => Regex::Plus(Box::new(a), Box::new(b)),
+           }
+       } else {
+           // naive: always build a Plus node
+           Regex::Plus(Box::new(self), Box::new(other))
+       }
     }
     fn times(self, other: Self) -> Self {
-        match (self, other) {
-            (Regex::Zero, _) | (_, Regex::Zero) => Regex::Zero,
-            (Regex::One, x) | (x, Regex::One) => x,
-            (a, b) => Regex::Times(Box::new(a), Box::new(b)),
-        }
+       if GENERATE_LESS.load(Ordering::SeqCst) {
+           match (self, other) {
+               (Regex::Zero, _) | (_, Regex::Zero) => Regex::Zero,
+               (Regex::One, x) | (x, Regex::One)    => x,
+               (a, b)                              => Regex::Times(Box::new(a), Box::new(b)),
+           }
+       } else {
+           // naive: always build a Times node
+           Regex::Times(Box::new(self), Box::new(other))
+       }
     }
     fn star(self) -> Self {
-        match self {
-            Regex::Zero | Regex::One => Regex::One,
-            Regex::Star(x) => Regex::Star(x),
-            x => Regex::Star(Box::new(x)),
-        }
+       if GENERATE_LESS.load(Ordering::SeqCst) {
+           match self {
+               Regex::Zero | Regex::One => Regex::One,
+               Regex::Star(x)           => Regex::Star(x),
+               x                        => Regex::Star(Box::new(x)),
+           }
+       } else {
+           // naive: always build a Star node
+           Regex::Star(Box::new(self))
+       }
     }
 }
 

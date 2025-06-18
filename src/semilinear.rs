@@ -6,6 +6,29 @@ pub use std::hash::Hash;
 
 use crate::kleene::Kleene;
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
+static REMOVE_REDUNDANT_PARTS: AtomicBool = AtomicBool::new(true);
+
+pub fn set_remove_redundant_parts(on: bool) {
+    REMOVE_REDUNDANT_PARTS.store(on, Ordering::SeqCst);
+}
+
+
+static REMOVE_REDUNDANT_SETS: AtomicBool = AtomicBool::new(true);
+
+pub fn set_remove_redundant_sets(on: bool) {
+    REMOVE_REDUNDANT_SETS.store(on, Ordering::SeqCst);
+}
+
+
+static GENERATE_LESS: AtomicBool = AtomicBool::new(true);
+
+pub fn set_generate_less(on: bool) {
+    GENERATE_LESS.store(on, Ordering::SeqCst);
+}
+
+
 /// A sparse vector in d-dimensional nonnegative integer space.
 /// Keys represent dimensions and values represent the value at that dimension.
 /// Dimensions not present in the HashMap are assumed to be 0.
@@ -205,22 +228,26 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Create a new semilinear set from a list of LinearSet components.
     pub fn new(mut components: Vec<LinearSet<K>>) -> Self {
         // Filter out duplicate period vectors
-        for lin in &mut components {
-            lin.dedup_periods();
-        }
+         if REMOVE_REDUNDANT_PARTS.load(Ordering::SeqCst) {
+             for lin in &mut components {
+                 lin.dedup_periods();
+             }
+         }
 
         // Try merging any of the new_components into another
-        'fixpoint: loop {
-            for i in 0..components.len() {
-                for j in i+1..components.len() {
-                    if let Some(merged) = try_merge_linear_sets(&components[i], &components[j]) {
-                        components[i] = merged;
-                        components.swap_remove(j);
-                        continue 'fixpoint;
+        if REMOVE_REDUNDANT_SETS.load(Ordering::SeqCst) {
+            'fixpoint: loop {
+                for i in 0..components.len() {
+                    for j in i + 1..components.len() {
+                        if let Some(merged) = try_merge_linear_sets(&components[i], &components[j]) {
+                            components[i] = merged;
+                            components.swap_remove(j);
+                            continue 'fixpoint;
+                        }
                     }
                 }
+                break;
             }
-            break;
         }
         SemilinearSet { components }
     }
@@ -472,28 +499,49 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
     // Union of two semilinear sets.
     fn plus(mut self, mut other: Self) -> Self {
         // Clone components of both and combine
-        self.components.append(&mut other.components);
-        SemilinearSet::new(self.components)
+        if GENERATE_LESS.load(Ordering::SeqCst) {
+            self.components.append(&mut other.components);
+            SemilinearSet::new(self.components)
+        } else {
+            // naive: tack on without any dedupe/merge
+            self.components.extend(other.components);
+            SemilinearSet { components: self.components }
+        }
     }
 
     // Sequential composition (a.k.a. Minkowski sum) of two semilinear sets.
     fn times(self, other: Self) -> Self {
-        let mut result_components = Vec::new();
-        for lin1 in &self.components {
-            for lin2 in &other.components {
-                // Compute the sum of lin1 and lin2 as a new LinearSet
-                let new_base = lin1.base.add(&lin2.base);
-                // periods: all periods from lin1 and lin2
-                let mut new_periods = Vec::with_capacity(lin1.periods.len() + lin2.periods.len());
-                new_periods.extend_from_slice(&lin1.periods);
-                new_periods.extend_from_slice(&lin2.periods);
-                result_components.push(LinearSet {
-                    base: new_base,
-                    periods: new_periods,
-                });
+        if GENERATE_LESS.load(Ordering::SeqCst) {
+            // optimized: build then dedupe/merge in `new`
+            let mut result_components = Vec::new();
+            for lin1 in &self.components {
+                for lin2 in &other.components {
+                    // Compute the sum of lin1 and lin2 as a new LinearSet
+                    let new_base = lin1.base.add(&lin2.base);
+                    // periods: all periods from lin1 and lin2
+                    let mut new_periods = Vec::with_capacity(lin1.periods.len() + lin2.periods.len());
+                    new_periods.extend_from_slice(&lin1.periods);
+                    new_periods.extend_from_slice(&lin2.periods);
+                    result_components.push(LinearSet {
+                        base: new_base,
+                        periods: new_periods,
+                    });
+                }
             }
+            SemilinearSet::new(result_components)
+        } else {
+            // naïve: just cartesian‐product, no further pruning ever
+            let mut comps = Vec::new();
+            for a in &self.components {
+                for b in &other.components {
+                    let mut lin = a.clone();
+                    lin.base = lin.base.add(&b.base);
+                    lin.periods.extend(b.periods.clone());
+                    comps.push(lin);
+                }
+            }
+            SemilinearSet { components: comps }
         }
-        SemilinearSet::new(result_components)
     }
 
     fn star(self) -> Self {
@@ -516,35 +564,39 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
 
         // 1. Pull out linear sets with zero base.
         let mut components = self.components;
-        components.retain(|comp| {
-            if comp.base.is_zero() {
-                for p in &comp.periods {
-                    extra_periods.insert(p.clone());
-                }
-                false
-            } else {
-                true
-            }
-        });
-
-        // 2+3. Remove redundant periods, and pull out bases with no periods.
-        loop {
-            let mut modified = false;
-            components.retain_mut(|comp| {
-                // Remove redundant periods.
-                // TODO: this could, in fact, be strengthened to p \in extra_periods*
-                comp.periods.retain(|p| !extra_periods.contains(p));
-                // If the component has no periods, we add its base to extra_periods
-                if comp.periods.is_empty() {
-                    extra_periods.insert(comp.base.clone());
-                    modified = true;
+        if GENERATE_LESS.load(Ordering::SeqCst) {
+            components.retain(|comp| {
+                if comp.base.is_zero() {
+                    for p in &comp.periods {
+                        extra_periods.insert(p.clone());
+                    }
                     false
                 } else {
                     true
                 }
             });
-            if !modified {
-                break;
+
+            // 2+3. Remove redundant periods, and pull out bases with no periods.
+            loop {
+                let mut modified = false;
+                components.retain_mut(|comp| {
+                    // Remove redundant periods.
+                    // TODO: this could, in fact, be strengthened to p \in extra_periods*
+                    if REMOVE_REDUNDANT_PARTS.load(Ordering::SeqCst) {
+                        comp.periods.retain(|p| !extra_periods.contains(p));
+                    }
+                    // If the component has no periods, we add its base to extra_periods
+                    if comp.periods.is_empty() {
+                        extra_periods.insert(comp.base.clone());
+                        modified = true;
+                        false
+                    } else {
+                        true
+                    }
+                });
+                if !modified {
+                    break;
+                }
             }
         }
 
@@ -582,9 +634,15 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
                 comp.periods.push(p.clone());
             }
         }
-
-        SemilinearSet::new(result_components)
+        // todo check this block with Jules
+        if GENERATE_LESS.load(Ordering::SeqCst) {
+            SemilinearSet::new(result_components)
+        } else {
+            SemilinearSet {
+            components: result_components,
+        }
     }
+}
 }
 
 #[cfg(test)]
