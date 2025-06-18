@@ -511,35 +511,18 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
 
     // Sequential composition (a.k.a. Minkowski sum) of two semilinear sets.
     fn times(self, other: Self) -> Self {
+        let mut comps = Vec::new();
+        for a in &self.components {
+            for b in &other.components {
+                let mut lin = a.clone();
+                lin.base = lin.base.add(&b.base);
+                lin.periods.extend(b.periods.clone());
+                comps.push(lin);
+            }
+        }
         if GENERATE_LESS.load(Ordering::SeqCst) {
-            // optimized: build then dedupe/merge in `new`
-            let mut result_components = Vec::new();
-            for lin1 in &self.components {
-                for lin2 in &other.components {
-                    // Compute the sum of lin1 and lin2 as a new LinearSet
-                    let new_base = lin1.base.add(&lin2.base);
-                    // periods: all periods from lin1 and lin2
-                    let mut new_periods = Vec::with_capacity(lin1.periods.len() + lin2.periods.len());
-                    new_periods.extend_from_slice(&lin1.periods);
-                    new_periods.extend_from_slice(&lin2.periods);
-                    result_components.push(LinearSet {
-                        base: new_base,
-                        periods: new_periods,
-                    });
-                }
-            }
-            SemilinearSet::new(result_components)
+            SemilinearSet::new(comps)
         } else {
-            // naïve: just cartesian‐product, no further pruning ever
-            let mut comps = Vec::new();
-            for a in &self.components {
-                for b in &other.components {
-                    let mut lin = a.clone();
-                    lin.base = lin.base.add(&b.base);
-                    lin.periods.extend(b.periods.clone());
-                    comps.push(lin);
-                }
-            }
             SemilinearSet { components: comps }
         }
     }
