@@ -505,7 +505,7 @@ where
                     disjunct_id, message
                 );
                 eprintln!("Cannot determine serializability - analysis is inconclusive");
-                eprintln!("This could indicate a bug when --without-optimizations is used");
+                eprintln!("This could indicate a bug when --without-bidirectional is used");
                 panic!("SMPT verification failed: {}", message);
             }
         }
