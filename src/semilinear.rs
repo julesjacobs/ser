@@ -14,20 +14,17 @@ pub fn set_remove_redundant_parts(on: bool) {
     REMOVE_REDUNDANT_PARTS.store(on, Ordering::SeqCst);
 }
 
-
 static REMOVE_REDUNDANT_SETS: AtomicBool = AtomicBool::new(true);
 
 pub fn set_remove_redundant_sets(on: bool) {
     REMOVE_REDUNDANT_SETS.store(on, Ordering::SeqCst);
 }
 
-
 static GENERATE_LESS: AtomicBool = AtomicBool::new(true);
 
 pub fn set_generate_less(on: bool) {
     GENERATE_LESS.store(on, Ordering::SeqCst);
 }
-
 
 /// A sparse vector in d-dimensional nonnegative integer space.
 /// Keys represent dimensions and values represent the value at that dimension.
@@ -228,18 +225,19 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Create a new semilinear set from a list of LinearSet components.
     pub fn new(mut components: Vec<LinearSet<K>>) -> Self {
         // Filter out duplicate period vectors
-         if REMOVE_REDUNDANT_PARTS.load(Ordering::SeqCst) {
-             for lin in &mut components {
-                 lin.dedup_periods();
-             }
-         }
+        if REMOVE_REDUNDANT_PARTS.load(Ordering::SeqCst) {
+            for lin in &mut components {
+                lin.dedup_periods();
+            }
+        }
 
         // Try merging any of the new_components into another
         if REMOVE_REDUNDANT_SETS.load(Ordering::SeqCst) {
             'fixpoint: loop {
                 for i in 0..components.len() {
                     for j in i + 1..components.len() {
-                        if let Some(merged) = try_merge_linear_sets(&components[i], &components[j]) {
+                        if let Some(merged) = try_merge_linear_sets(&components[i], &components[j])
+                        {
                             components[i] = merged;
                             components.swap_remove(j);
                             continue 'fixpoint;
@@ -505,7 +503,9 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         } else {
             // naive: tack on without any dedupe/merge
             self.components.extend(other.components);
-            SemilinearSet { components: self.components }
+            SemilinearSet {
+                components: self.components,
+            }
         }
     }
 
@@ -587,7 +587,10 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         let mut result_components = Vec::new();
         // We use bit masks to iterate over all non-empty subsets of components
         let n = components.len();
-        assert!(n <= 30, "Number of components in semilinear set is too large");
+        assert!(
+            n <= 30,
+            "Number of components in semilinear set is too large"
+        );
         for mask in 0..(1 << n) {
             // Determine subset X for this mask
             let mut subset_base = SparseVector::new();
@@ -622,10 +625,10 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
             SemilinearSet::new(result_components)
         } else {
             SemilinearSet {
-            components: result_components,
+                components: result_components,
+            }
         }
     }
-}
 }
 
 #[cfg(test)]
@@ -697,12 +700,10 @@ mod tests {
         let a_star = a.star();
 
         // Define the ground truth using the semilinear set constructors
-        let ground_truth_a_star = SemilinearSet::new(vec![
-            LinearSet {
-                base: SparseVector::new(),
-                periods: vec![SparseVector::unit("a")],
-            },
-        ]);
+        let ground_truth_a_star = SemilinearSet::new(vec![LinearSet {
+            base: SparseVector::new(),
+            periods: vec![SparseVector::unit("a")],
+        }]);
 
         assert_eq!(a_star, ground_truth_a_star);
     }
