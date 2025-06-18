@@ -157,6 +157,10 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
         let state = *states_todo
             .iter()
             .min_by_key(|s| {
+                // Optionally, disable the heuristics for picking the next state
+                if !SMART_ORDER.load(Ordering::SeqCst) {
+                    return 0;
+                }
                 let mut count = 0;
                 for ((_, to), _) in nfa.iter() {
                     if to == &Some(**s) && !nfa.contains_key(&(Some(s), *to)) {
