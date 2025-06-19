@@ -1,20 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./compare_optimizations.sh TIMEOUT_SECONDS
-# Runs each .ser example in examples/ser/ serially under all combinations of five optimization flags.
-# Records mode, example, and elapsed time (ms) into compare_results.csv.
+# Usage: ./compare_optimizations.sh TIMEOUT_SECONDS [json|ser]
+# Runs each file in a hard-coded examples directory under all combinations of five optimization flags.
+# Records mode, example, and elapsed time (ms) into /home/guyamir/RustroverProjects/ser/optimization_experiments/csvs/raw_inputs/compare_results_all_combos_timeout_${TIMEOUT_SECONDS}_seconds_<type>.csv.
 
 # Timeout (seconds) to pass to each `cargo run` invocation
-TIMEOUT_SECONDS="${1:-10}"
+TIMEOUT_SECONDS="${1:-60}"
+# File type: json or ser
+FILE_TYPE="${2:-ser}"
+
 TIMEOUT_CMD="${TIMEOUT_CMD:-timeout}"  # allow override if needed (e.g. on mac use gtimeout)
 
+# Hard-coded directory paths
+OUTPUT_DIR="/home/guyamir/RustroverProjects/ser/optimization_experiments/csvs/raw_inputs"
+EXAMPLES_ROOT="/home/guyamir/RustroverProjects/ser/examples"
+EXAMPLES_DIR="${EXAMPLES_ROOT}/${FILE_TYPE}"
+
+# Ensure necessary directories exist
+mkdir -p "$OUTPUT_DIR"
+
 # Output CSV file
-outfile="compare_results_all_combos_timeout_${TIMEOUT_SECONDS}_seconds_json.csv"
+outfile="${OUTPUT_DIR}/compare_results_all_combos_timeout_${TIMEOUT_SECONDS}_seconds_${FILE_TYPE}.csv"
 
 echo "mode,example,elapsed_ms" > "$outfile"
 
-echo "Running all .ser examples with timeout=${TIMEOUT_SECONDS}s"
+echo "Running all .${FILE_TYPE} examples with timeout=${TIMEOUT_SECONDS}s"
+echo "Examples directory: $EXAMPLES_DIR"
+echo "Results will be written to: $outfile"
 echo
 
 # Define all individual --without- flags
@@ -27,9 +40,9 @@ flags=(
 )
 n=${#flags[@]}
 
-# For each .ser file in examples/ser/
-for ser_file in examples/json/*.json; do
-  EXAMPLE=$(basename "$ser_file" .ser)
+# For each file in the hard-coded examples directory
+for file in "${EXAMPLES_DIR}"/*.${FILE_TYPE}; do
+  EXAMPLE=$(basename "$file" .${FILE_TYPE})
   echo "Processing example: $EXAMPLE"
 
   # Enumerate all subsets of flags (0 .. 2^n-1)
@@ -41,14 +54,16 @@ for ser_file in examples/json/*.json; do
       fi
     done
 
-    # Build human-readable label
+    # Build explicit label: strip leading '--' and join by '--'
     if [ ${#subset[@]} -eq 0 ]; then
-      label="regular"
+      label="all-on"
       mode_args=""
     else
-      # strip leading dashes and join by '+'
-      label=$(printf "%s+" "${subset[@]#--without-}")
-      label=${label%+}
+      stripped=()
+      for f in "${subset[@]}"; do
+        stripped+=( "${f#--}" )
+      done
+      IFS='--' read -r label <<< "${stripped[*]}"
       mode_args="${subset[*]}"
     fi
 
@@ -61,7 +76,7 @@ for ser_file in examples/json/*.json; do
 
     set +e
     $TIMEOUT_CMD --preserve-status ${TIMEOUT_SECONDS}s \
-      cargo run -- "$ser_file" --timeout "$TIMEOUT_SECONDS" $mode_args
+      cargo run -- "$file" --timeout "$TIMEOUT_SECONDS" $mode_args
     ret=$?
     set -e
     t1=$(date +%s%3N)
@@ -88,4 +103,4 @@ for ser_file in examples/json/*.json; do
   echo
  done
 
-echo "Results written to $outfile"
+echo "All runs complete. Results written to: $outfile"
