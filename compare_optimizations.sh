@@ -6,7 +6,7 @@ set -euo pipefail
 # Records mode, example, and elapsed time (ms) into compare_results.csv.
 
 # Timeout (seconds) to pass to each `cargo run` invocation
-TIMEOUT_SECONDS="${1:-30}"
+TIMEOUT_SECONDS="${1:-60}"
 TIMEOUT_CMD="${TIMEOUT_CMD:-timeout}"  # allow override if needed (e.g. on mac use gtimeout)
 
 # Output CSV file
@@ -29,6 +29,7 @@ for ser_file in examples/ser/*.ser; do
     "--without-remove-redundant-parts"
     "--without-remove-redundant-sets"
     "--without-generate-less"
+    "--without-smart-kleene-order"
   )
 
   for mode in "${MODES[@]}"; do

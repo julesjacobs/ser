@@ -6,11 +6,11 @@ set -euo pipefail
 # Records mode, example, and elapsed time (ms) into compare_results.csv.
 
 # Timeout (seconds) to pass to each `cargo run` invocation
-TIMEOUT_SECONDS="${1:-30}"
+TIMEOUT_SECONDS="${1:-10}"
 TIMEOUT_CMD="${TIMEOUT_CMD:-timeout}"  # allow override if needed (e.g. on mac use gtimeout)
 
 # Output CSV file
-outfile="compare_results.csv"
+outfile="compare_results_all_combos_timeout_${TIMEOUT_SECONDS}_seconds_json.csv"
 
 echo "mode,example,elapsed_ms" > "$outfile"
 
@@ -28,7 +28,7 @@ flags=(
 n=${#flags[@]}
 
 # For each .ser file in examples/ser/
-for ser_file in examples/ser/*.ser; do
+for ser_file in examples/json/*.json; do
   EXAMPLE=$(basename "$ser_file" .ser)
   echo "Processing example: $EXAMPLE"
 
