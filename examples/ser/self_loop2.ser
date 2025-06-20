@@ -1,0 +1,21 @@
+request bar {
+ 	// outer loop: spins until L flips
+ 	while (X == 0) {
+		if (?) {
+		    X := 1
+		} else {
+    		    while (Y == 0) {
+		        if (?) {
+		            yield
+		        } else {
+		            Y := 1
+		        };
+		        yield
+		    }
+		};
+		yield
+	    };
+    X
+}
+
+
