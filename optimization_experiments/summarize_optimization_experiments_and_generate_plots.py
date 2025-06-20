@@ -10,7 +10,8 @@ output_dir            = '/home/guyamir/RustroverProjects/ser/optimization_experi
 include_timeouts      = True  # Set to False to exclude benchmarks that timeout in any combination
 filter_by_flag_sums   = True   # Set to True to only plot rows whose sum of ON flags is in allowed_sums
 allowed_flag_sums     = [0, 1, 4]  # Allowed sums of ON flags when filtering
-timeout_values        = [10000]  # List of timeout values you're interested in
+# timeout_values        = [10000]  # List of timeout values you're interested in
+timeout_values        = [30000]  # List of timeout values you're interested in
 
 # Create output directory if missing
 os.makedirs(output_dir, exist_ok=True)
@@ -62,6 +63,59 @@ def compute_global_timeout_pct(df_f):
     # size = total runs, sum = number of terminations
     counts['timeout_pct'] = 100 * (counts['size'] - counts['sum']) / counts['size']
     return counts['timeout_pct']
+
+# Generate cumulative solved instances plot
+def plot_cumulative_solved(group, timeout_ms, output_dir):
+    # Get unique combinations
+    combinations = group['combination'].unique()
+
+    plt.figure(figsize=(10, 6), facecolor='white')
+    max_accumulated_time = 0
+    # Generate curve for each combination
+    for i, combo in enumerate(combinations):
+        # Get all runs for this combination (both terminating and non-terminating)
+        combo_runs = group[group['combination'] == combo]
+
+        # Use actual time_ms_num for all runs (no replacement with timeout_ms)
+        times = combo_runs['time_ms_num'].values
+
+        # Sort times from smallest to largest
+        sorted_times = np.sort(times)
+
+        # Calculate cumulative percentage solved
+        n = len(sorted_times)
+        # cumulative_solved = np.array([np.sum(sorted_times <= t) for t in sorted_times]) / n * 100
+        cumulative_solved = np.cumsum([1 if t < timeout_ms else 0 for t in sorted_times]) * 100.0 / len(sorted_times)
+
+        if np.cumsum(sorted_times)[-1] > max_accumulated_time:
+            max_accumulated_time = np.cumsum(sorted_times)[-1]
+
+        # Plot the curve
+        plt.plot(np.cumsum(sorted_times), cumulative_solved,
+                 label=combo,
+                 color=professional_colors[i % len(professional_colors)],
+                 linewidth=2)
+
+    plt.xlabel('Cumulative Time (ms)', fontsize=12)
+    plt.ylabel('% of instances solved', fontsize=12)
+    plt.title(f'Timeout: {timeout_ms} (ms): Cumulative Solved Instances (all runs)', fontsize=14, pad=20)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
+
+    # Add HORIZONTAL line at 100%
+    plt.axhline(y=100, color='gray', linestyle='--', alpha=0.5,
+                label='100% solved')
+
+    plt.tight_layout()
+
+    # Save the plot
+    output_path = os.path.join(output_dir, f"timeout_{timeout_ms}_cumulative_solved_all_runs.pdf")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Saved cumulative solved plot (all runs) to {output_path}")
+
+
 
 # Main processing
 def process():
@@ -142,6 +196,9 @@ def process():
             fig2.savefig(os.path.join(output_dir, f"timeout_{timeout_ms}_global_timeout_pct.pdf"),
                         dpi=300, bbox_inches='tight')
             plt.close(fig2)
+
+            # Plot 3: Cumulative solved instances
+            plot_cumulative_solved(group, timeout_ms, output_dir)
 
     print(f"All plots written to {output_dir}")
 

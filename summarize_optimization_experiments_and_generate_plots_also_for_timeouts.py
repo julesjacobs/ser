@@ -10,6 +10,7 @@ output_dir            = '/home/guyamir/RustroverProjects/ser/optimization_experi
 include_timeouts      = True  # Set to False to exclude benchmarks that timeout in any combination
 filter_by_flag_sums   = True   # Set to True to only plot rows whose sum of ON flags is in allowed_sums
 allowed_flag_sums     = [0, 1, 4]  # Allowed sums of ON flags when filtering
+timeout_values        = [10000]  # List of timeout values you're interested in
 
 # Create output directory if missing
 os.makedirs(output_dir, exist_ok=True)
@@ -27,6 +28,10 @@ flag_cols = [
     'generate-less ON',
     'smart-kleene-order ON'
 ]
+
+# Set professional style
+plt.style.use('seaborn')
+professional_colors = ['#4C72B0', '#55A868', '#C44E52', '#8172B2', '#CCB974', '#64B5CD']
 
 # Build label for each row based on flags
 def make_label(row):
@@ -58,6 +63,47 @@ def compute_global_timeout_pct(df_f):
     counts['timeout_pct'] = 100 * (counts['size'] - counts['sum']) / counts['size']
     return counts['timeout_pct']
 
+# Generate cumulative solved instances plot
+def plot_cumulative_solved(group, timeout_ms, output_dir):
+    # Filter only successful runs
+    successful = group[group['terminated'] == 1].copy()
+
+    # Get unique combinations
+    combinations = successful['combination'].unique()
+
+    plt.figure(figsize=(10, 6), facecolor='white')
+
+    # Generate curve for each combination
+    for i, combo in enumerate(combinations):
+        # Get all successful runs for this combination
+        combo_runs = successful[successful['combination'] == combo]['time_ms_num']
+
+        # Sort times from smallest to largest
+        sorted_times = np.sort(combo_runs)
+
+        # Calculate cumulative percentage
+        n = len(sorted_times)
+        cumulative_pct = np.arange(1, n+1) / n * 100
+
+        # Plot the curve
+        plt.plot(sorted_times, cumulative_pct,
+                label=combo,
+                color=professional_colors[i % len(professional_colors)],
+                linewidth=2)
+
+    plt.xlabel('Time (ms)', fontsize=12)
+    plt.ylabel('Cumulative % of instances solved', fontsize=12)
+    plt.title(f'Cumulative Solved Instances (timeout={timeout_ms} ms)', fontsize=14, pad=20)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+
+    # Save the plot
+    output_path = os.path.join(output_dir, f"timeout_{timeout_ms}_cumulative_solved.pdf")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Saved cumulative solved plot to {output_path}")
+
 # Main processing
 def process():
     for filter_type in types:
@@ -71,8 +117,15 @@ def process():
         # Compute global timeout % for this subset
         global_pct = compute_global_timeout_pct(df_f)
 
-        # Iterate each timeout threshold
-        for timeout_ms, grp in df_f.groupby('timeout_ms'):
+        # Iterate over specified timeout values instead of all in the table
+        for timeout_ms in timeout_values:
+            # Filter for the current timeout value
+            grp = df_f[df_f['timeout_ms'] == timeout_ms]
+
+            if grp.empty:
+                print(f"No data found for timeout value: {timeout_ms}")
+                continue
+
             # Optionally filter out benchmarks that ever timed out
             group = filter_no_timeouts(grp) if not include_timeouts else grp
 
@@ -82,28 +135,59 @@ def process():
                                .sort_values(ascending=False)
 
             # Plot 1: metric values
-            fig, ax = plt.subplots(figsize=(8, max(4,len(metric_vals)*0.5)))
-            ax.barh(metric_vals.index, metric_vals.values)
-            ax.set_xlabel(f"{metric.capitalize()} time (ms)")
-            ax.set_ylabel('Optimization combination')
-            ax.set_title(f"{metric.capitalize()} vs Combination (timeout={timeout_ms} ms)")
+            fig, ax = plt.subplots(figsize=(8, max(4, len(metric_vals)*0.5)), facecolor='white')
+            bars = ax.barh(metric_vals.index, metric_vals.values,
+                          color=professional_colors[0],
+                          edgecolor='white')
+
+            # Add value labels
+            for bar in bars:
+                width = bar.get_width()
+                ax.text(width + max(metric_vals.values)*0.02,
+                       bar.get_y() + bar.get_height()/2,
+                       f'{width:.1f}',
+                       ha='left', va='center')
+
+            ax.set_xlabel(f"{metric.capitalize()} time (ms)", fontsize=12)
+            ax.set_ylabel('Optimization combination', fontsize=12)
+            ax.set_title(f"{metric.capitalize()} vs Combination (timeout={timeout_ms} ms)",
+                        fontsize=14, pad=20)
+            ax.grid(axis='x', linestyle='--', alpha=0.7)
             plt.tight_layout()
-            fig.savefig(os.path.join(output_dir, f"timeout_{timeout_ms}_{metric}_times.png"))
+            fig.savefig(os.path.join(output_dir, f"timeout_{timeout_ms}_{metric}_times.pdf"),
+                       dpi=300, bbox_inches='tight')
             plt.close(fig)
 
-            # Plot 2: global timeout percentage
+            # Plot 2: global timeout percentage (in red)
             # Align y-axis to metric plot order
             pct = global_pct.reindex(metric_vals.index)
-            fig2, ax2 = plt.subplots(figsize=(8, max(4,len(pct)*0.5)))
-            ax2.barh(pct.index, pct.values)
-            ax2.set_xlabel('% of runs timed out (global)')
-            ax2.set_ylabel('Optimization combination')
-            ax2.set_title(f"Global Timeout % vs Combination")
+            fig2, ax2 = plt.subplots(figsize=(8, max(4, len(pct)*0.5)), facecolor='white')
+            bars2 = ax2.barh(pct.index, pct.values,
+                            color='#C44E52',  # Red color
+                            edgecolor='white')
+
+            # Add value labels
+            for bar in bars2:
+                width = bar.get_width()
+                ax2.text(width + max(pct.values)*0.02,
+                         bar.get_y() + bar.get_height()/2,
+                         f'{width:.1f}%',
+                         ha='left', va='center')
+
+            ax2.set_xlabel('% of runs timed out (global)', fontsize=12)
+            ax2.set_ylabel('Optimization combination', fontsize=12)
+            ax2.set_title(f"Global Timeout % vs Combination",
+                         fontsize=14, pad=20)
+            ax2.grid(axis='x', linestyle='--', alpha=0.7)
             plt.tight_layout()
-            fig2.savefig(os.path.join(output_dir, f"timeout_{timeout_ms}_global_timeout_pct.png"))
+            fig2.savefig(os.path.join(output_dir, f"timeout_{timeout_ms}_global_timeout_pct.pdf"),
+                        dpi=300, bbox_inches='tight')
             plt.close(fig2)
+
+            # Plot 3: Cumulative solved instances
+            plot_cumulative_solved(group, timeout_ms, output_dir)
 
     print(f"All plots written to {output_dir}")
 
-if __name__=='__main__':
+if __name__ == '__main__':
     process()
