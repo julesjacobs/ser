@@ -26,8 +26,7 @@ for ser_file in examples/ser/*.ser; do
   MODES=(
     ""  # regular
     "--without-bidirectional"
-    "--without-remove-redundant-parts"
-    "--without-remove-redundant-sets"
+    "--without-remove-redundant"
     "--without-generate-less"
     "--without-smart-kleene-order"
   )

@@ -6,7 +6,7 @@ set -euo pipefail
 # Records mode, example, and elapsed time (ms) into /home/guyamir/RustroverProjects/ser/optimization_experiments/csvs/raw_inputs/compare_results_all_combos_timeout_${TIMEOUT_SECONDS}_seconds_<type>.csv.
 
 # Timeout (seconds) to pass to each `cargo run` invocation
-TIMEOUT_SECONDS="${1:-60}"
+TIMEOUT_SECONDS="${1:-0.5}"
 # File type: json or ser
 FILE_TYPE="${2:-ser}"
 
@@ -33,8 +33,7 @@ echo
 # Define all individual --without- flags
 flags=(
   "--without-bidirectional"
-  "--without-remove-redundant-parts"
-  "--without-remove-redundant-sets"
+  "--without-remove-redundant"
   "--without-generate-less"
   "--without-smart-kleene-order"
 )

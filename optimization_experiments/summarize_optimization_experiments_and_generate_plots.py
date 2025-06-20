@@ -5,13 +5,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # --- Configuration (hard-coded) ---
-input_file            = '/home/guyamir/RustroverProjects/ser/optimization_experiments/csvs/combined_outputs/combined_results_merge_redundant_optimizations.csv'
+input_file            = '/home/guyamir/RustroverProjects/ser/optimization_experiments/csvs/combined_outputs/combined_results_10_30_60_sec_after_merge_redundant_opt.csv'
 output_dir            = '/home/guyamir/RustroverProjects/ser/optimization_experiments/plots'
 include_timeouts      = True  # Set to False to exclude benchmarks that timeout in any combination
 filter_by_flag_sums   = True   # Set to True to only plot rows whose sum of ON flags is in allowed_sums
 allowed_flag_sums     = [0, 1, 4]  # Allowed sums of ON flags when filtering
-# timeout_values        = [10000]  # List of timeout values you're interested in
-timeout_values        = [30000]  # List of timeout values you're interested in
+# timeout_values        = [1000, 3000, 10000, 30000, 60000]  # List of timeout values you're interested in
+timeout_values        = [10000]  # List of timeout values you're interested in
 
 # Create output directory if missing
 os.makedirs(output_dir, exist_ok=True)
@@ -91,12 +91,12 @@ def plot_cumulative_solved(group, timeout_ms, output_dir):
             max_accumulated_time = np.cumsum(sorted_times)[-1]
 
         # Plot the curve
-        plt.plot(np.cumsum(sorted_times), cumulative_solved,
+        plt.plot(np.minimum(sorted_times, timeout_ms), cumulative_solved,
                  label=combo,
                  color=professional_colors[i % len(professional_colors)],
                  linewidth=2)
 
-    plt.xlabel('Cumulative Time (ms)', fontsize=12)
+    plt.xlabel('Time (ms)', fontsize=12)
     plt.ylabel('% of instances solved', fontsize=12)
     plt.title(f'Timeout: {timeout_ms} (ms): Cumulative Solved Instances (all runs)', fontsize=14, pad=20)
     plt.grid(True, linestyle='--', alpha=0.7)

@@ -10,8 +10,7 @@ output_file = '/home/guyamir/RustroverProjects/ser/optimization_experiments/csvs
 # List of all optimizations
 all_flags = [
     'bidirectional',
-    'remove-redundant-parts',
-    'remove-redundant-sets',
+    'remove-redundant',
     'generate-less',
     'smart-kleene-order',
 ]

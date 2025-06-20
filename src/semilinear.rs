@@ -8,17 +8,13 @@ use crate::kleene::Kleene;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
-static REMOVE_REDUNDANT_PARTS: AtomicBool = AtomicBool::new(true);
+static REMOVE_REDUNDANT: AtomicBool = AtomicBool::new(true);
 
-pub fn set_remove_redundant_parts(on: bool) {
-    REMOVE_REDUNDANT_PARTS.store(on, Ordering::SeqCst);
+pub fn set_remove_redundant(on: bool) {
+    REMOVE_REDUNDANT.store(on, Ordering::SeqCst);
 }
 
-static REMOVE_REDUNDANT_SETS: AtomicBool = AtomicBool::new(true);
 
-pub fn set_remove_redundant_sets(on: bool) {
-    REMOVE_REDUNDANT_SETS.store(on, Ordering::SeqCst);
-}
 
 static GENERATE_LESS: AtomicBool = AtomicBool::new(true);
 
@@ -225,14 +221,14 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// Create a new semilinear set from a list of LinearSet components.
     pub fn new(mut components: Vec<LinearSet<K>>) -> Self {
         // Filter out duplicate period vectors
-        if REMOVE_REDUNDANT_PARTS.load(Ordering::SeqCst) {
+        if REMOVE_REDUNDANT.load(Ordering::SeqCst) {
             for lin in &mut components {
                 lin.dedup_periods();
             }
         }
 
         // Try merging any of the new_components into another
-        if REMOVE_REDUNDANT_SETS.load(Ordering::SeqCst) {
+        if REMOVE_REDUNDANT.load(Ordering::SeqCst) {
             'fixpoint: loop {
                 for i in 0..components.len() {
                     for j in i + 1..components.len() {
@@ -565,7 +561,7 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
                 components.retain_mut(|comp| {
                     // Remove redundant periods.
                     // TODO: this could, in fact, be strengthened to p \in extra_periods*
-                    if REMOVE_REDUNDANT_PARTS.load(Ordering::SeqCst) {
+                    if REMOVE_REDUNDANT.load(Ordering::SeqCst) {
                         comp.periods.retain(|p| !extra_periods.contains(p));
                     }
                     // If the component has no periods, we add its base to extra_periods

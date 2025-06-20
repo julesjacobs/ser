@@ -130,12 +130,8 @@ fn main() {
                     }
                 }
             }
-            "--without-remove-redundant-parts" => {
-                semilinear::set_remove_redundant_parts(false);
-                i += 1;
-            }
-            "--without-remove-redundant-sets" => {
-                semilinear::set_remove_redundant_sets(false);
+            "--without-remove-redundant" => {
+                semilinear::set_remove_redundant(false);
                 i += 1;
             }
             "--without-generate-less" => {
