@@ -10,6 +10,8 @@ use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Mutex;
+use crate::size_logger::{PetriNetSize, log_size_csv};
+use std::path::Path;
 
 /// Decision enum for reachability analysis results with proof/trace support
 #[derive(Debug, Clone)]
@@ -508,6 +510,21 @@ where
             &constraints,
         );
 
+        debug_logger.log_petri_net(
+            &format!("Pre-Pruning Petri Net {}", disjunct_id),
+            "Petri net before pruning and optimization",
+            &petri,
+        );
+        let csv_path = Path::new(out_dir).join("petri_sizes.csv");
+        let before = PetriNetSize {
+            disjunct_id,
+            stage: "pre_pruning",
+            num_places: petri.get_places().len(),
+            num_transitions: petri.get_transitions().len(),
+        };
+        log_size_csv(&csv_path, &before)
+            .expect("Failed to log Petri‐net size (pre‐pruning)");
+
         // Extract zero variables from constraints
         let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
         let zero_variables_set: HashSet<P> = zero_variables.into_iter().collect();
@@ -729,6 +746,25 @@ where
                     petri.get_transitions().len()
                 ),
             );
+
+            debug_logger.log_petri_net(
+                &format!("Post-Pruning Petri Net {}", disjunct_id),
+                "Petri net after bidirectional filtering",
+                &petri,
+            );  // :contentReference[oaicite:1]{index=1}
+
+            // **New: record CSV line for post‐pruning size**
+            let after = PetriNetSize {
+                disjunct_id,
+                stage: "post_pruning",
+                num_places: petri.get_places().len(),
+                num_transitions: petri.get_transitions().len(),
+            };
+
+            let csv_path = Path::new(out_dir).join("petri_sizes.csv");
+            log_size_csv(&csv_path, &after)
+                .expect("Failed to log Petri‐net size (post‐pruning)");
+
 
             let result =
                 crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);

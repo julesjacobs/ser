@@ -21,6 +21,7 @@ mod semilinear;
 mod smpt;
 mod spresburger;
 mod utils;
+mod size_logger;
 
 use colored::*;
 use parser::Program;

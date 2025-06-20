@@ -70,6 +70,9 @@ def plot_cumulative_solved(group, timeout_ms, output_dir):
     combinations = group['combination'].unique()
 
     plt.figure(figsize=(10, 6), facecolor='white')
+    plt.xscale('log')  # ← switch the x-axis to logarithmic scale
+
+
     max_accumulated_time = 0
     # Generate curve for each combination
     for i, combo in enumerate(combinations):
