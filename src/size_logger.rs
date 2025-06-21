@@ -81,20 +81,20 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
         .create(true)
         .append(true)
         .open(path)?;
+
     let mut wtr = csv::WriterBuilder::new()
         .has_headers(false)
         .from_writer(file);
 
-    // Write header if file was just created or is empty
+
     let need_header = match path.metadata() {
         Ok(meta) => meta.len() == 0,
-        Err(_) => true,
+            Err(_) => true,
     };
     if need_header {
         wtr.write_record(&["benchmark", "num_components", "periods_per_component"])?;
     }
 
-    // Serialize the data row
     let mut record = Vec::new();
     record.push(entry.program_name.to_string());
     record.push(entry.num_components.to_string());

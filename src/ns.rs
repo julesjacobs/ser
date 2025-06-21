@@ -523,12 +523,22 @@ where
             &ser
         );
 
+        // make csv in the <out/benchmark> directory
+        debug_logger.log_semilinear_set_for_optimization_comparison(
+            program_name.clone(),
+            "Serialized Automaton",
+            "Expected serializable behavior as semilinear set",
+            &ser,
+            Path::new(out_dir),
+        );
+
+        // keep track for optimization experiment
         debug_logger.log_semilinear_set_for_optimization_comparison(
             program_name,
             "Serialized Automaton",
             "Expected serializable behavior as semilinear set",
             &ser,
-            Path::new(out_dir),
+            Path::new("optimization_experiments/semilinear_size"),
         );
 
         // clone here so we can still use it below
