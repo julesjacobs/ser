@@ -18,10 +18,10 @@ mod proofinvariant_to_presburger;
 mod reachability;
 mod reachability_with_proofs;
 mod semilinear;
+mod size_logger;
 mod smpt;
 mod spresburger;
 mod utils;
-mod size_logger;
 
 use colored::*;
 use parser::Program;

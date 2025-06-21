@@ -448,7 +448,7 @@ impl<T: Eq + Hash> ProofInvariant<T> {
             formula: self.formula.map(&mut f),
         }
     }
-    
+
     /// Substitute variables according to a mapping function
     /// The mapping returns Either::Left(Q) for a new variable or Either::Right(i32) for a constant
     pub fn substitute<Q, F>(&self, mut mapping: F) -> ProofInvariant<Q>
@@ -458,16 +458,18 @@ impl<T: Eq + Hash> ProofInvariant<T> {
         T: Clone,
     {
         // Map variables list, keeping only Left (new variables)
-        let new_variables: Vec<Q> = self.variables.iter()
+        let new_variables: Vec<Q> = self
+            .variables
+            .iter()
             .filter_map(|var| match mapping(var) {
                 Either::Left(q) => Some(q),
                 Either::Right(_) => None, // Constants don't appear in variable list
             })
             .collect();
-        
+
         // Recursively substitute in the formula
         let new_formula = substitute_in_formula(&self.formula, &mut mapping);
-        
+
         ProofInvariant {
             variables: new_variables,
             formula: new_formula,
@@ -510,7 +512,7 @@ where
             // Substitute in the affine expression
             let mut new_terms = HashMap::new();
             let mut new_constant = c.expr.constant;
-            
+
             for (var, coeff) in &c.expr.terms {
                 match var {
                     Variable::Var(v) => {
@@ -531,10 +533,10 @@ where
                     }
                 }
             }
-            
+
             // Remove zero coefficients
             new_terms.retain(|_, coeff| *coeff != 0);
-            
+
             // Check if this is a degenerate constraint (only constant term)
             if new_terms.is_empty() {
                 // Evaluate the constant constraint

@@ -14,8 +14,6 @@ pub fn set_remove_redundant(on: bool) {
     REMOVE_REDUNDANT.store(on, Ordering::SeqCst);
 }
 
-
-
 pub static GENERATE_LESS: AtomicBool = AtomicBool::new(true);
 
 pub fn set_generate_less(on: bool) {

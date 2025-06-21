@@ -1,9 +1,9 @@
 //! HTML debugging report generation for serializability analysis
 
 use crate::presburger::Constraint;
+use crate::size_logger::{SemilinearStats, log_semilinear_csv};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
-use crate::size_logger::{SemilinearStats, log_semilinear_csv};
 use std::path::Path;
 
 #[derive(Debug, Clone)]
@@ -462,9 +462,9 @@ impl DebugLogger {
         self.step(name, description, &details);
     }
 
-
-
-    pub fn log_semilinear_set_for_optimization_comparison<T: Eq + Hash + Clone + Ord + Debug + Display>(
+    pub fn log_semilinear_set_for_optimization_comparison<
+        T: Eq + Hash + Clone + Ord + Debug + Display,
+    >(
         &self,
         program_name: String,
         name: &str,
@@ -513,15 +513,12 @@ impl DebugLogger {
         };
         // Write to <out_dir>/semilinear_stats.csv
         let csv_path = out_dir.join("semilinear_stats.csv"); // #### UPDATE: build path from out_dir
-        log_semilinear_csv(&csv_path, &stats)
-            .expect("Failed to write semilinear_stats.csv"); // #### UPDATE: write stats
+        log_semilinear_csv(&csv_path, &stats).expect("Failed to write semilinear_stats.csv"); // #### UPDATE: write stats
 
         // ##### CSV LOGGING END #####
 
         self.step(name, description, &details);
     }
-
-
 
     pub fn log_constraints<P: Display + Debug>(
         &self,

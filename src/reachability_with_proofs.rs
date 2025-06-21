@@ -3,15 +3,15 @@ use crate::kleene::Kleene;
 use crate::petri::*;
 use crate::proof_parser::ProofInvariant;
 use crate::semilinear::*;
+use crate::size_logger::{PetriNetSize, log_size_csv};
 use crate::spresburger::SPresburgerSet;
 use colored::*;
 use either::{Either, Left, Right};
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
-use std::sync::Mutex;
-use crate::size_logger::{PetriNetSize, log_size_csv};
 use std::path::Path;
+use std::sync::Mutex;
 
 /// Decision enum for reachability analysis results with proof/trace support
 #[derive(Debug, Clone)]
@@ -306,12 +306,11 @@ where
         );
 
         // Combine all disjunct proofs by ANDing them together
-        let combined_proof = if disjunct_proofs.is_empty() {
-            None
-        } else if disjunct_proofs.len() == 1 {
+        let combined_proof = if disjunct_proofs.len() == 1 {
             disjunct_proofs.into_iter().next()
         } else {
             // Combine multiple proofs by creating an AND formula
+            // This also handles the empty case, creating And([])
             use crate::proof_parser::Formula;
 
             // Collect all variables from all proofs
@@ -522,8 +521,7 @@ where
             num_places: petri.get_places().len(),
             num_transitions: petri.get_transitions().len(),
         };
-        log_size_csv(&csv_path, &before)
-            .expect("Failed to log Petri‐net size (pre‐pruning)");
+        log_size_csv(&csv_path, &before).expect("Failed to log Petri‐net size (pre‐pruning)");
 
         // Extract zero variables from constraints
         let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
@@ -751,7 +749,7 @@ where
                 &format!("Post-Pruning Petri Net {}", disjunct_id),
                 "Petri net after bidirectional filtering",
                 &petri,
-            );  // :contentReference[oaicite:1]{index=1}
+            ); // :contentReference[oaicite:1]{index=1}
 
             // **New: record CSV line for post‐pruning size**
             let after = PetriNetSize {
@@ -762,9 +760,7 @@ where
             };
 
             let csv_path = Path::new(out_dir).join("petri_sizes.csv");
-            log_size_csv(&csv_path, &after)
-                .expect("Failed to log Petri‐net size (post‐pruning)");
-
+            log_size_csv(&csv_path, &after).expect("Failed to log Petri‐net size (post‐pruning)");
 
             let result =
                 crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);

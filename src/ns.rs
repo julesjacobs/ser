@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
-use std::path::{Path};
+use std::path::Path;
 
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
@@ -520,7 +520,7 @@ where
         debug_logger.log_semilinear_set(
             "Serialized Automaton",
             "Expected serializable behavior as semilinear set",
-            &ser
+            &ser,
         );
 
         // make csv in the <out/benchmark> directory
@@ -615,16 +615,20 @@ where
             crate::reachability_with_proofs::Decision::Proof { proof } => {
                 if let Some(p) = proof {
                     println!("{}{}✅ PROOF CERTIFICATE FOUND{}", BOLD, GREEN, RESET);
-                    
+
                     // Translate to NS-level invariant
                     println!();
-                    println!("{}Translating proof to NS-level invariants...{}", YELLOW, RESET);
-                    let ns_invariant = crate::ns_invariant::translate_petri_proof_to_ns(p.clone(), self);
-                    
+                    println!(
+                        "{}Translating proof to NS-level invariants...{}",
+                        YELLOW, RESET
+                    );
+                    let ns_invariant =
+                        crate::ns_invariant::translate_petri_proof_to_ns(p.clone(), self);
+
                     // Pretty print NS-level invariants
                     println!();
                     ns_invariant.pretty_print();
-                    
+
                     // Also show original Petri net proof for debugging
                     println!();
                     println!("{}Original Petri net proof:{}", YELLOW, RESET);
