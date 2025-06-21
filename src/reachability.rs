@@ -14,7 +14,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 /// Global debug logger for reachability analysis
 static DEBUG_LOGGER: Mutex<Option<DebugLogger>> = Mutex::new(None);
 
-static OPTIMIZE_ENABLED: AtomicBool = AtomicBool::new(true);
+pub static BIDIRECTIONAL_PRUNING_ENABLED: AtomicBool = AtomicBool::new(true);
 
 /// Initialize the global debug logger
 pub fn init_debug_logger(program_name: String, program_content: String) {
@@ -36,12 +36,12 @@ pub fn get_debug_logger() -> DebugLogger {
 
 /// Set the optimize flag (called from `main.rs`)
 pub fn set_optimize_flag(enabled: bool) {
-    OPTIMIZE_ENABLED.store(enabled, Ordering::SeqCst);
+    BIDIRECTIONAL_PRUNING_ENABLED.store(enabled, Ordering::SeqCst);
 }
 
 /// Helper to check whether optimization should run
 pub fn optimize_enabled() -> bool {
-    OPTIMIZE_ENABLED.load(Ordering::SeqCst)
+    BIDIRECTIONAL_PRUNING_ENABLED.load(Ordering::SeqCst)
 }
 
 /// Execute a closure with the debug logger

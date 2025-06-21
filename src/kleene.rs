@@ -9,13 +9,9 @@ use std::collections::{HashMap, HashSet};
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
-static GENERATE_LESS: AtomicBool = AtomicBool::new(true);
+use crate::semilinear::GENERATE_LESS;
 
-pub fn set_generate_less(on: bool) {
-    GENERATE_LESS.store(on, Ordering::SeqCst);
-}
-
-static SMART_ORDER: AtomicBool = AtomicBool::new(true);
+pub static SMART_ORDER: AtomicBool = AtomicBool::new(true);
 
 pub fn set_smart_kleene_order(on: bool) {
     SMART_ORDER.store(on, Ordering::SeqCst);

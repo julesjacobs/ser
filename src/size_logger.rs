@@ -1,3 +1,7 @@
+use std::sync::atomic::Ordering;
+use crate::semilinear::{REMOVE_REDUNDANT,GENERATE_LESS};
+use crate::reachability::BIDIRECTIONAL_PRUNING_ENABLED;
+use crate::kleene::SMART_ORDER;
 use serde::Serialize;
 use std::{
     fs,
@@ -92,7 +96,15 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
             Err(_) => true,
     };
     if need_header {
-        wtr.write_record(&["benchmark", "num_components", "periods_per_component"])?;
+            wtr.write_record(&[
+                "benchmark",
+                "num_components",
+                "periods_per_component",
+                "bidirectional_pruning ON",
+                "remove_redundant ON",
+                "generate_less ON",
+                "smart_order ON",
+            ])?;
     }
 
     let mut record = Vec::new();
@@ -102,8 +114,20 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
         .unwrap_or_else(|_| "[]".to_string());
     record.push(periods_json);
 
+    // read each flag and push "1"/"0"
+    let bidir_pruning    = BIDIRECTIONAL_PRUNING_ENABLED.load(Ordering::Relaxed);
+    let remove_redundant = REMOVE_REDUNDANT.load(Ordering::Relaxed);
+    let generate_less    = GENERATE_LESS.load(Ordering::Relaxed);
+    let smart_order      = SMART_ORDER.load(Ordering::Relaxed);
+    record.push(if bidir_pruning    { "1" } else { "0" }.to_string());
+    record.push(if remove_redundant { "1" } else { "0" }.to_string());
+    record.push(if generate_less    { "1" } else { "0" }.to_string());
+    record.push(if smart_order      { "1" } else { "0" }.to_string());
+
+
     wtr.write_record(&record)?;
     wtr.flush()?;
     Ok(())
+
 }
 

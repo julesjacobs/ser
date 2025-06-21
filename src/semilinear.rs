@@ -8,7 +8,7 @@ use crate::kleene::Kleene;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
-static REMOVE_REDUNDANT: AtomicBool = AtomicBool::new(true);
+pub static REMOVE_REDUNDANT: AtomicBool = AtomicBool::new(true);
 
 pub fn set_remove_redundant(on: bool) {
     REMOVE_REDUNDANT.store(on, Ordering::SeqCst);
@@ -16,7 +16,7 @@ pub fn set_remove_redundant(on: bool) {
 
 
 
-static GENERATE_LESS: AtomicBool = AtomicBool::new(true);
+pub static GENERATE_LESS: AtomicBool = AtomicBool::new(true);
 
 pub fn set_generate_less(on: bool) {
     GENERATE_LESS.store(on, Ordering::SeqCst);

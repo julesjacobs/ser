@@ -137,7 +137,6 @@ fn main() {
             }
             "--without-generate-less" => {
                 semilinear::set_generate_less(false);
-                kleene::set_generate_less(false);
                 i += 1;
             }
             "--without-smart-kleene-order" => {
