@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
+use std::path::{Path};
 
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
@@ -519,7 +520,15 @@ where
         debug_logger.log_semilinear_set(
             "Serialized Automaton",
             "Expected serializable behavior as semilinear set",
+            &ser
+        );
+
+        debug_logger.log_semilinear_set_for_optimization_comparison(
+            program_name,
+            "Serialized Automaton",
+            "Expected serializable behavior as semilinear set",
             &ser,
+            Path::new(out_dir),
         );
 
         // clone here so we can still use it below

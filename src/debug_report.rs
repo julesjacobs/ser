@@ -3,6 +3,8 @@
 use crate::presburger::Constraint;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
+use crate::size_logger::{SemilinearStats, log_semilinear_csv};
+use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct SmptCall {
@@ -459,6 +461,67 @@ impl DebugLogger {
 
         self.step(name, description, &details);
     }
+
+
+
+    pub fn log_semilinear_set_for_optimization_comparison<T: Eq + Hash + Clone + Ord + Debug + Display>(
+        &self,
+        program_name: String,
+        name: &str,
+        description: &str,
+        set: &crate::semilinear::SemilinearSet<T>,
+        out_dir: &Path,
+    ) {
+        let mut details = String::new();
+        details.push_str("🔢 SEMILINEAR SET:\n\n");
+
+        // Use the existing pretty Display implementation
+        details.push_str(&format!("📚 MATHEMATICAL FORM:\n{}\n\n", set));
+
+        // Add some structural analysis
+        let components = &set.components;
+        details.push_str("📊 STRUCTURE ANALYSIS:\n");
+        details.push_str(&format!(
+            "  • {} linear set component{}\n",
+            components.len(),
+            if components.len() > 1 { "s" } else { "" }
+        ));
+
+        for (i, linear_set) in components.iter().enumerate() {
+            details.push_str(&format!(
+                "  • Component {}: {} period vector{}, base vector: {}\n",
+                i + 1,
+                linear_set.periods.len(),
+                if linear_set.periods.len() != 1 {
+                    "s"
+                } else {
+                    ""
+                },
+                if linear_set.base.values.is_empty() {
+                    "∅"
+                } else {
+                    "non-empty"
+                }
+            ));
+        }
+
+        // ##### CSV LOGGING START #####
+        let stats = SemilinearStats {
+            program_name: program_name,
+            num_components: set.components.len(),
+            periods_per_component: set.components.iter().map(|ls| ls.periods.len()).collect(),
+        };
+        // Write to <out_dir>/semilinear_stats.csv
+        let csv_path = out_dir.join("semilinear_stats.csv"); // #### UPDATE: build path from out_dir
+        log_semilinear_csv(&csv_path, &stats)
+            .expect("Failed to write semilinear_stats.csv"); // #### UPDATE: write stats
+
+        // ##### CSV LOGGING END #####
+
+        self.step(name, description, &details);
+    }
+
+
 
     pub fn log_constraints<P: Display + Debug>(
         &self,

@@ -1,5 +1,6 @@
 use serde::Serialize;
 use std::{
+    fs,
     fs::OpenOptions,
     io::Write,
     path::Path,
@@ -55,3 +56,54 @@ pub fn log_size_json(path: &Path, entry: &PetriNetSize) -> Result<(), std::io::E
     writeln!(file, "{}", json)?;
     Ok(())
 }
+
+
+
+/// Log entry for SemilinearSet statistics
+#[derive(Serialize)]
+pub struct SemilinearStats {
+        // Name of the benchmark
+        pub program_name: String,
+         /// Number of linear-set components
+         pub num_components: usize,
+         /// Number of period vectors per component
+         pub periods_per_component: Vec<usize>,
+     }
+
+/// Append a record to a CSV file for SemilinearSet statistics
+pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), std::io::Error> {
+    // Ensure output directory exists
+    if let Some(dir) = path.parent() {
+        fs::create_dir_all(dir)?;
+    }
+
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?;
+    let mut wtr = csv::WriterBuilder::new()
+        .has_headers(false)
+        .from_writer(file);
+
+    // Write header if file was just created or is empty
+    let need_header = match path.metadata() {
+        Ok(meta) => meta.len() == 0,
+        Err(_) => true,
+    };
+    if need_header {
+        wtr.write_record(&["benchmark", "num_components", "periods_per_component"])?;
+    }
+
+    // Serialize the data row
+    let mut record = Vec::new();
+    record.push(entry.program_name.to_string());
+    record.push(entry.num_components.to_string());
+    let periods_json = serde_json::to_string(&entry.periods_per_component)
+        .unwrap_or_else(|_| "[]".to_string());
+    record.push(periods_json);
+
+    wtr.write_record(&record)?;
+    wtr.flush()?;
+    Ok(())
+}
+
