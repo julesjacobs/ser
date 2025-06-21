@@ -97,22 +97,17 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
     };
     if need_header {
             wtr.write_record(&[
-                "benchmark",
-                "num_components",
-                "periods_per_component",
                 "bidirectional_pruning ON",
                 "remove_redundant ON",
                 "generate_less ON",
                 "smart_order ON",
+                "benchmark",
+                "num_components",
+                "periods_per_component",
             ])?;
     }
 
     let mut record = Vec::new();
-    record.push(entry.program_name.to_string());
-    record.push(entry.num_components.to_string());
-    let periods_json = serde_json::to_string(&entry.periods_per_component)
-        .unwrap_or_else(|_| "[]".to_string());
-    record.push(periods_json);
 
     // read each flag and push "1"/"0"
     let bidir_pruning    = BIDIRECTIONAL_PRUNING_ENABLED.load(Ordering::Relaxed);
@@ -124,6 +119,11 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
     record.push(if generate_less    { "1" } else { "0" }.to_string());
     record.push(if smart_order      { "1" } else { "0" }.to_string());
 
+    record.push(entry.program_name.to_string());
+    record.push(entry.num_components.to_string());
+    let periods_json = serde_json::to_string(&entry.periods_per_component)
+        .unwrap_or_else(|_| "[]".to_string());
+    record.push(periods_json);
 
     wtr.write_record(&record)?;
     wtr.flush()?;
