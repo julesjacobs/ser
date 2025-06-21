@@ -306,33 +306,28 @@ where
         );
 
         // Combine all disjunct proofs by ANDing them together
-        let combined_proof = if disjunct_proofs.len() == 1 {
-            disjunct_proofs.into_iter().next()
-        } else {
-            // Combine multiple proofs by creating an AND formula
-            // This also handles the empty case, creating And([])
-            use crate::proof_parser::Formula;
+        // This handles all cases: empty (And([])), single element (And([x])), and multiple elements
+        use crate::proof_parser::Formula;
 
-            // Collect all variables from all proofs
-            let mut all_variables = std::collections::HashSet::new();
-            for proof in &disjunct_proofs {
-                all_variables.extend(proof.variables.iter().cloned());
-            }
+        // Collect all variables from all proofs
+        let mut all_variables = std::collections::HashSet::new();
+        for proof in &disjunct_proofs {
+            all_variables.extend(proof.variables.iter().cloned());
+        }
 
-            // Create AND of all formulas
-            let formulas: Vec<Formula<P>> = disjunct_proofs
-                .into_iter()
-                .map(|proof| proof.formula)
-                .collect();
+        // Create AND of all formulas
+        let formulas: Vec<Formula<P>> = disjunct_proofs
+            .into_iter()
+            .map(|proof| proof.formula)
+            .collect();
 
-            let combined_formula = Formula::And(formulas);
-            let combined_variables: Vec<P> = all_variables.into_iter().collect();
+        let combined_formula = Formula::And(formulas);
+        let combined_variables: Vec<P> = all_variables.into_iter().collect();
 
-            Some(ProofInvariant {
-                variables: combined_variables,
-                formula: combined_formula,
-            })
-        };
+        let combined_proof = Some(ProofInvariant {
+            variables: combined_variables,
+            formula: combined_formula,
+        });
 
         Decision::Proof {
             proof: combined_proof,
