@@ -103,7 +103,8 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
                 "smart_order ON",
                 "benchmark",
                 "num_components",
-                "periods_per_component",
+                "max_periods_per_component",
+                "avg_periods_per_component",
             ])?;
     }
 
@@ -121,9 +122,22 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
 
     record.push(entry.program_name.to_string());
     record.push(entry.num_components.to_string());
-    let periods_json = serde_json::to_string(&entry.periods_per_component)
-        .unwrap_or_else(|_| "[]".to_string());
-    record.push(periods_json);
+
+    let max_period = entry
+        .periods_per_component
+        .iter()
+        .copied()
+        .max()
+        .unwrap_or(0);
+    record.push(max_period.to_string());
+
+        let avg_period = if entry.periods_per_component.is_empty() {
+            0.0
+        } else {
+            let sum: usize = entry.periods_per_component.iter().sum();
+            sum as f64 / (entry.periods_per_component.len() as f64)
+        };
+        record.push(format!("{:.2}", avg_period));   // 2-decimal precision
 
     wtr.write_record(&record)?;
     wtr.flush()?;
