@@ -623,7 +623,7 @@ where
                         YELLOW, RESET
                     );
                     let ns_invariant =
-                        crate::ns_invariant::translate_petri_proof_to_ns(p.clone(), self);
+                        crate::ns_decision::translate_petri_proof_to_ns(p.clone(), self);
 
                     // Pretty print NS-level invariants
                     println!();

@@ -1,6 +1,7 @@
 use crate::ns::NS;
 use crate::ns_to_petri::ReqPetriState;
 use crate::proof_parser::ProofInvariant;
+use crate::reachability_with_proofs::Decision;
 use either::Either;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Display};
@@ -45,6 +46,61 @@ impl<Req: Display, Resp: Display> Display for CompletedRequestPair<Req, Resp> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}/{}", self.0, self.1)
     }
+}
+
+/// NS-level trace representing a counterexample execution
+#[derive(Clone, Debug)]
+pub struct NSTrace<G, L, Req, Resp> {
+    /// Sequence of transitions in the NS
+    /// Each step contains: (from_local, from_global, request, response, to_local, to_global)
+    pub steps: Vec<(L, G, Req, Resp, L, G)>,
+}
+
+impl<G, L, Req, Resp> NSTrace<G, L, Req, Resp>
+where
+    G: Display,
+    L: Display,
+    Req: Display,
+    Resp: Display,
+{
+    /// Pretty print the NS trace
+    pub fn pretty_print(&self) {
+        println!("NS-Level Counterexample Trace:");
+        println!("==============================");
+        
+        if self.steps.is_empty() {
+            println!("(Empty trace - violation at initial state)");
+            return;
+        }
+        
+        for (i, (from_local, from_global, req, resp, to_local, to_global)) in self.steps.iter().enumerate() {
+            println!("\nStep {}:", i + 1);
+            println!("  Request: {}", req);
+            println!("  Response: {}", resp);
+            println!("  State transition:");
+            println!("    From: (local: {}, global: {})", from_local, from_global);
+            println!("    To:   (local: {}, global: {})", to_local, to_global);
+        }
+    }
+}
+
+/// NS-level decision enum containing either a proof (invariant) or counterexample (trace)
+#[derive(Clone, Debug)]
+pub enum NSDecision<G, L, Req, Resp>
+where
+    G: Eq + Hash,
+    L: Eq + Hash,
+    Req: Eq + Hash,
+    Resp: Eq + Hash,
+{
+    /// Program is serializable with proof invariant
+    Serializable {
+        invariant: NSInvariant<G, L, Req, Resp>,
+    },
+    /// Program is not serializable with counterexample trace
+    NotSerializable {
+        trace: NSTrace<G, L, Req, Resp>,
+    },
 }
 
 /// NS-level invariant structure that captures per-global-state invariants
@@ -203,6 +259,72 @@ where
     }
 
     NSInvariant { global_invariants }
+}
+
+/// Convert a Petri net Decision to an NS-level NSDecision
+pub fn petri_decision_to_ns<G, L, Req, Resp>(
+    petri_decision: Decision<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
+    ns: &NS<G, L, Req, Resp>,
+) -> NSDecision<G, L, Req, Resp>
+where
+    G: Clone + Eq + Hash + Debug + Display,
+    L: Clone + Eq + Hash + Debug + Display,
+    Req: Clone + Eq + Hash + Debug + Display,
+    Resp: Clone + Eq + Hash + Debug + Display,
+{
+    match petri_decision {
+        Decision::Proof { proof } => {
+            if let Some(p) = proof {
+                // Translate Petri net proof to NS-level invariant
+                let invariant = translate_petri_proof_to_ns(p, ns);
+                NSDecision::Serializable { invariant }
+            } else {
+                // No explicit proof available, create empty invariant
+                NSDecision::Serializable {
+                    invariant: NSInvariant {
+                        global_invariants: HashMap::new(),
+                    },
+                }
+            }
+        }
+        Decision::CounterExample { trace } => {
+            // Convert Petri net trace to NS-level trace
+            let ns_trace = convert_petri_trace_to_ns(trace, ns);
+            NSDecision::NotSerializable { trace: ns_trace }
+        }
+    }
+}
+
+/// Convert a Petri net trace to an NS-level trace
+fn convert_petri_trace_to_ns<G, L, Req, Resp>(
+    _petri_trace: Vec<(
+        Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
+        Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
+    )>,
+    _ns: &NS<G, L, Req, Resp>,
+) -> NSTrace<G, L, Req, Resp>
+where
+    G: Clone + Eq + Hash + Debug + Display,
+    L: Clone + Eq + Hash + Debug + Display,
+    Req: Clone + Eq + Hash + Debug + Display,
+    Resp: Clone + Eq + Hash + Debug + Display,
+{
+    let steps = Vec::new();
+    
+    // The Petri net trace contains transitions. We need to reconstruct NS-level transitions
+    // from the Petri net places involved in each transition.
+    
+    // This is a simplified conversion - in practice, you might need more sophisticated
+    // logic to properly reconstruct the NS-level trace from Petri net transitions.
+    // For now, we'll return an empty trace as a placeholder.
+    
+    // TODO: Implement proper trace conversion logic
+    // This would involve:
+    // 1. Identifying which NS transition corresponds to each Petri net transition
+    // 2. Extracting the request, response, and state information
+    // 3. Building the sequence of NS-level steps
+    
+    NSTrace { steps }
 }
 
 #[cfg(test)]
