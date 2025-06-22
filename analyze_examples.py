@@ -350,13 +350,39 @@ def main():
             
             f.write(f"| `{result['filename']}` | {opt_original} | {opt_proof} | {no_opt_original} | {no_opt_proof} | {result['opt_duration']} | {result['no_opt_duration']} | {trace_status} | {proof_status} |\n")
         
-        # Calculate summary statistics
-        serializable_count = sum(1 for r in results if "Serializable" in r['status'] and "❌" not in r['status'])
-        not_serializable_count = sum(1 for r in results if "Not serializable" in r['status'])
-        timeout_count = sum(1 for r in results if "SMPT Timeout" in r['status'] or "Timeout" in r['status'])
-        inconsistent_count = sum(1 for r in results if "Inconsistent" in r['status'])
-        error_count = sum(1 for r in results if "Error" in r['status'] and "Timeout" not in r['status'] and "Inconsistent" not in r['status'])
-        unknown_count = sum(1 for r in results if "Unknown" in r['status'])
+        # Calculate summary statistics by examining the actual result columns
+        serializable_count = 0
+        not_serializable_count = 0
+        timeout_count = 0
+        inconsistent_count = 0
+        error_count = 0
+        unknown_count = 0
+        
+        for r in results:
+            # Check the actual result columns to determine category
+            opt_original = r.get('opt_original_result', 'Unknown')
+            opt_proof = r.get('opt_proof_result', 'Unknown')
+            no_opt_original = r.get('no_opt_original_result', 'Unknown')
+            no_opt_proof = r.get('no_opt_proof_result', 'Unknown')
+            
+            # Check for SMPT timeouts
+            if any("SMPT Timeout" in result for result in [opt_original, opt_proof, no_opt_original, no_opt_proof]):
+                timeout_count += 1
+            # Check for inconsistencies
+            elif "Inconsistent" in r['status']:
+                inconsistent_count += 1
+            # Check for errors
+            elif any("Error" in result for result in [opt_original, opt_proof, no_opt_original, no_opt_proof]):
+                error_count += 1
+            # Check for serializable (both opt and no-opt should agree)
+            elif opt_original == "Serializable" and opt_proof == "Serializable":
+                serializable_count += 1
+            # Check for not serializable (both opt and no-opt should agree)
+            elif opt_original == "Not serializable" and opt_proof == "Not serializable":
+                not_serializable_count += 1
+            # Everything else is unknown
+            else:
+                unknown_count += 1
         
         # Count trace validation results
         trace_valid_count = sum(1 for r in results if r.get('opt_trace_valid') == True or r.get('no_opt_trace_valid') == True)
