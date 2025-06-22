@@ -648,7 +648,7 @@ where
         
         // Add all response variables (completed requests) that could appear
         for req in ns.get_requests() {
-            for (local, resp) in &ns.responses {
+            for (_local, resp) in &ns.responses {
                 all_vars.insert(RequestStatePair(req.clone(), RequestState::Completed(resp.clone())));
             }
         }
