@@ -405,6 +405,11 @@ where
         "{}",
         "────────────────────────────────────────────────────────────".bright_black()
     );
+    
+    // Print the semilinear set before analysis
+    println!();
+    println!("Serialized automaton semilinear set:");
+    println!("{}", ns.serialized_automaton_semilinear());
     let serializable = ns.is_serializable(out_dir);
     println!();
     println!(

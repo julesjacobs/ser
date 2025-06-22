@@ -560,7 +560,7 @@ where
         
         // Convert semilinear set to String type and then to PresburgerSet
         let string_semilinear = semilinear.clone().rename(|v| v.to_string());
-        let mut spresburger = crate::spresburger::SPresburgerSet::from_semilinear(string_semilinear);
+        let mut spresburger = crate::spresburger::SPresburgerSet::from_semilinear(string_semilinear.clone());
         let semilinear_as_presburger = spresburger.as_presburger();
         
         // Check if invariant_set ⊆ semilinear_set
@@ -572,6 +572,11 @@ where
         } else {
             // Log which values violate the implication for debugging
             eprintln!("Warning: Invariant for global state {} has values outside serializable set", global_state);
+            eprintln!("  Semilinear set: {}", string_semilinear);
+            eprintln!("  Projected invariant: {}", string_invariant.formula);
+            eprintln!("  Projected invariant (ISL): {}", invariant_set);
+            eprintln!("  Invariant variables: {:?}", string_vars);
+            eprintln!("  Values outside serializable set: {}", difference);
             Ok(false)
         }
     }
