@@ -8,7 +8,7 @@ mod isl;
 
 mod kleene;
 mod ns;
-mod ns_invariant;
+mod ns_decision;
 mod ns_to_petri;
 mod parser;
 mod petri;

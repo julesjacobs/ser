@@ -1,0 +1,538 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `target/debug/ser examples/ser/less_simple_ser.ser`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 Processing Ser file: examples/ser/less_simple_ser.ser
+Parsed program with 3 requests
+Converting program to Network System...
+
+🎨 Generating GraphViz visualization...
+Successfully generated the following Network System files:
+- out/less_simple_ser/network.dot
+- out/less_simple_ser/network.png
+- out/less_simple_ser/network.svg
+- out/less_simple_ser/network.pdf
+
+🔄 Converting to Petri net and generating visualization...
+Successfully generated the following Petri net files:
+- out/less_simple_ser/petri.dot
+- out/less_simple_ser/petri.png
+- out/less_simple_ser/petri.svg
+- out/less_simple_ser/petri.pdf
+- out/less_simple_ser/petri.net
+
+🔄 Converting to Petri net with requests and generating visualization...
+Successfully generated the following Petri net with requests files:
+- out/less_simple_ser/petri_with_requests.dot
+- out/less_simple_ser/petri_with_requests.png
+- out/less_simple_ser/petri_with_requests.svg
+- out/less_simple_ser/petri_with_requests.pdf
+- out/less_simple_ser/petri_with_requests.net
+- out/less_simple_ser/semilinear.txt
+
+────────────────────────────────────────────────────────────
+🔍 SERIALIZABILITY ANALYSIS
+────────────────────────────────────────────────────────────
+Checking disjunct 0: VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{} ≥ 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_0 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0 ∧ VRESP_receive_REQ_2 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0 ∧ VRESP_reset_REQ_1 ≥ 0 ∧ VRESP_reset_REQ_2 -1 ≥ 0
+  ✂️ Pruning results:
+    ➡️ Forward-removed transitions: 25
+      - L_({}, 1)_REQ_reset → RESP_reset_REQ_1
+      - L_({}, 2)_REQ_reset → RESP_reset_REQ_2
+      - L_({}, 0)_REQ_receive → RESP_receive_REQ_0
+      - L_({}, 2)_REQ_receive → RESP_receive_REQ_2
+      - L_({}, 0)_REQ_process → RESP_process_REQ_0
+      - L_({}, 1)_REQ_process → RESP_process_REQ_1
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{}
+      - L_({}, X := 1)_REQ_reset, G_{} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=1} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=2} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, X := 1)_REQ_reset, G_{X=2} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 1)_REQ_reset, G_{X=1} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 0)_REQ_receive, G_{} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{}
+      - L_({}, X := 0)_REQ_receive, G_{X=1} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=1} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_receive, G_{X=2} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=2} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_process, G_{} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 0)_REQ_process, G_{X=1} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 0)_REQ_process, G_{X=2} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{X=2} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 1)_REQ_process, G_{X=1} → L_({}, 1)_REQ_process, G_{X=1}
+Warning: Failed to parse proof certificate: ParseError { message: "Expected '(' at top level", position: 0 }
+  → SMPT result: UNREACHABLE
+Checking disjunct 1: VRESP_reset_REQ_2 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{} ≥ 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_0 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0 ∧ VRESP_receive_REQ_2 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0 ∧ VRESP_reset_REQ_1 -1 ≥ 0
+  ✂️ Pruning results:
+    ➡️ Forward-removed transitions: 25
+      - L_({}, 1)_REQ_reset → RESP_reset_REQ_1
+      - L_({}, 2)_REQ_reset → RESP_reset_REQ_2
+      - L_({}, 0)_REQ_receive → RESP_receive_REQ_0
+      - L_({}, 2)_REQ_receive → RESP_receive_REQ_2
+      - L_({}, 0)_REQ_process → RESP_process_REQ_0
+      - L_({}, 1)_REQ_process → RESP_process_REQ_1
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{}
+      - L_({}, X := 1)_REQ_reset, G_{} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=1} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=2} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, X := 1)_REQ_reset, G_{X=2} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 1)_REQ_reset, G_{X=1} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 0)_REQ_receive, G_{} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{}
+      - L_({}, X := 0)_REQ_receive, G_{X=1} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=1} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_receive, G_{X=2} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=2} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_process, G_{} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 0)_REQ_process, G_{X=1} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 0)_REQ_process, G_{X=2} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{X=2} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 1)_REQ_process, G_{X=1} → L_({}, 1)_REQ_process, G_{X=1}
+  → SMPT result: UNREACHABLE
+Checking disjunct 2: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{} ≥ 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_0 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0 ∧ VRESP_receive_REQ_2 -1 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0
+  ✂️ Pruning results:
+    ➡️ Forward-removed transitions: 25
+      - L_({}, 1)_REQ_reset → RESP_reset_REQ_1
+      - L_({}, 2)_REQ_reset → RESP_reset_REQ_2
+      - L_({}, 0)_REQ_receive → RESP_receive_REQ_0
+      - L_({}, 2)_REQ_receive → RESP_receive_REQ_2
+      - L_({}, 0)_REQ_process → RESP_process_REQ_0
+      - L_({}, 1)_REQ_process → RESP_process_REQ_1
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{}
+      - L_({}, X := 1)_REQ_reset, G_{} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=1} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=2} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, X := 1)_REQ_reset, G_{X=2} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 1)_REQ_reset, G_{X=1} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 0)_REQ_receive, G_{} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{}
+      - L_({}, X := 0)_REQ_receive, G_{X=1} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=1} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_receive, G_{X=2} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=2} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_process, G_{} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 0)_REQ_process, G_{X=1} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 0)_REQ_process, G_{X=2} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{X=2} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 1)_REQ_process, G_{X=1} → L_({}, 1)_REQ_process, G_{X=1}
+  → SMPT result: UNREACHABLE
+Checking disjunct 3: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{} ≥ 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_0 -1 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0
+  ✂️ Pruning results:
+    ➡️ Forward-removed transitions: 25
+      - L_({}, 1)_REQ_reset → RESP_reset_REQ_1
+      - L_({}, 2)_REQ_reset → RESP_reset_REQ_2
+      - L_({}, 0)_REQ_receive → RESP_receive_REQ_0
+      - L_({}, 2)_REQ_receive → RESP_receive_REQ_2
+      - L_({}, 0)_REQ_process → RESP_process_REQ_0
+      - L_({}, 1)_REQ_process → RESP_process_REQ_1
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{}
+      - L_({}, X := 1)_REQ_reset, G_{} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=1} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=2} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, X := 1)_REQ_reset, G_{X=2} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 1)_REQ_reset, G_{X=1} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 0)_REQ_receive, G_{} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{}
+      - L_({}, X := 0)_REQ_receive, G_{X=1} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=1} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_receive, G_{X=2} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=2} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_process, G_{} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 0)_REQ_process, G_{X=1} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 0)_REQ_process, G_{X=2} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{X=2} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 1)_REQ_process, G_{X=1} → L_({}, 1)_REQ_process, G_{X=1}
+  → SMPT result: UNREACHABLE
+Checking disjunct 4: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VRESP_receive_REQ_0 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{} ≥ 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 -1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0
+  ✂️ Pruning results:
+    ➡️ Forward-removed transitions: 25
+      - L_({}, 1)_REQ_reset → RESP_reset_REQ_1
+      - L_({}, 2)_REQ_reset → RESP_reset_REQ_2
+      - L_({}, 0)_REQ_receive → RESP_receive_REQ_0
+      - L_({}, 2)_REQ_receive → RESP_receive_REQ_2
+      - L_({}, 0)_REQ_process → RESP_process_REQ_0
+      - L_({}, 1)_REQ_process → RESP_process_REQ_1
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{}
+      - L_({}, X := 1)_REQ_reset, G_{} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=1} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=2} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, X := 1)_REQ_reset, G_{X=2} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 1)_REQ_reset, G_{X=1} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 0)_REQ_receive, G_{} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{}
+      - L_({}, X := 0)_REQ_receive, G_{X=1} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=1} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_receive, G_{X=2} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=2} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_process, G_{} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 0)_REQ_process, G_{X=1} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 0)_REQ_process, G_{X=2} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{X=2} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 1)_REQ_process, G_{X=1} → L_({}, 1)_REQ_process, G_{X=1}
+  → SMPT result: UNREACHABLE
+Checking disjunct 5: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VRESP_receive_REQ_0 = 0 ∧ VRESP_process_REQ_1 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{} ≥ 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 -1 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0
+  ✂️ Pruning results:
+    ➡️ Forward-removed transitions: 25
+      - L_({}, 1)_REQ_reset → RESP_reset_REQ_1
+      - L_({}, 2)_REQ_reset → RESP_reset_REQ_2
+      - L_({}, 0)_REQ_receive → RESP_receive_REQ_0
+      - L_({}, 2)_REQ_receive → RESP_receive_REQ_2
+      - L_({}, 0)_REQ_process → RESP_process_REQ_0
+      - L_({}, 1)_REQ_process → RESP_process_REQ_1
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{}
+      - L_({}, X := 1)_REQ_reset, G_{} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=1} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=2} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, X := 1)_REQ_reset, G_{X=2} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 1)_REQ_reset, G_{X=1} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 0)_REQ_receive, G_{} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{}
+      - L_({}, X := 0)_REQ_receive, G_{X=1} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=1} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_receive, G_{X=2} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=2} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_process, G_{} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 0)_REQ_process, G_{X=1} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 0)_REQ_process, G_{X=2} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{X=2} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 1)_REQ_process, G_{X=1} → L_({}, 1)_REQ_process, G_{X=1}
+  → SMPT result: UNREACHABLE
+Checking disjunct 6: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VRESP_receive_REQ_1 = 0 ∧ VRESP_receive_REQ_0 = 0 ∧ VRESP_process_REQ_2 -1 = 0 ∧ VRESP_process_REQ_1 = 0 ∧ VRESP_process_REQ_0 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{} ≥ 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0
+  ✂️ Pruning results:
+    ➡️ Forward-removed transitions: 30
+      - L_({}, 1)_REQ_reset → RESP_reset_REQ_1
+      - L_({}, 2)_REQ_reset → RESP_reset_REQ_2
+      - L_({}, 0)_REQ_receive → RESP_receive_REQ_0
+      - L_({}, 2)_REQ_receive → RESP_receive_REQ_2
+      - L_({}, 0)_REQ_process → RESP_process_REQ_0
+      - L_({}, 1)_REQ_process → RESP_process_REQ_1
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{}
+      - L_({}, X := 1)_REQ_reset, G_{} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=1} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=2} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, X := 1)_REQ_reset, G_{X=2} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 1)_REQ_reset, G_{X=1} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 0)_REQ_receive, G_{} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{}
+      - L_({}, X := 0)_REQ_receive, G_{X=1} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=1} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_receive, G_{X=2} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=2} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_process, G_{} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 0)_REQ_process, G_{X=1} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 0)_REQ_process, G_{X=2} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{X=2} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 1)_REQ_process, G_{X=1} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, 2)_REQ_process → RESP_process_REQ_2
+      - L_({}, X := 0)_REQ_reset, G_{X=1} → L_({}, 0)_REQ_reset, G_{}
+      - L_({}, X := 0)_REQ_reset, G_{X=2} → L_({}, 0)_REQ_reset, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{X=1} → L_({}, 2)_REQ_process, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{X=2} → L_({}, 2)_REQ_process, G_{X=2}
+    ⬅️ Backward-removed transitions: 6
+      - ∅ → L_({}, X := 1)_REQ_receive
+      - L_({}, 1)_REQ_receive → RESP_receive_REQ_1
+      - L_({}, X := 1)_REQ_receive, G_{} → L_({}, 1)_REQ_receive, G_{X=1}
+      - L_({}, X := 1)_REQ_receive, G_{X=2} → L_({}, 1)_REQ_receive, G_{X=1}
+      - L_({}, X := 1)_REQ_receive, G_{X=1} → L_({}, 1)_REQ_receive, G_{X=1}
+      - ∅ → L_({}, while(X == 0){ yield }; X := 2)_REQ_process
+  → SMPT result: UNREACHABLE
+Checking disjunct 7: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VRESP_receive_REQ_1 = 0 ∧ VRESP_receive_REQ_0 = 0 ∧ VRESP_process_REQ_1 = 0 ∧ VRESP_process_REQ_0 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{} ≥ 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_2 -2 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0
+  ✂️ Pruning results:
+    ➡️ Forward-removed transitions: 30
+      - L_({}, 1)_REQ_reset → RESP_reset_REQ_1
+      - L_({}, 2)_REQ_reset → RESP_reset_REQ_2
+      - L_({}, 0)_REQ_receive → RESP_receive_REQ_0
+      - L_({}, 2)_REQ_receive → RESP_receive_REQ_2
+      - L_({}, 0)_REQ_process → RESP_process_REQ_0
+      - L_({}, 1)_REQ_process → RESP_process_REQ_1
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{}
+      - L_({}, X := 1)_REQ_reset, G_{} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=1} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, G_{X=2} → L_({}, 2)_REQ_reset, G_{X=2}
+      - L_({}, X := 1)_REQ_reset, G_{X=2} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 1)_REQ_reset, G_{X=1} → L_({}, 1)_REQ_reset, G_{X=1}
+      - L_({}, X := 0)_REQ_receive, G_{} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{}
+      - L_({}, X := 0)_REQ_receive, G_{X=1} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=1} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_receive, G_{X=2} → L_({}, 0)_REQ_receive, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, G_{X=2} → L_({}, 2)_REQ_receive, G_{X=2}
+      - L_({}, X := 0)_REQ_process, G_{} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{} → L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 0)_REQ_process, G_{X=1} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 0)_REQ_process, G_{X=2} → L_({}, 0)_REQ_process, G_{}
+      - L_({}, X := 1)_REQ_process, G_{X=2} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, X := 1)_REQ_process, G_{X=1} → L_({}, 1)_REQ_process, G_{X=1}
+      - L_({}, 2)_REQ_process → RESP_process_REQ_2
+      - L_({}, X := 0)_REQ_reset, G_{X=1} → L_({}, 0)_REQ_reset, G_{}
+      - L_({}, X := 0)_REQ_reset, G_{X=2} → L_({}, 0)_REQ_reset, G_{}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{X=1} → L_({}, 2)_REQ_process, G_{X=2}
+      - L_({}, while(X == 0){ yield }; X := 2)_REQ_process, G_{X=2} → L_({}, 2)_REQ_process, G_{X=2}
+    ⬅️ Backward-removed transitions: 6
+      - ∅ → L_({}, X := 1)_REQ_receive
+      - L_({}, 1)_REQ_receive → RESP_receive_REQ_1
+      - L_({}, X := 1)_REQ_receive, G_{} → L_({}, 1)_REQ_receive, G_{X=1}
+      - L_({}, X := 1)_REQ_receive, G_{X=2} → L_({}, 1)_REQ_receive, G_{X=1}
+      - L_({}, X := 1)_REQ_receive, G_{X=1} → L_({}, 1)_REQ_receive, G_{X=1}
+      - ∅ → L_({}, while(X == 0){ yield }; X := 2)_REQ_process
+  → SMPT result: UNREACHABLE
+No disjuncts are reachable - constraint set is unsatisfiable
+Checking disjunct 0: VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_0 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0 ∧ VRESP_receive_REQ_2 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0 ∧ VRESP_reset_REQ_1 ≥ 0 ∧ VRESP_reset_REQ_2 -1 ≥ 0
+Iteration 0: Transitions 39 -> 14 (removed 25)
+  Forward removed places: L_({}, X := 0)_REQ_receive, RESP_reset_REQ_2, L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, L_({}, 0)_REQ_receive, RESP_receive_REQ_2, RESP_reset_REQ_1, RESP_receive_REQ_0, L_({}, 2)_REQ_receive, L_({}, X := 1)_REQ_process, L_({}, 1)_REQ_reset, RESP_process_REQ_1, L_({}, 0)_REQ_process, L_({}, X := 1)_REQ_reset, RESP_process_REQ_0, L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, L_({}, 2)_REQ_reset, L_({}, X := 0)_REQ_process, L_({}, 1)_REQ_process
+Iteration 1: Transitions 14 -> 14 (removed 0)
+  → SMPT result: UNREACHABLE
+Checking disjunct 1: VRESP_reset_REQ_2 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_0 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0 ∧ VRESP_receive_REQ_2 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0 ∧ VRESP_reset_REQ_1 -1 ≥ 0
+Iteration 0: Transitions 39 -> 14 (removed 25)
+  Forward removed places: L_({}, 2)_REQ_receive, RESP_process_REQ_0, L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, RESP_receive_REQ_2, L_({}, 1)_REQ_reset, L_({}, 0)_REQ_process, L_({}, 1)_REQ_process, L_({}, X := 1)_REQ_process, L_({}, X := 0)_REQ_receive, L_({}, X := 0)_REQ_process, L_({}, X := 1)_REQ_reset, RESP_process_REQ_1, L_({}, 2)_REQ_reset, L_({}, 0)_REQ_receive, RESP_reset_REQ_1, RESP_receive_REQ_0, RESP_reset_REQ_2
+Iteration 1: Transitions 14 -> 14 (removed 0)
+  → SMPT result: UNREACHABLE
+Checking disjunct 2: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_0 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0 ∧ VRESP_receive_REQ_2 -1 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0
+Iteration 0: Transitions 39 -> 14 (removed 25)
+  Forward removed places: RESP_receive_REQ_0, RESP_process_REQ_1, RESP_reset_REQ_2, RESP_receive_REQ_2, L_({}, X := 0)_REQ_receive, L_({}, X := 1)_REQ_reset, L_({}, 1)_REQ_reset, L_({}, 0)_REQ_process, RESP_reset_REQ_1, L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, L_({}, 2)_REQ_receive, L_({}, 1)_REQ_process, L_({}, 2)_REQ_reset, L_({}, X := 0)_REQ_process, L_({}, 0)_REQ_receive, L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, L_({}, X := 1)_REQ_process, RESP_process_REQ_0
+Iteration 1: Transitions 14 -> 14 (removed 0)
+  → SMPT result: UNREACHABLE
+Checking disjunct 3: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_0 -1 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0
+Iteration 0: Transitions 39 -> 14 (removed 25)
+  Forward removed places: L_({}, 0)_REQ_receive, L_({}, X := 0)_REQ_process, L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, RESP_receive_REQ_2, L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, RESP_process_REQ_0, L_({}, 2)_REQ_receive, RESP_reset_REQ_1, L_({}, 2)_REQ_reset, RESP_receive_REQ_0, L_({}, X := 1)_REQ_reset, L_({}, 1)_REQ_reset, L_({}, 0)_REQ_process, RESP_reset_REQ_2, L_({}, X := 0)_REQ_receive, L_({}, X := 1)_REQ_process, RESP_process_REQ_1, L_({}, 1)_REQ_process
+Iteration 1: Transitions 14 -> 14 (removed 0)
+  → SMPT result: UNREACHABLE
+Checking disjunct 4: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VRESP_receive_REQ_0 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 ≥ 0 ∧ VRESP_process_REQ_1 -1 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0
+Iteration 0: Transitions 39 -> 14 (removed 25)
+  Forward removed places: RESP_receive_REQ_0, L_({}, X := 0)_REQ_receive, L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, L_({}, 0)_REQ_receive, RESP_process_REQ_0, L_({}, 2)_REQ_receive, L_({}, X := 0)_REQ_process, L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, RESP_receive_REQ_2, L_({}, 1)_REQ_process, RESP_reset_REQ_2, RESP_reset_REQ_1, L_({}, 0)_REQ_process, L_({}, 1)_REQ_reset, L_({}, 2)_REQ_reset, L_({}, X := 1)_REQ_reset, RESP_process_REQ_1, L_({}, X := 1)_REQ_process
+Iteration 1: Transitions 14 -> 14 (removed 0)
+  → SMPT result: UNREACHABLE
+Checking disjunct 5: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VRESP_receive_REQ_0 = 0 ∧ VRESP_process_REQ_1 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_0 -1 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0 ∧ VRESP_process_REQ_2 ≥ 0 ∧ VRESP_receive_REQ_1 ≥ 0
+Iteration 0: Transitions 39 -> 14 (removed 25)
+  Forward removed places: L_({}, 2)_REQ_reset, L_({}, 1)_REQ_process, L_({}, 1)_REQ_reset, L_({}, X := 1)_REQ_reset, L_({}, X := 0)_REQ_receive, RESP_reset_REQ_1, RESP_receive_REQ_0, RESP_reset_REQ_2, RESP_process_REQ_0, L_({}, 0)_REQ_process, L_({}, 0)_REQ_receive, L_({}, X := 1)_REQ_process, L_({}, 2)_REQ_receive, RESP_process_REQ_1, L_({}, X := 0)_REQ_process, L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, RESP_receive_REQ_2
+Iteration 1: Transitions 14 -> 14 (removed 0)
+  → SMPT result: UNREACHABLE
+Checking disjunct 6: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VRESP_receive_REQ_1 = 0 ∧ VRESP_receive_REQ_0 = 0 ∧ VRESP_process_REQ_2 -1 = 0 ∧ VRESP_process_REQ_1 = 0 ∧ VRESP_process_REQ_0 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0
+Iteration 0: Transitions 39 -> 9 (removed 30)
+  Forward removed places: L_({}, X := 0)_REQ_receive, RESP_process_REQ_0, L_({}, 2)_REQ_reset, L_({}, 1)_REQ_reset, L_({}, X := 1)_REQ_process, RESP_process_REQ_1, L_({}, 2)_REQ_receive, RESP_receive_REQ_2, L_({}, 0)_REQ_process, RESP_reset_REQ_1, L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, RESP_receive_REQ_0, L_({}, X := 0)_REQ_process, L_({}, 1)_REQ_process, L_({}, X := 1)_REQ_reset, RESP_reset_REQ_2, L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, L_({}, 0)_REQ_receive
+  Backward removed places: RESP_receive_REQ_1, L_({}, 1)_REQ_receive, L_({}, X := 1)_REQ_receive
+Iteration 1: Transitions 9 -> 3 (removed 6)
+  Forward removed places: RESP_process_REQ_2, G_{X=1}, G_{X=2}, L_({}, 2)_REQ_process
+  Backward removed places: L_({}, while(X == 0){ yield }; X := 2)_REQ_process
+Iteration 2: Transitions 3 -> 3 (removed 0)
+  → SMPT result: UNREACHABLE
+Checking disjunct 7: VRESP_reset_REQ_2 = 0 ∧ VRESP_reset_REQ_1 = 0 ∧ VRESP_receive_REQ_2 = 0 ∧ VRESP_receive_REQ_1 = 0 ∧ VRESP_receive_REQ_0 = 0 ∧ VRESP_process_REQ_1 = 0 ∧ VRESP_process_REQ_0 = 0 ∧ VL_({}, 2)_REQ_reset = 0 ∧ VL_({}, 1)_REQ_reset = 0 ∧ VL_({}, 0)_REQ_reset = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ VL_({}, X := 1)_REQ_reset = 0 ∧ VL_({}, X := 0)_REQ_reset = 0 ∧ VL_({}, 2)_REQ_receive = 0 ∧ VL_({}, 1)_REQ_receive = 0 ∧ VL_({}, 0)_REQ_receive = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ VL_({}, X := 1)_REQ_receive = 0 ∧ VL_({}, X := 0)_REQ_receive = 0 ∧ VL_({}, 2)_REQ_process = 0 ∧ VL_({}, 1)_REQ_process = 0 ∧ VL_({}, 0)_REQ_process = 0 ∧ VL_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ VL_({}, X := 1)_REQ_process = 0 ∧ VL_({}, X := 0)_REQ_process = 0 ∧ VG_{X=1} ≥ 0 ∧ VG_{} ≥ 0 ∧ VG_{X=2} ≥ 0 ∧ VRESP_process_REQ_2 -2 ≥ 0 ∧ VRESP_reset_REQ_0 ≥ 0
+Iteration 0: Transitions 39 -> 9 (removed 30)
+  Forward removed places: RESP_reset_REQ_1, L_({}, 0)_REQ_receive, L_({}, while(X == 0){ yield }; X := 2)_REQ_reset, RESP_receive_REQ_0, L_({}, X := 0)_REQ_process, RESP_receive_REQ_2, L_({}, X := 0)_REQ_receive, L_({}, X := 1)_REQ_process, L_({}, X := 1)_REQ_reset, L_({}, 2)_REQ_receive, RESP_process_REQ_0, L_({}, 1)_REQ_process, L_({}, 2)_REQ_reset, L_({}, 0)_REQ_process, RESP_reset_REQ_2, L_({}, while(X == 0){ yield }; X := 2)_REQ_receive, RESP_process_REQ_1, L_({}, 1)_REQ_reset
+  Backward removed places: L_({}, 1)_REQ_receive, L_({}, X := 1)_REQ_receive, RESP_receive_REQ_1
+Iteration 1: Transitions 9 -> 3 (removed 6)
+  Forward removed places: G_{X=2}, RESP_process_REQ_2, L_({}, 2)_REQ_process, G_{X=1}
+  Backward removed places: L_({}, while(X == 0){ yield }; X := 2)_REQ_process
+Iteration 2: Transitions 3 -> 3 (removed 0)
+  → SMPT result: UNREACHABLE
+No disjuncts are reachable - constraint set is unsatisfiable
+Serializability check results:
+  Original method: Serializable
+  Proof-based method: Proof (Serializable)
+
+[1m[36m================================================================================[0m
+[1m[36mPROOF/COUNTEREXAMPLE DETAILS:[0m
+[1m[36m================================================================================[0m
+[1m[32m✅ PROOF CERTIFICATE FOUND[0m
+
+NS-Level Invariants per Global State:
+=====================================
+
+Global State: {X=2}
+-------------
+Variables:
+  [0] receive/0
+  [1] reset({}, while(X == 0){ yield }; X := 2)
+  [2] receive({}, while(X == 0){ yield }; X := 2)
+  [3] process/2
+  [4] receive({}, 1)
+  [5] reset/1
+  [6] receive/2
+  [7] receive({}, 2)
+  [8] reset/2
+  [9] receive({}, X := 1)
+  [10] process({}, X := 1)
+  [11] reset({}, X := 1)
+  [12] reset({}, 2)
+  [13] reset({}, 1)
+  [14] process/0
+  [15] reset({}, 0)
+  [16] receive({}, 0)
+  [17] process({}, 2)
+  [18] reset/0
+  [19] process({}, 1)
+  [20] reset({}, X := 0)
+  [21] process({}, X := 0)
+  [22] receive({}, X := 0)
+  [23] receive/1
+  [24] process/1
+  [25] process({}, while(X == 0){ yield }; X := 2)
+  [26] process({}, 0)
+Formula: (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 + e4 -e5 -1 = 0 ∧ e4 + receive({}, X := 1) -e13 + e3 + e2 = 0 ∧ e1 + process({}, while(X == 0){ yield }; X := 2) + e0 -e12 = 0 ∧ e6 -e11 + e7 + reset({}, X := 0) + e5 = 0 ∧ -e6 -e7 -e5 + e10 + reset({}, 0) = 0 ∧ reset/0 -e10 = 0 ∧ -e2 -e4 + receive({}, 1) -e3 + e9 = 0 ∧ receive/1 -e9 = 0 ∧ process({}, 2) + e8 -e1 -e0 = 0 ∧ -e8 + process/2 = 0 ∧ e6 + e1 -e3 -e4 = 0 ∧ -e1 + e3 + e5 + 1 = 0) ∧ receive({}, X := 0) = 0 ∧ reset/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 0) = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ receive({}, 2) = 0 ∧ process({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process/1 = 0 ∧ process({}, 0) = 0 ∧ reset({}, X := 1) = 0 ∧ process/0 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ reset({}, 2) = 0 ∧ process({}, X := 0) = 0 ∧ process({}, 1) = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 + e4 -e5 -1 = 0 ∧ e3 -e13 + e4 + e2 + receive({}, X := 1) = 0 ∧ process({}, while(X == 0){ yield }; X := 2) + e1 + e0 -e12 = 0 ∧ e6 + reset({}, X := 0) -e11 + e5 + e7 = 0 ∧ -e6 + reset({}, 0) + e10 -e5 -e7 = 0 ∧ reset/0 -e10 = 0 ∧ -e4 -e2 + receive({}, 1) -e3 + e9 = 0 ∧ receive/1 -e9 = 0 ∧ process({}, 2) -e1 -e0 + e8 = 0 ∧ -e8 + process/2 = 0 ∧ -e4 + e6 + e1 -e3 = 0 ∧ e5 + e3 -e1 + 1 = 0) ∧ receive/0 = 0 ∧ process/1 = 0 ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ receive({}, X := 0) = 0 ∧ reset({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process({}, 0) = 0 ∧ reset/1 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 2) = 0 ∧ process({}, 1) = 0 ∧ reset({}, 2) = 0 ∧ process({}, X := 0) = 0 ∧ receive({}, 0) = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ process({}, X := 1) = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 -e5 + e4 -1 = 0 ∧ e3 + receive({}, X := 1) + e2 + e4 -e13 = 0 ∧ e0 + e1 + process({}, while(X == 0){ yield }; X := 2) -e12 = 0 ∧ reset({}, X := 0) + e7 -e11 + e6 + e5 = 0 ∧ -e7 -e6 + e10 + reset({}, 0) -e5 = 0 ∧ reset/0 -e10 = 0 ∧ e9 -e3 -e2 + receive({}, 1) -e4 = 0 ∧ receive/1 -e9 = 0 ∧ e8 -e1 + process({}, 2) -e0 = 0 ∧ process/2 -e8 = 0 ∧ -e4 -e3 + e6 + e1 = 0 ∧ e3 + e5 -e1 + 1 = 0) ∧ receive({}, 0) = 0 ∧ process({}, X := 0) = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ process/0 = 0 ∧ receive({}, 2) = 0 ∧ reset/1 = 0 ∧ reset({}, 2) = 0 ∧ receive/0 = 0 ∧ reset({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process({}, 0) = 0 ∧ reset/2 = 0 ∧ receive({}, X := 0) = 0 ∧ process({}, X := 1) = 0 ∧ process/1 = 0 ∧ process({}, 1) = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + e4 -1 = 0 ∧ receive({}, X := 1) -e13 + e2 + e3 + e4 = 0 ∧ e0 + process({}, while(X == 0){ yield }; X := 2) + e1 -e12 = 0 ∧ e7 + e5 -e11 + reset({}, X := 0) + e6 = 0 ∧ -e6 -e7 + e10 + reset({}, 0) -e5 = 0 ∧ reset/0 -e10 = 0 ∧ -e4 + receive({}, 1) -e2 -e3 + e9 = 0 ∧ -e9 + receive/1 = 0 ∧ process({}, 2) -e1 -e0 + e8 = 0 ∧ process/2 -e8 = 0 ∧ -e3 + e6 + e1 -e4 = 0 ∧ e3 + e5 -e1 + 1 = 0) ∧ reset({}, 2) = 0 ∧ process({}, 1) = 0 ∧ reset({}, 1) = 0 ∧ reset({}, X := 1) = 0 ∧ receive({}, X := 0) = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/0 = 0 ∧ process({}, 0) = 0 ∧ receive({}, 0) = 0 ∧ process({}, X := 1) = 0 ∧ receive({}, 2) = 0 ∧ process/1 = 0 ∧ process({}, X := 0) = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/2 = 0 ∧ (receive/1 -1 ≥ 0 ∨ receive({}, 1) -1 ≥ 0 ∨ receive({}, X := 1) -1 ≥ 0) ∧ receive({}, X := 0) = 0 ∧ process/0 = 0 ∧ reset({}, 2) = 0 ∧ reset({}, 1) = 0 ∧ process({}, X := 1) = 0 ∧ process/1 = 0 ∧ receive({}, 2) = 0 ∧ receive/2 = 0 ∧ process({}, 0) = 0 ∧ reset/1 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/0 = 0 ∧ process({}, X := 0) = 0 ∧ process({}, 1) = 0 ∧ reset({}, X := 1) = 0 ∧ reset/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 0) = 0)
+
+Projected (Completed Requests Only):
+Variables:
+  [0] receive/0
+  [1] process/2
+  [2] reset/1
+  [3] receive/2
+  [4] reset/2
+  [5] process/0
+  [6] reset/0
+  [7] receive/1
+  [8] process/1
+Formula: (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + e4 -1 = 0 ∧ -e13 + e3 + e2 + e4 = 0 ∧ e1 + e0 -e12 = 0 ∧ e5 -e11 + e7 + e6 = 0 ∧ -e7 + e10 -e6 -e5 = 0 ∧ reset/0 -e10 = 0 ∧ -e2 -e4 + e9 -e3 = 0 ∧ receive/1 -e9 = 0 ∧ -e1 -e0 + e8 = 0 ∧ process/2 -e8 = 0 ∧ -e3 + e6 -e4 + e1 = 0 ∧ -e1 + e3 + e5 + 1 = 0) ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ process/1 = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (e4 -e5 -e6 -1 = 0 ∧ e3 + e2 -e13 + e4 = 0 ∧ e1 + e0 -e12 = 0 ∧ e6 + e5 -e11 + e7 = 0 ∧ -e5 -e7 + e10 -e6 = 0 ∧ -e10 + reset/0 = 0 ∧ e9 -e2 -e4 -e3 = 0 ∧ -e9 + receive/1 = 0 ∧ -e0 -e1 + e8 = 0 ∧ -e8 + process/2 = 0 ∧ e6 -e4 + e1 -e3 = 0 ∧ e5 + e3 -e1 + 1 = 0) ∧ receive/0 = 0 ∧ process/1 = 0 ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 -e5 + e4 -1 = 0 ∧ e2 + e4 + e3 -e13 = 0 ∧ e0 + e1 -e12 = 0 ∧ e7 -e11 + e6 + e5 = 0 ∧ -e5 -e7 + e10 -e6 = 0 ∧ -e10 + reset/0 = 0 ∧ e9 -e3 -e2 -e4 = 0 ∧ receive/1 -e9 = 0 ∧ e8 -e1 -e0 = 0 ∧ -e8 + process/2 = 0 ∧ -e3 + e1 + e6 -e4 = 0 ∧ e5 + e3 -e1 + 1 = 0) ∧ receive/2 = 0 ∧ process/0 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/1 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 + e4 -e5 -1 = 0 ∧ -e13 + e2 + e3 + e4 = 0 ∧ -e12 + e1 + e0 = 0 ∧ e6 + e5 + e7 -e11 = 0 ∧ -e6 + e10 -e5 -e7 = 0 ∧ -e10 + reset/0 = 0 ∧ e9 -e2 -e4 -e3 = 0 ∧ -e9 + receive/1 = 0 ∧ -e1 -e0 + e8 = 0 ∧ process/2 -e8 = 0 ∧ -e4 + e6 -e3 + e1 = 0 ∧ e3 -e1 + e5 + 1 = 0) ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/0 = 0 ∧ process/1 = 0 ∧ receive/2 = 0 ∧ (receive/1 -1 ≥ 0) ∧ process/0 = 0 ∧ process/1 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0)
+
+Global State: {}
+-------------
+Variables:
+  [0] receive/0
+  [1] reset({}, while(X == 0){ yield }; X := 2)
+  [2] receive({}, while(X == 0){ yield }; X := 2)
+  [3] process/2
+  [4] receive({}, 1)
+  [5] reset/1
+  [6] receive/2
+  [7] receive({}, 2)
+  [8] reset/2
+  [9] receive({}, X := 1)
+  [10] process({}, X := 1)
+  [11] reset({}, X := 1)
+  [12] reset({}, 2)
+  [13] reset({}, 1)
+  [14] process/0
+  [15] reset({}, 0)
+  [16] receive({}, 0)
+  [17] process({}, 2)
+  [18] reset/0
+  [19] process({}, 1)
+  [20] reset({}, X := 0)
+  [21] process({}, X := 0)
+  [22] receive({}, X := 0)
+  [23] receive/1
+  [24] process/1
+  [25] process({}, while(X == 0){ yield }; X := 2)
+  [26] process({}, 0)
+Formula: (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + e4 = 0 ∧ e2 -e13 + receive({}, X := 1) + e3 + e4 = 0 ∧ process({}, while(X == 0){ yield }; X := 2) -e12 + e1 + e0 = 0 ∧ e5 + e7 + reset({}, X := 0) + e6 -e11 = 0 ∧ -e7 -e5 -e6 + e10 + reset({}, 0) = 0 ∧ -e10 + reset/0 = 0 ∧ receive({}, 1) -e2 + e9 -e3 -e4 = 0 ∧ receive/1 -e9 = 0 ∧ process({}, 2) -e1 -e0 + e8 = 0 ∧ process/2 -e8 = 0 ∧ e6 -e4 + e1 -e3 = 0 ∧ e3 -e1 + e5 = 0) ∧ receive({}, X := 0) = 0 ∧ reset/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 0) = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ receive({}, 2) = 0 ∧ process({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process/1 = 0 ∧ process({}, 0) = 0 ∧ reset({}, X := 1) = 0 ∧ process/0 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ reset({}, 2) = 0 ∧ process({}, X := 0) = 0 ∧ process({}, 1) = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (e4 -e5 -e6 = 0 ∧ -e13 + e2 + e4 + e3 + receive({}, X := 1) = 0 ∧ -e12 + e0 + process({}, while(X == 0){ yield }; X := 2) + e1 = 0 ∧ reset({}, X := 0) + e7 + e5 -e11 + e6 = 0 ∧ -e7 + reset({}, 0) -e6 + e10 -e5 = 0 ∧ -e10 + reset/0 = 0 ∧ -e3 -e2 + receive({}, 1) + e9 -e4 = 0 ∧ receive/1 -e9 = 0 ∧ process({}, 2) -e0 -e1 + e8 = 0 ∧ -e8 + process/2 = 0 ∧ -e4 + e1 + e6 -e3 = 0 ∧ -e1 + e3 + e5 = 0) ∧ receive/0 = 0 ∧ process/1 = 0 ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ receive({}, X := 0) = 0 ∧ reset({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process({}, 0) = 0 ∧ reset/1 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 2) = 0 ∧ process({}, 1) = 0 ∧ reset({}, 2) = 0 ∧ process({}, X := 0) = 0 ∧ receive({}, 0) = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ process({}, X := 1) = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + e4 = 0 ∧ e4 + e3 -e13 + receive({}, X := 1) + e2 = 0 ∧ -e12 + e1 + process({}, while(X == 0){ yield }; X := 2) + e0 = 0 ∧ reset({}, X := 0) -e11 + e7 + e5 + e6 = 0 ∧ -e6 -e7 + reset({}, 0) -e5 + e10 = 0 ∧ reset/0 -e10 = 0 ∧ -e3 -e2 + e9 + receive({}, 1) -e4 = 0 ∧ -e9 + receive/1 = 0 ∧ e8 + process({}, 2) -e0 -e1 = 0 ∧ -e8 + process/2 = 0 ∧ -e4 -e3 + e6 + e1 = 0 ∧ -e1 + e3 + e5 = 0) ∧ receive({}, 0) = 0 ∧ process({}, X := 0) = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ process/0 = 0 ∧ receive({}, 2) = 0 ∧ reset/1 = 0 ∧ reset({}, 2) = 0 ∧ receive/0 = 0 ∧ reset({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process({}, 0) = 0 ∧ reset/2 = 0 ∧ receive({}, X := 0) = 0 ∧ process({}, X := 1) = 0 ∧ process/1 = 0 ∧ process({}, 1) = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + e4 = 0 ∧ e4 + e2 + receive({}, X := 1) -e13 + e3 = 0 ∧ e1 -e12 + e0 + process({}, while(X == 0){ yield }; X := 2) = 0 ∧ reset({}, X := 0) + e6 + e5 + e7 -e11 = 0 ∧ e10 -e7 -e5 + reset({}, 0) -e6 = 0 ∧ -e10 + reset/0 = 0 ∧ e9 + receive({}, 1) -e4 -e2 -e3 = 0 ∧ receive/1 -e9 = 0 ∧ process({}, 2) + e8 -e0 -e1 = 0 ∧ -e8 + process/2 = 0 ∧ e6 -e3 -e4 + e1 = 0 ∧ e5 + e3 -e1 = 0) ∧ reset({}, 2) = 0 ∧ process({}, 1) = 0 ∧ reset({}, 1) = 0 ∧ reset({}, X := 1) = 0 ∧ receive({}, X := 0) = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/0 = 0 ∧ process({}, 0) = 0 ∧ receive({}, 0) = 0 ∧ process({}, X := 1) = 0 ∧ receive({}, 2) = 0 ∧ process/1 = 0 ∧ process({}, X := 0) = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/2 = 0 ∧ (((∃e2. ∃e1. ∃e0. (e0 + reset({}, X := 0) -e2 = 0 ∧ reset({}, 0) + e1 -e0 = 0 ∧ -e1 + reset/0 = 0) ∨ process({}, while(X == 0){ yield }; X := 2) -1 ≥ 0) ∧ process/2 = 0 ∧ process({}, 2) = 0) ∨ receive/1 -1 ≥ 0 ∨ receive({}, 1) -1 ≥ 0 ∨ receive({}, X := 1) -1 ≥ 0) ∧ receive({}, X := 0) = 0 ∧ process/0 = 0 ∧ reset({}, 2) = 0 ∧ reset({}, 1) = 0 ∧ process({}, X := 1) = 0 ∧ process/1 = 0 ∧ receive({}, 2) = 0 ∧ receive/2 = 0 ∧ process({}, 0) = 0 ∧ reset/1 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/0 = 0 ∧ process({}, X := 0) = 0 ∧ process({}, 1) = 0 ∧ reset({}, X := 1) = 0 ∧ reset/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 0) = 0)
+
+Projected (Completed Requests Only):
+Variables:
+  [0] receive/0
+  [1] process/2
+  [2] reset/1
+  [3] receive/2
+  [4] reset/2
+  [5] process/0
+  [6] reset/0
+  [7] receive/1
+  [8] process/1
+Formula: (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (e4 -e5 -e6 = 0 ∧ -e13 + e2 + e3 + e4 = 0 ∧ -e12 + e1 + e0 = 0 ∧ e6 + e5 -e11 + e7 = 0 ∧ -e5 -e6 + e10 -e7 = 0 ∧ -e10 + reset/0 = 0 ∧ -e4 + e9 -e2 -e3 = 0 ∧ -e9 + receive/1 = 0 ∧ -e0 -e1 + e8 = 0 ∧ process/2 -e8 = 0 ∧ -e3 -e4 + e1 + e6 = 0 ∧ e3 + e5 -e1 = 0) ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ process/1 = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 + e4 -e5 = 0 ∧ e3 + e4 + e2 -e13 = 0 ∧ e1 -e12 + e0 = 0 ∧ e5 -e11 + e7 + e6 = 0 ∧ -e6 -e7 -e5 + e10 = 0 ∧ reset/0 -e10 = 0 ∧ -e3 + e9 -e2 -e4 = 0 ∧ -e9 + receive/1 = 0 ∧ -e0 -e1 + e8 = 0 ∧ -e8 + process/2 = 0 ∧ -e3 -e4 + e1 + e6 = 0 ∧ -e1 + e5 + e3 = 0) ∧ receive/0 = 0 ∧ process/1 = 0 ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 + e4 -e6 = 0 ∧ -e13 + e4 + e2 + e3 = 0 ∧ e0 + e1 -e12 = 0 ∧ e5 + e7 -e11 + e6 = 0 ∧ e10 -e7 -e6 -e5 = 0 ∧ reset/0 -e10 = 0 ∧ -e3 + e9 -e4 -e2 = 0 ∧ receive/1 -e9 = 0 ∧ e8 -e1 -e0 = 0 ∧ -e8 + process/2 = 0 ∧ -e3 + e6 -e4 + e1 = 0 ∧ e3 -e1 + e5 = 0) ∧ receive/2 = 0 ∧ process/0 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/1 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 -e5 + e4 = 0 ∧ e2 + e4 + e3 -e13 = 0 ∧ e0 + e1 -e12 = 0 ∧ e7 -e11 + e6 + e5 = 0 ∧ -e5 + e10 -e6 -e7 = 0 ∧ -e10 + reset/0 = 0 ∧ e9 -e2 -e4 -e3 = 0 ∧ receive/1 -e9 = 0 ∧ -e0 + e8 -e1 = 0 ∧ process/2 -e8 = 0 ∧ e1 -e3 + e6 -e4 = 0 ∧ e5 + e3 -e1 = 0) ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/0 = 0 ∧ process/1 = 0 ∧ receive/2 = 0 ∧ (((∃e2. ∃e1. ∃e0. (e0 -e2 = 0 ∧ e1 -e0 = 0 ∧ -e1 + reset/0 = 0)) ∧ process/2 = 0) ∨ receive/1 -1 ≥ 0) ∧ process/0 = 0 ∧ process/1 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0)
+
+Global State: {X=1}
+-------------
+Variables:
+  [0] receive/0
+  [1] reset({}, while(X == 0){ yield }; X := 2)
+  [2] receive({}, while(X == 0){ yield }; X := 2)
+  [3] process/2
+  [4] receive({}, 1)
+  [5] reset/1
+  [6] receive/2
+  [7] receive({}, 2)
+  [8] reset/2
+  [9] receive({}, X := 1)
+  [10] process({}, X := 1)
+  [11] reset({}, X := 1)
+  [12] reset({}, 2)
+  [13] reset({}, 1)
+  [14] process/0
+  [15] reset({}, 0)
+  [16] receive({}, 0)
+  [17] process({}, 2)
+  [18] reset/0
+  [19] process({}, 1)
+  [20] reset({}, X := 0)
+  [21] process({}, X := 0)
+  [22] receive({}, X := 0)
+  [23] receive/1
+  [24] process/1
+  [25] process({}, while(X == 0){ yield }; X := 2)
+  [26] process({}, 0)
+Formula: (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 + e4 -e5 -1 = 0 ∧ receive({}, X := 1) + e3 -e13 + e4 + e2 = 0 ∧ e0 + e1 -e12 + process({}, while(X == 0){ yield }; X := 2) = 0 ∧ e6 + e7 + e5 + reset({}, X := 0) -e11 = 0 ∧ e10 + reset({}, 0) -e7 -e5 -e6 = 0 ∧ -e10 + reset/0 = 0 ∧ -e2 + receive({}, 1) -e3 + e9 -e4 = 0 ∧ -e9 + receive/1 = 0 ∧ -e0 + e8 + process({}, 2) -e1 = 0 ∧ -e8 + process/2 = 0 ∧ e1 -e3 -e4 + e6 + 1 = 0 ∧ -e1 + e5 + e3 = 0) ∧ receive({}, X := 0) = 0 ∧ reset/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 0) = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ receive({}, 2) = 0 ∧ process({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process/1 = 0 ∧ process({}, 0) = 0 ∧ reset({}, X := 1) = 0 ∧ process/0 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ reset({}, 2) = 0 ∧ process({}, X := 0) = 0 ∧ process({}, 1) = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + e4 -1 = 0 ∧ -e13 + e3 + e2 + e4 + receive({}, X := 1) = 0 ∧ -e12 + e0 + process({}, while(X == 0){ yield }; X := 2) + e1 = 0 ∧ e7 -e11 + e6 + e5 + reset({}, X := 0) = 0 ∧ reset({}, 0) -e5 -e6 -e7 + e10 = 0 ∧ reset/0 -e10 = 0 ∧ receive({}, 1) -e4 + e9 -e3 -e2 = 0 ∧ receive/1 -e9 = 0 ∧ process({}, 2) -e0 + e8 -e1 = 0 ∧ process/2 -e8 = 0 ∧ e1 + e6 -e3 -e4 + 1 = 0 ∧ -e1 + e5 + e3 = 0) ∧ receive/0 = 0 ∧ process/1 = 0 ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ receive({}, X := 0) = 0 ∧ reset({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process({}, 0) = 0 ∧ reset/1 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 2) = 0 ∧ process({}, 1) = 0 ∧ reset({}, 2) = 0 ∧ process({}, X := 0) = 0 ∧ receive({}, 0) = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ process({}, X := 1) = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 -e5 + e4 -1 = 0 ∧ -e13 + e2 + e4 + receive({}, X := 1) + e3 = 0 ∧ e1 + e0 -e12 + process({}, while(X == 0){ yield }; X := 2) = 0 ∧ e5 + e6 + e7 -e11 + reset({}, X := 0) = 0 ∧ -e7 -e5 -e6 + reset({}, 0) + e10 = 0 ∧ reset/0 -e10 = 0 ∧ -e2 -e4 + receive({}, 1) + e9 -e3 = 0 ∧ -e9 + receive/1 = 0 ∧ e8 + process({}, 2) -e0 -e1 = 0 ∧ process/2 -e8 = 0 ∧ -e3 -e4 + e6 + e1 + 1 = 0 ∧ -e1 + e5 + e3 = 0) ∧ receive({}, 0) = 0 ∧ process({}, X := 0) = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ process/0 = 0 ∧ receive({}, 2) = 0 ∧ reset/1 = 0 ∧ reset({}, 2) = 0 ∧ receive/0 = 0 ∧ reset({}, X := 1) = 0 ∧ reset({}, 1) = 0 ∧ process({}, 0) = 0 ∧ reset/2 = 0 ∧ receive({}, X := 0) = 0 ∧ process({}, X := 1) = 0 ∧ process/1 = 0 ∧ process({}, 1) = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 + e4 -e6 -1 = 0 ∧ e2 + e4 + receive({}, X := 1) -e13 + e3 = 0 ∧ process({}, while(X == 0){ yield }; X := 2) + e0 -e12 + e1 = 0 ∧ e7 + e5 -e11 + reset({}, X := 0) + e6 = 0 ∧ -e7 + reset({}, 0) + e10 -e5 -e6 = 0 ∧ -e10 + reset/0 = 0 ∧ -e2 + receive({}, 1) -e3 + e9 -e4 = 0 ∧ -e9 + receive/1 = 0 ∧ -e1 + e8 + process({}, 2) -e0 = 0 ∧ -e8 + process/2 = 0 ∧ -e3 + e1 + e6 -e4 + 1 = 0 ∧ e5 -e1 + e3 = 0) ∧ reset({}, 2) = 0 ∧ process({}, 1) = 0 ∧ reset({}, 1) = 0 ∧ reset({}, X := 1) = 0 ∧ receive({}, X := 0) = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/0 = 0 ∧ process({}, 0) = 0 ∧ receive({}, 0) = 0 ∧ process({}, X := 1) = 0 ∧ receive({}, 2) = 0 ∧ process/1 = 0 ∧ process({}, X := 0) = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/2 = 0 ∧ (receive/1 -1 ≥ 0 ∨ receive({}, 1) -1 ≥ 0 ∨ receive({}, X := 1) -1 ≥ 0) ∧ receive({}, X := 0) = 0 ∧ process/0 = 0 ∧ reset({}, 2) = 0 ∧ reset({}, 1) = 0 ∧ process({}, X := 1) = 0 ∧ process/1 = 0 ∧ receive({}, 2) = 0 ∧ receive/2 = 0 ∧ process({}, 0) = 0 ∧ reset/1 = 0 ∧ receive({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive/0 = 0 ∧ process({}, X := 0) = 0 ∧ process({}, 1) = 0 ∧ reset({}, X := 1) = 0 ∧ reset/2 = 0 ∧ reset({}, while(X == 0){ yield }; X := 2) = 0 ∧ receive({}, 0) = 0)
+
+Projected (Completed Requests Only):
+Variables:
+  [0] receive/0
+  [1] process/2
+  [2] reset/1
+  [3] receive/2
+  [4] reset/2
+  [5] process/0
+  [6] reset/0
+  [7] receive/1
+  [8] process/1
+Formula: (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + e4 -1 = 0 ∧ e4 + e3 -e13 + e2 = 0 ∧ e0 + e1 -e12 = 0 ∧ e6 + e7 + e5 -e11 = 0 ∧ -e6 -e7 -e5 + e10 = 0 ∧ -e10 + reset/0 = 0 ∧ -e4 -e3 + e9 -e2 = 0 ∧ -e9 + receive/1 = 0 ∧ -e1 -e0 + e8 = 0 ∧ -e8 + process/2 = 0 ∧ -e3 -e4 + e6 + e1 + 1 = 0 ∧ e5 + e3 -e1 = 0) ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ process/1 = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 -e5 + e4 -1 = 0 ∧ e3 + e2 -e13 + e4 = 0 ∧ e0 -e12 + e1 = 0 ∧ e7 + e6 + e5 -e11 = 0 ∧ -e5 -e7 -e6 + e10 = 0 ∧ reset/0 -e10 = 0 ∧ -e4 -e2 -e3 + e9 = 0 ∧ -e9 + receive/1 = 0 ∧ -e0 -e1 + e8 = 0 ∧ process/2 -e8 = 0 ∧ e1 -e4 + e6 -e3 + 1 = 0 ∧ e5 -e1 + e3 = 0) ∧ receive/0 = 0 ∧ process/1 = 0 ∧ reset/2 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ process/0 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (e4 -e6 -e5 -1 = 0 ∧ e2 + e4 + e3 -e13 = 0 ∧ e1 + e0 -e12 = 0 ∧ e5 -e11 + e6 + e7 = 0 ∧ -e5 + e10 -e7 -e6 = 0 ∧ -e10 + reset/0 = 0 ∧ -e3 -e2 + e9 -e4 = 0 ∧ receive/1 -e9 = 0 ∧ -e1 -e0 + e8 = 0 ∧ process/2 -e8 = 0 ∧ -e4 + e1 + e6 -e3 + 1 = 0 ∧ -e1 + e5 + e3 = 0) ∧ receive/2 = 0 ∧ process/0 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/1 = 0 ∧ ∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 + e4 -e5 -1 = 0 ∧ -e13 + e3 + e4 + e2 = 0 ∧ -e12 + e0 + e1 = 0 ∧ -e11 + e5 + e7 + e6 = 0 ∧ -e6 + e10 -e7 -e5 = 0 ∧ -e10 + reset/0 = 0 ∧ -e3 -e2 -e4 + e9 = 0 ∧ -e9 + receive/1 = 0 ∧ e8 -e1 -e0 = 0 ∧ process/2 -e8 = 0 ∧ -e4 -e3 + e1 + e6 + 1 = 0 ∧ e5 -e1 + e3 = 0) ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0 ∧ process/0 = 0 ∧ process/1 = 0 ∧ receive/2 = 0 ∧ (receive/1 -1 ≥ 0) ∧ process/0 = 0 ∧ process/1 = 0 ∧ receive/2 = 0 ∧ reset/1 = 0 ∧ receive/0 = 0 ∧ reset/2 = 0)
+
+=====================================
+Proof Certificate Verification:
+=====================================
+Warning: Invariant for global state {X=2} has values outside serializable set
+❌ Proof certificate is INVALID
+  Error: Invariant for global state {X=2} does not imply serializability
+
+[33mOriginal Petri net proof:[0m
+[33m   Variables:[0m
+      [33m0: RESP_receive_REQ_0[0m
+      [33m1: L_({}, while(X == 0){ yield }; X := 2)_REQ_reset[0m
+      [33m2: L_({}, while(X == 0){ yield }; X := 2)_REQ_receive[0m
+      [33m3: RESP_process_REQ_2[0m
+      [33m4: L_({}, 1)_REQ_receive[0m
+      [33m5: RESP_reset_REQ_1[0m
+      [33m6: RESP_receive_REQ_2[0m
+      [33m7: L_({}, 2)_REQ_receive[0m
+      [33m8: RESP_reset_REQ_2[0m
+      [33m9: L_({}, X := 1)_REQ_receive[0m
+      [33m10: L_({}, X := 1)_REQ_process[0m
+      [33m11: L_({}, X := 1)_REQ_reset[0m
+      [33m12: L_({}, 2)_REQ_reset[0m
+      [33m13: L_({}, 1)_REQ_reset[0m
+      [33m14: RESP_process_REQ_0[0m
+      [33m15: L_({}, 0)_REQ_reset[0m
+      [33m16: G_{X=2}[0m
+      [33m17: L_({}, 0)_REQ_receive[0m
+      [33m18: G_{X=1}[0m
+      [33m19: L_({}, 2)_REQ_process[0m
+      [33m20: G_{}[0m
+      [33m21: RESP_reset_REQ_0[0m
+      [33m22: L_({}, 1)_REQ_process[0m
+      [33m23: L_({}, X := 0)_REQ_reset[0m
+      [33m24: L_({}, X := 0)_REQ_process[0m
+      [33m25: L_({}, X := 0)_REQ_receive[0m
+      [33m26: RESP_receive_REQ_1[0m
+      [33m27: RESP_process_REQ_1[0m
+      [33m28: L_({}, while(X == 0){ yield }; X := 2)_REQ_process[0m
+      [33m29: L_({}, 0)_REQ_process[0m
+[33m   Formula:[0m
+      ((∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + G_{} + e4 -1 = 0 ∧ e4 + e3 -e13 + e2 + L_({}, X := 1)_REQ_receive = 0 ∧ e0 -e12 + e1 + L_({}, while(X == 0){ yield }; X := 2)_REQ_process = 0 ∧ -e11 + L_({}, X := 0)_REQ_reset + e5 + e7 + e6 = 0 ∧ L_({}, 0)_REQ_reset -e6 -e5 -e7 + e10 = 0 ∧ -e10 + RESP_reset_REQ_0 = 0 ∧ -e4 + L_({}, 1)_REQ_receive -e3 + e9 -e2 = 0 ∧ RESP_receive_REQ_1 -e9 = 0 ∧ L_({}, 2)_REQ_process + e8 -e0 -e1 = 0 ∧ RESP_process_REQ_2 -e8 = 0 ∧ e1 -e3 + G_{X=1} -e4 + e6 = 0 ∧ -e1 + G_{X=2} + e3 + e5 = 0) ∧ L_({}, X := 0)_REQ_receive = 0 ∧ RESP_reset_REQ_2 = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ L_({}, 0)_REQ_receive = 0 ∧ RESP_receive_REQ_2 = 0 ∧ RESP_reset_REQ_1 = 0 ∧ RESP_receive_REQ_0 = 0 ∧ L_({}, 2)_REQ_receive = 0 ∧ L_({}, X := 1)_REQ_process = 0 ∧ L_({}, 1)_REQ_reset = 0 ∧ RESP_process_REQ_1 = 0 ∧ L_({}, 0)_REQ_process = 0 ∧ L_({}, X := 1)_REQ_reset = 0 ∧ RESP_process_REQ_0 = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ L_({}, 2)_REQ_reset = 0 ∧ L_({}, X := 0)_REQ_process = 0 ∧ L_({}, 1)_REQ_process = 0) ∧ (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e5 -e6 + e4 + G_{} -1 = 0 ∧ e4 -e13 + e2 + L_({}, X := 1)_REQ_receive + e3 = 0 ∧ -e12 + e1 + L_({}, while(X == 0){ yield }; X := 2)_REQ_process + e0 = 0 ∧ L_({}, X := 0)_REQ_reset + e6 -e11 + e7 + e5 = 0 ∧ -e6 -e7 + e10 -e5 + L_({}, 0)_REQ_reset = 0 ∧ RESP_reset_REQ_0 -e10 = 0 ∧ L_({}, 1)_REQ_receive -e2 -e3 -e4 + e9 = 0 ∧ RESP_receive_REQ_1 -e9 = 0 ∧ e8 -e1 -e0 + L_({}, 2)_REQ_process = 0 ∧ -e8 + RESP_process_REQ_2 = 0 ∧ G_{X=1} -e4 -e3 + e1 + e6 = 0 ∧ -e1 + e5 + e3 + G_{X=2} = 0) ∧ RESP_receive_REQ_0 = 0 ∧ RESP_process_REQ_1 = 0 ∧ RESP_reset_REQ_2 = 0 ∧ RESP_receive_REQ_2 = 0 ∧ L_({}, X := 0)_REQ_receive = 0 ∧ L_({}, X := 1)_REQ_reset = 0 ∧ L_({}, 1)_REQ_reset = 0 ∧ L_({}, 0)_REQ_process = 0 ∧ RESP_reset_REQ_1 = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ L_({}, 2)_REQ_receive = 0 ∧ L_({}, 1)_REQ_process = 0 ∧ L_({}, 2)_REQ_reset = 0 ∧ L_({}, X := 0)_REQ_process = 0 ∧ L_({}, 0)_REQ_receive = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ L_({}, X := 1)_REQ_process = 0 ∧ RESP_process_REQ_0 = 0) ∧ (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (G_{} -e5 + e4 -e6 -1 = 0 ∧ e4 + e2 + L_({}, X := 1)_REQ_receive + e3 -e13 = 0 ∧ e0 + e1 + L_({}, while(X == 0){ yield }; X := 2)_REQ_process -e12 = 0 ∧ e7 + e6 + L_({}, X := 0)_REQ_reset + e5 -e11 = 0 ∧ -e6 -e5 -e7 + e10 + L_({}, 0)_REQ_reset = 0 ∧ RESP_reset_REQ_0 -e10 = 0 ∧ -e2 -e4 -e3 + L_({}, 1)_REQ_receive + e9 = 0 ∧ -e9 + RESP_receive_REQ_1 = 0 ∧ e8 -e0 -e1 + L_({}, 2)_REQ_process = 0 ∧ RESP_process_REQ_2 -e8 = 0 ∧ -e4 + G_{X=1} + e6 -e3 + e1 = 0 ∧ e5 + G_{X=2} -e1 + e3 = 0) ∧ L_({}, 0)_REQ_receive = 0 ∧ L_({}, X := 0)_REQ_process = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ RESP_receive_REQ_2 = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ RESP_process_REQ_0 = 0 ∧ L_({}, 2)_REQ_receive = 0 ∧ RESP_reset_REQ_1 = 0 ∧ L_({}, 2)_REQ_reset = 0 ∧ RESP_receive_REQ_0 = 0 ∧ L_({}, X := 1)_REQ_reset = 0 ∧ L_({}, 1)_REQ_reset = 0 ∧ L_({}, 0)_REQ_process = 0 ∧ RESP_reset_REQ_2 = 0 ∧ L_({}, X := 0)_REQ_receive = 0 ∧ L_({}, X := 1)_REQ_process = 0 ∧ RESP_process_REQ_1 = 0 ∧ L_({}, 1)_REQ_process = 0) ∧ (∃e13. ∃e12. ∃e11. ∃e10. ∃e9. ∃e8. ∃e7. ∃e6. ∃e5. ∃e4. ∃e3. ∃e2. ∃e1. ∃e0. (-e6 -e5 + e4 + G_{} -1 = 0 ∧ e2 + e3 + e4 + L_({}, X := 1)_REQ_receive -e13 = 0 ∧ e1 + L_({}, while(X == 0){ yield }; X := 2)_REQ_process -e12 + e0 = 0 ∧ L_({}, X := 0)_REQ_reset + e6 + e5 + e7 -e11 = 0 ∧ -e7 -e6 + e10 -e5 + L_({}, 0)_REQ_reset = 0 ∧ RESP_reset_REQ_0 -e10 = 0 ∧ L_({}, 1)_REQ_receive -e4 -e2 + e9 -e3 = 0 ∧ RESP_receive_REQ_1 -e9 = 0 ∧ -e1 + e8 -e0 + L_({}, 2)_REQ_process = 0 ∧ RESP_process_REQ_2 -e8 = 0 ∧ -e3 + e1 + G_{X=1} + e6 -e4 = 0 ∧ -e1 + e5 + G_{X=2} + e3 = 0) ∧ L_({}, 2)_REQ_reset = 0 ∧ L_({}, 1)_REQ_process = 0 ∧ L_({}, 1)_REQ_reset = 0 ∧ L_({}, X := 1)_REQ_reset = 0 ∧ L_({}, X := 0)_REQ_receive = 0 ∧ RESP_reset_REQ_1 = 0 ∧ RESP_receive_REQ_0 = 0 ∧ RESP_reset_REQ_2 = 0 ∧ RESP_process_REQ_0 = 0 ∧ L_({}, 0)_REQ_process = 0 ∧ L_({}, 0)_REQ_receive = 0 ∧ L_({}, X := 1)_REQ_process = 0 ∧ L_({}, 2)_REQ_receive = 0 ∧ RESP_process_REQ_1 = 0 ∧ L_({}, X := 0)_REQ_process = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ RESP_receive_REQ_2 = 0) ∧ ((((∃e2. ∃e1. ∃e0. (G_{} -1 = 0 ∧ e0 -e2 + L_({}, X := 0)_REQ_reset = 0 ∧ e1 -e0 + L_({}, 0)_REQ_reset = 0 ∧ -e1 + RESP_reset_REQ_0 = 0) ∨ (L_({}, while(X == 0){ yield }; X := 2)_REQ_process -1 ≥ 0)) ∧ RESP_process_REQ_2 = 0 ∧ G_{X=1} = 0 ∧ G_{X=2} = 0 ∧ L_({}, 2)_REQ_process = 0) ∨ (RESP_receive_REQ_1 -1 ≥ 0 ∨ L_({}, 1)_REQ_receive -1 ≥ 0 ∨ L_({}, X := 1)_REQ_receive -1 ≥ 0)) ∧ L_({}, X := 0)_REQ_receive = 0 ∧ RESP_process_REQ_0 = 0 ∧ L_({}, 2)_REQ_reset = 0 ∧ L_({}, 1)_REQ_reset = 0 ∧ L_({}, X := 1)_REQ_process = 0 ∧ RESP_process_REQ_1 = 0 ∧ L_({}, 2)_REQ_receive = 0 ∧ RESP_receive_REQ_2 = 0 ∧ L_({}, 0)_REQ_process = 0 ∧ RESP_reset_REQ_1 = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_receive = 0 ∧ RESP_receive_REQ_0 = 0 ∧ L_({}, X := 0)_REQ_process = 0 ∧ L_({}, 1)_REQ_process = 0 ∧ L_({}, X := 1)_REQ_reset = 0 ∧ RESP_reset_REQ_2 = 0 ∧ L_({}, while(X == 0){ yield }; X := 2)_REQ_reset = 0 ∧ L_({}, 0)_REQ_receive = 0))
+[1m[36m================================================================================[0m
+
+✓ Both methods agree on the result
+Debug report generated: out/less_simple_ser/debug_report.html
+
+════════════════════════════════════════════════════════════
+✅ RESULT: SERIALIZABLE
+════════════════════════════════════════════════════════════
