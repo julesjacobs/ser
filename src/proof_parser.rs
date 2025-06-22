@@ -2,7 +2,7 @@ use crate::kleene::Kleene; // <-- bring in zero()
 use crate::presburger::{Constraint as PConstraint, PresburgerSet, QuantifiedSet, Variable};
 use either::Either;
 use std::collections::HashMap;
-use std::fmt;
+use std::fmt::{self, Display};
 use std::fs;
 use std::hash::Hash;
 use std::path::Path;
@@ -474,6 +474,84 @@ impl<T: Eq + Hash> ProofInvariant<T> {
             variables: new_variables,
             formula: new_formula,
         }
+    }
+}
+
+impl<T: Clone + Eq + Hash + Display> ProofInvariant<Either<usize, T>> {
+    /// Add one token of the given variable to all multisets satisfying this invariant
+    /// Q(n_a, n_b, ...) = ∃e0. P(n_a, n_b, ...) ∧ n_a = e0 + 1
+    pub fn add_one(&self, var: &T) -> ProofInvariant<Either<usize, T>> {
+        // Create a fresh existential variable index
+        let fresh_idx = 0usize;
+        let fresh_var = Either::Left(fresh_idx);
+        
+        // Add the fresh variable to the variable list
+        let mut new_variables = vec![fresh_var.clone()];
+        new_variables.extend(self.variables.clone());
+        
+        // Create constraint: var = e0 + 1 (which is var - e0 - 1 = 0)
+        let var_expr = AffineExpr::from_var(Either::Right(var.clone()));
+        let fresh_expr = AffineExpr::from_var(fresh_var.clone());
+        let one = AffineExpr::from_const(1);
+        let constraint_expr = var_expr.sub(&fresh_expr).sub(&one);
+        let constraint = Constraint::new(constraint_expr, CompOp::Eq);
+        
+        // Combine original formula with the constraint
+        let combined_formula = Formula::And(vec![
+            self.formula.clone(),
+            Formula::Constraint(constraint),
+        ]);
+        
+        // Create the proof invariant with the existential variable, then quantify it
+        let proof_with_existential = ProofInvariant {
+            variables: new_variables,
+            formula: combined_formula,
+        };
+        
+        // Existentially quantify and project
+        crate::proofinvariant_to_presburger::existentially_quantify_keep_either(proof_with_existential, &[fresh_idx])
+    }
+    
+    /// Remove one token of the given variable from multisets that have at least one
+    /// Q(n_a, n_b, ...) = ∃e0. P(e0, n_b, ...) ∧ e0 = n_a + 1 ∧ e0 ≥ 1
+    pub fn filter_and_subtract_one(&self, var: &T) -> ProofInvariant<Either<usize, T>> {
+        // Create a fresh existential variable index
+        let fresh_idx = 0usize;
+        let fresh_var = Either::Left(fresh_idx);
+        
+        // Add the fresh variable to the variable list
+        let mut new_variables = vec![fresh_var.clone()];
+        new_variables.extend(self.variables.clone());
+        
+        // Create constraint: e0 = var + 1 (which is e0 - var - 1 = 0)
+        let fresh_expr = AffineExpr::from_var(fresh_var.clone());
+        let var_expr = AffineExpr::from_var(Either::Right(var.clone()));
+        let one = AffineExpr::from_const(1);
+        let equality_expr = fresh_expr.sub(&var_expr).sub(&one);
+        let equality_constraint = Constraint::new(equality_expr, CompOp::Eq);
+        
+        // Create constraint: e0 >= 1 (which is e0 - 1 >= 0)
+        let geq_expr = AffineExpr::from_var(fresh_var.clone()).sub(&AffineExpr::from_const(1));
+        let geq_constraint = Constraint::new(geq_expr, CompOp::Geq);
+        
+        // Substitute var with e0 in the original formula
+        let substituted_formula = self.formula.substitute_var(&Either::Right(var.clone()), Variable::Var(fresh_var.clone()));
+        
+        // Combine all constraints
+        let combined_formula = Formula::And(vec![
+            substituted_formula,
+            Formula::Constraint(equality_constraint),
+            Formula::Constraint(geq_constraint),
+        ]);
+        
+        // Create the proof invariant with the existential variable
+        let proof_with_existential = ProofInvariant {
+            variables: new_variables,
+            formula: combined_formula,
+        };
+        
+        // Existentially quantify and return
+        crate::proofinvariant_to_presburger::existentially_quantify_keep_either(proof_with_existential, &[fresh_idx])
     }
 }
 

@@ -625,6 +625,10 @@ where
             "Expected serializable behavior as semilinear set",
             &ser,
         );
+        
+        // Also print to console for debugging
+        println!("\nSerialized automaton semilinear set:");
+        println!("{}", ser);
 
         // make csv in the <out/benchmark> directory
         debug_logger.log_semilinear_set_for_optimization_comparison(
@@ -729,12 +733,20 @@ where
                 if let crate::reachability_with_proofs::Decision::Proof { proof: Some(p) } = &result_with_proofs {
                     println!();
                     println!("{}Original Petri net proof:{}", YELLOW, RESET);
-                    println!("{}   Variables:{}", YELLOW, RESET);
-                    for (i, var) in p.variables.iter().enumerate() {
-                        println!("      {}{}: {}{}", YELLOW, i, format!("{}", var), RESET);
+                    println!("{}   Number of variables: {}{}", YELLOW, p.variables.len(), RESET);
+                    println!("{}   Proof invariant:{}", YELLOW, RESET);
+                    let vars_str = p.variables.iter()
+                        .map(|v| format!("{}", v))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    println!("      ({}) ↦ {}", vars_str, p.formula);
+                    
+                    // Also print all places in the Petri net for comparison
+                    println!("{}   All Petri net places:{}", YELLOW, RESET);
+                    let all_places = petri_for_trace.get_places();
+                    for place in &all_places {
+                        println!("      - {}", place);
                     }
-                    println!("{}   Formula:{}", YELLOW, RESET);
-                    println!("      {}", p.formula);
                 }
             }
             crate::ns_decision::NSDecision::NotSerializable { trace } => {

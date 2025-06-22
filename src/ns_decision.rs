@@ -4,7 +4,7 @@ use crate::proof_parser::{ProofInvariant, Formula};
 use crate::reachability_with_proofs::Decision;
 use crate::proofinvariant_to_presburger::formula_to_presburger;
 use either::Either;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Debug, Display};
 use std::hash::Hash;
 
@@ -253,23 +253,21 @@ where
             println!("\nGlobal State: {}", global_state);
             println!("-------------");
 
-            // Print full invariant variables
-            println!("Variables:");
-            for (i, pair) in invariant.variables.iter().enumerate() {
-                println!("  [{}] {}", i, pair);
-            }
-
-            // Print formula
-            println!("Formula: {}", invariant.formula);
+            // Print full invariant in mapping notation
+            let vars_str = invariant.variables.iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            println!("Invariant: ({}) ↦ {}", vars_str, invariant.formula);
 
             // Print projected invariant
             if let Some(projected) = self.project_to_completed(global_state) {
                 println!("\nProjected (Completed Requests Only):");
-                println!("Variables:");
-                for (i, pair) in projected.variables.iter().enumerate() {
-                    println!("  [{}] {}", i, pair);
-                }
-                println!("Formula: {}", projected.formula);
+                let proj_vars_str = projected.variables.iter()
+                    .map(|v| v.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                println!("({}) ↦ {}", proj_vars_str, projected.formula);
             }
         }
     }
@@ -292,8 +290,8 @@ where
             Ok(()) => {
                 println!("✅ Proof certificate is VALID");
                 println!("  ✓ Initial state satisfies the invariant");
+                println!("  ✓ Invariant is inductive (preserved by all transitions)");
                 println!("  ✓ Invariant implies serializability when no requests in flight");
-                // TODO: Add inductiveness check output when implemented
             }
             Err(err) => {
                 println!("❌ Proof certificate is INVALID");
@@ -315,7 +313,7 @@ where
         self.check_initial_state(ns)?;
         
         // Check 2: Invariant is inductive
-        // TODO: Implement inductiveness check
+        self.check_inductive(ns)?;
         
         // Check 3: Invariant implies target (serializability)
         self.check_implies_target(ns)?;
@@ -353,6 +351,144 @@ where
         } else {
             Err("Initial state (empty multiset) does not satisfy the invariant".to_string())
         }
+    }
+    
+    /// Check that the invariant is inductive (preserved by all transitions)
+    fn check_inductive(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
+    where
+        G: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        L: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        Req: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        Resp: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+    {
+        // Check 1: Internal transitions preserve the invariant
+        for (from_local, from_global, to_local, to_global) in &ns.transitions {
+            // Get invariants for source and target global states
+            let from_inv = self.global_invariants
+                .get(from_global)
+                .ok_or_else(|| format!("No invariant for global state: {}", from_global))?;
+            let to_inv = self.global_invariants
+                .get(to_global)
+                .ok_or_else(|| format!("No invariant for global state: {}", to_global))?;
+            
+            // For each possible request type that could be in this local state
+            for (req, _) in &ns.requests {
+                let from_var = RequestStatePair(req.clone(), RequestState::InFlight(from_local.clone()));
+                let to_var = RequestStatePair(req.clone(), RequestState::InFlight(to_local.clone()));
+                
+                // Convert to Either type for the operations
+                let from_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> = 
+                    from_inv.clone().map(|v| Either::Right(v.clone()));
+                
+                // Apply the transition: remove one from source, add one to target
+                let inv_after_remove = from_inv_either.filter_and_subtract_one(&from_var);
+                let inv_after_add = inv_after_remove.add_one(&to_var);
+                
+                // Project back to the original type
+                let inv_after_transition = inv_after_add.project_right();
+                
+                // Check if the result implies the target invariant
+                if !self.check_formula_implies(&inv_after_transition, to_inv)? {
+                    return Err(format!(
+                        "Invariant not inductive for transition ({}, {}) -> ({}, {}) with request {}",
+                        from_local, from_global, to_local, to_global, req
+                    ));
+                }
+            }
+        }
+        
+        // Check 2: Request creation preserves the invariant
+        for (req, initial_local) in &ns.requests {
+            let initial_inv = self.global_invariants
+                .get(&ns.initial_global)
+                .ok_or_else(|| format!("No invariant for initial global state: {}", ns.initial_global))?;
+            
+            let new_var = RequestStatePair(req.clone(), RequestState::InFlight(initial_local.clone()));
+            
+            // Convert to Either type for the operation
+            let initial_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> = 
+                initial_inv.clone().map(|v| Either::Right(v.clone()));
+            
+            let inv_after_add = initial_inv_either.add_one(&new_var);
+            let inv_after_creation = inv_after_add.project_right();
+            
+            // Check if creating a new request preserves the initial state invariant
+            if !self.check_formula_implies(&inv_after_creation, initial_inv)? {
+                return Err(format!(
+                    "Invariant not inductive for request creation: {} at local state {}",
+                    req, initial_local
+                ));
+            }
+        }
+        
+        // Check 3: Request completion preserves the invariant
+        for (final_local, resp) in &ns.responses {
+            // For each global state where this response could occur
+            for global_state in ns.get_global_states() {
+                let global_inv = self.global_invariants
+                    .get(global_state)
+                    .ok_or_else(|| format!("No invariant for global state: {}", global_state))?;
+                
+                // For each request type that could complete with this response
+                for (req, _) in &ns.requests {
+                    let inflight_var = RequestStatePair(req.clone(), RequestState::InFlight(final_local.clone()));
+                    let completed_var = RequestStatePair(req.clone(), RequestState::Completed(resp.clone()));
+                    
+                    // Convert to Either type for the operations
+                    let global_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> = 
+                        global_inv.clone().map(|v| Either::Right(v.clone()));
+                    
+                    // Apply completion: remove inflight, add completed
+                    let inv_after_remove = global_inv_either.filter_and_subtract_one(&inflight_var);
+                    let inv_after_add = inv_after_remove.add_one(&completed_var);
+                    let inv_after_completion = inv_after_add.project_right();
+                    
+                    // Check if completion preserves the same global state invariant
+                    if !self.check_formula_implies(&inv_after_completion, global_inv)? {
+                        return Err(format!(
+                            "Invariant not inductive for request completion: {} at {} -> {} in global state {}",
+                            req, final_local, resp, global_state
+                        ));
+                    }
+                }
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Check if one proof invariant implies another using Presburger arithmetic
+    fn check_formula_implies(&self, 
+        antecedent: &ProofInvariant<RequestStatePair<Req, L, Resp>>,
+        consequent: &ProofInvariant<RequestStatePair<Req, L, Resp>>
+    ) -> Result<bool, String>
+    where
+        G: Display,
+        L: Clone + Display + ToString,
+        Req: Clone + Display + ToString,
+        Resp: Clone + Display + ToString,
+    {
+        // Get all variables that might appear in either formula
+        let mut all_vars = HashSet::new();
+        all_vars.extend(antecedent.variables.iter().cloned());
+        all_vars.extend(consequent.variables.iter().cloned());
+        
+        // Convert to a consistent vector of string variables
+        let string_vars: Vec<String> = all_vars.iter()
+            .map(|v| v.to_string())
+            .collect();
+        
+        // Convert both invariants to use string representations
+        let antecedent_string = antecedent.clone().map(|v| v.to_string());
+        let consequent_string = consequent.clone().map(|v| v.to_string());
+        
+        // Convert to Presburger sets using the same variable mapping
+        let antecedent_set = formula_to_presburger(&antecedent_string.formula, &string_vars);
+        let consequent_set = formula_to_presburger(&consequent_string.formula, &string_vars);
+        
+        // Check if antecedent ⊆ consequent (i.e., antecedent \ consequent = ∅)
+        let difference = antecedent_set.difference(&consequent_set);
+        Ok(difference.is_empty())
     }
     
     /// Check that the invariant implies the target property (serializability)
@@ -461,7 +597,7 @@ where
 
     for global_state in global_states {
         // Create substitution mapping for this global state
-        let specialized_proof = petri_proof.substitute(|place| {
+        let mut specialized_proof = petri_proof.substitute(|place| {
             match place {
                 // LEFT side - Global, Local, Request places
                 Either::Left(req_petri_state) => match req_petri_state {
@@ -505,6 +641,42 @@ where
                 },
             }
         });
+
+        // Ensure all possible request state pairs are included in the variable list
+        // This fixes cases where trivial proofs (True formulas) have empty variable lists
+        let mut all_vars: HashSet<RequestStatePair<Req, L, Resp>> = HashSet::new();
+        
+        // Add all response variables (completed requests) that could appear
+        for req in ns.get_requests() {
+            for (local, resp) in &ns.responses {
+                all_vars.insert(RequestStatePair(req.clone(), RequestState::Completed(resp.clone())));
+            }
+        }
+        
+        // Add all in-flight variables that could appear
+        for req in ns.get_requests() {
+            for (req_local, local) in &ns.requests {
+                if req == req_local {
+                    all_vars.insert(RequestStatePair(req.clone(), RequestState::InFlight(local.clone())));
+                }
+            }
+            // Also add all local states that could be reached via transitions
+            for (from_local, _, to_local, _) in &ns.transitions {
+                all_vars.insert(RequestStatePair(req.clone(), RequestState::InFlight(from_local.clone())));
+                all_vars.insert(RequestStatePair(req.clone(), RequestState::InFlight(to_local.clone())));
+            }
+        }
+        
+        // Convert to sorted vector for consistent ordering
+        let mut additional_vars: Vec<_> = all_vars.into_iter().collect();
+        additional_vars.sort_by(|a, b| format!("{}", a).cmp(&format!("{}", b)));
+        
+        // Add any variables that aren't already in the proof
+        for var in additional_vars {
+            if !specialized_proof.variables.contains(&var) {
+                specialized_proof.variables.push(var);
+            }
+        }
 
         global_invariants.insert(global_state.clone(), specialized_proof);
     }
