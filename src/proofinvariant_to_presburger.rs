@@ -65,6 +65,14 @@ pub fn formula_to_presburger(
             let mut new_mapping = mapping.to_owned();
             new_mapping.push(name.clone());
 
+            // todo delete - start
+
+            // <-- debug prints! -->
+            println!("⮕ [debug] new_mapping = {:?}", new_mapping);
+            println!("⮕ [debug] new_form    = {:?}", new_form);
+
+            // todo delete - end
+
             // Recursive call + project out the existential variable
             formula_to_presburger(&new_form, &new_mapping).project_out(name)
         }
