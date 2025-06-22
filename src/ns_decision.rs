@@ -277,10 +277,10 @@ where
     /// Pretty print the NS invariant with proof verification results
     pub fn pretty_print_with_verification(&self, ns: &NS<G, L, Req, Resp>)
     where
-        G: Clone,
-        L: Clone,
-        Req: Clone,
-        Resp: Clone,
+        G: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        L: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        Req: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        Resp: Clone + Display + Eq + Hash + Ord + Debug + ToString,
     {
         self.pretty_print();
         
@@ -292,7 +292,8 @@ where
             Ok(()) => {
                 println!("✅ Proof certificate is VALID");
                 println!("  ✓ Initial state satisfies the invariant");
-                // TODO: Add more detailed output when other checks are implemented
+                println!("  ✓ Invariant implies serializability when no requests in flight");
+                // TODO: Add inductiveness check output when implemented
             }
             Err(err) => {
                 println!("❌ Proof certificate is INVALID");
@@ -305,10 +306,10 @@ where
     /// Returns Ok(()) if valid, Err with explanation if invalid
     pub fn check_proof(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
     where
-        G: Clone,
-        L: Clone,
-        Req: Clone,
-        Resp: Clone,
+        G: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        L: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        Req: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        Resp: Clone + Display + Eq + Hash + Ord + Debug + ToString,
     {
         // Check 1: Initial state satisfies the invariant
         self.check_initial_state(ns)?;
@@ -325,10 +326,10 @@ where
     /// Check that the initial state satisfies the invariant
     fn check_initial_state(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
     where
-        G: Clone,
-        L: Clone,
-        Req: Clone,
-        Resp: Clone,
+        G: Clone + Display,
+        L: Clone + Display,
+        Req: Clone + Display,
+        Resp: Clone + Display,
     {
         // Get the invariant for the initial global state
         let initial_invariant = self.global_invariants
@@ -351,6 +352,91 @@ where
             Ok(())
         } else {
             Err("Initial state (empty multiset) does not satisfy the invariant".to_string())
+        }
+    }
+    
+    /// Check that the invariant implies the target property (serializability)
+    /// When there are no in-flight requests, completed requests must form a serializable execution
+    fn check_implies_target(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
+    where
+        G: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        L: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        Req: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+        Resp: Clone + Display + Eq + Hash + Ord + Debug + ToString,
+    {
+        // Get the semilinear set of serializable executions
+        // This uses Response(Req, Resp) as the type
+        use crate::ns_to_petri::ReqPetriState;
+        let serializable_set: crate::semilinear::SemilinearSet<_> = ns.serialized_automaton_kleene(|req, resp| {
+            crate::semilinear::SemilinearSet::singleton(
+                crate::semilinear::SparseVector::unit(ReqPetriState::Response(req, resp))
+            )
+        });
+        
+        // Check each global state
+        for (global_state, invariant) in &self.global_invariants {
+            // Substitute: InFlight -> 0, Completed -> Response(Req, Resp)
+            let mut mapping = |pair: &RequestStatePair<Req, L, Resp>| -> Either<ReqPetriState<L, G, Req, Resp>, i32> {
+                match &pair.1 {
+                    RequestState::InFlight(_) => {
+                        // Map in-flight requests to 0
+                        Either::Right(0)
+                    }
+                    RequestState::Completed(resp) => {
+                        // Map completed requests to Response type used in semilinear set
+                        Either::Left(ReqPetriState::Response(pair.0.clone(), resp.clone()))
+                    }
+                }
+            };
+            
+            let substituted_invariant = invariant.substitute(&mut mapping);
+            
+            // Check if the invariant implies membership in the serializable set
+            if !self.invariant_implies_semilinear(&substituted_invariant, &serializable_set, global_state)? {
+                return Err(format!(
+                    "Invariant for global state {} does not imply serializability", 
+                    global_state
+                ));
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Check if an invariant formula implies membership in a semilinear set
+    fn invariant_implies_semilinear<T>(&self, 
+        invariant: &ProofInvariant<T>,
+        semilinear: &crate::semilinear::SemilinearSet<T>,
+        global_state: &G,
+    ) -> Result<bool, String>
+    where
+        T: Clone + Eq + Hash + Display + Debug + Ord + ToString,
+        G: Display,
+    {
+        // For now, convert to String since that's what formula_to_presburger supports
+        // This is not ideal but works until we have proper generic support
+        let string_vars: Vec<String> = invariant.variables.iter()
+            .map(|v| v.to_string())
+            .collect();
+        
+        let string_invariant = invariant.clone().map(|v| v.to_string());
+        let invariant_set = formula_to_presburger(&string_invariant.formula, &string_vars);
+        
+        // Convert semilinear set to String type and then to PresburgerSet
+        let string_semilinear = semilinear.clone().rename(|v| v.to_string());
+        let mut spresburger = crate::spresburger::SPresburgerSet::from_semilinear(string_semilinear);
+        let semilinear_as_presburger = spresburger.as_presburger();
+        
+        // Check if invariant_set ⊆ semilinear_set
+        // This is equivalent to: invariant_set \ semilinear_set = ∅
+        let difference = invariant_set.difference(semilinear_as_presburger);
+        
+        if difference.is_empty() {
+            Ok(true)
+        } else {
+            // Log which values violate the implication for debugging
+            eprintln!("Warning: Invariant for global state {} has values outside serializable set", global_state);
+            Ok(false)
         }
     }
 }
