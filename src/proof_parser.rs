@@ -531,8 +531,8 @@ impl<T: Clone + Eq + Hash + Display> ProofInvariant<Either<usize, T>> {
         let equality_constraint = Constraint::new(equality_expr, CompOp::Eq);
         
         // Create constraint: e0 >= 1 (which is e0 - 1 >= 0)
-        let geq_expr = AffineExpr::from_var(fresh_var.clone()).sub(&AffineExpr::from_const(1));
-        let geq_constraint = Constraint::new(geq_expr, CompOp::Geq);
+        // let geq_expr = AffineExpr::from_var(fresh_var.clone()).sub(&AffineExpr::from_const(1));
+        // let geq_constraint = Constraint::new(geq_expr, CompOp::Geq);
         
         // Substitute var with e0 in the original formula
         let substituted_formula = self.formula.substitute_var(&Either::Right(var.clone()), Variable::Var(fresh_var.clone()));
@@ -541,7 +541,7 @@ impl<T: Clone + Eq + Hash + Display> ProofInvariant<Either<usize, T>> {
         let combined_formula = Formula::And(vec![
             substituted_formula,
             Formula::Constraint(equality_constraint),
-            Formula::Constraint(geq_constraint),
+            // Formula::Constraint(geq_constraint),
         ]);
         
         // Create the proof invariant with the existential variable

@@ -98,7 +98,7 @@ where
             ReqPetriState::Local(req, l) => write!(f, "L_{}_REQ_{}", l, req),
             ReqPetriState::Global(g) => write!(f, "G_{}", g),
             ReqPetriState::Request(req) => write!(f, "REQ_{}", req),
-            ReqPetriState::Response(req, resp) => write!(f, "RESP_{}_REQ_{}", req, resp),
+            ReqPetriState::Response(req, resp) => write!(f, "RESP_{}_REQ_{}", resp, req),
         }
     }
 }
