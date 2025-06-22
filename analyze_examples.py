@@ -350,7 +350,81 @@ def main():
             
             f.write(f"| `{result['filename']}` | {opt_original} | {opt_proof} | {no_opt_original} | {no_opt_proof} | {result['opt_duration']} | {result['no_opt_duration']} | {trace_status} | {proof_status} |\n")
         
-        f.write("\n## Summary\n\n")
+        # Calculate summary statistics
+        serializable_count = sum(1 for r in results if "✅ Serializable" in r['status'])
+        not_serializable_count = sum(1 for r in results if "❌ Not serializable" in r['status'])
+        unknown_count = sum(1 for r in results if "❓ Unknown" in r['status'])
+        timeout_count = sum(1 for r in results if "⏱️" in r['status'] or "timed out" in r['status'].lower())
+        inconsistent_count = sum(1 for r in results if "⚠️ Inconsistent" in r['status'])
+        error_count = sum(1 for r in results if "⚠️" in r['status'] and "Inconsistent" not in r['status'] and "⏱️" not in r['status'])
+        
+        # Count trace validation results
+        trace_valid_count = sum(1 for r in results if r.get('opt_trace_valid') == True or r.get('no_opt_trace_valid') == True)
+        trace_invalid_count = sum(1 for r in results if r.get('opt_trace_valid') == False or r.get('no_opt_trace_valid') == False)
+        
+        # Count proof verification results
+        proof_valid_count = sum(1 for r in results if r.get('opt_proof_verification') == True or r.get('no_opt_proof_verification') == True)
+        proof_invalid_count = sum(1 for r in results if r.get('opt_proof_verification') == False or r.get('no_opt_proof_verification') == False)
+        
+        # Find examples with failed proofs
+        failed_proofs = []
+        for r in results:
+            if r.get('opt_proof_verification') == False or r.get('no_opt_proof_verification') == False:
+                failed_proofs.append(r['filename'])
+        
+        # Find examples with failed traces
+        failed_traces = []
+        for r in results:
+            if r.get('opt_trace_valid') == False or r.get('no_opt_trace_valid') == False:
+                failed_traces.append(r['filename'])
+        
+        # Find inconsistent examples
+        inconsistent_examples = []
+        for r in results:
+            if "⚠️ Inconsistent" in r['status']:
+                inconsistent_examples.append(r['filename'])
+        
+        f.write("\n## Analysis Summary\n\n")
+        f.write("### Overall Results\n\n")
+        f.write(f"- **Serializable**: {serializable_count}\n")
+        if serializable_count > 0:
+            f.write(f"  - Valid proofs: {proof_valid_count}\n")
+            f.write(f"  - Invalid proofs: {proof_invalid_count}\n")
+        f.write(f"- **Not serializable**: {not_serializable_count}\n")
+        if not_serializable_count > 0:
+            f.write(f"  - Valid traces: {trace_valid_count}\n")
+            f.write(f"  - Invalid traces: {trace_invalid_count}\n")
+        f.write(f"- **Unknown**: {unknown_count}\n")
+        f.write(f"- **SMPT Timeouts**: {timeout_count}\n")
+        f.write(f"- **Inconsistent**: {inconsistent_count}\n")
+        f.write(f"- **Errors**: {error_count}\n")
+        f.write(f"- **Total**: {total_files}\n\n")
+        
+        # Add details about failed proofs
+        if failed_proofs:
+            f.write("### ❌ Examples with Failed Proof Certificates\n\n")
+            f.write("The following examples have serializable results but their proof certificates failed verification:\n\n")
+            for example in failed_proofs:
+                f.write(f"- `{example}`\n")
+            f.write("\n")
+        
+        # Add details about failed traces
+        if failed_traces:
+            f.write("### ❌ Examples with Invalid Counterexample Traces\n\n")
+            f.write("The following examples have non-serializable results but their counterexample traces failed validation:\n\n")
+            for example in failed_traces:
+                f.write(f"- `{example}`\n")
+            f.write("\n")
+        
+        # Add details about inconsistent results
+        if inconsistent_examples:
+            f.write("### ⚠️ Examples with Inconsistent Results\n\n")
+            f.write("The following examples give different results between optimized and non-optimized runs:\n\n")
+            for example in inconsistent_examples:
+                f.write(f"- `{example}`\n")
+            f.write("\n")
+        
+        f.write("## Legend\n\n")
         f.write("- ✅ **Serializable**: Programs that maintain serializability properties\n")
         f.write("- ❌ **Not serializable**: Programs that violate serializability\n")
         f.write("- ❓ **Unknown**: Could not determine result\n")
