@@ -48,23 +48,46 @@ impl<Req: Display, Resp: Display> Display for CompletedRequestPair<Req, Resp> {
     }
 }
 
+/// NS-level step in a trace
+#[derive(Clone, Debug)]
+pub enum NSStep<G, L, Req, Resp> {
+    /// A new request is created
+    RequestStart {
+        request: Req,
+        initial_local: L,
+    },
+    /// An internal transition within an active request
+    InternalStep {
+        request: Req,
+        from_local: L,
+        from_global: G,
+        to_local: L,
+        to_global: G,
+    },
+    /// A request completes with a response
+    RequestComplete {
+        request: Req,
+        final_local: L,
+        response: Resp,
+    },
+}
+
 /// NS-level trace representing a counterexample execution
 #[derive(Clone, Debug)]
 pub struct NSTrace<G, L, Req, Resp> {
-    /// Sequence of transitions in the NS
-    /// Each step contains: (from_local, from_global, request, response, to_local, to_global)
-    pub steps: Vec<(L, G, Req, Resp, L, G)>,
+    /// Sequence of steps in the NS execution
+    pub steps: Vec<NSStep<G, L, Req, Resp>>,
 }
 
 impl<G, L, Req, Resp> NSTrace<G, L, Req, Resp>
 where
-    G: Display,
-    L: Display,
-    Req: Display,
-    Resp: Display,
+    G: Display + Clone + Eq + Hash,
+    L: Display + Clone + Eq + Hash,
+    Req: Display + Clone + Eq + Hash,
+    Resp: Display + Clone + Eq + Hash,
 {
     /// Pretty print the NS trace
-    pub fn pretty_print(&self) {
+    pub fn pretty_print(&self, ns: &NS<G, L, Req, Resp>) {
         println!("NS-Level Counterexample Trace:");
         println!("==============================");
         
@@ -73,13 +96,74 @@ where
             return;
         }
         
-        for (i, (from_local, from_global, req, resp, to_local, to_global)) in self.steps.iter().enumerate() {
+        for (i, step) in self.steps.iter().enumerate() {
             println!("\nStep {}:", i + 1);
-            println!("  Request: {}", req);
-            println!("  Response: {}", resp);
-            println!("  State transition:");
-            println!("    From: (local: {}, global: {})", from_local, from_global);
-            println!("    To:   (local: {}, global: {})", to_local, to_global);
+            match step {
+                NSStep::RequestStart { request, initial_local } => {
+                    println!("  📨 NEW REQUEST");
+                    println!("  Request: {}", request);
+                    println!("  Initial local state: {}", initial_local);
+                }
+                NSStep::InternalStep {
+                    request,
+                    from_local,
+                    from_global,
+                    to_local,
+                    to_global,
+                } => {
+                    println!("  🔄 INTERNAL TRANSITION");
+                    println!("  Request: {}", request);
+                    println!("  State transition:");
+                    println!("    From: (local: {}, global: {})", from_local, from_global);
+                    println!("    To:   (local: {}, global: {})", to_local, to_global);
+                }
+                NSStep::RequestComplete {
+                    request,
+                    final_local,
+                    response,
+                } => {
+                    println!("  ✅ REQUEST COMPLETE");
+                    println!("  Request: {}", request);
+                    println!("  Final local state: {}", final_local);
+                    println!("  Response: {}", response);
+                }
+            }
+        }
+        
+        // Run trace validation and display results
+        println!("\n==============================");
+        println!("Trace Validation:");
+        println!("==============================");
+        
+        match ns.check_trace(self) {
+            Ok(completed_pairs) => {
+                println!("✅ Trace is valid!");
+                
+                // Display completed request/response multiset
+                println!("\nCompleted Request/Response Pairs:");
+                if completed_pairs.is_empty() {
+                    println!("  (none)");
+                } else {
+                    // Count occurrences of each pair for multiset display
+                    let mut counts: std::collections::HashMap<(Req, Resp), usize> = std::collections::HashMap::new();
+                    for (req, resp) in completed_pairs {
+                        *counts.entry((req, resp)).or_insert(0) += 1;
+                    }
+                    
+                    // Display with multiplicity
+                    for ((req, resp), count) in counts {
+                        if count == 1 {
+                            println!("  {}/{}", req, resp);
+                        } else {
+                            println!("  ({}/{})^{}", req, resp, count);
+                        }
+                    }
+                }
+            }
+            Err(error) => {
+                println!("❌ Trace validation failed!");
+                println!("Error: {}", error);
+            }
         }
     }
 }
@@ -297,7 +381,7 @@ where
 
 /// Convert a Petri net trace to an NS-level trace
 fn convert_petri_trace_to_ns<G, L, Req, Resp>(
-    _petri_trace: Vec<(
+    petri_trace: Vec<(
         Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
         Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
     )>,
@@ -309,20 +393,96 @@ where
     Req: Clone + Eq + Hash + Debug + Display,
     Resp: Clone + Eq + Hash + Debug + Display,
 {
-    let steps = Vec::new();
+    let mut steps = Vec::new();
     
-    // The Petri net trace contains transitions. We need to reconstruct NS-level transitions
-    // from the Petri net places involved in each transition.
-    
-    // This is a simplified conversion - in practice, you might need more sophisticated
-    // logic to properly reconstruct the NS-level trace from Petri net transitions.
-    // For now, we'll return an empty trace as a placeholder.
-    
-    // TODO: Implement proper trace conversion logic
-    // This would involve:
-    // 1. Identifying which NS transition corresponds to each Petri net transition
-    // 2. Extracting the request, response, and state information
-    // 3. Building the sequence of NS-level steps
+    // Analyze each transition in the Petri trace
+    for (inputs, outputs) in petri_trace {
+        // Case 1: Request creation (empty inputs, creates Local state)
+        if inputs.is_empty() && outputs.len() == 1 {
+            if let Some(Either::Left(ReqPetriState::Local(req, local))) = outputs.first() {
+                steps.push(NSStep::RequestStart {
+                    request: req.clone(),
+                    initial_local: local.clone(),
+                });
+                continue;
+            }
+        }
+        
+        // Case 2: Internal transition (Local + Global inputs)
+        if inputs.len() == 2 && outputs.len() == 2 {
+            let mut from_local = None;
+            let mut from_global = None;
+            let mut request = None;
+            
+            // Extract input states
+            for input in &inputs {
+                match input {
+                    Either::Left(ReqPetriState::Local(req, local)) => {
+                        from_local = Some(local.clone());
+                        request = Some(req.clone());
+                    }
+                    Either::Left(ReqPetriState::Global(global)) => {
+                        from_global = Some(global.clone());
+                    }
+                    _ => {}
+                }
+            }
+            
+            let mut to_local = None;
+            let mut to_global = None;
+            
+            // Extract output states
+            for output in &outputs {
+                match output {
+                    Either::Left(ReqPetriState::Local(req, local)) => {
+                        to_local = Some(local.clone());
+                        // Verify same request
+                        if request.is_none() {
+                            request = Some(req.clone());
+                        }
+                    }
+                    Either::Left(ReqPetriState::Global(global)) => {
+                        to_global = Some(global.clone());
+                    }
+                    _ => {}
+                }
+            }
+            
+            // If we have all components, create internal step
+            if let (Some(req), Some(fl), Some(fg), Some(tl), Some(tg)) = 
+                (request, from_local, from_global, to_local, to_global) {
+                steps.push(NSStep::InternalStep {
+                    request: req,
+                    from_local: fl,
+                    from_global: fg,
+                    to_local: tl,
+                    to_global: tg,
+                });
+                continue;
+            }
+        }
+        
+        // Case 3: Response completion (single Local input, creates Response)
+        if inputs.len() == 1 && outputs.len() == 1 {
+            if let (
+                Some(Either::Left(ReqPetriState::Local(req_in, local))),
+                Some(Either::Right(ReqPetriState::Response(req_out, resp)))
+            ) = (inputs.first(), outputs.first()) {
+                // Verify same request
+                if req_in == req_out {
+                    steps.push(NSStep::RequestComplete {
+                        request: req_in.clone(),
+                        final_local: local.clone(),
+                        response: resp.clone(),
+                    });
+                    continue;
+                }
+            }
+        }
+        
+        // If we couldn't match any pattern, log a warning
+        eprintln!("Warning: Could not interpret Petri transition: {:?} -> {:?}", inputs, outputs);
+    }
     
     NSTrace { steps }
 }

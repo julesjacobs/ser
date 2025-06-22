@@ -448,6 +448,109 @@ where
             self.add_response(l.clone(), resp.clone());
         }
     }
+
+    /// Check if a trace can be executed by this NS
+    /// Returns Ok(multiset of (request, response) pairs) if valid and no requests in flight
+    /// Returns Err(message) if invalid or if requests remain in flight
+    pub fn check_trace(&self, trace: &crate::ns_decision::NSTrace<G, L, Req, Resp>) -> Result<Vec<(Req, Resp)>, String> {
+        use crate::ns_decision::NSStep;
+        
+        // Initialize simulation state
+        let mut global_state = self.initial_global.clone();
+        let mut in_flight: Vec<(Req, L)> = Vec::new(); // Multiset of active requests
+        let mut completed: Vec<(Req, Resp)> = Vec::new(); // Multiset of completed requests
+        
+        // Process each step in the trace
+        for (step_idx, step) in trace.steps.iter().enumerate() {
+            match step {
+                NSStep::RequestStart { request, initial_local } => {
+                    // Verify this request type exists with the given initial local state
+                    if !self.requests.contains(&(request.clone(), initial_local.clone())) {
+                        return Err(format!(
+                            "Step {}: Unknown request type or wrong initial state: ({}, {})",
+                            step_idx, request, initial_local
+                        ));
+                    }
+                    
+                    // Add to in-flight multiset
+                    in_flight.push((request.clone(), initial_local.clone()));
+                }
+                
+                NSStep::InternalStep { request, from_local, from_global, to_local, to_global } => {
+                    // Verify global state matches
+                    if &global_state != from_global {
+                        return Err(format!(
+                            "Step {}: Global state mismatch: expected {}, found {}",
+                            step_idx, from_global, global_state
+                        ));
+                    }
+                    
+                    // Verify transition exists
+                    let transition = (from_local.clone(), from_global.clone(), to_local.clone(), to_global.clone());
+                    if !self.transitions.contains(&transition) {
+                        return Err(format!(
+                            "Step {}: Transition not found in NS: ({}, {}, {}, {})",
+                            step_idx, from_local, from_global, to_local, to_global
+                        ));
+                    }
+                    
+                    // Find and remove the matching request from in-flight
+                    let request_entry = (request.clone(), from_local.clone());
+                    if let Some(pos) = in_flight.iter().position(|entry| entry == &request_entry) {
+                        in_flight.remove(pos);
+                    } else {
+                        return Err(format!(
+                            "Step {}: No active request found matching: ({}, {})",
+                            step_idx, request, from_local
+                        ));
+                    }
+                    
+                    // Add updated request back to in-flight
+                    in_flight.push((request.clone(), to_local.clone()));
+                    
+                    // Update global state
+                    global_state = to_global.clone();
+                }
+                
+                NSStep::RequestComplete { request, final_local, response } => {
+                    // Verify response exists
+                    if !self.responses.contains(&(final_local.clone(), response.clone())) {
+                        return Err(format!(
+                            "Step {}: Response not found in NS: ({}, {})",
+                            step_idx, final_local, response
+                        ));
+                    }
+                    
+                    // Find and remove the matching request from in-flight
+                    let request_entry = (request.clone(), final_local.clone());
+                    if let Some(pos) = in_flight.iter().position(|entry| entry == &request_entry) {
+                        in_flight.remove(pos);
+                    } else {
+                        return Err(format!(
+                            "Step {}: No active request found matching: ({}, {})",
+                            step_idx, request, final_local
+                        ));
+                    }
+                    
+                    // Add to completed multiset
+                    completed.push((request.clone(), response.clone()));
+                }
+            }
+        }
+        
+        // Check that no requests remain in flight
+        if !in_flight.is_empty() {
+            let in_flight_str: Vec<String> = in_flight.iter()
+                .map(|(req, local)| format!("({}, {})", req, local))
+                .collect();
+            return Err(format!(
+                "Requests still in flight at end of trace: [{}]",
+                in_flight_str.join(", ")
+            ));
+        }
+        
+        Ok(completed)
+    }
 }
 
 impl<G, L, Req, Resp> NS<G, L, Req, Resp>
@@ -611,25 +714,19 @@ where
         println!("{}{}PROOF/COUNTEREXAMPLE DETAILS:{}", BOLD, CYAN, RESET);
         println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
 
-        match &result_with_proofs {
-            crate::reachability_with_proofs::Decision::Proof { proof } => {
-                if let Some(p) = proof {
-                    println!("{}{}✅ PROOF CERTIFICATE FOUND{}", BOLD, GREEN, RESET);
+        // Convert Petri decision to NS decision
+        let ns_decision = crate::ns_decision::petri_decision_to_ns(result_with_proofs.clone(), self);
 
-                    // Translate to NS-level invariant
-                    println!();
-                    println!(
-                        "{}Translating proof to NS-level invariants...{}",
-                        YELLOW, RESET
-                    );
-                    let ns_invariant =
-                        crate::ns_decision::translate_petri_proof_to_ns(p.clone(), self);
+        match ns_decision {
+            crate::ns_decision::NSDecision::Serializable { invariant } => {
+                println!("{}{}✅ PROOF CERTIFICATE FOUND{}", BOLD, GREEN, RESET);
 
-                    // Pretty print NS-level invariants
-                    println!();
-                    ns_invariant.pretty_print();
+                // Pretty print NS-level invariants
+                println!();
+                invariant.pretty_print();
 
-                    // Also show original Petri net proof for debugging
+                // Also show original Petri net proof for debugging if available
+                if let crate::reachability_with_proofs::Decision::Proof { proof: Some(p) } = &result_with_proofs {
                     println!();
                     println!("{}Original Petri net proof:{}", YELLOW, RESET);
                     println!("{}   Variables:{}", YELLOW, RESET);
@@ -638,32 +735,20 @@ where
                     }
                     println!("{}   Formula:{}", YELLOW, RESET);
                     println!("      {}", p.formula);
-                } else {
-                    println!(
-                        "{}{}✅ PROOF: Program is serializable{} (no explicit certificate available)",
-                        BOLD, GREEN, RESET
-                    );
                 }
             }
-            crate::reachability_with_proofs::Decision::CounterExample { trace } => {
+            crate::ns_decision::NSDecision::NotSerializable { trace } => {
                 println!("{}{}❌ COUNTEREXAMPLE TRACE FOUND{}", BOLD, RED, RESET);
-                if trace.is_empty() {
-                    println!(
-                        "{}   (Empty trace - violation found at initial state){}",
-                        YELLOW, RESET
-                    );
-                } else {
-                    println!(
-                        "{}   Trace length: {} transitions{}",
-                        YELLOW,
-                        trace.len(),
-                        RESET
-                    );
-                    println!(
-                        "{}   This trace demonstrates a non-serializable execution{}",
-                        YELLOW, RESET
-                    );
-                    print_counterexample_trace(&petri_for_trace, trace);
+                println!();
+                
+                // Pretty print NS-level trace
+                trace.pretty_print(self);
+                
+                // Also show original Petri net trace for debugging
+                if let crate::reachability_with_proofs::Decision::CounterExample { trace: petri_trace } = &result_with_proofs {
+                    println!();
+                    println!("{}Original Petri net trace:{}", YELLOW, RESET);
+                    print_counterexample_trace(&petri_for_trace, petri_trace);
                 }
             }
         }
@@ -955,6 +1040,128 @@ mod tests {
         let ns2 = NS::<String, String, String, String>::from_json(&json).unwrap();
         assert_eq!(ns.requests.len(), ns2.requests.len());
         assert_eq!(ns.transitions.len(), ns2.transitions.len());
+    }
+
+    #[test]
+    fn test_check_trace() {
+        use crate::ns_decision::{NSTrace, NSStep};
+        
+        // Create a simple NS
+        let mut ns = NS::<String, String, String, String>::new("G0".to_string());
+        
+        // Add requests
+        ns.add_request("Req1".to_string(), "L0".to_string());
+        ns.add_request("Req2".to_string(), "L1".to_string());
+        
+        // Add transitions
+        ns.add_transition("L0".to_string(), "G0".to_string(), "L2".to_string(), "G1".to_string());
+        ns.add_transition("L1".to_string(), "G1".to_string(), "L3".to_string(), "G2".to_string());
+        
+        // Add responses
+        ns.add_response("L2".to_string(), "Resp1".to_string());
+        ns.add_response("L3".to_string(), "Resp2".to_string());
+        
+        // Test 1: Valid trace with two requests completing successfully
+        let trace1 = NSTrace {
+            steps: vec![
+                NSStep::RequestStart {
+                    request: "Req1".to_string(),
+                    initial_local: "L0".to_string(),
+                },
+                NSStep::InternalStep {
+                    request: "Req1".to_string(),
+                    from_local: "L0".to_string(),
+                    from_global: "G0".to_string(),
+                    to_local: "L2".to_string(),
+                    to_global: "G1".to_string(),
+                },
+                NSStep::RequestStart {
+                    request: "Req2".to_string(),
+                    initial_local: "L1".to_string(),
+                },
+                NSStep::RequestComplete {
+                    request: "Req1".to_string(),
+                    final_local: "L2".to_string(),
+                    response: "Resp1".to_string(),
+                },
+                NSStep::InternalStep {
+                    request: "Req2".to_string(),
+                    from_local: "L1".to_string(),
+                    from_global: "G1".to_string(),
+                    to_local: "L3".to_string(),
+                    to_global: "G2".to_string(),
+                },
+                NSStep::RequestComplete {
+                    request: "Req2".to_string(),
+                    final_local: "L3".to_string(),
+                    response: "Resp2".to_string(),
+                },
+            ],
+        };
+        
+        let result1 = ns.check_trace(&trace1);
+        assert!(result1.is_ok());
+        let completed = result1.unwrap();
+        assert_eq!(completed.len(), 2);
+        assert!(completed.contains(&("Req1".to_string(), "Resp1".to_string())));
+        assert!(completed.contains(&("Req2".to_string(), "Resp2".to_string())));
+        
+        // Test 2: Invalid trace - request still in flight
+        let trace2 = NSTrace {
+            steps: vec![
+                NSStep::RequestStart {
+                    request: "Req1".to_string(),
+                    initial_local: "L0".to_string(),
+                },
+                NSStep::InternalStep {
+                    request: "Req1".to_string(),
+                    from_local: "L0".to_string(),
+                    from_global: "G0".to_string(),
+                    to_local: "L2".to_string(),
+                    to_global: "G1".to_string(),
+                },
+                // Missing RequestComplete for Req1
+            ],
+        };
+        
+        let result2 = ns.check_trace(&trace2);
+        assert!(result2.is_err());
+        assert!(result2.unwrap_err().contains("Requests still in flight"));
+        
+        // Test 3: Invalid trace - wrong global state
+        let trace3 = NSTrace {
+            steps: vec![
+                NSStep::RequestStart {
+                    request: "Req1".to_string(),
+                    initial_local: "L0".to_string(),
+                },
+                NSStep::InternalStep {
+                    request: "Req1".to_string(),
+                    from_local: "L0".to_string(),
+                    from_global: "G1".to_string(), // Wrong! Should be G0
+                    to_local: "L2".to_string(),
+                    to_global: "G1".to_string(),
+                },
+            ],
+        };
+        
+        let result3 = ns.check_trace(&trace3);
+        assert!(result3.is_err());
+        assert!(result3.unwrap_err().contains("Global state mismatch"));
+        
+        // Test 4: Invalid trace - unknown request
+        let trace4 = NSTrace {
+            steps: vec![
+                NSStep::RequestStart {
+                    request: "UnknownReq".to_string(),
+                    initial_local: "L0".to_string(),
+                },
+            ],
+        };
+        
+        let result4 = ns.check_trace(&trace4);
+        assert!(result4.is_err());
+        assert!(result4.unwrap_err().contains("Unknown request type"));
     }
 
     #[test]
