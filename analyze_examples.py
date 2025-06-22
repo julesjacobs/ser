@@ -351,12 +351,12 @@ def main():
             f.write(f"| `{result['filename']}` | {opt_original} | {opt_proof} | {no_opt_original} | {no_opt_proof} | {result['opt_duration']} | {result['no_opt_duration']} | {trace_status} | {proof_status} |\n")
         
         # Calculate summary statistics
-        serializable_count = sum(1 for r in results if "✅ Serializable" in r['status'])
-        not_serializable_count = sum(1 for r in results if "❌ Not serializable" in r['status'])
-        unknown_count = sum(1 for r in results if "❓ Unknown" in r['status'])
-        timeout_count = sum(1 for r in results if "⏱️" in r['status'] or "timed out" in r['status'].lower())
-        inconsistent_count = sum(1 for r in results if "⚠️ Inconsistent" in r['status'])
-        error_count = sum(1 for r in results if "⚠️" in r['status'] and "Inconsistent" not in r['status'] and "⏱️" not in r['status'])
+        serializable_count = sum(1 for r in results if "Serializable" in r['status'] and "❌" not in r['status'])
+        not_serializable_count = sum(1 for r in results if "Not serializable" in r['status'])
+        timeout_count = sum(1 for r in results if "SMPT Timeout" in r['status'] or "Timeout" in r['status'])
+        inconsistent_count = sum(1 for r in results if "Inconsistent" in r['status'])
+        error_count = sum(1 for r in results if "Error" in r['status'] and "Timeout" not in r['status'] and "Inconsistent" not in r['status'])
+        unknown_count = sum(1 for r in results if "Unknown" in r['status'])
         
         # Count trace validation results
         trace_valid_count = sum(1 for r in results if r.get('opt_trace_valid') == True or r.get('no_opt_trace_valid') == True)
