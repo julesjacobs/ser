@@ -1843,8 +1843,20 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 
             // Parse the ISL set string
             let set = unsafe {
-                let cstr = CString::new(set_string).unwrap();
-                isl::isl_set_read_from_str(ctx, cstr.as_ptr())
+                let cstr = CString::new(set_string.clone()).unwrap();
+                let parsed_set = isl::isl_set_read_from_str(ctx, cstr.as_ptr());
+                
+                // Check if ISL returned NULL (syntax error)
+                if parsed_set.is_null() {
+                    panic!(
+                        "ISL syntax error while parsing set string. This likely indicates a bug in constraint generation.\n\
+                         Set string: {}\n\
+                         Mapping: {:?}",
+                        set_string, mapping
+                    );
+                }
+                
+                parsed_set
             };
 
             // Union with the result set
@@ -1905,23 +1917,15 @@ fn create_isl_set_string<T: ToString>(quantified_set: &QuantifiedSet<T>, mapping
     for constraint in &quantified_set.constraints {
         // Build the affine expression
         let mut expr = String::new();
+        expr.push_str("0");
 
         for (i, (coeff, var)) in constraint.linear_combination.iter().enumerate() {
-            if i > 0 {
-                if *coeff >= 0 {
-                    expr.push_str(" + ");
-                } else {
-                    expr.push_str(" - ");
-                }
-                expr.push_str(&format!("{}", coeff.abs()));
+            if *coeff >= 0 {
+                expr.push_str(" + ");
             } else {
-                // First term
-                if *coeff >= 0 {
-                    expr.push_str(&format!("{}", coeff));
-                } else {
-                    expr.push_str(&format!("-{}", coeff.abs()));
-                }
+                expr.push_str(" - ");
             }
+            expr.push_str(&format!("{}", coeff.abs()));
 
             match var {
                 Variable::Var(t) => {
@@ -1948,7 +1952,6 @@ fn create_isl_set_string<T: ToString>(quantified_set: &QuantifiedSet<T>, mapping
                 expr.push_str(&format!(" - {}", -constraint.constant_term));
             }
         }
-
         // Add the constraint type
         match constraint.constraint_type {
             ConstraintType::EqualToZero => constraint_strings.push(format!("{} = 0", expr)),
