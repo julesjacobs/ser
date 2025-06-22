@@ -706,6 +706,335 @@ mod tests {
             RequestStatePair("req1".to_string(), RequestState::InFlight("L1".to_string()))
         );
     }
+
+    #[test]
+    fn test_invariant_implies_semilinear_empty_invariant() {
+        use crate::semilinear::SemilinearSet;
+        use crate::kleene::Kleene;
+        
+        // Test case where invariant is empty (always true), should imply any semilinear set
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+
+        // Create an empty semilinear set using Kleene interface
+        let semilinear = <SemilinearSet<String> as Kleene>::zero();
+        
+        // Since we have no global states in the invariant, this should trivially succeed
+        let result = ns_invariant.invariant_implies_semilinear(
+            &ProofInvariant {
+                variables: vec![],
+                formula: Formula::Constraint(Constraint::new(
+                    AffineExpr::from_const(1), 
+                    CompOp::Eq
+                )),
+            },
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_invariant_implies_semilinear_singleton_match() {
+        use crate::semilinear::SemilinearSet;
+        
+        // Create an invariant that matches exactly one point
+        let var_name = "x".to_string();
+        let invariant = ProofInvariant {
+            variables: vec![var_name.clone()],
+            formula: Formula::Constraint(Constraint::new(
+                AffineExpr::from_var(var_name.clone()).sub(&AffineExpr::from_const(1)),
+                CompOp::Eq,
+            )), // x = 1
+        };
+        
+        // Create a semilinear set containing just the atom x
+        let semilinear = SemilinearSet::atom(var_name.clone());
+        
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+        
+        let result = ns_invariant.invariant_implies_semilinear(
+            &invariant,
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+        assert!(result.unwrap());
+    }
+
+    #[test]
+    fn test_invariant_implies_semilinear_singleton_no_match() {
+        use crate::semilinear::SemilinearSet;
+        
+        // Create an invariant for x = 2
+        let var_name = "x".to_string();
+        let invariant = ProofInvariant {
+            variables: vec![var_name.clone()],
+            formula: Formula::Constraint(Constraint::new(
+                AffineExpr::from_var(var_name.clone()).sub(&AffineExpr::from_const(2)),
+                CompOp::Eq,
+            )), // x = 2
+        };
+        
+        // Create a semilinear set containing just the atom x (which represents x=1)
+        let semilinear = SemilinearSet::atom(var_name.clone());
+        
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+        
+        let result = ns_invariant.invariant_implies_semilinear(
+            &invariant,
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+        assert!(!result.unwrap()); // Should NOT be implied
+    }
+
+    #[test]
+    fn test_invariant_implies_semilinear_star() {
+        use crate::semilinear::SemilinearSet;
+        use crate::kleene::Kleene;
+        
+        // Create an invariant for x >= 0 (any non-negative x)
+        let var_name = "x".to_string();
+        let invariant = ProofInvariant {
+            variables: vec![var_name.clone()],
+            formula: Formula::Constraint(Constraint::new(
+                AffineExpr::from_var(var_name.clone()),
+                CompOp::Geq,
+            )), // x >= 0
+        };
+        
+        // Create a semilinear set for x* (0 or more x's)
+        let x_atom = SemilinearSet::atom(var_name.clone());
+        let semilinear = x_atom.star();
+        
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+        
+        let result = ns_invariant.invariant_implies_semilinear(
+            &invariant,
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+        assert!(result.unwrap()); // x >= 0 is exactly what x* represents
+    }
+
+    #[test]
+    fn test_invariant_implies_semilinear_union() {
+        use crate::semilinear::SemilinearSet;
+        use crate::kleene::Kleene;
+        
+        // Create an invariant for x = 1 OR x = 2
+        let x_var = "x".to_string();
+        let invariant = ProofInvariant {
+            variables: vec![x_var.clone()],
+            formula: Formula::Or(vec![
+                Formula::Constraint(Constraint::new(
+                    AffineExpr::from_var(x_var.clone()).sub(&AffineExpr::from_const(1)),
+                    CompOp::Eq,
+                )), // x = 1
+                Formula::Constraint(Constraint::new(
+                    AffineExpr::from_var(x_var.clone()).sub(&AffineExpr::from_const(2)),
+                    CompOp::Eq,
+                )), // x = 2
+            ]),
+        };
+        
+        // Create a semilinear set for x* (which contains 0, 1, 2, 3, ...)
+        let x_atom = SemilinearSet::atom(x_var.clone());
+        let semilinear = x_atom.star();
+        
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+        
+        let result = ns_invariant.invariant_implies_semilinear(
+            &invariant,
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+        assert!(result.unwrap()); // {1, 2} ⊆ {0, 1, 2, 3, ...}
+    }
+
+    #[test]
+    fn test_invariant_implies_semilinear_concatenation() {
+        use crate::semilinear::SemilinearSet;
+        use crate::kleene::Kleene;
+        
+        // Create an invariant for x = 1 AND y = 1
+        let x_var = "x".to_string();
+        let y_var = "y".to_string();
+        let invariant = ProofInvariant {
+            variables: vec![x_var.clone(), y_var.clone()],
+            formula: Formula::And(vec![
+                Formula::Constraint(Constraint::new(
+                    AffineExpr::from_var(x_var.clone()).sub(&AffineExpr::from_const(1)),
+                    CompOp::Eq,
+                )), // x = 1
+                Formula::Constraint(Constraint::new(
+                    AffineExpr::from_var(y_var.clone()).sub(&AffineExpr::from_const(1)),
+                    CompOp::Eq,
+                )), // y = 1
+            ]),
+        };
+        
+        // Create a semilinear set for x·y (concatenation)
+        let x_atom = SemilinearSet::atom(x_var.clone());
+        let y_atom = SemilinearSet::atom(y_var.clone());
+        let semilinear = x_atom.times(y_atom);
+        
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+        
+        let result = ns_invariant.invariant_implies_semilinear(
+            &invariant,
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+        assert!(result.unwrap()); // x=1 AND y=1 is exactly what x·y represents
+    }
+
+    #[test]
+    fn test_invariant_implies_semilinear_complex() {
+        use crate::semilinear::SemilinearSet;
+        use crate::kleene::Kleene;
+        
+        // Create an invariant for x = 2
+        let x_var = "x".to_string();
+        let invariant = ProofInvariant {
+            variables: vec![x_var.clone()],
+            formula: Formula::Constraint(Constraint::new(
+                AffineExpr::from_var(x_var.clone()).sub(&AffineExpr::from_const(2)),
+                CompOp::Eq,
+            )), // x = 2
+        };
+        
+        // Create a semilinear set x·x (concatenation of x with itself)
+        let x_atom = SemilinearSet::atom(x_var.clone());
+        let semilinear = x_atom.clone().times(x_atom);
+        
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+        
+        let result = ns_invariant.invariant_implies_semilinear(
+            &invariant,
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+        // x = 2 is exactly what x·x represents (concatenation gives x=2)
+        assert!(result.unwrap());
+    }
+
+    #[test]
+    fn test_invariant_implies_semilinear_even_numbers() {
+        use crate::semilinear::SemilinearSet;
+        use crate::kleene::Kleene;
+        
+        // Create an invariant for even numbers: ∃n. a = 2n
+        let a_var = "a".to_string();
+        let n_var = "n".to_string();
+        
+        // First create the formula a = 2n (which is a - 2n = 0)
+        let a_expr = AffineExpr::from_var(a_var.clone());
+        let n_expr = AffineExpr::from_var(n_var.clone());
+        let two_n = n_expr.mul_by_const(2);
+        let formula_body = Formula::Constraint(Constraint::new(
+            a_expr.sub(&two_n),
+            CompOp::Eq,
+        ));
+        
+        // Now quantify over n to get ∃n. a = 2n
+        let existential_formula = formula_body.mk_exists(n_var.clone());
+        
+        let invariant = ProofInvariant {
+            variables: vec![a_var.clone()],
+            formula: existential_formula,
+        };
+        
+        // Create a semilinear set (aa)* which represents even multiples of a
+        let a_atom = SemilinearSet::atom(a_var.clone());
+        let aa = a_atom.clone().times(a_atom); // aa (represents a=2)
+        let semilinear = aa.star(); // (aa)* (represents a=0, a=2, a=4, a=6, ...)
+        
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+        
+        let result = ns_invariant.invariant_implies_semilinear(
+            &invariant,
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+        assert!(result.unwrap()); // ∃n. a = 2n is exactly what (aa)* represents
+    }
+    
+    #[test]
+    fn test_invariant_implies_semilinear_odd_not_in_even() {
+        use crate::semilinear::SemilinearSet;
+        use crate::kleene::Kleene;
+        
+        // Test that odd numbers are NOT in (aa)*
+        // Create an invariant for odd numbers: ∃n. a = 2n + 1
+        let a_var = "a".to_string();
+        let n_var = "n".to_string();
+        
+        // First create the formula a = 2n + 1 (which is a - 2n - 1 = 0)
+        let a_expr = AffineExpr::from_var(a_var.clone());
+        let n_expr = AffineExpr::from_var(n_var.clone());
+        let two_n_plus_one = n_expr.mul_by_const(2).add(&AffineExpr::from_const(1));
+        let formula_body = Formula::Constraint(Constraint::new(
+            a_expr.sub(&two_n_plus_one),
+            CompOp::Eq,
+        ));
+        
+        // Now quantify over n to get ∃n. a = 2n + 1
+        let existential_formula = formula_body.mk_exists(n_var.clone());
+        
+        let invariant = ProofInvariant {
+            variables: vec![a_var.clone()],
+            formula: existential_formula,
+        };
+        
+        // Create a semilinear set (aa)* which represents even multiples of a
+        let a_atom = SemilinearSet::atom(a_var.clone());
+        let aa = a_atom.clone().times(a_atom); // aa
+        let semilinear = aa.star(); // (aa)*
+        
+        let ns_invariant = NSInvariant::<String, String, String, String> {
+            global_invariants: HashMap::new(),
+        };
+        
+        let result = ns_invariant.invariant_implies_semilinear(
+            &invariant,
+            &semilinear,
+            &"G1".to_string(),
+        );
+        
+        assert!(result.is_ok());
+        assert!(!result.unwrap()); // ∃n. a = 2n + 1 (odd) is NOT in (aa)* (even)
+    }
 }
 
 /// Check if a formula with no free variables is satisfied

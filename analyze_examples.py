@@ -92,6 +92,7 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
     original_result = "Unknown"
     proof_result = "Unknown"
     trace_valid = None  # None for serializable, True/False for non-serializable
+    proof_verification = None  # None for non-serializable, True/False for serializable
     
     if result.returncode == 0:
         # Check original method results
@@ -103,6 +104,14 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
         # Check proof-based method results
         if "Proof-based method: Proof" in output:
             proof_result = "Serializable"
+            
+            # Check proof verification for serializable cases
+            if "Proof Certificate Verification:" in output:
+                if "✅ Proof certificate is VALID" in output:
+                    proof_verification = True
+                elif "❌ Proof certificate is INVALID" in output:
+                    proof_verification = False
+                    
         elif "Proof-based method: CounterExample" in output:
             proof_result = "Not serializable"
             
@@ -149,6 +158,7 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
         'original_result': original_result,
         'proof_result': proof_result,
         'trace_valid': trace_valid,
+        'proof_verification': proof_verification,
         'cpu_time': cpu_time,
         'returncode': result.returncode,
         'is_timeout': is_smpt_timeout
@@ -209,9 +219,11 @@ def analyze_file(file_path, timeout_arg, index):
             'opt_original_result': opt_result['original_result'],
             'opt_proof_result': opt_result['proof_result'],
             'opt_trace_valid': opt_result['trace_valid'],
+            'opt_proof_verification': opt_result['proof_verification'],
             'no_opt_original_result': no_opt_result['original_result'],
             'no_opt_proof_result': no_opt_result['proof_result'],
             'no_opt_trace_valid': no_opt_result['trace_valid'],
+            'no_opt_proof_verification': no_opt_result['proof_verification'],
             'index': index
         }
         
@@ -296,8 +308,8 @@ def main():
         f.write(f"- Timeout: {timeout_value}s\n" if timeout_value else "- Timeout: none\n")
         f.write(f"- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("## Results\n\n")
-        f.write("| Example | Opt Original | Opt Proof | No-Opt Original | No-Opt Proof | Opt CPU (s) | No-Opt CPU (s) | Trace Valid |\n")
-        f.write("|---------|--------------|-----------|-----------------|--------------|-------------|----------------|-------------|\n")
+        f.write("| Example | Opt Original | Opt Proof | No-Opt Original | No-Opt Proof | Opt CPU (s) | No-Opt CPU (s) | Trace Valid | Proof Valid |\n")
+        f.write("|---------|--------------|-----------|-----------------|--------------|-------------|----------------|-------------|-------------|\n")
         
         for result in results:
             # Get method results for all combinations
@@ -321,7 +333,22 @@ def main():
             else:
                 trace_status = "?"
             
-            f.write(f"| `{result['filename']}` | {opt_original} | {opt_proof} | {no_opt_original} | {no_opt_proof} | {result['opt_duration']} | {result['no_opt_duration']} | {trace_status} |\n")
+            # Format proof verification status
+            opt_proof_ver = result.get('opt_proof_verification', None)
+            no_opt_proof_ver = result.get('no_opt_proof_verification', None)
+            
+            if opt_proof_ver is None and no_opt_proof_ver is None:
+                proof_status = "N/A"  # Not serializable or error cases
+            elif opt_proof_ver == True and no_opt_proof_ver == True:
+                proof_status = "✅"
+            elif opt_proof_ver == False or no_opt_proof_ver == False:
+                proof_status = "❌"
+            elif opt_proof_ver != no_opt_proof_ver:
+                proof_status = "⚠️ Inconsistent"
+            else:
+                proof_status = "?"
+            
+            f.write(f"| `{result['filename']}` | {opt_original} | {opt_proof} | {no_opt_original} | {no_opt_proof} | {result['opt_duration']} | {result['no_opt_duration']} | {trace_status} | {proof_status} |\n")
         
         f.write("\n## Summary\n\n")
         f.write("- ✅ **Serializable**: Programs that maintain serializability properties\n")
@@ -334,6 +361,10 @@ def main():
         f.write("- ✅ **Valid trace**: The counterexample trace was successfully validated against the NS definition\n")
         f.write("- ❌ **Invalid trace**: The counterexample trace failed validation (indicates a bug)\n")
         f.write("- **N/A**: Not applicable (serializable programs don't have counterexample traces)\n\n")
+        f.write("**Proof Valid Column**:\n")
+        f.write("- ✅ **Valid proof**: The proof certificate was successfully verified (invariant holds)\n")
+        f.write("- ❌ **Invalid proof**: The proof certificate failed verification (indicates a bug)\n")
+        f.write("- **N/A**: Not applicable (non-serializable programs don't have proof certificates)\n\n")
         f.write("**Note**: Each example is analyzed twice - once with optimizations (default) and once with `--without-bidirectional` flag. The table shows results for all four combinations: Optimized Original/Proof methods and Non-optimized Original/Proof methods. CPU times compare performance impact of optimizations.\n\n")
         f.write("---\n\n")
         f.write("*Report generated automatically by analyze_examples.py*\n")
@@ -355,8 +386,15 @@ def main():
     trace_valid_count = sum(1 for r in results if r.get('opt_trace_valid') == True or r.get('no_opt_trace_valid') == True)
     trace_invalid_count = sum(1 for r in results if r.get('opt_trace_valid') == False or r.get('no_opt_trace_valid') == False)
     
+    # Count proof verification results
+    proof_valid_count = sum(1 for r in results if r.get('opt_proof_verification') == True or r.get('no_opt_proof_verification') == True)
+    proof_invalid_count = sum(1 for r in results if r.get('opt_proof_verification') == False or r.get('no_opt_proof_verification') == False)
+    
     print("📈 Summary:")
     print(f"   Serializable: {serializable_count}")
+    if serializable_count > 0:
+        print(f"     - Valid proofs: {proof_valid_count}")
+        print(f"     - Invalid proofs: {proof_invalid_count}")
     print(f"   Not serializable: {not_serializable_count}")
     if not_serializable_count > 0:
         print(f"     - Valid traces: {trace_valid_count}")
