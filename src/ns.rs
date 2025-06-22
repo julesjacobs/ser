@@ -721,9 +721,9 @@ where
             crate::ns_decision::NSDecision::Serializable { invariant } => {
                 println!("{}{}✅ PROOF CERTIFICATE FOUND{}", BOLD, GREEN, RESET);
 
-                // Pretty print NS-level invariants
+                // Pretty print NS-level invariants with verification
                 println!();
-                invariant.pretty_print();
+                invariant.pretty_print_with_verification(self);
 
                 // Also show original Petri net proof for debugging if available
                 if let crate::reachability_with_proofs::Decision::Proof { proof: Some(p) } = &result_with_proofs {

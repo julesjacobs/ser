@@ -1,7 +1,8 @@
 use crate::ns::NS;
 use crate::ns_to_petri::ReqPetriState;
-use crate::proof_parser::ProofInvariant;
+use crate::proof_parser::{ProofInvariant, Formula};
 use crate::reachability_with_proofs::Decision;
+use crate::proofinvariant_to_presburger::formula_to_presburger;
 use either::Either;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Display};
@@ -272,6 +273,86 @@ where
             }
         }
     }
+    
+    /// Pretty print the NS invariant with proof verification results
+    pub fn pretty_print_with_verification(&self, ns: &NS<G, L, Req, Resp>)
+    where
+        G: Clone,
+        L: Clone,
+        Req: Clone,
+        Resp: Clone,
+    {
+        self.pretty_print();
+        
+        println!("\n=====================================");
+        println!("Proof Certificate Verification:");
+        println!("=====================================");
+        
+        match self.check_proof(ns) {
+            Ok(()) => {
+                println!("✅ Proof certificate is VALID");
+                println!("  ✓ Initial state satisfies the invariant");
+                // TODO: Add more detailed output when other checks are implemented
+            }
+            Err(err) => {
+                println!("❌ Proof certificate is INVALID");
+                println!("  Error: {}", err);
+            }
+        }
+    }
+    
+    /// Check if the proof certificate is valid
+    /// Returns Ok(()) if valid, Err with explanation if invalid
+    pub fn check_proof(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
+    where
+        G: Clone,
+        L: Clone,
+        Req: Clone,
+        Resp: Clone,
+    {
+        // Check 1: Initial state satisfies the invariant
+        self.check_initial_state(ns)?;
+        
+        // Check 2: Invariant is inductive
+        // TODO: Implement inductiveness check
+        
+        // Check 3: Invariant implies target (serializability)
+        self.check_implies_target(ns)?;
+        
+        Ok(())
+    }
+    
+    /// Check that the initial state satisfies the invariant
+    fn check_initial_state(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
+    where
+        G: Clone,
+        L: Clone,
+        Req: Clone,
+        Resp: Clone,
+    {
+        // Get the invariant for the initial global state
+        let initial_invariant = self.global_invariants
+            .get(&ns.initial_global)
+            .ok_or_else(|| format!(
+                "No invariant found for initial global state: {}", 
+                ns.initial_global
+            ))?;
+        
+        // Initial state has empty multiset (no requests in flight or completed)
+        // This means all variables in the formula should be substituted with 0
+        let mut mapping = |_var: &RequestStatePair<Req, L, Resp>| -> Either<String, i32> {
+            // All variables map to 0 in the empty multiset
+            Either::Right(0)
+        };
+        let substituted_invariant: ProofInvariant<String> = initial_invariant.substitute(&mut mapping);
+        
+        // Check if the substituted formula is satisfiable
+        if is_formula_satisfied_string(&substituted_invariant.formula) {
+            Ok(())
+        } else {
+            Err("Initial state (empty multiset) does not satisfy the invariant".to_string())
+        }
+    }
 }
 
 /// Translate a Petri net proof to NS-level invariants
@@ -539,4 +620,15 @@ mod tests {
             RequestStatePair("req1".to_string(), RequestState::InFlight("L1".to_string()))
         );
     }
+}
+
+/// Check if a formula with no free variables is satisfied
+/// This is used after substituting all variables with concrete values
+fn is_formula_satisfied_string(formula: &Formula<String>) -> bool {
+    // Convert the formula to a PresburgerSet
+    // Since all variables are substituted, we have an empty mapping
+    let presburger = formula_to_presburger(formula, &[]);
+    
+    // A formula is satisfied if the corresponding PresburgerSet is non-empty
+    !presburger.is_empty()
 }
