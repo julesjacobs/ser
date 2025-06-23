@@ -500,7 +500,8 @@ where
         all_vars.extend(consequent.variables.iter().cloned());
 
         // Convert to a consistent vector of string variables
-        let string_vars: Vec<String> = all_vars.iter().map(|v| v.to_string()).collect();
+        let mut string_vars: Vec<String> = all_vars.iter().map(|v| v.to_string()).collect();
+        string_vars.sort();
 
         // Convert both invariants to use string representations
         let antecedent_string = antecedent.clone().map(|v| v.to_string());
