@@ -61,6 +61,36 @@ where
 
 impl<Place> Petri<Place>
 where
+    Place: Clone + PartialEq + Eq + Hash + Ord,
+{
+    /// Get all unique places in the Petri net, sorted for deterministic ordering
+    pub fn get_places_sorted(&self) -> Vec<Place> {
+        let mut places = HashSet::default();
+
+        // Collect places from initial marking
+        for place in &self.initial_marking {
+            places.insert(place.clone());
+        }
+
+        // Collect places from transitions
+        for (input, output) in &self.transitions {
+            for place in input {
+                places.insert(place.clone());
+            }
+            for place in output {
+                places.insert(place.clone());
+            }
+        }
+
+        // Sort places to ensure deterministic ordering
+        let mut places_vec: Vec<Place> = places.into_iter().collect();
+        places_vec.sort();
+        places_vec
+    }
+}
+
+impl<Place> Petri<Place>
+where
     Place: Clone + PartialEq + Eq + Hash + std::fmt::Display,
 {
     /// Generate Graphviz DOT format for visualizing the Petri net

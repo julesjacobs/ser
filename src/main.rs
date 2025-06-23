@@ -14,6 +14,8 @@ mod ns_to_petri;
 mod parser;
 mod petri;
 mod presburger;
+#[cfg(test)]
+mod presburger_harmonize_tests;
 mod proof_parser;
 mod proofinvariant_to_presburger;
 mod reachability;

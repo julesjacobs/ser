@@ -68,8 +68,8 @@ pub fn formula_to_presburger(
             // todo delete - start
 
             // <-- debug prints! -->
-            println!("⮕ [debug] new_mapping = {:?}", new_mapping);
-            println!("⮕ [debug] new_form    = {:?}", new_form);
+            // println!("⮕ [debug] new_mapping = {:?}", new_mapping);
+            // println!("⮕ [debug] new_form    = {:?}", new_form);
 
             // todo delete - end
 

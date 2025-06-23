@@ -940,7 +940,7 @@ mod tests {
 
         // Test case where invariant is empty (always true), should imply any semilinear set
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         // Create an empty semilinear set using Kleene interface
@@ -980,7 +980,7 @@ mod tests {
         let semilinear = SemilinearSet::atom(var_name.clone());
 
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         let result =
@@ -1008,7 +1008,7 @@ mod tests {
         let semilinear = SemilinearSet::atom(var_name.clone());
 
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         let result =
@@ -1038,7 +1038,7 @@ mod tests {
         let semilinear = x_atom.star();
 
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         let result =
@@ -1074,7 +1074,7 @@ mod tests {
         let semilinear = x_atom.star();
 
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         let result =
@@ -1112,7 +1112,7 @@ mod tests {
         let semilinear = x_atom.times(y_atom);
 
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         let result =
@@ -1142,7 +1142,7 @@ mod tests {
         let semilinear = x_atom.clone().times(x_atom);
 
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         let result =
@@ -1182,7 +1182,7 @@ mod tests {
         let semilinear = aa.star(); // (aa)* (represents a=0, a=2, a=4, a=6, ...)
 
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         let result =
@@ -1223,7 +1223,7 @@ mod tests {
         let semilinear = aa.star(); // (aa)*
 
         let ns_invariant = NSInvariant::<String, String, String, String> {
-            global_invariants: HashMap::new(),
+            global_invariants: HashMap::default(),
         };
 
         let result =

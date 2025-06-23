@@ -297,7 +297,10 @@ where
 
     // 3. Output the "pl" lines, e.g. "pl P1 (1)"
     //    for each place in initial marking.
-    for (place, count) in marking_count {
+    // Sort by place name for deterministic output
+    let mut sorted_places: Vec<(String, usize)> = marking_count.into_iter().collect();
+    sorted_places.sort_by(|a, b| a.0.cmp(&b.0));
+    for (place, count) in sorted_places {
         out.push_str(&format!("pl {} ({})\n", place, count));
     }
 
@@ -376,7 +379,7 @@ where
                         let convert_places = |places: &Vec<String>| -> Vec<P> {
                             places.iter().filter_map(|s| {
                                 // Try to convert string back to P using the petri net places
-                                petri.get_places().into_iter().find(|p| {
+                                petri.get_places_sorted().into_iter().find(|p| {
                                     sanitize(&p.to_string()) == *s
                                 })
                             }).collect()
@@ -420,7 +423,7 @@ where
 
     // Extract places from Petri net to handle missing places in constraints
     let petri_places: HashSet<String> = petri
-        .get_places()
+        .get_places_sorted()
         .iter()
         .map(|p| sanitize(&p.to_string()))
         .collect();
