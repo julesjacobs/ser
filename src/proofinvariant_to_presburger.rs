@@ -704,4 +704,169 @@ mod tests {
         let empty = PresburgerSet::<String>::zero();
         assert_eq!(ps_false, empty);
     }
+
+    #[test]
+    fn test_variable_mapping_permutation() {
+        // Test that different mappings create different coordinate systems
+        // Create constraint: x + 2y = 10
+        let mut expr = AffineExpr::new();
+        expr = expr.add(&AffineExpr::from_var("x".to_string()));
+        expr = expr.add(&AffineExpr::from_var("y".to_string()).mul_by_const(2));
+        expr = expr.sub(&AffineExpr::from_const(10));
+        
+        let constraint = ProofConstraint::new(expr, CompOp::Eq);
+        let formula = Formula::Constraint(constraint);
+        
+        let proof_inv = ProofInvariant {
+            variables: vec!["x".to_string(), "y".to_string()],
+            formula,
+        };
+        
+        // Test 1: Standard mapping [x, y]
+        let mapping1 = vec!["x".to_string(), "y".to_string()];
+        let ps1 = proof_invariant_to_presburger(&proof_inv, mapping1.clone());
+        
+        // Test 2: Permuted mapping [y, x]
+        let mapping2 = vec!["y".to_string(), "x".to_string()];
+        let ps2 = proof_invariant_to_presburger(&proof_inv, mapping2.clone());
+        
+        println!("PS1 with mapping [x,y]: {}", ps1);
+        println!("PS2 with mapping [y,x]: {}", ps2);
+        
+        // These should have different ISL representations:
+        // PS1: p0 + 2*p1 = 10 (where p0=x, p1=y)
+        // PS2: p1 + 2*p0 = 10 (where p0=y, p1=x)
+        
+        // Test 3: Different permutation with all variables
+        let mapping3 = vec!["y".to_string(), "x".to_string()];
+        let ps3 = proof_invariant_to_presburger(&proof_inv, mapping3);
+        println!("PS3 with reversed mapping [y,x]: {}", ps3);
+        // This should show y as p0 and x as p1
+    }
+
+    #[test]
+    fn test_mapping_with_extra_variables() {
+        // Test what happens when mapping contains variables not in the formula
+        let constraint = ProofConstraint::new(
+            AffineExpr::from_var("x".to_string()).sub(&AffineExpr::from_const(5)),
+            CompOp::Eq
+        );
+        let formula = Formula::Constraint(constraint);
+        
+        let proof_inv = ProofInvariant {
+            variables: vec!["x".to_string()],
+            formula,
+        };
+        
+        // Mapping includes extra variables y and z
+        let mapping = vec!["x".to_string(), "y".to_string(), "z".to_string()];
+        let ps = proof_invariant_to_presburger(&proof_inv, mapping.clone());
+        
+        println!("PS with extra variables in mapping: {}", ps);
+        // Should create a set where x=5 and y,z are unconstrained
+        
+        // Also test with x in different positions
+        let mapping2 = vec!["y".to_string(), "x".to_string(), "z".to_string()];
+        let ps2 = proof_invariant_to_presburger(&proof_inv, mapping2);
+        println!("PS with x in middle position: {}", ps2);
+        // Now x=5 is on coordinate p1 instead of p0
+    }
+
+    #[test]
+    fn test_request_response_mapping_order() {
+        // Test the specific bug case with request/response pairs
+        // Create constraint: decr/0 + incr/1 = decr/1 + incr/0
+        let mut expr = AffineExpr::new();
+        expr = expr.add(&AffineExpr::from_var("decr/0".to_string()));
+        expr = expr.add(&AffineExpr::from_var("incr/1".to_string()));
+        expr = expr.sub(&AffineExpr::from_var("decr/1".to_string()));
+        expr = expr.sub(&AffineExpr::from_var("incr/0".to_string()));
+        
+        let constraint = ProofConstraint::new(expr, CompOp::Eq);
+        let formula = Formula::Constraint(constraint);
+        
+        let proof_inv = ProofInvariant {
+            variables: vec![
+                "decr/0".to_string(),
+                "incr/0".to_string(),
+                "decr/1".to_string(),
+                "incr/1".to_string(),
+            ],
+            formula,
+        };
+        
+        // Original order
+        let mapping1 = vec![
+            "decr/0".to_string(),
+            "incr/0".to_string(),
+            "decr/1".to_string(),
+            "incr/1".to_string(),
+        ];
+        
+        // Permuted order (the bug case)
+        let mapping2 = vec![
+            "decr/0".to_string(),
+            "incr/0".to_string(),
+            "incr/1".to_string(),
+            "decr/1".to_string(),
+        ];
+        
+        let ps1 = proof_invariant_to_presburger(&proof_inv, mapping1);
+        let ps2 = proof_invariant_to_presburger(&proof_inv, mapping2);
+        
+        println!("PS1 with order (decr/0, incr/0, decr/1, incr/1): {}", ps1);
+        println!("PS2 with order (decr/0, incr/0, incr/1, decr/1): {}", ps2);
+        
+        // The constraint is the same, but the coordinate mapping differs:
+        // PS1: p0 - p1 - p2 + p3 = 0
+        // PS2: p0 - p1 + p2 - p3 = 0
+    }
+
+    #[test]
+    fn test_mapping_consistency_for_comparison() {
+        // This test demonstrates why consistent variable ordering is crucial
+        // when comparing or checking implications between proof invariants
+        
+        // Create two constraints that are logically equivalent
+        // Constraint 1: x = y
+        let mut expr1 = AffineExpr::new();
+        expr1 = expr1.add(&AffineExpr::from_var("x".to_string()));
+        expr1 = expr1.sub(&AffineExpr::from_var("y".to_string()));
+        let constraint1 = ProofConstraint::new(expr1, CompOp::Eq);
+        
+        // Constraint 2: y = x (same constraint, written differently)
+        let mut expr2 = AffineExpr::new();
+        expr2 = expr2.add(&AffineExpr::from_var("y".to_string()));
+        expr2 = expr2.sub(&AffineExpr::from_var("x".to_string()));
+        let constraint2 = ProofConstraint::new(expr2, CompOp::Eq);
+        
+        let proof1 = ProofInvariant {
+            variables: vec!["x".to_string(), "y".to_string()],
+            formula: Formula::Constraint(constraint1),
+        };
+        
+        let proof2 = ProofInvariant {
+            variables: vec!["x".to_string(), "y".to_string()],
+            formula: Formula::Constraint(constraint2),
+        };
+        
+        // Use consistent mapping for both
+        let mapping = vec!["x".to_string(), "y".to_string()];
+        
+        let ps1 = proof_invariant_to_presburger(&proof1, mapping.clone());
+        let ps2 = proof_invariant_to_presburger(&proof2, mapping.clone());
+        
+        println!("PS1 (x = y): {}", ps1);
+        println!("PS2 (y = x): {}", ps2);
+        
+        // These should be equivalent when using the same mapping
+        // Both represent the same line where x equals y
+        
+        // Now let's see what happens with inconsistent mappings
+        let mapping_reversed = vec!["y".to_string(), "x".to_string()];
+        let ps2_reversed = proof_invariant_to_presburger(&proof2, mapping_reversed);
+        
+        println!("PS2 with reversed mapping: {}", ps2_reversed);
+        // This would make comparison difficult because the coordinate systems differ
+    }
 }
