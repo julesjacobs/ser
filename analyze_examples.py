@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Script to analyze all .ser examples and generate a serializability report (parallelized)
-Usage: python3 analyze_examples.py [--timeout <seconds>] [--jobs <number>]
+Script to analyze all .ser examples and generate a serializability report (optimized only)
+Usage: python3 analyze_examples.py [--timeout <seconds>] [--jobs <number>] [--use-cache] [--without-remove-redundant] [--without-generate-less] [--without-smart-kleene-order] [--<other_flags>]
 """
 
 import argparse
@@ -17,500 +17,188 @@ from datetime import datetime
 def parse_time_output(stderr_output):
     """Parse time command output to extract user and sys time."""
     lines = stderr_output.strip().split('\n')
-    
-    user_time = 0.0
-    sys_time = 0.0
-    
+    user_time = sys_time = 0.0
     for line in lines:
         if 'user' in line:
-            # Extract time from formats like "user    0m0.123s" or "0.123"
-            match = re.search(r'(\d+)m([\d.]+)s', line)
-            if match:
-                minutes = int(match.group(1))
-                seconds = float(match.group(2))
-                user_time = minutes * 60 + seconds
+            m = re.search(r'(\d+)m([\d.]+)s', line)
+            if m:
+                user_time = int(m.group(1)) * 60 + float(m.group(2))
             else:
-                # Try to find just seconds
-                match = re.search(r'([\d.]+)', line)
-                if match:
-                    user_time = float(match.group(1))
-        
+                m = re.search(r'([\d.]+)', line)
+                if m:
+                    user_time = float(m.group(1))
         elif 'sys' in line:
-            # Same parsing for sys time
-            match = re.search(r'(\d+)m([\d.]+)s', line)
-            if match:
-                minutes = int(match.group(1))
-                seconds = float(match.group(2))
-                sys_time = minutes * 60 + seconds
+            m = re.search(r'(\d+)m([\d.]+)s', line)
+            if m:
+                sys_time = int(m.group(1)) * 60 + float(m.group(2))
             else:
-                match = re.search(r'([\d.]+)', line)
-                if match:
-                    sys_time = float(match.group(1))
-    
+                m = re.search(r'([\d.]+)', line)
+                if m:
+                    sys_time = float(m.group(1))
     return user_time + sys_time
 
 
-def run_single_analysis(file_path, timeout_arg, with_optimizations=True, use_cache=False):
-    """Run a single analysis (with or without optimizations) and return timing and status."""
-    # Build command
-    cmd = ['cargo', 'run', '--quiet', '--']
+def run_single_analysis(file_path, timeout_arg, extra_flags, use_cache=False):
+    """Run a single optimized analysis with optional extra flags."""
+    cmd = ['cargo', 'run', '--quiet', '--'] + extra_flags
     if timeout_arg:
-        cmd.extend(['--timeout', str(timeout_arg)])
-    if not with_optimizations:
-        cmd.append('--without-bidirectional')
+        cmd += ['--timeout', str(timeout_arg)]
     if use_cache:
         cmd.append('--use-cache')
     cmd.append(str(file_path))
-    
-    # Use time command to get CPU timing
+
     time_cmd = ['time'] + cmd
-    
-    start_time = time.time()
-    result = subprocess.run(
-        time_cmd,
-        capture_output=True,
-        text=True,
-        timeout=timeout_arg * 2 if timeout_arg else None  # Give extra time for the timeout to work
-    )
-    
-    # Parse CPU time from stderr (time command output)
-    cpu_time = parse_time_output(result.stderr)
-    if cpu_time == 0.0:
-        # Fallback to wall clock time if time parsing failed
-        cpu_time = time.time() - start_time
-    
-    # Extract program output (stdout and stderr combined)
-    output = result.stdout + result.stderr
-    
-    # Check for SMPT timeout in the output - check multiple patterns
-    is_smpt_timeout = (
-        "SMPT timeout:" in output or 
-        "SMPT verification failed: SMPT timeout:" in output or
-        "Failed to run SMPT: SMPT timeout:" in output or
-        "Analysis timed out" in output
-    )
-    
-    # Determine results for each method separately
-    original_result = "Unknown"
-    proof_result = "Unknown"
-    trace_valid = None  # None for serializable, True/False for non-serializable
-    proof_verification = None  # None for non-serializable, True/False for serializable
-    
+    start = time.time()
+    try:
+        result = subprocess.run(
+            time_cmd,
+            capture_output=True,
+            text=True,
+            timeout=(timeout_arg * 2) if timeout_arg else None
+        )
+    except subprocess.TimeoutExpired:
+        return {
+            'status': '⏱️ SMPT Timeout',
+            'original_result': 'SMPT Timeout',
+            'proof_result': 'SMPT Timeout',
+            'trace_valid': None,
+            'proof_verification': None,
+            'cpu_time': 0.0,
+            'is_timeout': True
+        }
+
+    cpu = parse_time_output(result.stderr)
+    if cpu == 0.0:
+        cpu = time.time() - start
+
+    out = result.stdout + result.stderr
+    timeout_flag = 'SMPT timeout:' in out or 'Analysis timed out' in out
+
+    orig = 'Unknown'
+    proof = 'Unknown'
+    trace_valid = None
+    proof_valid = None
     if result.returncode == 0:
-        # Check original method results
-        if "Original method: Serializable" in output:
-            original_result = "Serializable"
-        elif "Original method: Not serializable" in output:
-            original_result = "Not serializable"
-        
-        # Check proof-based method results
-        if "Proof-based method: Proof" in output:
-            proof_result = "Serializable"
-            
-            # Check proof verification for serializable cases
-            if "Proof Certificate Verification:" in output:
-                if "✅ Proof certificate is VALID" in output:
-                    proof_verification = True
-                elif "❌ Proof certificate is INVALID" in output:
-                    proof_verification = False
-                    
-        elif "Proof-based method: CounterExample" in output:
-            proof_result = "Not serializable"
-            
-            # Check trace validation for non-serializable cases
-            if "Trace Validation:" in output:
-                if "✅ Trace is valid!" in output:
-                    trace_valid = True
-                elif "❌ Trace validation failed!" in output:
-                    trace_valid = False
+        if 'Original method: Serializable' in out:
+            orig = 'Serializable'
+        elif 'Original method: Not serializable' in out:
+            orig = 'Not serializable'
+        if 'Proof-based method: Proof' in out:
+            proof = 'Serializable'
+            proof_valid = '✅ Proof certificate is VALID' in out
+        elif 'Proof-based method: CounterExample' in out:
+            proof = 'Not serializable'
+            trace_valid = '✅ Trace is valid!' in out
     else:
-        # Process failed - check if due to timeout
-        if is_smpt_timeout:
-            original_result = "SMPT Timeout"
-            proof_result = "SMPT Timeout"
+        if timeout_flag:
+            orig = proof = 'SMPT Timeout'
         else:
-            original_result = "Error"
-            proof_result = "Error"
-    
-    # Create combined status for backward compatibility
-    if original_result == proof_result:
-        if original_result == "Serializable":
-            status = "✅ Serializable"
-            console_status = "Serializable"
-        elif original_result == "Not serializable":
-            status = "❌ Not serializable"
-            console_status = "Not serializable"
-        elif original_result == "SMPT Timeout":
-            status = "⏱️ SMPT Timeout"
-            console_status = "SMPT Timeout"
-        elif original_result == "Error":
-            status = "⚠️ Error"
-            console_status = "Error"
+            orig = proof = 'Error'
+
+    if orig == proof:
+        if orig == 'Serializable':
+            status = '✅ Serializable'
+        elif orig == 'Not serializable':
+            status = '❌ Not serializable'
+        elif orig == 'SMPT Timeout':
+            status = '⏱️ SMPT Timeout'
         else:
-            status = "❓ Unknown"
-            console_status = "Unknown"
+            status = '⚠️ Error'
     else:
-        # Methods disagree
-        status = f"⚠️ Inconsistent (orig: {original_result}, proof: {proof_result})"
-        console_status = "Inconsistent"
-    
+        status = '⚠️ Error'
+
     return {
         'status': status,
-        'console_status': console_status,
-        'original_result': original_result,
-        'proof_result': proof_result,
+        'original_result': orig,
+        'proof_result': proof,
         'trace_valid': trace_valid,
-        'proof_verification': proof_verification,
-        'cpu_time': cpu_time,
-        'returncode': result.returncode,
-        'is_timeout': is_smpt_timeout
+        'proof_verification': proof_valid,
+        'cpu_time': cpu,
+        'is_timeout': timeout_flag
     }
 
 
-def analyze_file(file_path, timeout_arg, index, use_cache=False):
-    """Analyze a single .ser file twice (with and without optimizations) and return results."""
-    filename = Path(file_path).stem
-    
-    try:
-        # Run with optimizations (default)
-        print(f"[{index}] {filename}: Running with optimizations...")
-        opt_result = run_single_analysis(file_path, timeout_arg, with_optimizations=True, use_cache=use_cache)
-        
-        # Run without optimizations
-        print(f"[{index}] {filename}: Running without optimizations...")
-        no_opt_result = run_single_analysis(file_path, timeout_arg, with_optimizations=False, use_cache=use_cache)
-        
-        # Use the optimized result for the main status (they should be the same)
-        status = opt_result['status']
-        console_status = opt_result['console_status']
-        
-        # Check if results are consistent
-        if opt_result['status'] != no_opt_result['status']:
-            # Only accept inconsistency if one or both runs had SMPT timeouts
-            if opt_result.get('is_timeout', False) or no_opt_result.get('is_timeout', False):
-                print(f"[{index}] {filename}: Results differ due to SMPT timeout")
-                # Use the non-timeout result if one succeeded
-                if opt_result.get('is_timeout', False) and not no_opt_result.get('is_timeout', False):
-                    status = no_opt_result['status'] + " (opt timed out)"
-                    console_status = no_opt_result['console_status'] + " (opt timed out)"
-                elif no_opt_result.get('is_timeout', False) and not opt_result.get('is_timeout', False):
-                    status = opt_result['status'] + " (no-opt timed out)"
-                    console_status = opt_result['console_status'] + " (no-opt timed out)"
-                else:
-                    # Both timed out
-                    status = "⏱️ Both Timed Out"
-                    console_status = "Both Timed Out"
-            else:
-                # Real inconsistency - this is a serious problem!
-                print(f"[{index}] {filename}: WARNING - Results differ between optimized and non-optimized runs (not due to timeout)!")
-                print(f"                    Optimized: {opt_result['status']}, No-opt: {no_opt_result['status']}")
-                status = "⚠️ Inconsistent"
-                console_status = "Inconsistent"
-        
-        # Format durations
-        opt_duration_str = f"{opt_result['cpu_time']:.2f}"
-        no_opt_duration_str = f"{no_opt_result['cpu_time']:.2f}"
-        
-        print(f"[{index}] {filename}: {console_status} (opt: {opt_duration_str}s, no-opt: {no_opt_duration_str}s CPU)")
-        
-        return {
-            'filename': filename,
-            'status': status,
-            'opt_duration': opt_duration_str,
-            'no_opt_duration': no_opt_duration_str,
-            'opt_original_result': opt_result['original_result'],
-            'opt_proof_result': opt_result['proof_result'],
-            'opt_trace_valid': opt_result['trace_valid'],
-            'opt_proof_verification': opt_result['proof_verification'],
-            'no_opt_original_result': no_opt_result['original_result'],
-            'no_opt_proof_result': no_opt_result['proof_result'],
-            'no_opt_trace_valid': no_opt_result['trace_valid'],
-            'no_opt_proof_verification': no_opt_result['proof_verification'],
-            'index': index
-        }
-        
-    except subprocess.TimeoutExpired:
-        print(f"[{index}] {filename}: Timeout")
-        return {
-            'filename': filename,
-            'status': "⚠️ Timeout",
-            'opt_duration': "N/A",
-            'no_opt_duration': "N/A",
-            'index': index
-        }
-    except Exception as e:
-        print(f"[{index}] {filename}: Error ({e})")
-        return {
-            'filename': filename,
-            'status': "⚠️ Error",
-            'opt_duration': "N/A",
-            'no_opt_duration': "N/A",
-            'index': index
-        }
+def analyze_file(fp, timeout, idx, extra_flags, use_cache):
+    name = Path(fp).stem
+    print(f"[{idx}] {name}: Running optimized analysis...")
+    res = run_single_analysis(fp, timeout, extra_flags, use_cache)
+    dur = f"{res['cpu_time']:.2f}"
+    print(f"[{idx}] {name}: {res['status']} ({dur}s CPU)")
+    res.update({'filename': name, 'duration': dur, 'index': idx})
+    return res
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyze all .ser examples and generate a serializability report"
+        description="Analyze .ser examples with optional cargo flags (optimized only)",
+        allow_abbrev=False
     )
-    parser.add_argument('--timeout', type=int, help='Timeout in seconds for each analysis')
-    parser.add_argument('--jobs', type=int, help='Number of parallel jobs')
-    parser.add_argument('--use-cache', action='store_true', help='Enable SMPT result caching')
-    
-    args = parser.parse_args()
-    
-    # Set defaults
-    timeout_value = args.timeout
-    max_jobs = args.jobs or os.cpu_count() or 4
-    
-    print("🔍 Analyzing Serializability of .ser Examples (Parallel)")
-    print("======================================================")
-    print(f"Using {max_jobs} parallel jobs")
-    if timeout_value:
-        print(f"Timeout: {timeout_value}s")
-    else:
-        print("Timeout: none")
-    print()
-    
-    # Find all .ser files
-    ser_files = sorted(Path('examples/ser').glob('*.ser'))
-    total_files = len(ser_files)
-    
-    print(f"Found {total_files} .ser files to analyze")
-    print()
-    
-    # Create output file
-    output_file = "serializability_report.md"
-    
-    # Analyze files in parallel
+    parser.add_argument('--timeout', type=int, help='Timeout seconds')
+    parser.add_argument('--jobs', type=int, help='Parallel jobs')
+    parser.add_argument('--use-cache', action='store_true', help='Enable caching')
+    parser.add_argument('--without-remove-redundant', action='store_true', help='Disable redundant removal')
+    parser.add_argument('--without-generate-less', action='store_true', help='Disable generate-less optimization')
+    parser.add_argument('--without-smart-kleene-order', action='store_true', help='Disable smart Kleene ordering')
+    known_args, extra = parser.parse_known_args()
+
+    timeout = known_args.timeout
+    jobs = known_args.jobs or os.cpu_count() or 4
+    cache = known_args.use_cache
+    # collect flags to forward
+    extras = []
+    if known_args.without_remove_redundant:
+        extras.append('--without-remove-redundant')
+    if known_args.without_generate_less:
+        extras.append('--without-generate-less')
+    if known_args.without_smart_kleene_order:
+        extras.append('--without-smart-kleene-order')
+    # append other unknown flags
+    extras.extend(extra)
+
+    print(f"🔍 Analyzing (.ser) with {jobs} jobs, timeout={timeout or 'none'}, cache={'on' if cache else 'off'}, extras={extras}")
+    files = sorted(Path('examples/ser').glob('*.ser'))
+    print(f"Found {len(files)} examples")
+
     results = []
-    with ThreadPoolExecutor(max_workers=max_jobs) as executor:
-        # Submit all jobs
-        future_to_index = {
-            executor.submit(analyze_file, file_path, timeout_value, i, getattr(args, 'use_cache', False)): i
-            for i, file_path in enumerate(ser_files)
-        }
-        
-        # Collect results as they complete
-        for future in as_completed(future_to_index):
-            result = future.result()
-            results.append(result)
-    
-    print()
-    print("🔄 Collecting results...")
-    
-    # Sort results by original index to maintain order
-    results.sort(key=lambda x: x['index'])
-    
-    # Generate report
-    with open(output_file, 'w') as f:
-        f.write("# Serializability Analysis Report\n\n")
-        f.write("This report shows the serializability analysis results for all `.ser` examples using both original and proof-based methods, with and without optimizations.\n\n")
-        f.write("**Analysis Configuration:**\n")
-        f.write(f"- Parallel jobs: {max_jobs}\n")
-        f.write(f"- Timeout: {timeout_value}s\n" if timeout_value else "- Timeout: none\n")
-        f.write(f"- SMPT caching: {'enabled' if getattr(args, 'use_cache', False) else 'disabled'}\n")
-        f.write(f"- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-        f.write("## Results\n\n")
-        f.write("| Example | Opt Original | Opt Proof | No-Opt Original | No-Opt Proof | Opt CPU (s) | No-Opt CPU (s) | Trace Valid | Proof Valid |\n")
-        f.write("|---------|--------------|-----------|-----------------|--------------|-------------|----------------|-------------|-------------|\n")
-        
-        for result in results:
-            # Get method results for all combinations
-            opt_original = result.get('opt_original_result', 'Unknown')
-            opt_proof = result.get('opt_proof_result', 'Unknown') 
-            no_opt_original = result.get('no_opt_original_result', 'Unknown')
-            no_opt_proof = result.get('no_opt_proof_result', 'Unknown')
-            
-            # Format trace validation status
-            opt_trace = result.get('opt_trace_valid', None)
-            no_opt_trace = result.get('no_opt_trace_valid', None)
-            
-            if opt_trace is None and no_opt_trace is None:
-                trace_status = "N/A"  # Serializable or error cases
-            elif opt_trace == True and no_opt_trace == True:
-                trace_status = "✅"
-            elif opt_trace == False or no_opt_trace == False:
-                trace_status = "❌"
-            elif opt_trace != no_opt_trace:
-                trace_status = "⚠️ Inconsistent"
-            else:
-                trace_status = "?"
-            
-            # Format proof verification status
-            opt_proof_ver = result.get('opt_proof_verification', None)
-            no_opt_proof_ver = result.get('no_opt_proof_verification', None)
-            
-            if opt_proof_ver is None and no_opt_proof_ver is None:
-                proof_status = "N/A"  # Not serializable or error cases
-            elif opt_proof_ver == True and no_opt_proof_ver == True:
-                proof_status = "✅"
-            elif opt_proof_ver == False or no_opt_proof_ver == False:
-                proof_status = "❌"
-            elif opt_proof_ver != no_opt_proof_ver:
-                proof_status = "⚠️ Inconsistent"
-            else:
-                proof_status = "?"
-            
-            f.write(f"| `{result['filename']}` | {opt_original} | {opt_proof} | {no_opt_original} | {no_opt_proof} | {result['opt_duration']} | {result['no_opt_duration']} | {trace_status} | {proof_status} |\n")
-        
-        # Calculate summary statistics by examining the actual result columns
-        serializable_count = 0
-        not_serializable_count = 0
-        timeout_count = 0
-        inconsistent_count = 0
-        error_count = 0
-        unknown_count = 0
-        
-        for r in results:
-            # Check the actual result columns to determine category
-            opt_original = r.get('opt_original_result', 'Unknown')
-            opt_proof = r.get('opt_proof_result', 'Unknown')
-            no_opt_original = r.get('no_opt_original_result', 'Unknown')
-            no_opt_proof = r.get('no_opt_proof_result', 'Unknown')
-            
-            # Check for SMPT timeouts
-            if any("SMPT Timeout" in result for result in [opt_original, opt_proof, no_opt_original, no_opt_proof]):
-                timeout_count += 1
-            # Check for inconsistencies
-            elif "Inconsistent" in r['status']:
-                inconsistent_count += 1
-            # Check for errors
-            elif any("Error" in result for result in [opt_original, opt_proof, no_opt_original, no_opt_proof]):
-                error_count += 1
-            # Check for serializable (both opt and no-opt should agree)
-            elif opt_original == "Serializable" and opt_proof == "Serializable":
-                serializable_count += 1
-            # Check for not serializable (both opt and no-opt should agree)
-            elif opt_original == "Not serializable" and opt_proof == "Not serializable":
-                not_serializable_count += 1
-            # Everything else is unknown
-            else:
-                unknown_count += 1
-        
-        # Count trace validation results
-        trace_valid_count = sum(1 for r in results if r.get('opt_trace_valid') == True or r.get('no_opt_trace_valid') == True)
-        trace_invalid_count = sum(1 for r in results if r.get('opt_trace_valid') == False or r.get('no_opt_trace_valid') == False)
-        
-        # Count proof verification results
-        proof_valid_count = sum(1 for r in results if r.get('opt_proof_verification') == True or r.get('no_opt_proof_verification') == True)
-        proof_invalid_count = sum(1 for r in results if r.get('opt_proof_verification') == False or r.get('no_opt_proof_verification') == False)
-        
-        # Find examples with failed proofs
-        failed_proofs = []
-        for r in results:
-            if r.get('opt_proof_verification') == False or r.get('no_opt_proof_verification') == False:
-                failed_proofs.append(r['filename'])
-        
-        # Find examples with failed traces
-        failed_traces = []
-        for r in results:
-            if r.get('opt_trace_valid') == False or r.get('no_opt_trace_valid') == False:
-                failed_traces.append(r['filename'])
-        
-        # Find inconsistent examples
-        inconsistent_examples = []
-        for r in results:
-            if "⚠️ Inconsistent" in r['status']:
-                inconsistent_examples.append(r['filename'])
-        
-        f.write("\n## Analysis Summary\n\n")
-        f.write("### Overall Results\n\n")
-        f.write(f"- **Serializable**: {serializable_count}\n")
-        if serializable_count > 0:
-            f.write(f"  - Valid proofs: {proof_valid_count}\n")
-            f.write(f"  - Invalid proofs: {proof_invalid_count}\n")
-        f.write(f"- **Not serializable**: {not_serializable_count}\n")
-        if not_serializable_count > 0:
-            f.write(f"  - Valid traces: {trace_valid_count}\n")
-            f.write(f"  - Invalid traces: {trace_invalid_count}\n")
-        f.write(f"- **Unknown**: {unknown_count}\n")
-        f.write(f"- **SMPT Timeouts**: {timeout_count}\n")
-        f.write(f"- **Inconsistent**: {inconsistent_count}\n")
-        f.write(f"- **Errors**: {error_count}\n")
-        f.write(f"- **Total**: {total_files}\n\n")
-        
-        # Add details about failed proofs
-        if failed_proofs:
-            f.write("### ❌ Examples with Failed Proof Certificates\n\n")
-            f.write("The following examples have serializable results but their proof certificates failed verification:\n\n")
-            for example in failed_proofs:
-                f.write(f"- `{example}`\n")
-            f.write("\n")
-        
-        # Add details about failed traces
-        if failed_traces:
-            f.write("### ❌ Examples with Invalid Counterexample Traces\n\n")
-            f.write("The following examples have non-serializable results but their counterexample traces failed validation:\n\n")
-            for example in failed_traces:
-                f.write(f"- `{example}`\n")
-            f.write("\n")
-        
-        # Add details about inconsistent results
-        if inconsistent_examples:
-            f.write("### ⚠️ Examples with Inconsistent Results\n\n")
-            f.write("The following examples give different results between optimized and non-optimized runs:\n\n")
-            for example in inconsistent_examples:
-                f.write(f"- `{example}`\n")
-            f.write("\n")
-        
-        f.write("## Legend\n\n")
-        f.write("- ✅ **Serializable**: Programs that maintain serializability properties\n")
-        f.write("- ❌ **Not serializable**: Programs that violate serializability\n")
-        f.write("- ❓ **Unknown**: Could not determine result\n")
-        f.write("- ⚠️ **Error**: Analysis failed\n")
-        f.write("- ⏱️ **SMPT Timeout**: SMPT verification timed out\n")
-        f.write("- ⚠️ **Inconsistent**: Results differ between optimized and non-optimized runs (serious issue)\n\n")
-        f.write("**Trace Valid Column**:\n")
-        f.write("- ✅ **Valid trace**: The counterexample trace was successfully validated against the NS definition\n")
-        f.write("- ❌ **Invalid trace**: The counterexample trace failed validation (indicates a bug)\n")
-        f.write("- **N/A**: Not applicable (serializable programs don't have counterexample traces)\n\n")
-        f.write("**Proof Valid Column**:\n")
-        f.write("- ✅ **Valid proof**: The proof certificate was successfully verified (invariant holds)\n")
-        f.write("- ❌ **Invalid proof**: The proof certificate failed verification (indicates a bug)\n")
-        f.write("- **N/A**: Not applicable (non-serializable programs don't have proof certificates)\n\n")
-        f.write("**Note**: Each example is analyzed twice - once with optimizations (default) and once with `--without-bidirectional` flag. The table shows results for all four combinations: Optimized Original/Proof methods and Non-optimized Original/Proof methods. CPU times compare performance impact of optimizations.\n\n")
-        f.write("---\n\n")
-        f.write("*Report generated automatically by analyze_examples.py*\n")
-    
-    print()
-    print("✅ Analysis complete!")
-    print(f"📊 Results saved to: {output_file}")
-    print()
-    
-    # Show summary
-    serializable_count = sum(1 for r in results if "✅ Serializable" in r['status'])
-    not_serializable_count = sum(1 for r in results if "❌ Not serializable" in r['status'])
-    unknown_count = sum(1 for r in results if "❓ Unknown" in r['status'])
-    timeout_count = sum(1 for r in results if "⏱️" in r['status'] or "timed out" in r['status'].lower())
-    inconsistent_count = sum(1 for r in results if "⚠️ Inconsistent" in r['status'])
-    error_count = sum(1 for r in results if "⚠️" in r['status'] and "Inconsistent" not in r['status'] and "⏱️" not in r['status'])
-    
-    # Count trace validation results
-    trace_valid_count = sum(1 for r in results if r.get('opt_trace_valid') == True or r.get('no_opt_trace_valid') == True)
-    trace_invalid_count = sum(1 for r in results if r.get('opt_trace_valid') == False or r.get('no_opt_trace_valid') == False)
-    
-    # Count proof verification results
-    proof_valid_count = sum(1 for r in results if r.get('opt_proof_verification') == True or r.get('no_opt_proof_verification') == True)
-    proof_invalid_count = sum(1 for r in results if r.get('opt_proof_verification') == False or r.get('no_opt_proof_verification') == False)
-    
-    print("📈 Summary:")
-    print(f"   Serializable: {serializable_count}")
-    if serializable_count > 0:
-        print(f"     - Valid proofs: {proof_valid_count}")
-        print(f"     - Invalid proofs: {proof_invalid_count}")
-    print(f"   Not serializable: {not_serializable_count}")
-    if not_serializable_count > 0:
-        print(f"     - Valid traces: {trace_valid_count}")
-        print(f"     - Invalid traces: {trace_invalid_count}")
-    print(f"   Unknown: {unknown_count}")
-    print(f"   SMPT Timeouts: {timeout_count}")
-    print(f"   Inconsistent: {inconsistent_count}")
-    print(f"   Errors: {error_count}")
-    print(f"   Total: {total_files}")
-    print()
-    print(f"🔗 View the full report: cat {output_file}")
+    with ThreadPoolExecutor(max_workers=jobs) as ex:
+        futures = {ex.submit(analyze_file, fp, timeout, i, extras, cache): i for i, fp in enumerate(files)}
+        for fut in as_completed(futures):
+            results.append(fut.result())
+    results.sort(key=lambda r: r['index'])
 
+    # Print non-validated cases
+    nv_proofs = [r['filename'] for r in results
+                 if r['original_result'] == 'Serializable' and r['proof_result'] == 'Serializable' and r['proof_verification'] is False]
+    nv_traces = [r['filename'] for r in results
+                 if r['original_result'] == 'Not serializable' and r['proof_result'] == 'Not serializable' and r['trace_valid'] is False]
+    if nv_proofs:
+        print('❌ Non-validated proofs for:', ', '.join(nv_proofs))
+    if nv_traces:
+        print('❌ Non-validated traces for:', ', '.join(nv_traces))
 
-if __name__ == "__main__":
+    out_md = 'serializability_report.md'
+    with open(out_md, 'w') as f:
+        f.write(f"# Serializability Analysis Report\nGenerated: {datetime.now():%Y-%m-%d %H:%M:%S}\nExtras: {extras}\n\n")
+        f.write("|Example|Orig|Proof|CPU(s)|Trace|Proof Cert|\n|--|--|--|--|--|--|\n")
+        for r in results:
+            t = 'N/A' if r['trace_valid'] is None else ('✅' if r['trace_valid'] else '❌')
+            p = 'N/A' if r['proof_verification'] is None else ('✅' if r['proof_verification'] else '❌')
+            f.write(f"|{r['filename']}|{r['original_result']}|{r['proof_result']}|{r['duration']}|{t}|{p}|\n")
+        # summary counts
+        s_cnt = sum(r['original_result'] == 'Serializable' and r['proof_result'] == 'Serializable' for r in results)
+        vp = sum(r['proof_verification'] for r in results if r['original_result'] == 'Serializable' and r['proof_result'] == 'Serializable')
+        ip = s_cnt - vp
+        ns_cnt = sum(r['original_result'] == 'Not serializable' and r['proof_result'] == 'Not serializable' for r in results)
+        vt = sum(r['trace_valid'] for r in results if r['original_result'] == 'Not serializable' and r['proof_result'] == 'Not serializable')
+        it = ns_cnt - vt
+        to_cnt = sum(r['status'] == '⏱️ SMPT Timeout' for r in results)
+        err = sum(r['status'] == '⚠️ Error' for r in results)
+        f.write("\n## Summary\n")
+        f.write(f"- Serializable: {s_cnt} (valid proofs: {vp}, invalid: {ip})\n")
+        f.write(f"- Not serializable: {ns_cnt} (valid traces: {vt}, invalid: {it})\n")
+        f.write(f"- Timeouts: {to_cnt}, Errors: {err}, Total: {len(results)}\n")
+
+    print("✅ Done. Report:", out_md)
+
+if __name__ == '__main__':
     main()
