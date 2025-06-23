@@ -311,13 +311,13 @@ where
     {
         // Check 1: Initial state satisfies the invariant
         self.check_initial_state(ns)?;
-        
+
         // Check 2: Invariant is inductive
         self.check_inductive(ns)?;
-        
+
         // Check 3: Invariant implies target (serializability)
         self.check_implies_target(ns)?;
-        
+
         Ok(())
     }
     
@@ -370,23 +370,23 @@ where
             let to_inv = self.global_invariants
                 .get(to_global)
                 .ok_or_else(|| format!("No invariant for global state: {}", to_global))?;
-            
+
             // For each possible request type that could be in this local state
             for (req, _) in &ns.requests {
                 let from_var = RequestStatePair(req.clone(), RequestState::InFlight(from_local.clone()));
                 let to_var = RequestStatePair(req.clone(), RequestState::InFlight(to_local.clone()));
-                
+
                 // Convert to Either type for the operations
                 let from_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> = 
                     from_inv.clone().map(|v| Either::Right(v.clone()));
-                
+
                 // Apply the transition: remove one from source, add one to target
                 let inv_after_remove = from_inv_either.filter_and_subtract_one(&from_var);
                 let inv_after_add = inv_after_remove.add_one(&to_var);
-                
+
                 // Project back to the original type
                 let inv_after_transition = inv_after_add.project_right();
-                
+
                 // Check if the result implies the target invariant
                 if !self.check_formula_implies(&inv_after_transition, to_inv)? {
                     return Err(format!(
@@ -396,15 +396,15 @@ where
                 }
             }
         }
-        
+
         // Check 2: Request creation preserves the invariant
         for (req, initial_local) in &ns.requests {
             let initial_inv = self.global_invariants
                 .get(&ns.initial_global)
                 .ok_or_else(|| format!("No invariant for initial global state: {}", ns.initial_global))?;
-            
+
             let new_var = RequestStatePair(req.clone(), RequestState::InFlight(initial_local.clone()));
-            
+
             // Convert to Either type for the operation
             let initial_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> = 
                 initial_inv.clone().map(|v| Either::Right(v.clone()));
@@ -472,20 +472,20 @@ where
         let mut all_vars = HashSet::new();
         all_vars.extend(antecedent.variables.iter().cloned());
         all_vars.extend(consequent.variables.iter().cloned());
-        
+
         // Convert to a consistent vector of string variables
         let string_vars: Vec<String> = all_vars.iter()
             .map(|v| v.to_string())
             .collect();
-        
+
         // Convert both invariants to use string representations
         let antecedent_string = antecedent.clone().map(|v| v.to_string());
         let consequent_string = consequent.clone().map(|v| v.to_string());
-        
+
         // Convert to Presburger sets using the same variable mapping
         let antecedent_set = formula_to_presburger(&antecedent_string.formula, &string_vars);
         let consequent_set = formula_to_presburger(&consequent_string.formula, &string_vars);
-        
+
         // Check if antecedent ⊆ consequent (i.e., antecedent \ consequent = ∅)
         let difference = antecedent_set.difference(&consequent_set);
         Ok(difference.is_empty())
@@ -551,13 +551,15 @@ where
     {
         // For now, convert to String since that's what formula_to_presburger supports
         // This is not ideal but works until we have proper generic support
-        let string_vars: Vec<String> = invariant.variables.iter()
+            let mut string_vars: Vec<String> = invariant.variables.iter()
             .map(|v| v.to_string())
             .collect();
+        // ⮕ force the same canonical ordering as petri.get_places() → response_places
+        string_vars.sort();
         
         let string_invariant = invariant.clone().map(|v| v.to_string());
         let invariant_set = formula_to_presburger(&string_invariant.formula, &string_vars);
-        
+
         // Convert semilinear set to String type and then to PresburgerSet
         let string_semilinear = semilinear.clone().rename(|v| v.to_string());
         let mut spresburger = crate::spresburger::SPresburgerSet::from_semilinear(string_semilinear.clone());
