@@ -37,7 +37,8 @@ use std::hash::Hasher;
 // === Constants ===
 const SMPT_WRAPPER_PATH: &str = "./smpt_wrapper.sh";
 const SMPT_PYTHON_MODULE: &str = "smpt";
-const DEFAULT_METHODS: &[&str] = &["STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"];
+// const DEFAULT_METHODS: &[&str] = &["STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"];
+const DEFAULT_METHODS: &[&str] = &["STATE-EQUATION", "BMC"];
 
 // === Cache Infrastructure ===
 
