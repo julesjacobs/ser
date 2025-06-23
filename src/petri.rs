@@ -1,6 +1,6 @@
+use crate::deterministic_map::{HashMap, HashSet};
 use crate::graphviz;
 use crate::utils::string::escape_for_graphviz_id;
-use std::collections::HashSet;
 use std::hash::Hash;
 
 #[derive(Clone)]
@@ -28,7 +28,7 @@ where
 
     /// Get all unique places in the Petri net
     pub fn get_places(&self) -> Vec<Place> {
-        let mut places = HashSet::new();
+        let mut places = HashSet::default();
 
         // Collect places from initial marking
         for place in &self.initial_marking {
@@ -90,7 +90,7 @@ where
 
         let places = self.get_places();
         // Count tokens per place
-        let mut initial_count = std::collections::HashMap::new();
+        let mut initial_count = HashMap::default();
         // Add zero to initial_count for each place
         for place in &places {
             initial_count.insert(place.clone(), 0);
@@ -129,8 +129,8 @@ where
 
         // Count inputs and outputs for each place and transition
         // to determine if we need to show weights
-        let mut input_counts = std::collections::HashMap::new();
-        let mut output_counts = std::collections::HashMap::new();
+        let mut input_counts = HashMap::default();
+        let mut output_counts = HashMap::default();
 
         for (i, (input, output)) in self.transitions.iter().enumerate() {
             // Count inputs from each place to this transition
@@ -150,7 +150,7 @@ where
         dot.push_str("\n  // Transition edges\n");
         for (i, (input, output)) in self.transitions.iter().enumerate() {
             // Process unique input places
-            let mut unique_inputs = std::collections::HashMap::new();
+            let mut unique_inputs = HashMap::default();
             for place in input {
                 *unique_inputs.entry(place).or_insert(0) += 1;
             }
@@ -175,7 +175,7 @@ where
             }
 
             // Process unique output places
-            let mut unique_outputs = std::collections::HashMap::new();
+            let mut unique_outputs = HashMap::default();
             for place in output {
                 *unique_outputs.entry(place).or_insert(0) += 1;
             }
@@ -275,7 +275,7 @@ where
         self.remove_identity_transitions();
 
         let mut reachable_places: HashSet<Place> = initial_places.iter().cloned().collect();
-        let mut reachable_transitions: HashSet<usize> = HashSet::new();
+        let mut reachable_transitions: HashSet<usize> = HashSet::default();
         let mut worklist: Vec<Place> = initial_places.to_vec();
 
         while let Some(_current_place) = worklist.pop() {
@@ -358,6 +358,7 @@ where
     /// 1. Flipping the net (reversing all transitions)
     /// 2. Running forward reachability from target places
     /// 3. Flipping back to original orientation
+    ///
     /// Iteratively filter the Petri net using alternating forward and backward reachability
     /// Returns two vectors of transitions:
     /// 1. `removed_forward` — transitions deleted in the forward filtering steps
@@ -408,7 +409,7 @@ where
             self.filter_reachable(&initial_places);
             for tr in before_forward
                 .into_iter()
-                .filter(|tr| !self.transitions.contains(&tr))
+                .filter(|tr| !self.transitions.contains(tr))
             {
                 removed_forward.push(tr);
             }
@@ -418,7 +419,7 @@ where
             self.filter_backwards_reachable(target_places);
             for tr in before_backward
                 .into_iter()
-                .filter(|tr| !self.transitions.contains(&tr))
+                .filter(|tr| !self.transitions.contains(tr))
             {
                 removed_backward.push(tr);
             }

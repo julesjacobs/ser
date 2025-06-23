@@ -46,7 +46,7 @@ pub fn formula_to_presburger(
                 .iter()
                 .map(|f| formula_to_presburger(f, mapping))
                 .reduce(|a, b| a.union(&b))
-                .unwrap_or_else(|| PresburgerSet::<String>::zero())
+                .unwrap_or_else(PresburgerSet::<String>::zero)
         }
 
         &Formula::Exists(id, ref form) => {

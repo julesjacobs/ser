@@ -1845,7 +1845,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
             let set = unsafe {
                 let cstr = CString::new(set_string.clone()).unwrap();
                 let parsed_set = isl::isl_set_read_from_str(ctx, cstr.as_ptr());
-                
+
                 // Check if ISL returned NULL (syntax error)
                 if parsed_set.is_null() {
                     panic!(
@@ -1855,7 +1855,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
                         set_string, mapping
                     );
                 }
-                
+
                 parsed_set
             };
 
@@ -1917,9 +1917,9 @@ fn create_isl_set_string<T: ToString>(quantified_set: &QuantifiedSet<T>, mapping
     for constraint in &quantified_set.constraints {
         // Build the affine expression
         let mut expr = String::new();
-        expr.push_str("0");
+        expr.push('0');
 
-        for (i, (coeff, var)) in constraint.linear_combination.iter().enumerate() {
+        for (coeff, var) in constraint.linear_combination.iter() {
             if *coeff >= 0 {
                 expr.push_str(" + ");
             } else {

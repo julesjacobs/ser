@@ -1,4 +1,5 @@
 use crate::debug_report::DebugLogger;
+use crate::deterministic_map::{HashMap, HashSet};
 use crate::kleene::Kleene;
 use crate::petri::*;
 use crate::proof_parser::ProofInvariant;
@@ -7,7 +8,6 @@ use crate::size_logger::{PetriNetSize, log_size_csv};
 use crate::spresburger::SPresburgerSet;
 use colored::*;
 use either::{Either, Left, Right};
-use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::path::Path;
@@ -179,7 +179,7 @@ where
         // IMPORTANT: Decision variants are based on the TYPE of evidence, not the answer:
         // - If complement IS reachable: subset property FAILS, we have a counterexample trace → Decision::CounterExample
         // - If complement is NOT reachable: subset property HOLDS, we have a proof → Decision::Proof
-        let result = match can_reach_decision {
+        match can_reach_decision {
             Decision::CounterExample { trace } => {
                 // Complement is reachable, so subset property does NOT hold
                 // We have a trace showing non-serializability
@@ -200,9 +200,7 @@ where
                 );
                 Decision::Proof { proof }
             }
-        };
-
-        result
+        }
     })
 }
 
@@ -310,7 +308,7 @@ where
         use crate::proof_parser::Formula;
 
         // Collect all variables from all proofs
-        let mut all_variables = std::collections::HashSet::new();
+        let mut all_variables = HashSet::default();
         for proof in &disjunct_proofs {
             all_variables.extend(proof.variables.iter().cloned());
         }
@@ -396,8 +394,7 @@ where
         );
 
         // Build mapping from sanitized names to Either<usize, P> for proof conversion
-        let mut name_to_place: std::collections::HashMap<String, Either<usize, P>> =
-            std::collections::HashMap::new();
+        let mut name_to_place: HashMap<String, Either<usize, P>> = HashMap::default();
         for place in new_petri.get_places() {
             let sanitized_name = crate::utils::string::sanitize(&place.to_string());
             name_to_place.insert(sanitized_name, place);
@@ -471,7 +468,7 @@ where
     P: Clone + Hash + Ord + Display + Debug,
 {
     // Build default mapping (sanitized name maps to itself when P = String)
-    let name_to_place = std::collections::HashMap::new();
+    let name_to_place = HashMap::default();
     can_reach_constraint_set_with_debug_mapped(
         petri,
         constraints,
@@ -487,7 +484,7 @@ fn can_reach_constraint_set_with_debug_mapped<P>(
     constraints: Vec<super::presburger::Constraint<P>>,
     out_dir: &str,
     disjunct_id: usize,
-    name_to_place: std::collections::HashMap<String, P>,
+    name_to_place: HashMap<String, P>,
 ) -> Decision<P>
 where
     P: Clone + Hash + Ord + Display + Debug,
@@ -587,7 +584,7 @@ where
 /// Helper function to convert SMPT result to Decision with proof mapping
 fn convert_smpt_result_to_decision<P>(
     result: crate::smpt::SmptVerificationResult<P>,
-    name_to_place: &std::collections::HashMap<String, P>,
+    name_to_place: &HashMap<String, P>,
 ) -> Decision<P>
 where
     P: Clone + Hash + Ord + Display + Debug,
@@ -604,7 +601,7 @@ where
                     None
                 } else {
                     // Use the specialized mapping function to avoid infinite recursion
-                    crate::proof_parser::map_proof_variables(string_proof, &name_to_place)
+                    crate::proof_parser::map_proof_variables(string_proof, name_to_place)
                 }
             });
 
@@ -630,7 +627,7 @@ fn can_reach_constraint_set_recursive_with_proof<P>(
     target_places: &[P],
     out_dir: &str,
     disjunct_id: usize,
-    name_to_place: std::collections::HashMap<String, P>,
+    name_to_place: HashMap<String, P>,
     iteration: usize,
 ) -> Decision<P>
 where

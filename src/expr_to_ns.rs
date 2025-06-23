@@ -2,9 +2,8 @@ use crate::ns::*;
 use crate::parser::*;
 use hash_cons::Hc;
 
+use crate::deterministic_map::{HashMap, HashSet};
 use std::cmp::Ordering;
-use std::collections::HashMap;
-use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
@@ -59,7 +58,7 @@ impl Hash for Env {
 impl Env {
     fn new() -> Self {
         Self {
-            vars: HashMap::new(),
+            vars: HashMap::default(),
         }
     }
     fn insert(self, var: String, value: i64) -> Self {
@@ -480,8 +479,8 @@ pub fn program_to_ns(
     let mut ns = NS::new(Global::new());
 
     // Track seen states to avoid duplication and infinite loops
-    let mut seen_packets: HashSet<LocalExpr> = HashSet::new();
-    let mut seen_globals: HashSet<Global> = HashSet::new();
+    let mut seen_packets: HashSet<LocalExpr> = HashSet::default();
+    let mut seen_globals: HashSet<Global> = HashSet::default();
     let mut todo = vec![];
 
     // Process each request in the program

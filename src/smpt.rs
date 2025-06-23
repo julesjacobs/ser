@@ -21,11 +21,11 @@
 //! ```
 
 use crate::debug_report::{SmptCall, format_constraints_description};
+use crate::deterministic_map::{HashMap, HashSet};
 use crate::petri::*;
 use crate::presburger::{Constraint, ConstraintType};
 use crate::proof_parser::{ProofInvariant, parse_proof_file};
 use colored::*;
-use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::path::Path;
@@ -114,7 +114,7 @@ where
     out.push_str(&format!("net {{{}}}\n", sanitize(net_name)));
 
     // 2. Count how many times each place appears in the initial marking.
-    let mut marking_count: HashMap<String, usize> = HashMap::new();
+    let mut marking_count: HashMap<String, usize> = HashMap::default();
     for place in petri.get_initial_marking() {
         let place_str = sanitize(&place.to_string());
         *marking_count.entry(place_str).or_insert(0) += 1;
@@ -458,7 +458,7 @@ fn extract_model(output: &str) -> Option<String> {
     for line in output.lines() {
         let trimmed = line.trim_start();
         if trimmed.starts_with("# Model:") {
-            let after = trimmed["# Model:".len()..].trim_start();
+            let after = trimmed.strip_prefix("# Model:").unwrap().trim_start();
             return Some(after.to_string());
         }
     }
@@ -827,7 +827,7 @@ mod tests {
         let constraint = Constraint::new(vec![(1, "x")], -5, ConstraintType::NonNegative);
 
         // Create a set of places that includes 'x'
-        let mut petri_places = HashSet::new();
+        let mut petri_places = HashSet::default();
         petri_places.insert("x".to_string());
 
         let xml = presburger_constraint_to_xml(&constraint, &petri_places);
@@ -844,7 +844,7 @@ mod tests {
             Constraint::new(vec![(2, "x"), (3, "y")], -10, ConstraintType::EqualToZero);
 
         // Create a set of places that includes 'x' and 'y'
-        let mut petri_places = HashSet::new();
+        let mut petri_places = HashSet::default();
         petri_places.insert("x".to_string());
         petri_places.insert("y".to_string());
 
@@ -862,7 +862,7 @@ mod tests {
     #[test]
     fn test_presburger_constraints_to_xml_empty() {
         let constraints: Vec<Constraint<&str>> = vec![];
-        let petri_places = HashSet::new();
+        let petri_places = HashSet::default();
         let xml = presburger_constraints_to_xml(&constraints, "test-empty", &petri_places);
 
         assert!(xml.contains("<conjunction>"));
@@ -878,7 +878,7 @@ mod tests {
         ];
 
         // Create a set of places that includes 'x' and 'y'
-        let mut petri_places = HashSet::new();
+        let mut petri_places = HashSet::default();
         petri_places.insert("x".to_string());
         petri_places.insert("y".to_string());
 

@@ -1,7 +1,7 @@
+use crate::deterministic_map::HashMap;
 use crate::kleene::Kleene; // <-- bring in zero()
 use crate::presburger::{Constraint as PConstraint, PresburgerSet, QuantifiedSet, Variable};
 use either::Either;
-use std::collections::HashMap;
 use std::fmt::{self, Display};
 use std::fs;
 use std::hash::Hash;
@@ -40,7 +40,7 @@ impl<T: Clone + Eq + Hash> AffineExpr<T> {
     /// Create a zero expression
     pub fn new() -> Self {
         AffineExpr {
-            terms: HashMap::new(),
+            terms: HashMap::default(),
             constant: 0,
         }
     }
@@ -48,14 +48,14 @@ impl<T: Clone + Eq + Hash> AffineExpr<T> {
     /// Create a constant expression
     pub fn from_const(c: i64) -> Self {
         AffineExpr {
-            terms: HashMap::new(),
+            terms: HashMap::default(),
             constant: c,
         }
     }
 
     /// Create a variable expression (coefficient 1)
     pub fn from_var(var: T) -> Self {
-        let mut terms = HashMap::new();
+        let mut terms = HashMap::default();
         terms.insert(Variable::Var(var), 1);
         AffineExpr { terms, constant: 0 }
     }
@@ -484,74 +484,81 @@ impl<T: Clone + Eq + Hash + Display> ProofInvariant<Either<usize, T>> {
         // Create a fresh existential variable index
         let fresh_idx = 0usize;
         let fresh_var = Either::Left(fresh_idx);
-        
+
         // Add the fresh variable to the variable list
         let mut new_variables = vec![fresh_var.clone()];
         new_variables.extend(self.variables.clone());
-        
+
         // Create constraint: var = e0 + 1 (which is var - e0 - 1 = 0)
         let var_expr = AffineExpr::from_var(Either::Right(var.clone()));
         let fresh_expr = AffineExpr::from_var(fresh_var.clone());
         let one = AffineExpr::from_const(1);
         let constraint_expr = var_expr.sub(&fresh_expr).sub(&one);
         let constraint = Constraint::new(constraint_expr, CompOp::Eq);
-        
+
         // Combine original formula with the constraint
-        let combined_formula = Formula::And(vec![
-            self.formula.clone(),
-            Formula::Constraint(constraint),
-        ]);
-        
+        let combined_formula =
+            Formula::And(vec![self.formula.clone(), Formula::Constraint(constraint)]);
+
         // Create the proof invariant with the existential variable, then quantify it
         let proof_with_existential = ProofInvariant {
             variables: new_variables,
             formula: combined_formula,
         };
-        
+
         // Existentially quantify and project
-        crate::proofinvariant_to_presburger::existentially_quantify_keep_either(proof_with_existential, &[fresh_idx])
+        crate::proofinvariant_to_presburger::existentially_quantify_keep_either(
+            proof_with_existential,
+            &[fresh_idx],
+        )
     }
-    
+
     /// Remove one token of the given variable from multisets that have at least one
     /// Q(n_a, n_b, ...) = ∃e0. P(e0, n_b, ...) ∧ e0 = n_a + 1 ∧ e0 ≥ 1
     pub fn filter_and_subtract_one(&self, var: &T) -> ProofInvariant<Either<usize, T>> {
         // Create a fresh existential variable index
         let fresh_idx = 0usize;
         let fresh_var = Either::Left(fresh_idx);
-        
+
         // Add the fresh variable to the variable list
         let mut new_variables = vec![fresh_var.clone()];
         new_variables.extend(self.variables.clone());
-        
+
         // Create constraint: e0 = var + 1 (which is e0 - var - 1 = 0)
         let fresh_expr = AffineExpr::from_var(fresh_var.clone());
         let var_expr = AffineExpr::from_var(Either::Right(var.clone()));
         let one = AffineExpr::from_const(1);
         let equality_expr = fresh_expr.sub(&var_expr).sub(&one);
         let equality_constraint = Constraint::new(equality_expr, CompOp::Eq);
-        
+
         // Create constraint: e0 >= 1 (which is e0 - 1 >= 0)
         // let geq_expr = AffineExpr::from_var(fresh_var.clone()).sub(&AffineExpr::from_const(1));
         // let geq_constraint = Constraint::new(geq_expr, CompOp::Geq);
-        
+
         // Substitute var with e0 in the original formula
-        let substituted_formula = self.formula.substitute_var(&Either::Right(var.clone()), Variable::Var(fresh_var.clone()));
-        
+        let substituted_formula = self.formula.substitute_var(
+            &Either::Right(var.clone()),
+            Variable::Var(fresh_var.clone()),
+        );
+
         // Combine all constraints
         let combined_formula = Formula::And(vec![
             substituted_formula,
             Formula::Constraint(equality_constraint),
             // Formula::Constraint(geq_constraint),
         ]);
-        
+
         // Create the proof invariant with the existential variable
         let proof_with_existential = ProofInvariant {
             variables: new_variables,
             formula: combined_formula,
         };
-        
+
         // Existentially quantify and return
-        crate::proofinvariant_to_presburger::existentially_quantify_keep_either(proof_with_existential, &[fresh_idx])
+        crate::proofinvariant_to_presburger::existentially_quantify_keep_either(
+            proof_with_existential,
+            &[fresh_idx],
+        )
     }
 }
 
@@ -588,7 +595,7 @@ where
     match formula {
         Formula::Constraint(c) => {
             // Substitute in the affine expression
-            let mut new_terms = HashMap::new();
+            let mut new_terms = HashMap::default();
             let mut new_constant = c.expr.constant;
 
             for (var, coeff) in &c.expr.terms {
@@ -733,7 +740,7 @@ impl<T: Clone + Eq + Hash> Formula<T> {
     fn substitute_var(&self, old_var: &T, new_var: Variable<T>) -> Self {
         match self {
             Formula::Constraint(c) => {
-                let mut new_terms = HashMap::new();
+                let mut new_terms = HashMap::default();
                 for (var, coeff) in &c.expr.terms {
                     let new_var_key = match var {
                         Variable::Var(v) if v == old_var => new_var.clone(),
@@ -1534,7 +1541,7 @@ pub fn to_presburger_constraint(
 /// This is a specialized function to avoid the infinite recursion issue with nested Either types
 pub fn map_proof_variables<P>(
     proof: ProofInvariant<String>,
-    name_to_place: &std::collections::HashMap<String, P>,
+    name_to_place: &HashMap<String, P>,
 ) -> Option<ProofInvariant<P>>
 where
     P: Clone + Eq + Hash,
@@ -1560,7 +1567,7 @@ where
 /// Helper function to map Formula<String> to Formula<P>
 fn map_formula_variables<P>(
     formula: Formula<String>,
-    name_to_place: &std::collections::HashMap<String, P>,
+    name_to_place: &HashMap<String, P>,
 ) -> Option<Formula<P>>
 where
     P: Clone + Eq + Hash,
@@ -1598,7 +1605,7 @@ where
 /// Helper function to map Constraint<String> to Constraint<P>
 fn map_constraint_variables<P>(
     constraint: Constraint<String>,
-    name_to_place: &std::collections::HashMap<String, P>,
+    name_to_place: &HashMap<String, P>,
 ) -> Option<Constraint<P>>
 where
     P: Clone + Eq + Hash,
@@ -1613,12 +1620,12 @@ where
 /// Helper function to map AffineExpr<String> to AffineExpr<P>
 fn map_affine_expr_variables<P>(
     expr: AffineExpr<String>,
-    name_to_place: &std::collections::HashMap<String, P>,
+    name_to_place: &HashMap<String, P>,
 ) -> Option<AffineExpr<P>>
 where
     P: Clone + Eq + Hash,
 {
-    let mut mapped_terms = HashMap::new();
+    let mut mapped_terms = HashMap::default();
 
     for (var, coeff) in expr.terms {
         let mapped_var = match var {
@@ -1739,7 +1746,7 @@ fn formula_to_presburger(formula: &Formula<String>, mapping: Vec<String>) -> Pre
             let mut iter = children
                 .iter()
                 .map(|f| formula_to_presburger(f, mapping.clone()));
-            let first = iter.next().unwrap_or_else(|| PresburgerSet::zero());
+            let first = iter.next().unwrap_or_else(PresburgerSet::zero);
             iter.fold(first, |acc, next| acc.union(&next))
         }
         Formula::Exists(_idx, body) => {

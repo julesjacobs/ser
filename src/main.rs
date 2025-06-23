@@ -1,19 +1,8 @@
 #![allow(dead_code)]
 
-
-// Make the hashmap and hashset deterministic
-use std::collections::{HashMap as StdHashMap, HashSet as StdHashSet};
-use std::collections::hash_map::DefaultHasher;
-use std::hash::BuildHasherDefault;
-
-pub type DeterministicHasher = BuildHasherDefault<DefaultHasher>;
-
-pub type HashMap<K, V> = StdHashMap<K, V, DeterministicHasher>;
-pub type HashSet<T> = StdHashSet<T, DeterministicHasher>;
-
-
 // mod affine_constraints;
 mod debug_report;
+mod deterministic_map;
 mod expr_to_ns;
 mod graphviz;
 mod isl;
@@ -417,7 +406,7 @@ where
         "{}",
         "────────────────────────────────────────────────────────────".bright_black()
     );
-    
+
     // Print the semilinear set before analysis
     println!();
     println!("Serialized automaton semilinear set:");

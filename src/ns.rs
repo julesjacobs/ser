@@ -5,13 +5,12 @@
 // - Responses (L -> Resp): Server responses from a local state
 // - Transitions (L,G -> L',G'): State transitions between local and global states
 
+use crate::deterministic_map::{HashMap, HashSet};
 use crate::ns_to_petri::ReqPetriState;
 use crate::petri::Petri;
 use colored::*;
 use either::*;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::path::Path;
@@ -21,6 +20,14 @@ use crate::semilinear::*;
 
 // Use the shared utility function for GraphViz escaping
 use crate::utils::string::escape_for_graphviz_id;
+
+// Type aliases to reduce complexity
+type PetriPlace<L, G, Req, Resp> =
+    Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>;
+type PetriTraceStep<L, G, Req, Resp> = (
+    Vec<PetriPlace<L, G, Req, Resp>>,
+    Vec<PetriPlace<L, G, Req, Resp>>,
+);
 
 // Helper function to properly quote strings for GraphViz labels
 fn quote_for_graphviz(s: &str) -> String {
@@ -104,7 +111,7 @@ where
 
     /// Get all unique local states in the network system
     pub fn get_local_states(&self) -> Vec<&L> {
-        let mut local_states = HashSet::new();
+        let mut local_states = HashSet::default();
 
         // Collect local states from requests
         for (_, local) in &self.requests {
@@ -127,7 +134,7 @@ where
 
     /// Get all unique global states in the network system
     pub fn get_global_states(&self) -> Vec<&G> {
-        let mut globals = HashSet::new();
+        let mut globals = HashSet::default();
         globals.insert(&self.initial_global);
 
         // Collect global states from transitions
@@ -141,7 +148,7 @@ where
 
     /// Get all unique requests in the network system
     pub fn get_requests(&self) -> Vec<&Req> {
-        let mut requests = HashSet::new();
+        let mut requests = HashSet::default();
         for (req, _) in &self.requests {
             requests.insert(req);
         }
@@ -150,7 +157,7 @@ where
 
     /// Get all unique responses in the network system
     pub fn get_responses(&self) -> Vec<&Resp> {
-        let mut responses = HashSet::new();
+        let mut responses = HashSet::default();
         for (_, resp) in &self.responses {
             responses.insert(resp);
         }
@@ -170,7 +177,7 @@ where
             for (req, l) in &self.requests {
                 // find all reachable states from (l, g)
                 let mut todo = vec![(l, g)];
-                let mut reached = HashSet::new();
+                let mut reached = HashSet::default();
                 while let Some((l, g)) = todo.pop() {
                     reached.insert((l, g));
                     for (l1, g1, l2, g2) in &self.transitions {
@@ -180,7 +187,7 @@ where
                     }
                 }
                 // find all reachable responses from (l, g)
-                let mut reached_responses: HashSet<(&Resp, &G)> = HashSet::new();
+                let mut reached_responses: HashSet<(&Resp, &G)> = HashSet::default();
                 for (l, g) in reached {
                     for (l2, resp) in &self.responses {
                         if l == l2 {
@@ -452,31 +459,46 @@ where
     /// Check if a trace can be executed by this NS
     /// Returns Ok(multiset of (request, response) pairs) if valid and no requests in flight
     /// Returns Err(message) if invalid or if requests remain in flight
-    pub fn check_trace(&self, trace: &crate::ns_decision::NSTrace<G, L, Req, Resp>) -> Result<Vec<(Req, Resp)>, String> {
+    pub fn check_trace(
+        &self,
+        trace: &crate::ns_decision::NSTrace<G, L, Req, Resp>,
+    ) -> Result<Vec<(Req, Resp)>, String> {
         use crate::ns_decision::NSStep;
-        
+
         // Initialize simulation state
         let mut global_state = self.initial_global.clone();
         let mut in_flight: Vec<(Req, L)> = Vec::new(); // Multiset of active requests
         let mut completed: Vec<(Req, Resp)> = Vec::new(); // Multiset of completed requests
-        
+
         // Process each step in the trace
         for (step_idx, step) in trace.steps.iter().enumerate() {
             match step {
-                NSStep::RequestStart { request, initial_local } => {
+                NSStep::RequestStart {
+                    request,
+                    initial_local,
+                } => {
                     // Verify this request type exists with the given initial local state
-                    if !self.requests.contains(&(request.clone(), initial_local.clone())) {
+                    if !self
+                        .requests
+                        .contains(&(request.clone(), initial_local.clone()))
+                    {
                         return Err(format!(
                             "Step {}: Unknown request type or wrong initial state: ({}, {})",
                             step_idx, request, initial_local
                         ));
                     }
-                    
+
                     // Add to in-flight multiset
                     in_flight.push((request.clone(), initial_local.clone()));
                 }
-                
-                NSStep::InternalStep { request, from_local, from_global, to_local, to_global } => {
+
+                NSStep::InternalStep {
+                    request,
+                    from_local,
+                    from_global,
+                    to_local,
+                    to_global,
+                } => {
                     // Verify global state matches
                     if &global_state != from_global {
                         return Err(format!(
@@ -484,16 +506,21 @@ where
                             step_idx, from_global, global_state
                         ));
                     }
-                    
+
                     // Verify transition exists
-                    let transition = (from_local.clone(), from_global.clone(), to_local.clone(), to_global.clone());
+                    let transition = (
+                        from_local.clone(),
+                        from_global.clone(),
+                        to_local.clone(),
+                        to_global.clone(),
+                    );
                     if !self.transitions.contains(&transition) {
                         return Err(format!(
                             "Step {}: Transition not found in NS: ({}, {}, {}, {})",
                             step_idx, from_local, from_global, to_local, to_global
                         ));
                     }
-                    
+
                     // Find and remove the matching request from in-flight
                     let request_entry = (request.clone(), from_local.clone());
                     if let Some(pos) = in_flight.iter().position(|entry| entry == &request_entry) {
@@ -504,23 +531,30 @@ where
                             step_idx, request, from_local
                         ));
                     }
-                    
+
                     // Add updated request back to in-flight
                     in_flight.push((request.clone(), to_local.clone()));
-                    
+
                     // Update global state
                     global_state = to_global.clone();
                 }
-                
-                NSStep::RequestComplete { request, final_local, response } => {
+
+                NSStep::RequestComplete {
+                    request,
+                    final_local,
+                    response,
+                } => {
                     // Verify response exists
-                    if !self.responses.contains(&(final_local.clone(), response.clone())) {
+                    if !self
+                        .responses
+                        .contains(&(final_local.clone(), response.clone()))
+                    {
                         return Err(format!(
                             "Step {}: Response not found in NS: ({}, {})",
                             step_idx, final_local, response
                         ));
                     }
-                    
+
                     // Find and remove the matching request from in-flight
                     let request_entry = (request.clone(), final_local.clone());
                     if let Some(pos) = in_flight.iter().position(|entry| entry == &request_entry) {
@@ -531,16 +565,17 @@ where
                             step_idx, request, final_local
                         ));
                     }
-                    
+
                     // Add to completed multiset
                     completed.push((request.clone(), response.clone()));
                 }
             }
         }
-        
+
         // Check that no requests remain in flight
         if !in_flight.is_empty() {
-            let in_flight_str: Vec<String> = in_flight.iter()
+            let in_flight_str: Vec<String> = in_flight
+                .iter()
                 .map(|(req, local)| format!("({}, {})", req, local))
                 .collect();
             return Err(format!(
@@ -548,7 +583,7 @@ where
                 in_flight_str.join(", ")
             ));
         }
-        
+
         Ok(completed)
     }
 }
@@ -587,7 +622,7 @@ where
             &format!("Program: {}\nOutput directory: {}", program_name, out_dir),
         );
 
-        let mut places_that_must_be_zero = HashSet::new();
+        let mut places_that_must_be_zero = HashSet::default();
         let petri = ns_to_petri_with_requests(self).rename(|st| match st {
             Response(_, _) => Right(st),
             Global(_) => Left(st),
@@ -625,7 +660,7 @@ where
             "Expected serializable behavior as semilinear set",
             &ser,
         );
-        
+
         // Also print to console for debugging
         println!("\nSerialized automaton semilinear set:");
         println!("{}", ser);
@@ -719,7 +754,8 @@ where
         println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
 
         // Convert Petri decision to NS decision
-        let ns_decision = crate::ns_decision::petri_decision_to_ns(result_with_proofs.clone(), self);
+        let ns_decision =
+            crate::ns_decision::petri_decision_to_ns(result_with_proofs.clone(), self);
 
         match ns_decision {
             crate::ns_decision::NSDecision::Serializable { invariant } => {
@@ -730,17 +766,26 @@ where
                 invariant.pretty_print_with_verification(self);
 
                 // Also show original Petri net proof for debugging if available
-                if let crate::reachability_with_proofs::Decision::Proof { proof: Some(p) } = &result_with_proofs {
+                if let crate::reachability_with_proofs::Decision::Proof { proof: Some(p) } =
+                    &result_with_proofs
+                {
                     println!();
                     println!("{}Original Petri net proof:{}", YELLOW, RESET);
-                    println!("{}   Number of variables: {}{}", YELLOW, p.variables.len(), RESET);
+                    println!(
+                        "{}   Number of variables: {}{}",
+                        YELLOW,
+                        p.variables.len(),
+                        RESET
+                    );
                     println!("{}   Proof invariant:{}", YELLOW, RESET);
-                    let vars_str = p.variables.iter()
+                    let vars_str = p
+                        .variables
+                        .iter()
                         .map(|v| format!("{}", v))
                         .collect::<Vec<_>>()
                         .join(", ");
                     println!("      ({}) ↦ {}", vars_str, p.formula);
-                    
+
                     // Also print all places in the Petri net for comparison
                     println!("{}   All Petri net places:{}", YELLOW, RESET);
                     let all_places = petri_for_trace.get_places();
@@ -752,12 +797,15 @@ where
             crate::ns_decision::NSDecision::NotSerializable { trace } => {
                 println!("{}{}❌ COUNTEREXAMPLE TRACE FOUND{}", BOLD, RED, RESET);
                 println!();
-                
+
                 // Pretty print NS-level trace
                 trace.pretty_print(self);
-                
+
                 // Also show original Petri net trace for debugging
-                if let crate::reachability_with_proofs::Decision::CounterExample { trace: petri_trace } = &result_with_proofs {
+                if let crate::reachability_with_proofs::Decision::CounterExample {
+                    trace: petri_trace,
+                } = &result_with_proofs
+                {
                     println!();
                     println!("{}Original Petri net trace:{}", YELLOW, RESET);
                     print_counterexample_trace(&petri_for_trace, petri_trace);
@@ -796,11 +844,8 @@ fn display_vec<T: Display>(v: &[T]) -> String {
 
 /// Prints a counterexample trace step-by-step on the given Petri net.
 fn print_counterexample_trace<L, G, Req, Resp>(
-    petri: &Petri<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
-    trace: &[(
-        Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
-        Vec<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
-    )],
+    petri: &Petri<PetriPlace<L, G, Req, Resp>>,
+    trace: &[PetriTraceStep<L, G, Req, Resp>],
 ) where
     L: Clone + Eq + PartialEq + Hash + std::fmt::Display,
     G: Clone + Eq + PartialEq + Hash + std::fmt::Display,
@@ -889,7 +934,7 @@ fn print_counterexample_trace<L, G, Req, Resp>(
 
         // Final marking summary
         let total_tokens = marking.len();
-        let mut counts = HashMap::new();
+        let mut counts = HashMap::default();
         for p in &marking {
             *counts.entry(p).or_insert(0) += 1;
         }
@@ -924,15 +969,12 @@ fn print_counterexample_trace<L, G, Req, Resp>(
         // for each place, look for the Debug pattern "Right(Response(...), resp)" and extract
         for (place, &cnt) in &counts {
             use crate::ns_to_petri::ReqPetriState::Response;
-            match place {
-                Right(Response(req, resp)) => {
-                    if cnt == 1 {
-                        print!("{req}/{resp} ");
-                    } else {
-                        print!("({req}/{resp})^{cnt} ");
-                    }
+            if let Right(Response(req, resp)) = place {
+                if cnt == 1 {
+                    print!("{req}/{resp} ");
+                } else {
+                    print!("({req}/{resp})^{cnt} ");
                 }
-                _ => (),
             }
         }
         println!();
@@ -952,7 +994,7 @@ fn extract_name_and_value(s: &str) -> Option<(String, usize)> {
     let name = unescaped.split('"').nth(1)?.to_string();
 
     // 4) Grab the number after the comma and before the `)`:
-    let num_part = unescaped.splitn(2, ',').nth(1)?.trim();
+    let num_part = unescaped.split_once(',')?.1.trim();
     let num = num_part.trim_end_matches(')').parse::<usize>().ok()?;
 
     Some((name, num))
@@ -1056,23 +1098,33 @@ mod tests {
 
     #[test]
     fn test_check_trace() {
-        use crate::ns_decision::{NSTrace, NSStep};
-        
+        use crate::ns_decision::{NSStep, NSTrace};
+
         // Create a simple NS
         let mut ns = NS::<String, String, String, String>::new("G0".to_string());
-        
+
         // Add requests
         ns.add_request("Req1".to_string(), "L0".to_string());
         ns.add_request("Req2".to_string(), "L1".to_string());
-        
+
         // Add transitions
-        ns.add_transition("L0".to_string(), "G0".to_string(), "L2".to_string(), "G1".to_string());
-        ns.add_transition("L1".to_string(), "G1".to_string(), "L3".to_string(), "G2".to_string());
-        
+        ns.add_transition(
+            "L0".to_string(),
+            "G0".to_string(),
+            "L2".to_string(),
+            "G1".to_string(),
+        );
+        ns.add_transition(
+            "L1".to_string(),
+            "G1".to_string(),
+            "L3".to_string(),
+            "G2".to_string(),
+        );
+
         // Add responses
         ns.add_response("L2".to_string(), "Resp1".to_string());
         ns.add_response("L3".to_string(), "Resp2".to_string());
-        
+
         // Test 1: Valid trace with two requests completing successfully
         let trace1 = NSTrace {
             steps: vec![
@@ -1110,14 +1162,14 @@ mod tests {
                 },
             ],
         };
-        
+
         let result1 = ns.check_trace(&trace1);
         assert!(result1.is_ok());
         let completed = result1.unwrap();
         assert_eq!(completed.len(), 2);
         assert!(completed.contains(&("Req1".to_string(), "Resp1".to_string())));
         assert!(completed.contains(&("Req2".to_string(), "Resp2".to_string())));
-        
+
         // Test 2: Invalid trace - request still in flight
         let trace2 = NSTrace {
             steps: vec![
@@ -1135,11 +1187,11 @@ mod tests {
                 // Missing RequestComplete for Req1
             ],
         };
-        
+
         let result2 = ns.check_trace(&trace2);
         assert!(result2.is_err());
         assert!(result2.unwrap_err().contains("Requests still in flight"));
-        
+
         // Test 3: Invalid trace - wrong global state
         let trace3 = NSTrace {
             steps: vec![
@@ -1156,21 +1208,19 @@ mod tests {
                 },
             ],
         };
-        
+
         let result3 = ns.check_trace(&trace3);
         assert!(result3.is_err());
         assert!(result3.unwrap_err().contains("Global state mismatch"));
-        
+
         // Test 4: Invalid trace - unknown request
         let trace4 = NSTrace {
-            steps: vec![
-                NSStep::RequestStart {
-                    request: "UnknownReq".to_string(),
-                    initial_local: "L0".to_string(),
-                },
-            ],
+            steps: vec![NSStep::RequestStart {
+                request: "UnknownReq".to_string(),
+                initial_local: "L0".to_string(),
+            }],
         };
-        
+
         let result4 = ns.check_trace(&trace4);
         assert!(result4.is_err());
         assert!(result4.unwrap_err().contains("Unknown request type"));

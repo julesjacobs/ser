@@ -1,7 +1,7 @@
 // Semi-linear sets
 
+use crate::deterministic_map::{HashMap, HashSet};
 use std::clone::Clone;
-use std::collections::{HashMap, HashSet};
 pub use std::hash::Hash;
 
 use crate::kleene::Kleene;
@@ -65,7 +65,7 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
     /// Create a new empty sparse vector (all zeros)
     pub fn new() -> Self {
         SparseVector {
-            values: HashMap::new(),
+            values: HashMap::default(),
         }
     }
 
@@ -85,7 +85,7 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
 
     /// Create a unit vector with 1 at the specified dimension
     pub fn unit(key: K) -> Self {
-        let mut values = HashMap::new();
+        let mut values = HashMap::default();
         values.insert(key, 1);
         SparseVector { values }
     }
@@ -109,7 +109,7 @@ impl<K: Eq + Hash + Clone + Ord> SparseVector<K> {
 
     /// Rename all the keys
     pub fn rename<L: Eq + Hash + Clone + Ord>(self, mut f: impl FnMut(K) -> L) -> SparseVector<L> {
-        let mut new_map = HashMap::new();
+        let mut new_map = HashMap::default();
         for (k, v) in self.values {
             let k = f(k);
             *new_map.entry(k).or_insert(0) += v;
@@ -265,7 +265,9 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
 
     /// Singleton containing the zero vector.
     fn zero() -> Self {
-        SemilinearSet::singleton(SparseVector::new())
+        SemilinearSet::singleton(SparseVector {
+            values: HashMap::default(),
+        })
     }
 
     /// The empty semilinear set (contains no vectors).
@@ -279,7 +281,9 @@ impl<K: Eq + Hash + Clone + Ord> SemilinearSet<K> {
     /// This requires providing a set of possible dimensions.
     pub fn universe(keys: Vec<K>) -> Self {
         // Universe = linear set with base = empty (all zeros), periods = unit vectors for each key
-        let base = SparseVector::new();
+        let base = SparseVector {
+            values: HashMap::default(),
+        };
         let periods = keys.into_iter().map(SparseVector::unit).collect();
         SemilinearSet::new(vec![LinearSet { base, periods }])
     }
@@ -310,7 +314,7 @@ pub fn is_nonnegative_combination<K: Eq + Hash + Clone + Ord>(
     periods: &[SparseVector<K>],
 ) -> bool {
     // We'll do a DFS with memoization.  The memo stores `(current_vector, index_in_periods)`.
-    let mut memo = HashSet::new();
+    let mut memo = HashSet::default();
     dfs(target, 0, periods, &mut memo)
 }
 
@@ -537,7 +541,7 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         // 4. Lastly, for any combinations that are left, we have to do the slow thing of
         //      (bp* + ...)* = bb*p*(...)* + (...)*
         //    recursively.
-        let mut extra_periods = HashSet::new();
+        let mut extra_periods = HashSet::default();
 
         // 1. Pull out linear sets with zero base.
         let mut components = self.components;
@@ -587,7 +591,9 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         );
         for mask in 0..(1 << n) {
             // Determine subset X for this mask
-            let mut subset_base = SparseVector::new();
+            let mut subset_base = SparseVector {
+                values: HashMap::default(),
+            };
             let mut subset_periods: Vec<SparseVector<K>> = Vec::new();
 
             for (i, comp) in components.iter().enumerate() {
@@ -631,11 +637,15 @@ mod tests {
 
     #[test]
     fn test_sparse_vector_operations() {
-        let mut v1 = SparseVector::new();
+        let mut v1 = SparseVector {
+            values: HashMap::default(),
+        };
         v1.set("x".to_string(), 1);
         v1.set("y".to_string(), 2);
 
-        let mut v2 = SparseVector::new();
+        let mut v2 = SparseVector {
+            values: HashMap::default(),
+        };
         v2.set("y".to_string(), 3);
         v2.set("z".to_string(), 4);
 
@@ -648,11 +658,15 @@ mod tests {
 
     #[test]
     fn test_semilinear_set_union() {
-        let mut v1 = SparseVector::new();
+        let mut v1 = SparseVector {
+            values: HashMap::default(),
+        };
         v1.set("x".to_string(), 1);
         v1.set("y".to_string(), 2);
 
-        let mut v2 = SparseVector::new();
+        let mut v2 = SparseVector {
+            values: HashMap::default(),
+        };
         v2.set("y".to_string(), 3);
         v2.set("z".to_string(), 4);
 
@@ -668,10 +682,14 @@ mod tests {
 
     #[test]
     fn test_semilinear_set_add() {
-        let mut v1 = SparseVector::new();
+        let mut v1 = SparseVector {
+            values: HashMap::default(),
+        };
         v1.set("x".to_string(), 1);
 
-        let mut v2 = SparseVector::new();
+        let mut v2 = SparseVector {
+            values: HashMap::default(),
+        };
         v2.set("y".to_string(), 2);
 
         let set1 = SemilinearSet::singleton(v1);
@@ -695,7 +713,9 @@ mod tests {
 
         // Define the ground truth using the semilinear set constructors
         let ground_truth_a_star = SemilinearSet::new(vec![LinearSet {
-            base: SparseVector::new(),
+            base: SparseVector {
+                values: HashMap::default(),
+            },
             periods: vec![SparseVector::unit("a")],
         }]);
 
@@ -712,7 +732,9 @@ mod tests {
         // check symetry
         assert_eq!(b_times_c, c_times_b);
 
-        let mut b_time_c_sparse_vector = SparseVector::new();
+        let mut b_time_c_sparse_vector = SparseVector {
+            values: HashMap::default(),
+        };
         b_time_c_sparse_vector.set("b".to_string(), 1);
         b_time_c_sparse_vector.set("c".to_string(), 1);
 
@@ -737,7 +759,9 @@ mod tests {
         // Use the Kleene operations to compute (a*);b
         let a_star_times_b = a_star.times(b);
 
-        let mut a_b = SparseVector::new();
+        let mut a_b = SparseVector {
+            values: HashMap::default(),
+        };
         a_b.set("a".to_string(), 1);
         a_b.set("b".to_string(), 1);
 
@@ -766,7 +790,9 @@ mod tests {
         // Use the Kleene operations to compute (a*);b
         let a_star_times_b = a_star.times(b.clone());
 
-        let mut a_b = SparseVector::new();
+        let mut a_b = SparseVector {
+            values: HashMap::default(),
+        };
         a_b.set("a".to_string(), 1);
         a_b.set("b".to_string(), 1);
 
@@ -852,7 +878,7 @@ mod tests {
 //     // Define the ground truth using the semilinear set constructors
 //     let ground_truth_star_of_a_star_times_b_plus_b_times_c = SemilinearSet::new(vec![
 //         LinearSet { // {(0,0,0);[]}
-//             base: SparseVector::new(),
+//             base: SparseVector { values: HashMap::default() },
 //             periods: vec![],
 //         },
 //         LinearSet { // {(0,1,0);[(0,1,0)]}

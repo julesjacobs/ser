@@ -1,12 +1,16 @@
+use crate::deterministic_map::{HashMap, HashSet};
 use crate::ns::NS;
 use crate::ns_to_petri::ReqPetriState;
-use crate::proof_parser::{ProofInvariant, Formula};
-use crate::reachability_with_proofs::Decision;
+use crate::proof_parser::{Formula, ProofInvariant};
 use crate::proofinvariant_to_presburger::formula_to_presburger;
+use crate::reachability_with_proofs::Decision;
 use either::Either;
-use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Debug, Display};
 use std::hash::Hash;
+
+// Type alias to reduce complexity
+type PetriPlace<L, G, Req, Resp> =
+    Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>;
 
 /// Domain-specific type representing the state of a request in the NS
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -53,10 +57,7 @@ impl<Req: Display, Resp: Display> Display for CompletedRequestPair<Req, Resp> {
 #[derive(Clone, Debug)]
 pub enum NSStep<G, L, Req, Resp> {
     /// A new request is created
-    RequestStart {
-        request: Req,
-        initial_local: L,
-    },
+    RequestStart { request: Req, initial_local: L },
     /// An internal transition within an active request
     InternalStep {
         request: Req,
@@ -91,16 +92,19 @@ where
     pub fn pretty_print(&self, ns: &NS<G, L, Req, Resp>) {
         println!("NS-Level Counterexample Trace:");
         println!("==============================");
-        
+
         if self.steps.is_empty() {
             println!("(Empty trace - violation at initial state)");
             return;
         }
-        
+
         for (i, step) in self.steps.iter().enumerate() {
             println!("\nStep {}:", i + 1);
             match step {
-                NSStep::RequestStart { request, initial_local } => {
+                NSStep::RequestStart {
+                    request,
+                    initial_local,
+                } => {
                     println!("  📨 NEW REQUEST");
                     println!("  Request: {}", request);
                     println!("  Initial local state: {}", initial_local);
@@ -130,27 +134,27 @@ where
                 }
             }
         }
-        
+
         // Run trace validation and display results
         println!("\n==============================");
         println!("Trace Validation:");
         println!("==============================");
-        
+
         match ns.check_trace(self) {
             Ok(completed_pairs) => {
                 println!("✅ Trace is valid!");
-                
+
                 // Display completed request/response multiset
                 println!("\nCompleted Request/Response Pairs:");
                 if completed_pairs.is_empty() {
                     println!("  (none)");
                 } else {
                     // Count occurrences of each pair for multiset display
-                    let mut counts: std::collections::HashMap<(Req, Resp), usize> = std::collections::HashMap::new();
+                    let mut counts: HashMap<(Req, Resp), usize> = HashMap::default();
                     for (req, resp) in completed_pairs {
                         *counts.entry((req, resp)).or_insert(0) += 1;
                     }
-                    
+
                     // Display with multiplicity
                     for ((req, resp), count) in counts {
                         if count == 1 {
@@ -183,9 +187,7 @@ where
         invariant: NSInvariant<G, L, Req, Resp>,
     },
     /// Program is not serializable with counterexample trace
-    NotSerializable {
-        trace: NSTrace<G, L, Req, Resp>,
-    },
+    NotSerializable { trace: NSTrace<G, L, Req, Resp> },
 }
 
 /// NS-level invariant structure that captures per-global-state invariants
@@ -254,7 +256,9 @@ where
             println!("-------------");
 
             // Print full invariant in mapping notation
-            let vars_str = invariant.variables.iter()
+            let vars_str = invariant
+                .variables
+                .iter()
                 .map(|v| v.to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
@@ -263,7 +267,9 @@ where
             // Print projected invariant
             if let Some(projected) = self.project_to_completed(global_state) {
                 println!("\nProjected (Completed Requests Only):");
-                let proj_vars_str = projected.variables.iter()
+                let proj_vars_str = projected
+                    .variables
+                    .iter()
                     .map(|v| v.to_string())
                     .collect::<Vec<_>>()
                     .join(", ");
@@ -271,7 +277,7 @@ where
             }
         }
     }
-    
+
     /// Pretty print the NS invariant with proof verification results
     pub fn pretty_print_with_verification(&self, ns: &NS<G, L, Req, Resp>)
     where
@@ -281,11 +287,11 @@ where
         Resp: Clone + Display + Eq + Hash + Ord + Debug + ToString,
     {
         self.pretty_print();
-        
+
         println!("\n=====================================");
         println!("Proof Certificate Verification:");
         println!("=====================================");
-        
+
         match self.check_proof(ns) {
             Ok(()) => {
                 println!("✅ Proof certificate is VALID");
@@ -299,7 +305,7 @@ where
             }
         }
     }
-    
+
     /// Check if the proof certificate is valid
     /// Returns Ok(()) if valid, Err with explanation if invalid
     pub fn check_proof(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
@@ -311,16 +317,16 @@ where
     {
         // Check 1: Initial state satisfies the invariant
         self.check_initial_state(ns)?;
-        
+
         // Check 2: Invariant is inductive
         self.check_inductive(ns)?;
-        
+
         // Check 3: Invariant implies target (serializability)
         self.check_implies_target(ns)?;
-        
+
         Ok(())
     }
-    
+
     /// Check that the initial state satisfies the invariant
     fn check_initial_state(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
     where
@@ -330,21 +336,25 @@ where
         Resp: Clone + Display,
     {
         // Get the invariant for the initial global state
-        let initial_invariant = self.global_invariants
-            .get(&ns.initial_global)
-            .ok_or_else(|| format!(
-                "No invariant found for initial global state: {}", 
-                ns.initial_global
-            ))?;
-        
+        let initial_invariant =
+            self.global_invariants
+                .get(&ns.initial_global)
+                .ok_or_else(|| {
+                    format!(
+                        "No invariant found for initial global state: {}",
+                        ns.initial_global
+                    )
+                })?;
+
         // Initial state has empty multiset (no requests in flight or completed)
         // This means all variables in the formula should be substituted with 0
         let mut mapping = |_var: &RequestStatePair<Req, L, Resp>| -> Either<String, i32> {
             // All variables map to 0 in the empty multiset
             Either::Right(0)
         };
-        let substituted_invariant: ProofInvariant<String> = initial_invariant.substitute(&mut mapping);
-        
+        let substituted_invariant: ProofInvariant<String> =
+            initial_invariant.substitute(&mut mapping);
+
         // Check if the substituted formula is satisfiable
         if is_formula_satisfied_string(&substituted_invariant.formula) {
             Ok(())
@@ -352,7 +362,7 @@ where
             Err("Initial state (empty multiset) does not satisfy the invariant".to_string())
         }
     }
-    
+
     /// Check that the invariant is inductive (preserved by all transitions)
     fn check_inductive(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
     where
@@ -364,29 +374,33 @@ where
         // Check 1: Internal transitions preserve the invariant
         for (from_local, from_global, to_local, to_global) in &ns.transitions {
             // Get invariants for source and target global states
-            let from_inv = self.global_invariants
+            let from_inv = self
+                .global_invariants
                 .get(from_global)
                 .ok_or_else(|| format!("No invariant for global state: {}", from_global))?;
-            let to_inv = self.global_invariants
+            let to_inv = self
+                .global_invariants
                 .get(to_global)
                 .ok_or_else(|| format!("No invariant for global state: {}", to_global))?;
-            
+
             // For each possible request type that could be in this local state
             for (req, _) in &ns.requests {
-                let from_var = RequestStatePair(req.clone(), RequestState::InFlight(from_local.clone()));
-                let to_var = RequestStatePair(req.clone(), RequestState::InFlight(to_local.clone()));
-                
+                let from_var =
+                    RequestStatePair(req.clone(), RequestState::InFlight(from_local.clone()));
+                let to_var =
+                    RequestStatePair(req.clone(), RequestState::InFlight(to_local.clone()));
+
                 // Convert to Either type for the operations
-                let from_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> = 
+                let from_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> =
                     from_inv.clone().map(|v| Either::Right(v.clone()));
-                
+
                 // Apply the transition: remove one from source, add one to target
                 let inv_after_remove = from_inv_either.filter_and_subtract_one(&from_var);
                 let inv_after_add = inv_after_remove.add_one(&to_var);
-                
+
                 // Project back to the original type
                 let inv_after_transition = inv_after_add.project_right();
-                
+
                 // Check if the result implies the target invariant
                 if !self.check_formula_implies(&inv_after_transition, to_inv)? {
                     return Err(format!(
@@ -396,22 +410,29 @@ where
                 }
             }
         }
-        
+
         // Check 2: Request creation preserves the invariant
         for (req, initial_local) in &ns.requests {
-            let initial_inv = self.global_invariants
+            let initial_inv = self
+                .global_invariants
                 .get(&ns.initial_global)
-                .ok_or_else(|| format!("No invariant for initial global state: {}", ns.initial_global))?;
-            
-            let new_var = RequestStatePair(req.clone(), RequestState::InFlight(initial_local.clone()));
-            
+                .ok_or_else(|| {
+                    format!(
+                        "No invariant for initial global state: {}",
+                        ns.initial_global
+                    )
+                })?;
+
+            let new_var =
+                RequestStatePair(req.clone(), RequestState::InFlight(initial_local.clone()));
+
             // Convert to Either type for the operation
-            let initial_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> = 
+            let initial_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> =
                 initial_inv.clone().map(|v| Either::Right(v.clone()));
-            
+
             let inv_after_add = initial_inv_either.add_one(&new_var);
             let inv_after_creation = inv_after_add.project_right();
-            
+
             // Check if creating a new request preserves the initial state invariant
             if !self.check_formula_implies(&inv_after_creation, initial_inv)? {
                 return Err(format!(
@@ -420,29 +441,33 @@ where
                 ));
             }
         }
-        
+
         // Check 3: Request completion preserves the invariant
         for (final_local, resp) in &ns.responses {
             // For each global state where this response could occur
             for global_state in ns.get_global_states() {
-                let global_inv = self.global_invariants
+                let global_inv = self
+                    .global_invariants
                     .get(global_state)
                     .ok_or_else(|| format!("No invariant for global state: {}", global_state))?;
-                
+
                 // For each request type that could complete with this response
                 for (req, _) in &ns.requests {
-                    let inflight_var = RequestStatePair(req.clone(), RequestState::InFlight(final_local.clone()));
-                    let completed_var = RequestStatePair(req.clone(), RequestState::Completed(resp.clone()));
-                    
+                    let inflight_var =
+                        RequestStatePair(req.clone(), RequestState::InFlight(final_local.clone()));
+                    let completed_var =
+                        RequestStatePair(req.clone(), RequestState::Completed(resp.clone()));
+
                     // Convert to Either type for the operations
-                    let global_inv_either: ProofInvariant<Either<usize, RequestStatePair<Req, L, Resp>>> = 
-                        global_inv.clone().map(|v| Either::Right(v.clone()));
-                    
+                    let global_inv_either: ProofInvariant<
+                        Either<usize, RequestStatePair<Req, L, Resp>>,
+                    > = global_inv.clone().map(|v| Either::Right(v.clone()));
+
                     // Apply completion: remove inflight, add completed
                     let inv_after_remove = global_inv_either.filter_and_subtract_one(&inflight_var);
                     let inv_after_add = inv_after_remove.add_one(&completed_var);
                     let inv_after_completion = inv_after_add.project_right();
-                    
+
                     // Check if completion preserves the same global state invariant
                     if !self.check_formula_implies(&inv_after_completion, global_inv)? {
                         return Err(format!(
@@ -453,14 +478,15 @@ where
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Check if one proof invariant implies another using Presburger arithmetic
-    fn check_formula_implies(&self, 
+    fn check_formula_implies(
+        &self,
         antecedent: &ProofInvariant<RequestStatePair<Req, L, Resp>>,
-        consequent: &ProofInvariant<RequestStatePair<Req, L, Resp>>
+        consequent: &ProofInvariant<RequestStatePair<Req, L, Resp>>,
     ) -> Result<bool, String>
     where
         G: Display,
@@ -469,28 +495,26 @@ where
         Resp: Clone + Display + ToString,
     {
         // Get all variables that might appear in either formula
-        let mut all_vars = HashSet::new();
+        let mut all_vars = HashSet::default();
         all_vars.extend(antecedent.variables.iter().cloned());
         all_vars.extend(consequent.variables.iter().cloned());
-        
+
         // Convert to a consistent vector of string variables
-        let string_vars: Vec<String> = all_vars.iter()
-            .map(|v| v.to_string())
-            .collect();
-        
+        let string_vars: Vec<String> = all_vars.iter().map(|v| v.to_string()).collect();
+
         // Convert both invariants to use string representations
         let antecedent_string = antecedent.clone().map(|v| v.to_string());
         let consequent_string = consequent.clone().map(|v| v.to_string());
-        
+
         // Convert to Presburger sets using the same variable mapping
         let antecedent_set = formula_to_presburger(&antecedent_string.formula, &string_vars);
         let consequent_set = formula_to_presburger(&consequent_string.formula, &string_vars);
-        
+
         // Check if antecedent ⊆ consequent (i.e., antecedent \ consequent = ∅)
         let difference = antecedent_set.difference(&consequent_set);
         Ok(difference.is_empty())
     }
-    
+
     /// Check that the invariant implies the target property (serializability)
     /// When there are no in-flight requests, completed requests must form a serializable execution
     fn check_implies_target(&self, ns: &NS<G, L, Req, Resp>) -> Result<(), String>
@@ -503,12 +527,13 @@ where
         // Get the semilinear set of serializable executions
         // This uses Response(Req, Resp) as the type
         use crate::ns_to_petri::ReqPetriState;
-        let serializable_set: crate::semilinear::SemilinearSet<_> = ns.serialized_automaton_kleene(|req, resp| {
-            crate::semilinear::SemilinearSet::singleton(
-                crate::semilinear::SparseVector::unit(ReqPetriState::Response(req, resp))
-            )
-        });
-        
+        let serializable_set: crate::semilinear::SemilinearSet<_> =
+            ns.serialized_automaton_kleene(|req, resp| {
+                crate::semilinear::SemilinearSet::singleton(crate::semilinear::SparseVector::unit(
+                    ReqPetriState::Response(req, resp),
+                ))
+            });
+
         // Check each global state
         for (global_state, invariant) in &self.global_invariants {
             // Substitute: InFlight -> 0, Completed -> Response(Req, Resp)
@@ -524,23 +549,28 @@ where
                     }
                 }
             };
-            
+
             let substituted_invariant = invariant.substitute(&mut mapping);
-            
+
             // Check if the invariant implies membership in the serializable set
-            if !self.invariant_implies_semilinear(&substituted_invariant, &serializable_set, global_state)? {
+            if !self.invariant_implies_semilinear(
+                &substituted_invariant,
+                &serializable_set,
+                global_state,
+            )? {
                 return Err(format!(
-                    "Invariant for global state {} does not imply serializability", 
+                    "Invariant for global state {} does not imply serializability",
                     global_state
                 ));
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Check if an invariant formula implies membership in a semilinear set
-    fn invariant_implies_semilinear<T>(&self, 
+    fn invariant_implies_semilinear<T>(
+        &self,
         invariant: &ProofInvariant<T>,
         semilinear: &crate::semilinear::SemilinearSet<T>,
         global_state: &G,
@@ -551,27 +581,29 @@ where
     {
         // For now, convert to String since that's what formula_to_presburger supports
         // This is not ideal but works until we have proper generic support
-        let string_vars: Vec<String> = invariant.variables.iter()
-            .map(|v| v.to_string())
-            .collect();
-        
+        let string_vars: Vec<String> = invariant.variables.iter().map(|v| v.to_string()).collect();
+
         let string_invariant = invariant.clone().map(|v| v.to_string());
         let invariant_set = formula_to_presburger(&string_invariant.formula, &string_vars);
-        
+
         // Convert semilinear set to String type and then to PresburgerSet
         let string_semilinear = semilinear.clone().rename(|v| v.to_string());
-        let mut spresburger = crate::spresburger::SPresburgerSet::from_semilinear(string_semilinear.clone());
+        let mut spresburger =
+            crate::spresburger::SPresburgerSet::from_semilinear(string_semilinear.clone());
         let semilinear_as_presburger = spresburger.as_presburger();
-        
+
         // Check if invariant_set ⊆ semilinear_set
         // This is equivalent to: invariant_set \ semilinear_set = ∅
         let difference = invariant_set.difference(semilinear_as_presburger);
-        
+
         if difference.is_empty() {
             Ok(true)
         } else {
             // Log which values violate the implication for debugging
-            eprintln!("Warning: Invariant for global state {} has values outside serializable set", global_state);
+            eprintln!(
+                "Warning: Invariant for global state {} has values outside serializable set",
+                global_state
+            );
             eprintln!("  Semilinear set: {}", string_semilinear);
             eprintln!("  Projected invariant: {}", string_invariant.formula);
             eprintln!("  Projected invariant (ISL): {}", invariant_set);
@@ -584,9 +616,7 @@ where
 
 /// Translate a Petri net proof to NS-level invariants
 pub fn translate_petri_proof_to_ns<G, L, Req, Resp>(
-    petri_proof: ProofInvariant<
-        Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>,
-    >,
+    petri_proof: ProofInvariant<PetriPlace<L, G, Req, Resp>>,
     ns: &NS<G, L, Req, Resp>,
 ) -> NSInvariant<G, L, Req, Resp>
 where
@@ -595,7 +625,7 @@ where
     Req: Clone + Eq + Hash + Debug + Display,
     Resp: Clone + Eq + Hash + Debug + Display,
 {
-    let mut global_invariants = HashMap::new();
+    let mut global_invariants = HashMap::default();
 
     // Get all global states from the NS
     let global_states = ns.get_global_states();
@@ -649,33 +679,45 @@ where
 
         // Ensure all possible request state pairs are included in the variable list
         // This fixes cases where trivial proofs (True formulas) have empty variable lists
-        let mut all_vars: HashSet<RequestStatePair<Req, L, Resp>> = HashSet::new();
-        
+        let mut all_vars: HashSet<RequestStatePair<Req, L, Resp>> = HashSet::default();
+
         // Add all response variables (completed requests) that could appear
         for req in ns.get_requests() {
             for (_local, resp) in &ns.responses {
-                all_vars.insert(RequestStatePair(req.clone(), RequestState::Completed(resp.clone())));
+                all_vars.insert(RequestStatePair(
+                    req.clone(),
+                    RequestState::Completed(resp.clone()),
+                ));
             }
         }
-        
+
         // Add all in-flight variables that could appear
         for req in ns.get_requests() {
             for (req_local, local) in &ns.requests {
                 if req == req_local {
-                    all_vars.insert(RequestStatePair(req.clone(), RequestState::InFlight(local.clone())));
+                    all_vars.insert(RequestStatePair(
+                        req.clone(),
+                        RequestState::InFlight(local.clone()),
+                    ));
                 }
             }
             // Also add all local states that could be reached via transitions
             for (from_local, _, to_local, _) in &ns.transitions {
-                all_vars.insert(RequestStatePair(req.clone(), RequestState::InFlight(from_local.clone())));
-                all_vars.insert(RequestStatePair(req.clone(), RequestState::InFlight(to_local.clone())));
+                all_vars.insert(RequestStatePair(
+                    req.clone(),
+                    RequestState::InFlight(from_local.clone()),
+                ));
+                all_vars.insert(RequestStatePair(
+                    req.clone(),
+                    RequestState::InFlight(to_local.clone()),
+                ));
             }
         }
-        
+
         // Convert to sorted vector for consistent ordering
         let mut additional_vars: Vec<_> = all_vars.into_iter().collect();
         additional_vars.sort_by(|a, b| format!("{}", a).cmp(&format!("{}", b)));
-        
+
         // Add any variables that aren't already in the proof
         for var in additional_vars {
             if !specialized_proof.variables.contains(&var) {
@@ -691,7 +733,9 @@ where
 
 /// Convert a Petri net Decision to an NS-level NSDecision
 pub fn petri_decision_to_ns<G, L, Req, Resp>(
-    petri_decision: Decision<Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>>,
+    petri_decision: Decision<
+        Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>,
+    >,
     ns: &NS<G, L, Req, Resp>,
 ) -> NSDecision<G, L, Req, Resp>
 where
@@ -710,7 +754,7 @@ where
                 // No explicit proof available, create empty invariant
                 NSDecision::Serializable {
                     invariant: NSInvariant {
-                        global_invariants: HashMap::new(),
+                        global_invariants: HashMap::default(),
                     },
                 }
             }
@@ -738,7 +782,7 @@ where
     Resp: Clone + Eq + Hash + Debug + Display,
 {
     let mut steps = Vec::new();
-    
+
     // Analyze each transition in the Petri trace
     for (inputs, outputs) in petri_trace {
         // Case 1: Request creation (empty inputs, creates Local state)
@@ -751,13 +795,13 @@ where
                 continue;
             }
         }
-        
+
         // Case 2: Internal transition (Local + Global inputs)
         if inputs.len() == 2 && outputs.len() == 2 {
             let mut from_local = None;
             let mut from_global = None;
             let mut request = None;
-            
+
             // Extract input states
             for input in &inputs {
                 match input {
@@ -771,10 +815,10 @@ where
                     _ => {}
                 }
             }
-            
+
             let mut to_local = None;
             let mut to_global = None;
-            
+
             // Extract output states
             for output in &outputs {
                 match output {
@@ -791,10 +835,11 @@ where
                     _ => {}
                 }
             }
-            
+
             // If we have all components, create internal step
-            if let (Some(req), Some(fl), Some(fg), Some(tl), Some(tg)) = 
-                (request, from_local, from_global, to_local, to_global) {
+            if let (Some(req), Some(fl), Some(fg), Some(tl), Some(tg)) =
+                (request, from_local, from_global, to_local, to_global)
+            {
                 steps.push(NSStep::InternalStep {
                     request: req,
                     from_local: fl,
@@ -805,13 +850,14 @@ where
                 continue;
             }
         }
-        
+
         // Case 3: Response completion (single Local input, creates Response)
         if inputs.len() == 1 && outputs.len() == 1 {
             if let (
                 Some(Either::Left(ReqPetriState::Local(req_in, local))),
-                Some(Either::Right(ReqPetriState::Response(req_out, resp)))
-            ) = (inputs.first(), outputs.first()) {
+                Some(Either::Right(ReqPetriState::Response(req_out, resp))),
+            ) = (inputs.first(), outputs.first())
+            {
                 // Verify same request
                 if req_in == req_out {
                     steps.push(NSStep::RequestComplete {
@@ -823,11 +869,14 @@ where
                 }
             }
         }
-        
+
         // If we couldn't match any pattern, log a warning
-        eprintln!("Warning: Could not interpret Petri transition: {:?} -> {:?}", inputs, outputs);
+        eprintln!(
+            "Warning: Could not interpret Petri transition: {:?} -> {:?}",
+            inputs, outputs
+        );
     }
-    
+
     NSTrace { steps }
 }
 
@@ -886,9 +935,9 @@ mod tests {
 
     #[test]
     fn test_invariant_implies_semilinear_empty_invariant() {
-        use crate::semilinear::SemilinearSet;
         use crate::kleene::Kleene;
-        
+        use crate::semilinear::SemilinearSet;
+
         // Test case where invariant is empty (always true), should imply any semilinear set
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
@@ -896,27 +945,27 @@ mod tests {
 
         // Create an empty semilinear set using Kleene interface
         let semilinear = <SemilinearSet<String> as Kleene>::zero();
-        
+
         // Since we have no global states in the invariant, this should trivially succeed
         let result = ns_invariant.invariant_implies_semilinear(
             &ProofInvariant {
                 variables: vec![],
                 formula: Formula::Constraint(Constraint::new(
-                    AffineExpr::from_const(1), 
-                    CompOp::Eq
+                    AffineExpr::from_const(1),
+                    CompOp::Eq,
                 )),
             },
             &semilinear,
             &"G1".to_string(),
         );
-        
+
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_invariant_implies_semilinear_singleton_match() {
         use crate::semilinear::SemilinearSet;
-        
+
         // Create an invariant that matches exactly one point
         let var_name = "x".to_string();
         let invariant = ProofInvariant {
@@ -926,20 +975,17 @@ mod tests {
                 CompOp::Eq,
             )), // x = 1
         };
-        
+
         // Create a semilinear set containing just the atom x
         let semilinear = SemilinearSet::atom(var_name.clone());
-        
+
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
         };
-        
-        let result = ns_invariant.invariant_implies_semilinear(
-            &invariant,
-            &semilinear,
-            &"G1".to_string(),
-        );
-        
+
+        let result =
+            ns_invariant.invariant_implies_semilinear(&invariant, &semilinear, &"G1".to_string());
+
         assert!(result.is_ok());
         assert!(result.unwrap());
     }
@@ -947,7 +993,7 @@ mod tests {
     #[test]
     fn test_invariant_implies_semilinear_singleton_no_match() {
         use crate::semilinear::SemilinearSet;
-        
+
         // Create an invariant for x = 2
         let var_name = "x".to_string();
         let invariant = ProofInvariant {
@@ -957,29 +1003,26 @@ mod tests {
                 CompOp::Eq,
             )), // x = 2
         };
-        
+
         // Create a semilinear set containing just the atom x (which represents x=1)
         let semilinear = SemilinearSet::atom(var_name.clone());
-        
+
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
         };
-        
-        let result = ns_invariant.invariant_implies_semilinear(
-            &invariant,
-            &semilinear,
-            &"G1".to_string(),
-        );
-        
+
+        let result =
+            ns_invariant.invariant_implies_semilinear(&invariant, &semilinear, &"G1".to_string());
+
         assert!(result.is_ok());
         assert!(!result.unwrap()); // Should NOT be implied
     }
 
     #[test]
     fn test_invariant_implies_semilinear_star() {
-        use crate::semilinear::SemilinearSet;
         use crate::kleene::Kleene;
-        
+        use crate::semilinear::SemilinearSet;
+
         // Create an invariant for x >= 0 (any non-negative x)
         let var_name = "x".to_string();
         let invariant = ProofInvariant {
@@ -989,30 +1032,27 @@ mod tests {
                 CompOp::Geq,
             )), // x >= 0
         };
-        
+
         // Create a semilinear set for x* (0 or more x's)
         let x_atom = SemilinearSet::atom(var_name.clone());
         let semilinear = x_atom.star();
-        
+
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
         };
-        
-        let result = ns_invariant.invariant_implies_semilinear(
-            &invariant,
-            &semilinear,
-            &"G1".to_string(),
-        );
-        
+
+        let result =
+            ns_invariant.invariant_implies_semilinear(&invariant, &semilinear, &"G1".to_string());
+
         assert!(result.is_ok());
         assert!(result.unwrap()); // x >= 0 is exactly what x* represents
     }
 
     #[test]
     fn test_invariant_implies_semilinear_union() {
-        use crate::semilinear::SemilinearSet;
         use crate::kleene::Kleene;
-        
+        use crate::semilinear::SemilinearSet;
+
         // Create an invariant for x = 1 OR x = 2
         let x_var = "x".to_string();
         let invariant = ProofInvariant {
@@ -1028,30 +1068,27 @@ mod tests {
                 )), // x = 2
             ]),
         };
-        
+
         // Create a semilinear set for x* (which contains 0, 1, 2, 3, ...)
         let x_atom = SemilinearSet::atom(x_var.clone());
         let semilinear = x_atom.star();
-        
+
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
         };
-        
-        let result = ns_invariant.invariant_implies_semilinear(
-            &invariant,
-            &semilinear,
-            &"G1".to_string(),
-        );
-        
+
+        let result =
+            ns_invariant.invariant_implies_semilinear(&invariant, &semilinear, &"G1".to_string());
+
         assert!(result.is_ok());
         assert!(result.unwrap()); // {1, 2} ⊆ {0, 1, 2, 3, ...}
     }
 
     #[test]
     fn test_invariant_implies_semilinear_concatenation() {
-        use crate::semilinear::SemilinearSet;
         use crate::kleene::Kleene;
-        
+        use crate::semilinear::SemilinearSet;
+
         // Create an invariant for x = 1 AND y = 1
         let x_var = "x".to_string();
         let y_var = "y".to_string();
@@ -1068,31 +1105,28 @@ mod tests {
                 )), // y = 1
             ]),
         };
-        
+
         // Create a semilinear set for x·y (concatenation)
         let x_atom = SemilinearSet::atom(x_var.clone());
         let y_atom = SemilinearSet::atom(y_var.clone());
         let semilinear = x_atom.times(y_atom);
-        
+
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
         };
-        
-        let result = ns_invariant.invariant_implies_semilinear(
-            &invariant,
-            &semilinear,
-            &"G1".to_string(),
-        );
-        
+
+        let result =
+            ns_invariant.invariant_implies_semilinear(&invariant, &semilinear, &"G1".to_string());
+
         assert!(result.is_ok());
         assert!(result.unwrap()); // x=1 AND y=1 is exactly what x·y represents
     }
 
     #[test]
     fn test_invariant_implies_semilinear_complex() {
-        use crate::semilinear::SemilinearSet;
         use crate::kleene::Kleene;
-        
+        use crate::semilinear::SemilinearSet;
+
         // Create an invariant for x = 2
         let x_var = "x".to_string();
         let invariant = ProofInvariant {
@@ -1102,21 +1136,18 @@ mod tests {
                 CompOp::Eq,
             )), // x = 2
         };
-        
+
         // Create a semilinear set x·x (concatenation of x with itself)
         let x_atom = SemilinearSet::atom(x_var.clone());
         let semilinear = x_atom.clone().times(x_atom);
-        
+
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
         };
-        
-        let result = ns_invariant.invariant_implies_semilinear(
-            &invariant,
-            &semilinear,
-            &"G1".to_string(),
-        );
-        
+
+        let result =
+            ns_invariant.invariant_implies_semilinear(&invariant, &semilinear, &"G1".to_string());
+
         assert!(result.is_ok());
         // x = 2 is exactly what x·x represents (concatenation gives x=2)
         assert!(result.unwrap());
@@ -1124,91 +1155,80 @@ mod tests {
 
     #[test]
     fn test_invariant_implies_semilinear_even_numbers() {
-        use crate::semilinear::SemilinearSet;
         use crate::kleene::Kleene;
-        
+        use crate::semilinear::SemilinearSet;
+
         // Create an invariant for even numbers: ∃n. a = 2n
         let a_var = "a".to_string();
         let n_var = "n".to_string();
-        
+
         // First create the formula a = 2n (which is a - 2n = 0)
         let a_expr = AffineExpr::from_var(a_var.clone());
         let n_expr = AffineExpr::from_var(n_var.clone());
         let two_n = n_expr.mul_by_const(2);
-        let formula_body = Formula::Constraint(Constraint::new(
-            a_expr.sub(&two_n),
-            CompOp::Eq,
-        ));
-        
+        let formula_body = Formula::Constraint(Constraint::new(a_expr.sub(&two_n), CompOp::Eq));
+
         // Now quantify over n to get ∃n. a = 2n
         let existential_formula = formula_body.mk_exists(n_var.clone());
-        
+
         let invariant = ProofInvariant {
             variables: vec![a_var.clone()],
             formula: existential_formula,
         };
-        
+
         // Create a semilinear set (aa)* which represents even multiples of a
         let a_atom = SemilinearSet::atom(a_var.clone());
         let aa = a_atom.clone().times(a_atom); // aa (represents a=2)
         let semilinear = aa.star(); // (aa)* (represents a=0, a=2, a=4, a=6, ...)
-        
+
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
         };
-        
-        let result = ns_invariant.invariant_implies_semilinear(
-            &invariant,
-            &semilinear,
-            &"G1".to_string(),
-        );
-        
+
+        let result =
+            ns_invariant.invariant_implies_semilinear(&invariant, &semilinear, &"G1".to_string());
+
         assert!(result.is_ok());
         assert!(result.unwrap()); // ∃n. a = 2n is exactly what (aa)* represents
     }
-    
+
     #[test]
     fn test_invariant_implies_semilinear_odd_not_in_even() {
-        use crate::semilinear::SemilinearSet;
         use crate::kleene::Kleene;
-        
+        use crate::semilinear::SemilinearSet;
+
         // Test that odd numbers are NOT in (aa)*
         // Create an invariant for odd numbers: ∃n. a = 2n + 1
         let a_var = "a".to_string();
         let n_var = "n".to_string();
-        
+
         // First create the formula a = 2n + 1 (which is a - 2n - 1 = 0)
         let a_expr = AffineExpr::from_var(a_var.clone());
         let n_expr = AffineExpr::from_var(n_var.clone());
         let two_n_plus_one = n_expr.mul_by_const(2).add(&AffineExpr::from_const(1));
-        let formula_body = Formula::Constraint(Constraint::new(
-            a_expr.sub(&two_n_plus_one),
-            CompOp::Eq,
-        ));
-        
+        let formula_body =
+            Formula::Constraint(Constraint::new(a_expr.sub(&two_n_plus_one), CompOp::Eq));
+
         // Now quantify over n to get ∃n. a = 2n + 1
         let existential_formula = formula_body.mk_exists(n_var.clone());
-        
+
         let invariant = ProofInvariant {
             variables: vec![a_var.clone()],
             formula: existential_formula,
         };
-        
+
         // Create a semilinear set (aa)* which represents even multiples of a
         let a_atom = SemilinearSet::atom(a_var.clone());
         let aa = a_atom.clone().times(a_atom); // aa
         let semilinear = aa.star(); // (aa)*
-        
+
         let ns_invariant = NSInvariant::<String, String, String, String> {
             global_invariants: HashMap::new(),
         };
-        
-        let result = ns_invariant.invariant_implies_semilinear(
-            &invariant,
-            &semilinear,
-            &"G1".to_string(),
-        );
-        
+
+        let result =
+            ns_invariant.invariant_implies_semilinear(&invariant, &semilinear, &"G1".to_string());
+
         assert!(result.is_ok());
         assert!(!result.unwrap()); // ∃n. a = 2n + 1 (odd) is NOT in (aa)* (even)
     }
@@ -1220,7 +1240,7 @@ fn is_formula_satisfied_string(formula: &Formula<String>) -> bool {
     // Convert the formula to a PresburgerSet
     // Since all variables are substituted, we have an empty mapping
     let presburger = formula_to_presburger(formula, &[]);
-    
+
     // A formula is satisfied if the corresponding PresburgerSet is non-empty
     !presburger.is_empty()
 }
