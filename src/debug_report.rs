@@ -507,7 +507,7 @@ impl DebugLogger {
 
         // ##### CSV LOGGING START #####
         let stats = SemilinearStats {
-            program_name: program_name,
+            program_name,
             num_components: set.components.len(),
             periods_per_component: set.components.iter().map(|ls| ls.periods.len()).collect(),
         };

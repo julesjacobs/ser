@@ -33,7 +33,7 @@ pub fn log_size_csv(path: &Path, entry: &PetriNetSize) -> Result<(), std::io::Er
 
     if need_header {
         // write a top row naming each column
-        wtr.write_record(&["index", "stage", "num_places", "num_transitions"])?;
+        wtr.write_record(["index", "stage", "num_places", "num_transitions"])?;
     }
 
     // now append your entry
@@ -79,7 +79,7 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
         Err(_) => true,
     };
     if need_header {
-        wtr.write_record(&[
+        wtr.write_record([
             "bidirectional_pruning ON",
             "remove_redundant ON",
             "generate_less ON",
@@ -88,7 +88,7 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
             "num_components",
             "max_periods_per_component",
             "avg_periods_per_component",
-        ])?;
+        ])?
     }
 
     let mut record = Vec::new();
@@ -122,7 +122,7 @@ pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), st
     };
     record.push(format!("{:.2}", avg_period)); // 2-decimal precision
 
-    wtr.write_record(&record)?;
+    wtr.write_record(record)?;
     wtr.flush()?;
     Ok(())
 }

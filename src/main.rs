@@ -2,6 +2,7 @@
 
 // mod affine_constraints;
 mod debug_report;
+mod deterministic_map;
 mod expr_to_ns;
 mod graphviz;
 mod isl;
@@ -13,6 +14,8 @@ mod ns_to_petri;
 mod parser;
 mod petri;
 mod presburger;
+#[cfg(test)]
+mod presburger_harmonize_tests;
 mod proof_parser;
 mod proofinvariant_to_presburger;
 mod reachability;
@@ -54,6 +57,10 @@ fn print_usage() {
     println!(
         "  {}      Set SMPT timeout in seconds (default: 300)",
         "--timeout <seconds>".green()
+    );
+    println!(
+        "  {}             Enable SMPT result caching",
+        "--use-cache".green()
     );
     println!();
     println!("  - {}", "If a file is provided:".bold());
@@ -141,6 +148,10 @@ fn main() {
             }
             "--without-smart-kleene-order" => {
                 kleene::set_smart_kleene_order(false);
+                i += 1;
+            }
+            "--use-cache" => {
+                smpt::set_use_cache(true);
                 i += 1;
             }
             _ => {
@@ -405,7 +416,7 @@ where
         "{}",
         "────────────────────────────────────────────────────────────".bright_black()
     );
-    
+
     // Print the semilinear set before analysis
     println!();
     println!("Serialized automaton semilinear set:");
@@ -468,6 +479,11 @@ fn process_json_file(file_path: &str, open_files: bool) {
 
     // Process the Network System
     process_ns(&ns, &out_dir, open_files);
+    
+    // Print cache statistics if caching is enabled
+    if smpt::is_cache_enabled() {
+        smpt::print_cache_stats();
+    }
 
     // Copy this JSON into out/<stem>/<stem>.json after processing
     let dst_json = format!("{}/{}.json", out_dir, file_stem);
@@ -550,6 +566,11 @@ fn process_ser_file(file_path: &str, open_files: bool) {
 
     // Process the Network System
     process_ns(&ns, &out_dir, open_files);
+    
+    // Print cache statistics if caching is enabled
+    if smpt::is_cache_enabled() {
+        smpt::print_cache_stats();
+    }
 
     // Copy this SER into out/<stem>/<stem>.ser after processing
     let dst_ser = format!("{}/{}.ser", out_dir, file_stem);

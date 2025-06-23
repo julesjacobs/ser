@@ -1,11 +1,11 @@
 use crate::debug_report::DebugLogger;
+use crate::deterministic_map::HashSet;
 use crate::kleene::Kleene;
 use crate::petri::*;
 use crate::semilinear::*;
 use crate::spresburger::SPresburgerSet;
 use colored::Colorize;
 use either::{Either, Left, Right};
-use std::collections::HashSet;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::Mutex;

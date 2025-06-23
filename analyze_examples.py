@@ -50,7 +50,7 @@ def parse_time_output(stderr_output):
     return user_time + sys_time
 
 
-def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
+def run_single_analysis(file_path, timeout_arg, with_optimizations=True, use_cache=False):
     """Run a single analysis (with or without optimizations) and return timing and status."""
     # Build command
     cmd = ['cargo', 'run', '--quiet', '--']
@@ -58,6 +58,8 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
         cmd.extend(['--timeout', str(timeout_arg)])
     if not with_optimizations:
         cmd.append('--without-bidirectional')
+    if use_cache:
+        cmd.append('--use-cache')
     cmd.append(str(file_path))
     
     # Use time command to get CPU timing
@@ -165,18 +167,18 @@ def run_single_analysis(file_path, timeout_arg, with_optimizations=True):
     }
 
 
-def analyze_file(file_path, timeout_arg, index):
+def analyze_file(file_path, timeout_arg, index, use_cache=False):
     """Analyze a single .ser file twice (with and without optimizations) and return results."""
     filename = Path(file_path).stem
     
     try:
         # Run with optimizations (default)
         print(f"[{index}] {filename}: Running with optimizations...")
-        opt_result = run_single_analysis(file_path, timeout_arg, with_optimizations=True)
+        opt_result = run_single_analysis(file_path, timeout_arg, with_optimizations=True, use_cache=use_cache)
         
         # Run without optimizations
         print(f"[{index}] {filename}: Running without optimizations...")
-        no_opt_result = run_single_analysis(file_path, timeout_arg, with_optimizations=False)
+        no_opt_result = run_single_analysis(file_path, timeout_arg, with_optimizations=False, use_cache=use_cache)
         
         # Use the optimized result for the main status (they should be the same)
         status = opt_result['status']
@@ -253,6 +255,7 @@ def main():
     )
     parser.add_argument('--timeout', type=int, help='Timeout in seconds for each analysis')
     parser.add_argument('--jobs', type=int, help='Number of parallel jobs')
+    parser.add_argument('--use-cache', action='store_true', help='Enable SMPT result caching')
     
     args = parser.parse_args()
     
@@ -284,7 +287,7 @@ def main():
     with ThreadPoolExecutor(max_workers=max_jobs) as executor:
         # Submit all jobs
         future_to_index = {
-            executor.submit(analyze_file, file_path, timeout_value, i): i
+            executor.submit(analyze_file, file_path, timeout_value, i, getattr(args, 'use_cache', False)): i
             for i, file_path in enumerate(ser_files)
         }
         
@@ -306,6 +309,7 @@ def main():
         f.write("**Analysis Configuration:**\n")
         f.write(f"- Parallel jobs: {max_jobs}\n")
         f.write(f"- Timeout: {timeout_value}s\n" if timeout_value else "- Timeout: none\n")
+        f.write(f"- SMPT caching: {'enabled' if getattr(args, 'use_cache', False) else 'disabled'}\n")
         f.write(f"- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("## Results\n\n")
         f.write("| Example | Opt Original | Opt Proof | No-Opt Original | No-Opt Proof | Opt CPU (s) | No-Opt CPU (s) | Trace Valid | Proof Valid |\n")

@@ -21,26 +21,201 @@
 //! ```
 
 use crate::debug_report::{SmptCall, format_constraints_description};
+use crate::deterministic_map::{HashMap, HashSet};
 use crate::petri::*;
 use crate::presburger::{Constraint, ConstraintType};
 use crate::proof_parser::{ProofInvariant, parse_proof_file};
 use colored::*;
-use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::path::Path;
 use std::process::{Command, Output};
 use std::sync::Mutex;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::Hasher;
 
 // === Constants ===
 const SMPT_WRAPPER_PATH: &str = "./smpt_wrapper.sh";
 const SMPT_PYTHON_MODULE: &str = "smpt";
 const DEFAULT_METHODS: &[&str] = &["STATE-EQUATION", "BMC", "K-INDUCTION", "SMT", "PDR-REACH"];
 
+// === Cache Infrastructure ===
+
+/// Cache entry for SMPT results
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+struct CacheEntry {
+    /// The cached result
+    result: SmptVerificationOutcome<String>,
+    /// Raw stdout from SMPT
+    raw_stdout: String,
+    /// Raw stderr from SMPT  
+    raw_stderr: String,
+}
+
+/// Statistics for cache usage
+#[derive(Default)]
+struct CacheStats {
+    hits: u64,
+    misses: u64,
+}
+
+impl CacheStats {
+    fn record_hit(&mut self) {
+        self.hits += 1;
+    }
+    
+    fn record_miss(&mut self) {
+        self.misses += 1;
+    }
+    
+    fn total_calls(&self) -> u64 {
+        self.hits + self.misses
+    }
+    
+    fn hit_rate(&self) -> f64 {
+        if self.total_calls() == 0 {
+            0.0
+        } else {
+            (self.hits as f64 / self.total_calls() as f64) * 100.0
+        }
+    }
+}
+
+/// Global cache for SMPT results
+/// Key is a hash of (petri net structure, constraints)
+static SMPT_CACHE: Mutex<Option<HashMap<u64, CacheEntry>>> = Mutex::new(None);
+
+/// Cache statistics for the current run
+static CACHE_STATS: Mutex<CacheStats> = Mutex::new(CacheStats { hits: 0, misses: 0 });
+
+/// Whether caching is enabled
+static USE_CACHE: Mutex<bool> = Mutex::new(false);
+
+/// Cache directory path
+const CACHE_DIR: &str = ".smpt_cache";
+
+/// Enable or disable SMPT result caching
+pub fn set_use_cache(enabled: bool) {
+    *USE_CACHE.lock().unwrap() = enabled;
+    if enabled {
+        println!("{} SMPT result caching", "Enabled".green().bold());
+        // Ensure cache directory exists
+        std::fs::create_dir_all(CACHE_DIR).ok();
+        // Load filesystem cache into memory
+        load_cache_from_filesystem();
+    }
+}
+
+/// Check if caching is enabled
+pub fn is_cache_enabled() -> bool {
+    *USE_CACHE.lock().unwrap()
+}
+
+/// Clear the SMPT cache (both memory and filesystem)
+pub fn clear_cache() {
+    let mut cache_opt = SMPT_CACHE.lock().unwrap();
+    if let Some(cache) = cache_opt.as_mut() {
+        let size = cache.len();
+        cache.clear();
+        if size > 0 {
+            println!("{} SMPT cache ({} entries)", "Cleared".yellow().bold(), size);
+        }
+    }
+    
+    // Clear filesystem cache
+    if let Ok(entries) = std::fs::read_dir(CACHE_DIR) {
+        for entry in entries.flatten() {
+            if entry.path().extension().and_then(|s| s.to_str()) == Some("json") {
+                std::fs::remove_file(entry.path()).ok();
+            }
+        }
+    }
+    
+    // Reset statistics
+    *CACHE_STATS.lock().unwrap() = CacheStats::default();
+}
+
+/// Print cache statistics
+pub fn print_cache_stats() {
+    let stats = CACHE_STATS.lock().unwrap();
+    if stats.total_calls() > 0 {
+        println!("\n{} SMPT Cache Statistics:", "📊".cyan());
+        println!("  Total SMPT calls: {}", stats.total_calls());
+        println!("  Cache hits: {} ({})", 
+            stats.hits, 
+            format!("{:.1}%", stats.hit_rate()).green().bold()
+        );
+        println!("  Cache misses: {}", stats.misses);
+    }
+}
+
+/// Load cache from filesystem into memory
+fn load_cache_from_filesystem() {
+    let mut cache_opt = SMPT_CACHE.lock().unwrap();
+    if cache_opt.is_none() {
+        *cache_opt = Some(HashMap::default());
+    }
+    
+    let cache = cache_opt.as_mut().unwrap();
+    let mut loaded = 0;
+    
+    if let Ok(entries) = std::fs::read_dir(CACHE_DIR) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                if let Some(key_str) = path.file_stem().and_then(|s| s.to_str()) {
+                    if let Ok(key) = key_str.parse::<u64>() {
+                        if let Ok(contents) = std::fs::read_to_string(&path) {
+                            if let Ok(entry) = serde_json::from_str::<CacheEntry>(&contents) {
+                                cache.insert(key, entry);
+                                loaded += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if loaded > 0 {
+        println!("{} {} cache entries from filesystem", "Loaded".green().bold(), loaded);
+    }
+}
+
+/// Save a cache entry to filesystem
+fn save_cache_entry(key: u64, entry: &CacheEntry) {
+    if let Ok(json) = serde_json::to_string_pretty(entry) {
+        let path = format!("{}/{}.json", CACHE_DIR, key);
+        std::fs::write(path, json).ok();
+    }
+}
+
+/// Compute a hash for cache key from Petri net and constraints
+fn compute_cache_key<P>(petri: &Petri<P>, constraints: &[Constraint<P>]) -> u64 
+where
+    P: Clone + Hash + Ord + Display + Debug,
+{
+    let mut hasher = DefaultHasher::new();
+    
+    // Hash the Petri net structure
+    // Convert to string representation for consistent hashing
+    let net_str = petri_to_pnet(petri, "cache_key");
+    net_str.hash(&mut hasher);
+    
+    // Hash the constraints
+    for constraint in constraints {
+        // Convert constraint to string for consistent hashing
+        let constraint_str = format!("{:?}", constraint);
+        constraint_str.hash(&mut hasher);
+    }
+    
+    hasher.finish()
+}
+
 // === Result Types ===
 
 /// Inner verification result type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum SmptVerificationOutcome<P> {
     /// The constraint set is unreachable (program is serializable)
     Unreachable {
@@ -114,7 +289,7 @@ where
     out.push_str(&format!("net {{{}}}\n", sanitize(net_name)));
 
     // 2. Count how many times each place appears in the initial marking.
-    let mut marking_count: HashMap<String, usize> = HashMap::new();
+    let mut marking_count: HashMap<String, usize> = HashMap::default();
     for place in petri.get_initial_marking() {
         let place_str = sanitize(&place.to_string());
         *marking_count.entry(place_str).or_insert(0) += 1;
@@ -122,7 +297,10 @@ where
 
     // 3. Output the "pl" lines, e.g. "pl P1 (1)"
     //    for each place in initial marking.
-    for (place, count) in marking_count {
+    // Sort by place name for deterministic output
+    let mut sorted_places: Vec<(String, usize)> = marking_count.into_iter().collect();
+    sorted_places.sort_by(|a, b| a.0.cmp(&b.0));
+    for (place, count) in sorted_places {
         out.push_str(&format!("pl {} ({})\n", place, count));
     }
 
@@ -171,6 +349,60 @@ where
     // Get debug logger from global state
     let debug_logger = crate::reachability::get_debug_logger();
 
+    // Check cache if enabled
+    if is_cache_enabled() {
+        let cache_key = compute_cache_key(&petri, &constraints);
+        let mut cache_opt = SMPT_CACHE.lock().unwrap();
+        
+        // Initialize cache if needed
+        if cache_opt.is_none() {
+            *cache_opt = Some(HashMap::default());
+        }
+        
+        if let Some(cache) = cache_opt.as_ref() {
+            if let Some(entry) = cache.get(&cache_key) {
+            println!("{} SMPT cache hit for disjunct {}", "✓".green().bold(), disjunct_id);
+            CACHE_STATS.lock().unwrap().record_hit();
+            
+            // Convert cached result back to the correct type
+            // The cache stores results with String places, we need to convert back to P
+            let outcome = match &entry.result {
+                SmptVerificationOutcome::Unreachable { proof_certificate, parsed_proof } => {
+                    SmptVerificationOutcome::Unreachable {
+                        proof_certificate: proof_certificate.clone(),
+                        parsed_proof: parsed_proof.clone(),
+                    }
+                }
+                SmptVerificationOutcome::Reachable { trace } => {
+                    // Convert trace from String back to P
+                    let converted_trace = trace.iter().map(|(inputs, outputs)| {
+                        let convert_places = |places: &Vec<String>| -> Vec<P> {
+                            places.iter().filter_map(|s| {
+                                // Try to convert string back to P using the petri net places
+                                petri.get_places_sorted().into_iter().find(|p| {
+                                    sanitize(&p.to_string()) == *s
+                                })
+                            }).collect()
+                        };
+                        (convert_places(inputs), convert_places(outputs))
+                    }).collect();
+                    
+                    SmptVerificationOutcome::Reachable { trace: converted_trace }
+                }
+                SmptVerificationOutcome::Error { message } => {
+                    SmptVerificationOutcome::Error { message: message.clone() }
+                }
+            };
+            
+                return SmptVerificationResult {
+                    outcome,
+                    raw_stdout: entry.raw_stdout.clone(),
+                    raw_stderr: entry.raw_stderr.clone(),
+                };
+            }
+        }
+    }
+
     // Debug logging
     debug_logger.log_petri_net(
         "SMPT Input Petri Net",
@@ -191,7 +423,7 @@ where
 
     // Extract places from Petri net to handle missing places in constraints
     let petri_places: HashSet<String> = petri
-        .get_places()
+        .get_places_sorted()
         .iter()
         .map(|p| sanitize(&p.to_string()))
         .collect();
@@ -214,6 +446,11 @@ where
     std::fs::write(&xml_file_path, &xml).expect("Failed to write SMPT XML");
     std::fs::write(&pnet_file_path, &pnet_content).expect("Failed to write SMPT Petri net");
 
+    // Record cache miss
+    if is_cache_enabled() {
+        CACHE_STATS.lock().unwrap().record_miss();
+    }
+    
     // Try to run SMPT tool with the Petri net for trace mapping
     let result = run_smpt(&pnet_file_path, &xml_file_path, &petri);
 
@@ -271,6 +508,53 @@ where
     let stderr_path = format!("{}/smpt_output_disjunct_{}.stderr", out_dir, disjunct_id);
     std::fs::write(&stdout_path, &result.raw_stdout).ok();
     std::fs::write(&stderr_path, &result.raw_stderr).ok();
+
+    // Cache the result if caching is enabled
+    if is_cache_enabled() {
+        let cache_key = compute_cache_key(&petri, &constraints);
+        
+        // Convert result to String-based version for caching
+        let cache_outcome = match &result.outcome {
+            SmptVerificationOutcome::Unreachable { proof_certificate, parsed_proof } => {
+                SmptVerificationOutcome::Unreachable {
+                    proof_certificate: proof_certificate.clone(),
+                    parsed_proof: parsed_proof.clone(),
+                }
+            }
+            SmptVerificationOutcome::Reachable { trace } => {
+                // Convert trace to String for caching
+                let string_trace = trace.iter().map(|(inputs, outputs)| {
+                    let string_inputs: Vec<String> = inputs.iter()
+                        .map(|p| sanitize(&p.to_string()))
+                        .collect();
+                    let string_outputs: Vec<String> = outputs.iter()
+                        .map(|p| sanitize(&p.to_string()))
+                        .collect();
+                    (string_inputs, string_outputs)
+                }).collect();
+                
+                SmptVerificationOutcome::Reachable { trace: string_trace }
+            }
+            SmptVerificationOutcome::Error { message } => {
+                SmptVerificationOutcome::Error { message: message.clone() }
+            }
+        };
+        
+        let cache_entry = CacheEntry {
+            result: cache_outcome,
+            raw_stdout: result.raw_stdout.clone(),
+            raw_stderr: result.raw_stderr.clone(),
+        };
+        
+        let mut cache_opt = SMPT_CACHE.lock().unwrap();
+        if let Some(cache) = cache_opt.as_mut() {
+            cache.insert(cache_key, cache_entry.clone());
+            // Save to filesystem
+            save_cache_entry(cache_key, &cache_entry);
+        }
+        
+        println!("{} SMPT result cached for disjunct {}", "→".bright_black(), disjunct_id);
+    }
 
     result
 }
@@ -458,7 +742,7 @@ fn extract_model(output: &str) -> Option<String> {
     for line in output.lines() {
         let trimmed = line.trim_start();
         if trimmed.starts_with("# Model:") {
-            let after = trimmed["# Model:".len()..].trim_start();
+            let after = trimmed.strip_prefix("# Model:").unwrap().trim_start();
             return Some(after.to_string());
         }
     }
@@ -827,7 +1111,7 @@ mod tests {
         let constraint = Constraint::new(vec![(1, "x")], -5, ConstraintType::NonNegative);
 
         // Create a set of places that includes 'x'
-        let mut petri_places = HashSet::new();
+        let mut petri_places = HashSet::default();
         petri_places.insert("x".to_string());
 
         let xml = presburger_constraint_to_xml(&constraint, &petri_places);
@@ -844,7 +1128,7 @@ mod tests {
             Constraint::new(vec![(2, "x"), (3, "y")], -10, ConstraintType::EqualToZero);
 
         // Create a set of places that includes 'x' and 'y'
-        let mut petri_places = HashSet::new();
+        let mut petri_places = HashSet::default();
         petri_places.insert("x".to_string());
         petri_places.insert("y".to_string());
 
@@ -862,7 +1146,7 @@ mod tests {
     #[test]
     fn test_presburger_constraints_to_xml_empty() {
         let constraints: Vec<Constraint<&str>> = vec![];
-        let petri_places = HashSet::new();
+        let petri_places = HashSet::default();
         let xml = presburger_constraints_to_xml(&constraints, "test-empty", &petri_places);
 
         assert!(xml.contains("<conjunction>"));
@@ -878,7 +1162,7 @@ mod tests {
         ];
 
         // Create a set of places that includes 'x' and 'y'
-        let mut petri_places = HashSet::new();
+        let mut petri_places = HashSet::default();
         petri_places.insert("x".to_string());
         petri_places.insert("y".to_string());
 

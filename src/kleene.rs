@@ -5,7 +5,7 @@
 // - one
 // - zero
 
-use std::collections::{HashMap, HashSet};
+use crate::deterministic_map::{HashMap, HashSet};
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -118,7 +118,7 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
 ) -> K {
     // We add an extra state `None` and eliminate all states except that one
 
-    let mut nfa: HashMap<(Option<&S>, Option<&S>), K> = HashMap::new();
+    let mut nfa: HashMap<(Option<&S>, Option<&S>), K> = HashMap::default();
     for (from, k, to) in nfa_vec.iter() {
         nfa.entry((Some(from), Some(to)))
             .and_modify(|e| *e = e.clone().plus(k.clone()))
@@ -200,7 +200,7 @@ pub fn nfa_to_kleene<S: Clone + Eq + std::hash::Hash, K: Kleene + Clone>(
                 ));
             }
         }
-        let mut new_nfa_map: HashMap<(Option<&S>, Option<&S>), K> = HashMap::new();
+        let mut new_nfa_map: HashMap<(Option<&S>, Option<&S>), K> = HashMap::default();
         for (from, to, k) in new_nfa.iter() {
             new_nfa_map
                 .entry((*from, *to))
@@ -235,7 +235,7 @@ mod tests {
         let result = nfa_to_kleene(&nfa, 0);
 
         // Check if characters 'a', 'b', 'c', and 'd' are in the result exactly once
-        let mut chars = HashSet::new();
+        let mut chars = HashSet::default();
         for c in result.to_string().chars() {
             if c.is_ascii_alphabetic() {
                 chars.insert(c);
