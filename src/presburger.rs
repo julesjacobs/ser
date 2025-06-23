@@ -465,7 +465,7 @@ impl<T: Clone> QuantifiedSet<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Variable<T> {
     Var(T),
     Existential(usize),

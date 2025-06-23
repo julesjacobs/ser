@@ -56,6 +56,10 @@ fn print_usage() {
         "  {}      Set SMPT timeout in seconds (default: 300)",
         "--timeout <seconds>".green()
     );
+    println!(
+        "  {}             Enable SMPT result caching",
+        "--use-cache".green()
+    );
     println!();
     println!("  - {}", "If a file is provided:".bold());
     println!(
@@ -142,6 +146,10 @@ fn main() {
             }
             "--without-smart-kleene-order" => {
                 kleene::set_smart_kleene_order(false);
+                i += 1;
+            }
+            "--use-cache" => {
+                smpt::set_use_cache(true);
                 i += 1;
             }
             _ => {
@@ -469,6 +477,11 @@ fn process_json_file(file_path: &str, open_files: bool) {
 
     // Process the Network System
     process_ns(&ns, &out_dir, open_files);
+    
+    // Print cache statistics if caching is enabled
+    if smpt::is_cache_enabled() {
+        smpt::print_cache_stats();
+    }
 
     // Copy this JSON into out/<stem>/<stem>.json after processing
     let dst_json = format!("{}/{}.json", out_dir, file_stem);
@@ -551,6 +564,11 @@ fn process_ser_file(file_path: &str, open_files: bool) {
 
     // Process the Network System
     process_ns(&ns, &out_dir, open_files);
+    
+    // Print cache statistics if caching is enabled
+    if smpt::is_cache_enabled() {
+        smpt::print_cache_stats();
+    }
 
     // Copy this SER into out/<stem>/<stem>.ser after processing
     let dst_ser = format!("{}/{}.ser", out_dir, file_stem);

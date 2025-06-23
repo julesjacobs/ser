@@ -8,7 +8,7 @@ use std::hash::Hash;
 use std::path::Path;
 
 /// Affine expression: sum of terms (coefficient * variable) + constant
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct AffineExpr<T: Eq + Hash> {
     /// Map from variable to coefficient
     terms: HashMap<Variable<T>, i64>,
@@ -226,7 +226,7 @@ where
 }
 
 /// Comparison operators (normalized to only = and >=)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum CompOp {
     Eq,  // =
     Geq, // >=
@@ -242,7 +242,7 @@ impl fmt::Display for CompOp {
 }
 
 /// Linear constraint: expr op 0
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Constraint<T: Eq + Hash> {
     pub expr: AffineExpr<T>,
     pub op: CompOp,
@@ -293,7 +293,7 @@ impl<T: fmt::Display + Eq + Hash> fmt::Display for Constraint<T> {
 }
 
 /// Normalized formula (no Not or Implies)
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Formula<T: Eq + Hash> {
     Constraint(Constraint<T>),
     And(Vec<Formula<T>>),
@@ -428,7 +428,7 @@ impl<T: fmt::Display + Eq + Hash> fmt::Display for Formula<T> {
 }
 
 /// The proof invariant extracted from an SMT-LIB file
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ProofInvariant<T: Eq + Hash> {
     /// Variables declared in the cert function
     pub variables: Vec<T>,
