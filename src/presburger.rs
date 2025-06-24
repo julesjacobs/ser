@@ -1835,7 +1835,10 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 ///
 /// This function converts a Rust representation back to an ISL-based representation.
 impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
-    pub fn from_quantified_sets(sets: &[QuantifiedSet<T>], mapping: Vec<T>) -> Self {
+    pub fn from_quantified_sets(sets: &[QuantifiedSet<T>], mapping: Vec<T>) -> Self 
+    where
+        T: Display,
+    {
         // Using the ISL context
         let ctx = isl::get_ctx();
 
@@ -1889,7 +1892,7 @@ impl<T: Clone + Ord + Debug + ToString> PresburgerSet<T> {
 }
 
 // Helper function to create ISL set string from a QuantifiedSet
-fn create_isl_set_string<T: ToString>(quantified_set: &QuantifiedSet<T>, mapping: &[T]) -> String {
+fn create_isl_set_string<T: ToString + Display + Debug>(quantified_set: &QuantifiedSet<T>, mapping: &[T]) -> String {
     // Collect all existential variables used in this set
     let existential_vars: BTreeSet<usize> = quantified_set
         .constraints
@@ -1941,7 +1944,7 @@ fn create_isl_set_string<T: ToString>(quantified_set: &QuantifiedSet<T>, mapping
                     let idx = mapping
                         .iter()
                         .position(|x| x.to_string() == t_str)
-                        .expect("Variable not found in mapping");
+                        .unwrap_or_else(|| panic!("Variable {} not found in mapping {:?}", t, mapping));
                     expr.push_str(&format!("*p{}", idx));
                 }
                 Variable::Existential(idx) => {
