@@ -7,6 +7,7 @@
 use crate::ns::NS;
 use crate::petri::Petri;
 use std::hash::Hash;
+use crate::utils::string::escape_for_graphviz_id;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum PetriState<L, G, Req, Resp> {
@@ -25,10 +26,22 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PetriState::Local(l) => write!(f, "L_{}", l),
-            PetriState::Global(g) => write!(f, "G_{}", g),
-            PetriState::Request(req) => write!(f, "REQ_{}", req),
-            PetriState::Response(resp) => write!(f, "RESP_{}", resp),
+                PetriState::Local(l) => {
+                    let raw = format!("L_{}", l);
+                    write!(f, "{}", escape_for_graphviz_id(&raw))
+                }
+                PetriState::Global(g) => {
+                    let raw = format!("G_{}", g);
+                    write!(f, "{}", escape_for_graphviz_id(&raw))
+                }
+                PetriState::Request(req) => {
+                    let raw = format!("REQ_{}", req);
+                    write!(f, "{}", escape_for_graphviz_id(&raw))
+                }
+                PetriState::Response(resp) => {
+                    let raw = format!("RESP_{}", resp);
+                    write!(f, "{}", escape_for_graphviz_id(&raw))
+                }
         }
     }
 }
@@ -95,10 +108,22 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ReqPetriState::Local(req, l) => write!(f, "L_{}_REQ_{}", l, req),
-            ReqPetriState::Global(g) => write!(f, "G_{}", g),
-            ReqPetriState::Request(req) => write!(f, "REQ_{}", req),
-            ReqPetriState::Response(req, resp) => write!(f, "RESP_{}_REQ_{}", resp, req),
+            ReqPetriState::Local(req, l) => {
+                let raw = format!("L_{}_REQ_{}", l, req);
+                write!(f, "{}", escape_for_graphviz_id(&raw))
+            }
+            ReqPetriState::Global(g) => {
+                let raw = format!("G_{}", g);
+                write!(f, "{}", escape_for_graphviz_id(&raw))
+            }
+            ReqPetriState::Request(req) => {
+                let raw = format!("REQ_{}", req);
+                write!(f, "{}", escape_for_graphviz_id(&raw))
+            }
+            ReqPetriState::Response(req, resp) => {
+                let raw = format!("RESP_{}_REQ_{}", resp, req);
+                write!(f, "{}", escape_for_graphviz_id(&raw))
+            }
         }
     }
 }

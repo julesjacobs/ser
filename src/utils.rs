@@ -11,13 +11,12 @@ pub mod string {
     /// replaces all other characters with underscores and ensures the result
     /// is a valid identifier.
     pub fn escape_for_graphviz_id(s: &str) -> String {
-        s.chars()
-            .map(|c| {
-                if c.is_alphanumeric() || c == '_' {
-                    c
-                } else {
-                    '_'
-                }
+           s.chars()
+            .map(|c| match c {
+                c if c.is_alphanumeric() || c == '_' => c,
+                '+' => 'P',   // make plus distinct
+                '-' => 'M',   // make minus distinct
+                _   => '_',
             })
             .collect()
     }
