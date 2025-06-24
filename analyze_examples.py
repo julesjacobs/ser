@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
 Script to analyze all .ser examples and generate a serializability report (optimized only)
-Usage: python3 analyze_examples.py [--timeout <seconds>] [--jobs <number>] [--use-cache] [--without-remove-redundant] [--without-generate-less] [--without-smart-kleene-order] [--<other_flags>]
+Usage: python3 analyze_examples.py [--timeout <seconds>] [--jobs <number>] [--use-cache]
+                                  [--without-remove-redundant] [--without-generate-less]
+                                  [--without-smart-kleene-order] [--without-bidirectional]
+                                  [--<other_flags>]
 """
 
 import argparse
@@ -120,10 +123,10 @@ def run_single_analysis(file_path, timeout_arg, extra_flags, use_cache=False):
 
 def analyze_file(fp, timeout, idx, extra_flags, use_cache):
     name = Path(fp).stem
-    print(f"[{idx}] {name}: Running optimized analysis...")
+    print(f"[{idx}] `{name}`: Running optimized analysis...")
     res = run_single_analysis(fp, timeout, extra_flags, use_cache)
     dur = f"{res['cpu_time']:.2f}"
-    print(f"[{idx}] {name}: {res['status']} ({dur}s CPU)")
+    print(f"[{idx}] `{name}`: {res['status']} ({dur}s CPU)")
     res.update({'filename': name, 'duration': dur, 'index': idx})
     return res
 
@@ -139,6 +142,8 @@ def main():
     parser.add_argument('--without-remove-redundant', action='store_true', help='Disable redundant removal')
     parser.add_argument('--without-generate-less', action='store_true', help='Disable generate-less optimization')
     parser.add_argument('--without-smart-kleene-order', action='store_true', help='Disable smart Kleene ordering')
+    parser.add_argument('--without-bidirectional', action='store_true',
+                        help='Disable bidirectional optimization')  # <— new
     known_args, extra = parser.parse_known_args()
 
     timeout = known_args.timeout
@@ -152,10 +157,13 @@ def main():
         extras.append('--without-generate-less')
     if known_args.without_smart_kleene_order:
         extras.append('--without-smart-kleene-order')
+    if known_args.without_bidirectional:
+        extras.append('--without-bidirectional')            # <— new
     # append other unknown flags
     extras.extend(extra)
 
-    print(f"🔍 Analyzing (.ser) with {jobs} jobs, timeout={timeout or 'none'}, cache={'on' if cache else 'off'}, extras={extras}")
+    print(f"🔍 Analyzing (.ser) with {jobs} jobs, timeout={timeout or 'none'}, "
+          f"cache={'on' if cache else 'off'}, extras={extras}")
     files = sorted(Path('examples/ser').glob('*.ser'))
     print(f"Found {len(files)} examples")
 
@@ -168,9 +176,13 @@ def main():
 
     # Print non-validated cases
     nv_proofs = [r['filename'] for r in results
-                 if r['original_result'] == 'Serializable' and r['proof_result'] == 'Serializable' and r['proof_verification'] is False]
+                 if r['original_result'] == 'Serializable'
+                 and r['proof_result'] == 'Serializable'
+                 and r['proof_verification'] is False]
     nv_traces = [r['filename'] for r in results
-                 if r['original_result'] == 'Not serializable' and r['proof_result'] == 'Not serializable' and r['trace_valid'] is False]
+                 if r['original_result'] == 'Not serializable'
+                 and r['proof_result'] == 'Not serializable'
+                 and r['trace_valid'] is False]
     if nv_proofs:
         print('❌ Non-validated proofs for:', ', '.join(nv_proofs))
     if nv_traces:
@@ -178,18 +190,31 @@ def main():
 
     out_md = 'serializability_report.md'
     with open(out_md, 'w') as f:
-        f.write(f"# Serializability Analysis Report\nGenerated: {datetime.now():%Y-%m-%d %H:%M:%S}\nExtras: {extras}\n\n")
+        f.write(f"# Serializability Analysis Report\n"
+                f"Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
+                f"Extras: {extras}\n\n")
         f.write("|Example|Orig|Proof|CPU(s)|Trace|Proof Cert|\n|--|--|--|--|--|--|\n")
         for r in results:
             t = 'N/A' if r['trace_valid'] is None else ('✅' if r['trace_valid'] else '❌')
             p = 'N/A' if r['proof_verification'] is None else ('✅' if r['proof_verification'] else '❌')
-            f.write(f"|{r['filename']}|{r['original_result']}|{r['proof_result']}|{r['duration']}|{t}|{p}|\n")
+            # wrap filename in backticks for nicer Markdown
+            f.write(f"| `{r['filename']}` |{r['original_result']}|{r['proof_result']}|"
+                    f"{r['duration']}|{t}|{p}|\n")
+
         # summary counts
-        s_cnt = sum(r['original_result'] == 'Serializable' and r['proof_result'] == 'Serializable' for r in results)
-        vp = sum(r['proof_verification'] for r in results if r['original_result'] == 'Serializable' and r['proof_result'] == 'Serializable')
+        s_cnt = sum(r['original_result'] == 'Serializable' and r['proof_result'] == 'Serializable'
+                    for r in results)
+        vp = sum(r['proof_verification']
+                 for r in results
+                 if r['original_result'] == 'Serializable'
+                 and r['proof_result'] == 'Serializable')
         ip = s_cnt - vp
-        ns_cnt = sum(r['original_result'] == 'Not serializable' and r['proof_result'] == 'Not serializable' for r in results)
-        vt = sum(r['trace_valid'] for r in results if r['original_result'] == 'Not serializable' and r['proof_result'] == 'Not serializable')
+        ns_cnt = sum(r['original_result'] == 'Not serializable' and r['proof_result'] == 'Not serializable'
+                     for r in results)
+        vt = sum(r['trace_valid']
+                 for r in results
+                 if r['original_result'] == 'Not serializable'
+                 and r['proof_result'] == 'Not serializable')
         it = ns_cnt - vt
         to_cnt = sum(r['status'] == '⏱️ SMPT Timeout' for r in results)
         err = sum(r['status'] == '⚠️ Error' for r in results)
@@ -199,6 +224,7 @@ def main():
         f.write(f"- Timeouts: {to_cnt}, Errors: {err}, Total: {len(results)}\n")
 
     print("✅ Done. Report:", out_md)
+
 
 if __name__ == '__main__':
     main()
