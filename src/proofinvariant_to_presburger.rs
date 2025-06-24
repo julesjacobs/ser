@@ -2,6 +2,7 @@ use crate::kleene::Kleene;
 use crate::presburger::{PresburgerSet, QuantifiedSet, Variable};
 use crate::proof_parser::{Constraint as ProofConstraint, Formula, ProofInvariant};
 use either::Either;
+use std::fmt::Display;
 use std::hash::Hash;
 
 /// Convert a single affine constraint to a PresburgerSet
@@ -244,7 +245,7 @@ where
 /// This assumes all Left variables have been existentially quantified
 pub fn project_proof_from_either<T>(proof: ProofInvariant<Either<usize, T>>) -> ProofInvariant<T>
 where
-    T: Clone + Eq + Hash,
+    T: Clone + Eq + Hash + Display,
 {
     // Use the new project_right method instead of map to avoid infinite recursion
     proof.project_right()

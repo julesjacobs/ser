@@ -322,10 +322,10 @@ where
         let combined_formula = Formula::And(formulas);
         let combined_variables: Vec<P> = all_variables.into_iter().collect();
 
-        let combined_proof = Some(ProofInvariant {
-            variables: combined_variables,
-            formula: combined_formula,
-        });
+        let combined_proof = Some(ProofInvariant::new(
+            combined_variables,
+            combined_formula,
+        ));
 
         Decision::Proof {
             proof: combined_proof,

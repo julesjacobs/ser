@@ -903,13 +903,13 @@ mod tests {
             Formula::Constraint(constraint2),
         ]);
 
-        let proof = ProofInvariant {
-            variables: vec![
+        let proof = ProofInvariant::new(
+            vec![
                 Either::Left(ReqPetriState::Global("G1".to_string())),
                 Either::Left(ReqPetriState::Local("req1".to_string(), "L1".to_string())),
             ],
             formula,
-        };
+        );
 
         // Create a simple NS for context
         let mut ns = NS::<String, String, String, String>::new("G1".to_string());
@@ -949,13 +949,13 @@ mod tests {
 
         // Since we have no global states in the invariant, this should trivially succeed
         let result = ns_invariant.invariant_implies_semilinear(
-            &ProofInvariant {
-                variables: vec![],
-                formula: Formula::Constraint(Constraint::new(
+            &ProofInvariant::new(
+                vec![],
+                Formula::Constraint(Constraint::new(
                     AffineExpr::from_const(1),
                     CompOp::Eq,
                 )),
-            },
+            ),
             &semilinear,
             &"G1".to_string(),
         );
@@ -969,13 +969,13 @@ mod tests {
 
         // Create an invariant that matches exactly one point
         let var_name = "x".to_string();
-        let invariant = ProofInvariant {
-            variables: vec![var_name.clone()],
-            formula: Formula::Constraint(Constraint::new(
+        let invariant = ProofInvariant::new(
+            vec![var_name.clone()],
+            Formula::Constraint(Constraint::new(
                 AffineExpr::from_var(var_name.clone()).sub(&AffineExpr::from_const(1)),
                 CompOp::Eq,
             )), // x = 1
-        };
+        );
 
         // Create a semilinear set containing just the atom x
         let semilinear = SemilinearSet::atom(var_name.clone());
@@ -997,13 +997,13 @@ mod tests {
 
         // Create an invariant for x = 2
         let var_name = "x".to_string();
-        let invariant = ProofInvariant {
-            variables: vec![var_name.clone()],
-            formula: Formula::Constraint(Constraint::new(
+        let invariant = ProofInvariant::new(
+            vec![var_name.clone()],
+            Formula::Constraint(Constraint::new(
                 AffineExpr::from_var(var_name.clone()).sub(&AffineExpr::from_const(2)),
                 CompOp::Eq,
             )), // x = 2
-        };
+        );
 
         // Create a semilinear set containing just the atom x (which represents x=1)
         let semilinear = SemilinearSet::atom(var_name.clone());
@@ -1026,13 +1026,13 @@ mod tests {
 
         // Create an invariant for x >= 0 (any non-negative x)
         let var_name = "x".to_string();
-        let invariant = ProofInvariant {
-            variables: vec![var_name.clone()],
-            formula: Formula::Constraint(Constraint::new(
+        let invariant = ProofInvariant::new(
+            vec![var_name.clone()],
+            Formula::Constraint(Constraint::new(
                 AffineExpr::from_var(var_name.clone()),
                 CompOp::Geq,
             )), // x >= 0
-        };
+        );
 
         // Create a semilinear set for x* (0 or more x's)
         let x_atom = SemilinearSet::atom(var_name.clone());
@@ -1056,9 +1056,9 @@ mod tests {
 
         // Create an invariant for x = 1 OR x = 2
         let x_var = "x".to_string();
-        let invariant = ProofInvariant {
-            variables: vec![x_var.clone()],
-            formula: Formula::Or(vec![
+        let invariant = ProofInvariant::new(
+            vec![x_var.clone()],
+            Formula::Or(vec![
                 Formula::Constraint(Constraint::new(
                     AffineExpr::from_var(x_var.clone()).sub(&AffineExpr::from_const(1)),
                     CompOp::Eq,
@@ -1068,7 +1068,7 @@ mod tests {
                     CompOp::Eq,
                 )), // x = 2
             ]),
-        };
+        );
 
         // Create a semilinear set for x* (which contains 0, 1, 2, 3, ...)
         let x_atom = SemilinearSet::atom(x_var.clone());
@@ -1093,9 +1093,9 @@ mod tests {
         // Create an invariant for x = 1 AND y = 1
         let x_var = "x".to_string();
         let y_var = "y".to_string();
-        let invariant = ProofInvariant {
-            variables: vec![x_var.clone(), y_var.clone()],
-            formula: Formula::And(vec![
+        let invariant = ProofInvariant::new(
+            vec![x_var.clone(), y_var.clone()],
+            Formula::And(vec![
                 Formula::Constraint(Constraint::new(
                     AffineExpr::from_var(x_var.clone()).sub(&AffineExpr::from_const(1)),
                     CompOp::Eq,
@@ -1105,7 +1105,7 @@ mod tests {
                     CompOp::Eq,
                 )), // y = 1
             ]),
-        };
+        );
 
         // Create a semilinear set for x·y (concatenation)
         let x_atom = SemilinearSet::atom(x_var.clone());
@@ -1130,13 +1130,13 @@ mod tests {
 
         // Create an invariant for x = 2
         let x_var = "x".to_string();
-        let invariant = ProofInvariant {
-            variables: vec![x_var.clone()],
-            formula: Formula::Constraint(Constraint::new(
+        let invariant = ProofInvariant::new(
+            vec![x_var.clone()],
+            Formula::Constraint(Constraint::new(
                 AffineExpr::from_var(x_var.clone()).sub(&AffineExpr::from_const(2)),
                 CompOp::Eq,
             )), // x = 2
-        };
+        );
 
         // Create a semilinear set x·x (concatenation of x with itself)
         let x_atom = SemilinearSet::atom(x_var.clone());
@@ -1172,10 +1172,10 @@ mod tests {
         // Now quantify over n to get ∃n. a = 2n
         let existential_formula = formula_body.mk_exists(n_var.clone());
 
-        let invariant = ProofInvariant {
-            variables: vec![a_var.clone()],
-            formula: existential_formula,
-        };
+        let invariant = ProofInvariant::new(
+            vec![a_var.clone()],
+            existential_formula,
+        );
 
         // Create a semilinear set (aa)* which represents even multiples of a
         let a_atom = SemilinearSet::atom(a_var.clone());
@@ -1213,10 +1213,10 @@ mod tests {
         // Now quantify over n to get ∃n. a = 2n + 1
         let existential_formula = formula_body.mk_exists(n_var.clone());
 
-        let invariant = ProofInvariant {
-            variables: vec![a_var.clone()],
-            formula: existential_formula,
-        };
+        let invariant = ProofInvariant::new(
+            vec![a_var.clone()],
+            existential_formula,
+        );
 
         // Create a semilinear set (aa)* which represents even multiples of a
         let a_atom = SemilinearSet::atom(a_var.clone());

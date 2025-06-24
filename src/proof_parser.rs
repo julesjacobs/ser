@@ -303,6 +303,54 @@ pub enum Formula<T: Eq + Hash> {
 }
 
 impl<T: Eq + Hash> Formula<T> {
+    /// Collect all free variables in the formula, properly handling shadowing
+    /// by existential and universal quantifiers
+    pub fn collect_free_variables(&self) -> std::collections::HashSet<T>
+    where
+        T: Clone,
+    {
+        self.collect_free_variables_with_bound(&std::collections::HashSet::new())
+    }
+    
+    /// Helper method that tracks bound variables
+    fn collect_free_variables_with_bound(&self, bound_vars: &std::collections::HashSet<usize>) -> std::collections::HashSet<T>
+    where
+        T: Clone,
+    {
+        match self {
+            Formula::Constraint(c) => {
+                let mut free_vars = std::collections::HashSet::new();
+                for (var, _) in &c.expr.terms {
+                    match var {
+                        Variable::Var(v) => {
+                            free_vars.insert(v.clone());
+                        }
+                        Variable::Existential(idx) => {
+                            // Only free if not bound by a quantifier
+                            if !bound_vars.contains(idx) {
+                                panic!("Existential variable e{} used but not bound by quantifier", idx);
+                            }
+                        }
+                    }
+                }
+                free_vars
+            }
+            Formula::And(formulas) | Formula::Or(formulas) => {
+                let mut free_vars = std::collections::HashSet::new();
+                for formula in formulas {
+                    free_vars.extend(formula.collect_free_variables_with_bound(bound_vars));
+                }
+                free_vars
+            }
+            Formula::Exists(idx, body) | Formula::Forall(idx, body) => {
+                // Add this index to bound variables for the body
+                let mut new_bound = bound_vars.clone();
+                new_bound.insert(*idx);
+                body.collect_free_variables_with_bound(&new_bound)
+            }
+        }
+    }
+
     /// Map variable type from T to U
     pub fn rename_vars<U, F>(self, f: &mut F) -> Formula<U>
     where
@@ -437,6 +485,38 @@ pub struct ProofInvariant<T: Eq + Hash> {
 }
 
 impl<T: Eq + Hash> ProofInvariant<T> {
+    /// Create a new ProofInvariant, checking that all free variables in the formula
+    /// are present in the variables list. Properly handles shadowing by existential/universal quantifiers.
+    /// Panics if validation fails.
+    pub fn new(variables: Vec<T>, formula: Formula<T>) -> Self
+    where
+        T: Clone + Display,
+    {
+        // Collect all free variables from the formula
+        let free_vars = formula.collect_free_variables();
+        
+        // Convert variables list to a set for efficient lookup
+        let var_set: std::collections::HashSet<_> = variables.iter().cloned().collect();
+        
+        // Check that all free variables are in the declared variables list
+        let mut missing_vars = Vec::new();
+        for var in &free_vars {
+            if !var_set.contains(var) {
+                missing_vars.push(var.clone());
+            }
+        }
+        
+        if !missing_vars.is_empty() {
+            let missing_str: Vec<String> = missing_vars.iter().map(|v| v.to_string()).collect();
+            panic!(
+                "Variables used in formula but not declared: {}",
+                missing_str.join(", ")
+            );
+        }
+        
+        ProofInvariant { variables, formula }
+    }
+
     /// Map variable type from T to U
     pub fn map<U, F>(self, mut f: F) -> ProofInvariant<U>
     where
@@ -454,7 +534,7 @@ impl<T: Eq + Hash> ProofInvariant<T> {
     pub fn substitute<Q, F>(&self, mut mapping: F) -> ProofInvariant<Q>
     where
         F: FnMut(&T) -> Either<Q, i32>,
-        Q: Clone + Eq + Hash,
+        Q: Clone + Eq + Hash + Display,
         T: Clone,
     {
         // Map variables list, keeping only Left (new variables)
@@ -470,10 +550,9 @@ impl<T: Eq + Hash> ProofInvariant<T> {
         // Recursively substitute in the formula
         let new_formula = substitute_in_formula(&self.formula, &mut mapping);
 
-        ProofInvariant {
-            variables: new_variables,
-            formula: new_formula,
-        }
+        // Create new ProofInvariant - this should always succeed because we're
+        // substituting from a valid ProofInvariant
+        ProofInvariant::new(new_variables, new_formula)
     }
 }
 
@@ -501,10 +580,7 @@ impl<T: Clone + Eq + Hash + Display> ProofInvariant<Either<usize, T>> {
             Formula::And(vec![self.formula.clone(), Formula::Constraint(constraint)]);
 
         // Create the proof invariant with the existential variable, then quantify it
-        let proof_with_existential = ProofInvariant {
-            variables: new_variables,
-            formula: combined_formula,
-        };
+        let proof_with_existential = ProofInvariant::new(new_variables, combined_formula);
 
         // Existentially quantify and project
         crate::proofinvariant_to_presburger::existentially_quantify_keep_either(
@@ -549,10 +625,7 @@ impl<T: Clone + Eq + Hash + Display> ProofInvariant<Either<usize, T>> {
         ]);
 
         // Create the proof invariant with the existential variable
-        let proof_with_existential = ProofInvariant {
-            variables: new_variables,
-            formula: combined_formula,
-        };
+        let proof_with_existential = ProofInvariant::new(new_variables, combined_formula);
 
         // Existentially quantify and return
         crate::proofinvariant_to_presburger::existentially_quantify_keep_either(
@@ -569,18 +642,20 @@ where
 {
     /// Project from ProofInvariant<Either<L, R>> to ProofInvariant<R>
     /// when all Left values should not exist
-    pub fn project_right(self) -> ProofInvariant<R> {
-        ProofInvariant {
-            variables: self
-                .variables
-                .into_iter()
-                .filter_map(|v| match v {
-                    Either::Left(_) => None,
-                    Either::Right(r) => Some(r),
-                })
-                .collect(),
-            formula: self.formula.project_right(),
-        }
+    pub fn project_right(self) -> ProofInvariant<R> 
+    where
+        R: Clone + Display,
+    {
+        let variables = self
+            .variables
+            .into_iter()
+            .filter_map(|v| match v {
+                Either::Left(_) => None,
+                Either::Right(r) => Some(r),
+            })
+            .collect();
+        let formula = self.formula.project_right();
+        ProofInvariant::new(variables, formula)
     }
 }
 
@@ -1466,10 +1541,7 @@ impl Parser {
             return Err(self.error("No cert function found in proof file"));
         }
 
-        Ok(ProofInvariant {
-            variables,
-            formula: formula.unwrap(),
-        })
+        Ok(ProofInvariant::new(variables, formula.unwrap()))
     }
 
     /// Skip an S-expression form
@@ -1544,7 +1616,7 @@ pub fn map_proof_variables<P>(
     name_to_place: &HashMap<String, P>,
 ) -> Option<ProofInvariant<P>>
 where
-    P: Clone + Eq + Hash,
+    P: Clone + Eq + Hash + Display,
 {
     // Map variables
     let mut mapped_variables = Vec::new();
@@ -1558,10 +1630,7 @@ where
     // Map formula recursively
     let mapped_formula = map_formula_variables(proof.formula, name_to_place)?;
 
-    Some(ProofInvariant {
-        variables: mapped_variables,
-        formula: mapped_formula,
-    })
+    Some(ProofInvariant::new(mapped_variables, mapped_formula))
 }
 
 /// Helper function to map Formula<String> to Formula<P>
