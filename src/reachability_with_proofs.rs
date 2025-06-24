@@ -320,7 +320,8 @@ where
             .collect();
 
         let combined_formula = Formula::And(formulas);
-        let combined_variables: Vec<P> = all_variables.into_iter().collect();
+        let mut combined_variables: Vec<P> = all_variables.into_iter().collect();
+        combined_variables.sort();
 
         let combined_proof = Some(ProofInvariant::new(
             combined_variables,
