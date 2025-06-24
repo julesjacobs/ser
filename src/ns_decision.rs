@@ -582,7 +582,8 @@ where
     {
         // For now, convert to String since that's what formula_to_presburger supports
         // This is not ideal but works until we have proper generic support
-        let string_vars: Vec<String> = invariant.variables.iter().map(|v| v.to_string()).collect();
+        let mut string_vars: Vec<String> = invariant.variables.iter().map(|v| v.to_string()).collect();
+        string_vars.sort();
 
         let string_invariant = invariant.clone().map(|v| v.to_string());
         let invariant_set = formula_to_presburger(&string_invariant.formula, &string_vars);
@@ -614,6 +615,8 @@ where
         }
     }
 }
+
+
 
 /// Translate a Petri net proof to NS-level invariants
 pub fn translate_petri_proof_to_ns<G, L, Req, Resp>(
