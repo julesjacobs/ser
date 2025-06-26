@@ -867,7 +867,7 @@ mod tests {
             ("t2", vec!["P1", "P2"],                vec!["P3"]),
             ("t3", vec!["P5"],                 vec!["P6", "P7"]),
             ("t4", vec!["P3"],                      vec!["P4", "P6"]),
-            ("t5", vec!["P9", "P4", "P8"],          vec!["P8"]),
+            ("t5", vec!["P4", "P8", "P9"],          vec!["P8"]),
         ];
 
         // 3) Add them in order
@@ -884,51 +884,95 @@ mod tests {
             iteration += 1;
 
             // --- forward pruning ---
-            let before = petri.get_transitions();
+            let before_tr = petri.get_transitions();
+            let before_pl = petri.get_places();
             petri.filter_reachable(&initial);
-            let after = petri.get_transitions();
-            let removed_f: Vec<&str> = before.iter()
-                .filter(|tr| !after.contains(tr))
+            let after_tr  = petri.get_transitions();
+            let after_pl  = petri.get_places();
+
+            // compute which transitions fell out
+            let removed_tr_f: Vec<&str> = before_tr.iter()
+                .filter(|tr| !after_tr.contains(tr))
                 .filter_map(|tr| {
                     named.iter()
                         .find(|(_, inp, out)| &tr.0 == inp && &tr.1 == out)
                         .map(|(name, _, _)| *name)
                 })
                 .collect();
+
+            // compute which places fell out
+            let removed_pl_f: Vec<&str> = before_pl.iter()
+                .filter(|p| !after_pl.contains(*p))
+                .cloned()
+                .collect();
+
+            // build owned strings for printing
+            let f_tr_str = if removed_tr_f.is_empty() {
+                "(none)".to_string()
+            } else {
+                removed_tr_f.join(", ")
+            };
+            let f_pl_str = if removed_pl_f.is_empty() {
+                "(none)".to_string()
+            } else {
+                removed_pl_f.join(", ")
+            };
+
             println!(
-                "Iteration {} forward removed: {}",
+                "Iteration {} forward removed:\n  transitions: {}\n  places:      {}",
                 iteration,
-                if removed_f.is_empty() { "(none)".into() } else { removed_f.join(", ") }
+                f_tr_str,
+                f_pl_str
             );
 
             // --- backward pruning ---
-            let before = petri.get_transitions();
+            let before_tr = petri.get_transitions();
+            let before_pl = petri.get_places();
             petri.filter_backwards_reachable(&targets);
-            let after = petri.get_transitions();
-            let removed_b: Vec<&str> = before.iter()
-                .filter(|tr| !after.contains(tr))
+            let after_tr  = petri.get_transitions();
+            let after_pl  = petri.get_places();
+
+            let removed_tr_b: Vec<&str> = before_tr.iter()
+                .filter(|tr| !after_tr.contains(tr))
                 .filter_map(|tr| {
                     named.iter()
                         .find(|(_, inp, out)| &tr.0 == inp && &tr.1 == out)
                         .map(|(name, _, _)| *name)
                 })
                 .collect();
+
+            let removed_pl_b: Vec<&str> = before_pl.iter()
+                .filter(|p| !after_pl.contains(*p))
+                .cloned()
+                .collect();
+
+            let b_tr_str = if removed_tr_b.is_empty() {
+                "(none)".to_string()
+            } else {
+                removed_tr_b.join(", ")
+            };
+            let b_pl_str = if removed_pl_b.is_empty() {
+                "(none)".to_string()
+            } else {
+                removed_pl_b.join(", ")
+            };
+
             println!(
-                "Iteration {} backward removed: {}",
+                "Iteration {} backward removed:\n  transitions: {}\n  places:      {}",
                 iteration,
-                if removed_b.is_empty() { "(none)".into() } else { removed_b.join(", ") }
+                b_tr_str,
+                b_pl_str
             );
 
             // fixed‐point check
-            if removed_f.is_empty() && removed_b.is_empty() {
+            if removed_tr_f.is_empty() && removed_pl_f.is_empty()
+                && removed_tr_b.is_empty() && removed_pl_b.is_empty() {
                 break;
             }
         }
 
         // show what remains
-        let remaining: Vec<&str> = petri
-            .get_transitions()
-            .iter()
+        let remaining: Vec<&str> = petri.get_transitions().iter()
             .filter_map(|tr| {
                 named.iter()
                     .find(|(_, inp, out)| &tr.0 == inp && &tr.1 == out)
@@ -937,7 +981,6 @@ mod tests {
             .collect();
         println!("Final (pruned) transitions: {}", remaining.join(", "));
     }
-
 
 
 
