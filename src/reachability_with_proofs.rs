@@ -508,7 +508,7 @@ where
             "Petri net before pruning and optimization",
             &petri,
         );
-        let csv_path = Path::new(out_dir).join("petri_sizes.csv");
+        let csv_path = Path::new(out_dir).join("petri_size_stats.csv");
         let before = PetriNetSize {
             program_name: Path::new(out_dir)
             .file_name()
@@ -763,7 +763,7 @@ where
                 num_transitions: petri.get_transitions().len(),
             };
 
-            let csv_path = Path::new(out_dir).join("petri_sizes.csv");
+            let csv_path = Path::new(out_dir).join("petri_size_stats.csv");
             log_petri_size_csv(&csv_path, &after).expect("Failed to log Petri‐net size (post‐pruning)");
 
             let result =

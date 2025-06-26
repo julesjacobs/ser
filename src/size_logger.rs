@@ -69,6 +69,34 @@ pub fn log_petri_size_csv(path: &Path, entry: &PetriNetSize) -> Result<(), std::
     wtr.write_record(&record)?;
     wtr.flush()?;
 
+    // ─── ALSO log into global optimization_experiments/petri_size/petri_size_stats.csv ─────
+    let experiments_dir = Path::new("../optimization_experiments/petri_size");
+    fs::create_dir_all(&experiments_dir)?;
+    let global_path = experiments_dir.join("petri_size_stats.csv");
+    let need_header = match global_path.metadata() {
+        Ok(meta) => meta.len() == 0,
+        Err(_) => true,
+    };
+    let file = OpenOptions::new().create(true).append(true).open(&global_path)?;
+    let mut exp_wtr = csv::WriterBuilder::new()
+        .has_headers(false)
+        .from_writer(file);
+    if need_header {
+        exp_wtr.write_record(&[
+            "bidirectional_pruning ON",
+            "remove_redundant ON",
+            "generate_less ON",
+            "smart_order ON",
+            "benchmark",
+            "index",
+            "stage",
+            "num_places",
+            "num_transitions",
+        ])?;
+    }
+    exp_wtr.write_record(&record)?;
+    exp_wtr.flush()?;
+
     Ok(())
 }
 
