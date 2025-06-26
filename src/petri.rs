@@ -852,4 +852,93 @@ mod tests {
         println!("  Backward-only: kept irrelevant transitions after Target");
         println!("  Bidirectional: kept only Start → A → B → Target");
     }
+
+    #[test]
+    fn test_bidirectional_pruning_print_names() {
+        use crate::petri::Petri;
+
+        // 1) Build the net with initial marking only on "P1"
+        let mut petri = Petri::new(vec!["P1","P2"]);
+
+        // 2) Define our transitions along with their names
+        let named: Vec<(&str, Vec<&str>, Vec<&str>)> = vec![
+            ("t0", vec![],                          vec!["P0"]),
+            ("t1", vec!["P0", "P1", "P6"],          vec!["P5"]),
+            ("t2", vec!["P1", "P2"],                vec!["P3"]),
+            ("t3", vec!["P5"],                 vec!["P6", "P7"]),
+            ("t4", vec!["P3"],                      vec!["P4", "P6"]),
+            ("t5", vec!["P9", "P4", "P8"],          vec!["P8"]),
+        ];
+
+        // 3) Add them in order
+        for (_name, input, output) in &named {
+            petri.add_transition(input.clone(), output.clone());
+        }
+
+        let initial = petri.get_initial_marking(); // {"P1"}
+        // let targets = petri.get_places();          // all places
+        let targets: Vec<&str> = vec!["P0", "P5"];             // we only care about reaching P3
+
+        let mut iteration = 0;
+        loop {
+            iteration += 1;
+
+            // --- forward pruning ---
+            let before = petri.get_transitions();
+            petri.filter_reachable(&initial);
+            let after = petri.get_transitions();
+            let removed_f: Vec<&str> = before.iter()
+                .filter(|tr| !after.contains(tr))
+                .filter_map(|tr| {
+                    named.iter()
+                        .find(|(_, inp, out)| &tr.0 == inp && &tr.1 == out)
+                        .map(|(name, _, _)| *name)
+                })
+                .collect();
+            println!(
+                "Iteration {} forward removed: {}",
+                iteration,
+                if removed_f.is_empty() { "(none)".into() } else { removed_f.join(", ") }
+            );
+
+            // --- backward pruning ---
+            let before = petri.get_transitions();
+            petri.filter_backwards_reachable(&targets);
+            let after = petri.get_transitions();
+            let removed_b: Vec<&str> = before.iter()
+                .filter(|tr| !after.contains(tr))
+                .filter_map(|tr| {
+                    named.iter()
+                        .find(|(_, inp, out)| &tr.0 == inp && &tr.1 == out)
+                        .map(|(name, _, _)| *name)
+                })
+                .collect();
+            println!(
+                "Iteration {} backward removed: {}",
+                iteration,
+                if removed_b.is_empty() { "(none)".into() } else { removed_b.join(", ") }
+            );
+
+            // fixed‐point check
+            if removed_f.is_empty() && removed_b.is_empty() {
+                break;
+            }
+        }
+
+        // show what remains
+        let remaining: Vec<&str> = petri
+            .get_transitions()
+            .iter()
+            .filter_map(|tr| {
+                named.iter()
+                    .find(|(_, inp, out)| &tr.0 == inp && &tr.1 == out)
+                    .map(|(name, _, _)| *name)
+            })
+            .collect();
+        println!("Final (pruned) transitions: {}", remaining.join(", "));
+    }
+
+
+
+
 }
