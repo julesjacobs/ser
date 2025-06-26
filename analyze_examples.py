@@ -162,9 +162,12 @@ def main():
     # append other unknown flags
     extras.extend(extra)
 
-    print(f"🔍 Analyzing (.ser) with {jobs} jobs, timeout={timeout or 'none'}, "
-          f"cache={'on' if cache else 'off'}, extras={extras}")
-    files = sorted(Path('examples/ser').glob('*.ser'))
+    print(f"🔍 Analyzing (.ser & .json) with {jobs} jobs, timeout={timeout or 'none'}, "
+    f"cache={'on' if cache else 'off'}, extras={extras}")
+    files = sorted(
+        list(Path('examples/ser').glob('*.ser')) +
+        list(Path('examples/json').glob('*.json'))
+    )
     print(f"Found {len(files)} examples")
 
     results = []

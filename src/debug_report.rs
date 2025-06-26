@@ -1,7 +1,7 @@
 //! HTML debugging report generation for serializability analysis
 
 use crate::presburger::Constraint;
-use crate::size_logger::{SemilinearStats, log_semilinear_csv};
+use crate::size_logger::{SemilinearStats, log_semilinear_size_csv};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::path::Path;
@@ -511,9 +511,9 @@ impl DebugLogger {
             num_components: set.components.len(),
             periods_per_component: set.components.iter().map(|ls| ls.periods.len()).collect(),
         };
-        // Write to <out_dir>/semilinear_stats.csv
-        let csv_path = out_dir.join("semilinear_stats.csv"); // #### UPDATE: build path from out_dir
-        log_semilinear_csv(&csv_path, &stats).expect("Failed to write semilinear_stats.csv"); // #### UPDATE: write stats
+        // Write to <out_dir>/semilinear_size_stats.csv
+        let csv_path = out_dir.join("semilinear_size_stats.csv"); // #### UPDATE: build path from out_dir
+        log_semilinear_size_csv(&csv_path, &stats).expect("Failed to write semilinear_size_stats.csv"); // #### UPDATE: write stats
 
         // ##### CSV LOGGING END #####
 
