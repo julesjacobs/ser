@@ -70,7 +70,7 @@ pub fn log_petri_size_csv(path: &Path, entry: &PetriNetSize) -> Result<(), std::
     wtr.flush()?;
 
     // ─── ALSO log into global optimization_experiments/petri_size/petri_size_stats.csv ─────
-    let experiments_dir = Path::new("../optimization_experiments/petri_size");
+    let experiments_dir = Path::new("optimization_experiments/petri_size");
     fs::create_dir_all(&experiments_dir)?;
     let global_path = experiments_dir.join("petri_size_stats.csv");
     let need_header = match global_path.metadata() {
