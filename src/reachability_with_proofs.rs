@@ -4,7 +4,7 @@ use crate::kleene::Kleene;
 use crate::petri::*;
 use crate::proof_parser::ProofInvariant;
 use crate::semilinear::*;
-use crate::size_logger::{PetriNetSize, log_size_csv};
+use crate::size_logger::{PetriNetSize, log_petri_size_csv};
 use crate::spresburger::SPresburgerSet;
 use colored::*;
 use either::{Either, Left, Right};
@@ -520,7 +520,7 @@ where
             num_places: petri.get_places().len(),
             num_transitions: petri.get_transitions().len(),
         };
-        log_size_csv(&csv_path, &before).expect("Failed to log Petri‐net size (pre‐pruning)");
+        log_petri_size_csv(&csv_path, &before).expect("Failed to log Petri‐net size (pre‐pruning)");
 
         // Extract zero variables from constraints
         let zero_variables = super::presburger::Constraint::extract_zero_variables(&constraints);
@@ -764,7 +764,7 @@ where
             };
 
             let csv_path = Path::new(out_dir).join("petri_sizes.csv");
-            log_size_csv(&csv_path, &after).expect("Failed to log Petri‐net size (post‐pruning)");
+            log_petri_size_csv(&csv_path, &after).expect("Failed to log Petri‐net size (post‐pruning)");
 
             let result =
                 crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);

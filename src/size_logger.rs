@@ -20,7 +20,7 @@ pub struct PetriNetSize {
 }
 
 /// Append a record to a CSV file (no headers, so you can keep appending)
-pub fn log_size_csv(path: &Path, entry: &PetriNetSize) -> Result<(), std::io::Error> {
+pub fn log_petri_size_csv(path: &Path, entry: &PetriNetSize) -> Result<(), std::io::Error> {
     // Decide if we need to write headers: either file doesn't exist yet,
     // or it exists but is zero‐length.
     let need_header = match path.metadata() {
@@ -92,7 +92,7 @@ pub struct SemilinearStats {
 }
 
 /// Append a record to a CSV file for SemilinearSet statistics
-pub fn log_semilinear_csv(path: &Path, entry: &SemilinearStats) -> Result<(), std::io::Error> {
+pub fn log_semilinear_size_csv(path: &Path, entry: &SemilinearStats) -> Result<(), std::io::Error> {
     // Ensure output directory exists
     if let Some(dir) = path.parent() {
         fs::create_dir_all(dir)?;
