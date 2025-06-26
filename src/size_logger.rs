@@ -7,6 +7,8 @@ use std::{fs, fs::OpenOptions, io::Write, path::Path};
 
 #[derive(Serialize)]
 pub struct PetriNetSize {
+    // A string representing the program name (benchmark)
+    pub program_name: String,
     /// Identifier so you know which disjunct / iteration this came from
     pub disjunct_id: usize,
     /// “pre_pruning” or “post_pruning”
@@ -33,12 +35,40 @@ pub fn log_size_csv(path: &Path, entry: &PetriNetSize) -> Result<(), std::io::Er
 
     if need_header {
         // write a top row naming each column
-        wtr.write_record(["index", "stage", "num_places", "num_transitions"])?;
+        wtr.write_record([
+            "bidirectional_pruning ON",
+            "remove_redundant ON",
+            "generate_less ON",
+            "smart_order ON",
+            "benchmark",
+            "index",
+            "stage",
+            "num_places",
+            "num_transitions"])?;
     }
 
-    // now append your entry
-    wtr.serialize(entry)?;
+    let mut record = Vec::new();
+
+    // read each flag and push "1"/"0"
+    let bidir_pruning = BIDIRECTIONAL_PRUNING_ENABLED.load(Ordering::Relaxed);
+    let remove_redundant = REMOVE_REDUNDANT.load(Ordering::Relaxed);
+    let generate_less = GENERATE_LESS.load(Ordering::Relaxed);
+    let smart_order = SMART_ORDER.load(Ordering::Relaxed);
+    record.push(if bidir_pruning { "1" } else { "0" }.to_string());
+    record.push(if remove_redundant { "1" } else { "0" }.to_string());
+    record.push(if generate_less { "1" } else { "0" }.to_string());
+    record.push(if smart_order { "1" } else { "0" }.to_string());
+
+    record.push(entry.program_name.to_string());
+    record.push(entry.disjunct_id.to_string());
+    record.push(entry.stage.to_string());
+    record.push(entry.num_places.to_string());
+    record.push(entry.num_transitions.to_string());
+
+    // write all 9 columns in one shot
+    wtr.write_record(&record)?;
     wtr.flush()?;
+
     Ok(())
 }
 

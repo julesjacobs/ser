@@ -510,7 +510,12 @@ where
         );
         let csv_path = Path::new(out_dir).join("petri_sizes.csv");
         let before = PetriNetSize {
-            disjunct_id,
+            program_name: Path::new(out_dir)
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned(),
+            disjunct_id: disjunct_id,
             stage: "pre_pruning",
             num_places: petri.get_places().len(),
             num_transitions: petri.get_transitions().len(),
@@ -747,7 +752,12 @@ where
 
             // **New: record CSV line for post‐pruning size**
             let after = PetriNetSize {
-                disjunct_id,
+                program_name: Path::new(out_dir)
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned(),
+                disjunct_id: disjunct_id,
                 stage: "post_pruning",
                 num_places: petri.get_places().len(),
                 num_transitions: petri.get_transitions().len(),
