@@ -8,4 +8,24 @@
     \item Limitations (examples we cannot solve, future work that would help)
 \end{enumerate}
 
+
+
+
+
+\begin{tabular}{l c c c c}
+	\toprule
+	& \multicolumn{2}{c}{num components} & \multicolumn{2}{c}{periods per component} \\
+	\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+	& mean & max & mean & max \\
+	\midrule
+	baseline (all optimizations)    &  3.28 (+0\%) &  22.00 (+0\%) & 1.36 (+0\%) &  4.00 (+0\%) \\
+	baseline - remove\_redundant & 10.24 (+6.97\%) & 194 (+172\%)& \textbf{1.79 (+0.43\%)} & 11 (+7\%) \\
+	baseline - generate\_less    &\textbf{782.38 (+779.10\%)}&\textbf{20484 (+20462\%)}&1.65 (+0.29\%)& \textbf{15 (+11\%)} \\
+	baseline - smart\_order      &  3.36 (+0.09\%) &  22.00 (+0\%) & 1.38 (+0.02\%) &  4.00 (+0\%) \\
+	\bottomrule
+\end{tabular}
+\textbf{The Table compares experiment running with a 30 second timeout}
+
+
+
 \newpage
