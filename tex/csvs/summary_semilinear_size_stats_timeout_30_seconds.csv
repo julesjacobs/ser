@@ -1,0 +1,5 @@
+scenario,mean_num_components,max_num_components,mean_periods_per_component,max_periods_per_component
+baseline (all ON),3.28 (+0.00),22.00 (+0.00),1.36 (+0.00),4.00 (+0.00)
+no_remove_redundant,10.24 (+6.97),194.00 (+172.00),1.79 (+0.43),11.00 (+7.00)
+no_generate_less,782.38 (+779.10),20484.00 (+20462.00),1.65 (+0.29),15.00 (+11.00)
+no_smart_order,3.36 (+0.09),22.00 (+0.00),1.38 (+0.02),4.00 (+0.00)

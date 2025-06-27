@@ -1,0 +1,193 @@
+mode,example,elapsed_ms
+all-on,data_flow,116
+without-bidirectional,data_flow,110
+without-remove-redundant-parts,data_flow,116
+without-bidirectional without-remove-redundant-parts,data_flow,115
+without-remove-redundant-sets,data_flow,113
+without-bidirectional without-remove-redundant-sets,data_flow,113
+without-remove-redundant-parts without-remove-redundant-sets,data_flow,114
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets,data_flow,110
+without-generate-less,data_flow,109
+without-bidirectional without-generate-less,data_flow,112
+without-remove-redundant-parts without-generate-less,data_flow,114
+without-bidirectional without-remove-redundant-parts without-generate-less,data_flow,109
+without-remove-redundant-sets without-generate-less,data_flow,112
+without-bidirectional without-remove-redundant-sets without-generate-less,data_flow,118
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less,data_flow,119
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less,data_flow,117
+without-smart-kleene-order,data_flow,134
+without-bidirectional without-smart-kleene-order,data_flow,117
+without-remove-redundant-parts without-smart-kleene-order,data_flow,118
+without-bidirectional without-remove-redundant-parts without-smart-kleene-order,data_flow,111
+without-remove-redundant-sets without-smart-kleene-order,data_flow,116
+without-bidirectional without-remove-redundant-sets without-smart-kleene-order,data_flow,116
+without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,data_flow,111
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,data_flow,116
+without-generate-less without-smart-kleene-order,data_flow,112
+without-bidirectional without-generate-less without-smart-kleene-order,data_flow,110
+without-remove-redundant-parts without-generate-less without-smart-kleene-order,data_flow,118
+without-bidirectional without-remove-redundant-parts without-generate-less without-smart-kleene-order,data_flow,118
+without-remove-redundant-sets without-generate-less without-smart-kleene-order,data_flow,116
+without-bidirectional without-remove-redundant-sets without-generate-less without-smart-kleene-order,data_flow,118
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,data_flow,115
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,data_flow,116
+all-on,login_flow,130
+without-bidirectional,login_flow,129
+without-remove-redundant-parts,login_flow,197
+without-bidirectional without-remove-redundant-parts,login_flow,601
+without-remove-redundant-sets,login_flow,126
+without-bidirectional without-remove-redundant-sets,login_flow,125
+without-remove-redundant-parts without-remove-redundant-sets,login_flow,165
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets,login_flow,282
+without-generate-less,login_flow,87
+without-bidirectional without-generate-less,login_flow,92
+without-remove-redundant-parts without-generate-less,login_flow,91
+without-bidirectional without-remove-redundant-parts without-generate-less,login_flow,93
+without-remove-redundant-sets without-generate-less,login_flow,95
+without-bidirectional without-remove-redundant-sets without-generate-less,login_flow,96
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less,login_flow,95
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less,login_flow,93
+without-smart-kleene-order,login_flow,136
+without-bidirectional without-smart-kleene-order,login_flow,135
+without-remove-redundant-parts without-smart-kleene-order,login_flow,206
+without-bidirectional without-remove-redundant-parts without-smart-kleene-order,login_flow,201
+without-remove-redundant-sets without-smart-kleene-order,login_flow,130
+without-bidirectional without-remove-redundant-sets without-smart-kleene-order,login_flow,129
+without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,login_flow,296
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,login_flow,166
+without-generate-less without-smart-kleene-order,login_flow,101
+without-bidirectional without-generate-less without-smart-kleene-order,login_flow,93
+without-remove-redundant-parts without-generate-less without-smart-kleene-order,login_flow,97
+without-bidirectional without-remove-redundant-parts without-generate-less without-smart-kleene-order,login_flow,90
+without-remove-redundant-sets without-generate-less without-smart-kleene-order,login_flow,92
+without-bidirectional without-remove-redundant-sets without-generate-less without-smart-kleene-order,login_flow,94
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,login_flow,93
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,login_flow,96
+all-on,shopping_cart,200
+without-bidirectional,shopping_cart,213
+without-remove-redundant-parts,shopping_cart,62645
+without-bidirectional without-remove-redundant-parts,shopping_cart,62491
+without-remove-redundant-sets,shopping_cart,496
+without-bidirectional without-remove-redundant-sets,shopping_cart,245
+without-remove-redundant-parts without-remove-redundant-sets,shopping_cart,116
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets,shopping_cart,113
+without-generate-less,shopping_cart,2086
+without-bidirectional without-generate-less,shopping_cart,183
+without-remove-redundant-parts without-generate-less,shopping_cart,185
+without-bidirectional without-remove-redundant-parts without-generate-less,shopping_cart,2045
+without-remove-redundant-sets without-generate-less,shopping_cart,1901
+without-bidirectional without-remove-redundant-sets without-generate-less,shopping_cart,1784
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less,shopping_cart,154
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less,shopping_cart,2007
+without-smart-kleene-order,shopping_cart,223
+without-bidirectional without-smart-kleene-order,shopping_cart,239
+without-remove-redundant-parts without-smart-kleene-order,shopping_cart,62513
+without-bidirectional without-remove-redundant-parts without-smart-kleene-order,shopping_cart,62582
+without-remove-redundant-sets without-smart-kleene-order,shopping_cart,222
+without-bidirectional without-remove-redundant-sets without-smart-kleene-order,shopping_cart,281
+without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,shopping_cart,99
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,shopping_cart,108
+without-generate-less without-smart-kleene-order,shopping_cart,1878
+without-bidirectional without-generate-less without-smart-kleene-order,shopping_cart,1745
+without-remove-redundant-parts without-generate-less without-smart-kleene-order,shopping_cart,2227
+without-bidirectional without-remove-redundant-parts without-generate-less without-smart-kleene-order,shopping_cart,2144
+without-remove-redundant-sets without-generate-less without-smart-kleene-order,shopping_cart,1864
+without-bidirectional without-remove-redundant-sets without-generate-less without-smart-kleene-order,shopping_cart,1710
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,shopping_cart,151
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,shopping_cart,1511
+all-on,snapshot_isolation_directly_as_NS_without_yields,122
+without-bidirectional,snapshot_isolation_directly_as_NS_without_yields,112
+without-remove-redundant-parts,snapshot_isolation_directly_as_NS_without_yields,123
+without-bidirectional without-remove-redundant-parts,snapshot_isolation_directly_as_NS_without_yields,120
+without-remove-redundant-sets,snapshot_isolation_directly_as_NS_without_yields,118
+without-bidirectional without-remove-redundant-sets,snapshot_isolation_directly_as_NS_without_yields,117
+without-remove-redundant-parts without-remove-redundant-sets,snapshot_isolation_directly_as_NS_without_yields,111
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets,snapshot_isolation_directly_as_NS_without_yields,120
+without-generate-less,snapshot_isolation_directly_as_NS_without_yields,120
+without-bidirectional without-generate-less,snapshot_isolation_directly_as_NS_without_yields,117
+without-remove-redundant-parts without-generate-less,snapshot_isolation_directly_as_NS_without_yields,121
+without-bidirectional without-remove-redundant-parts without-generate-less,snapshot_isolation_directly_as_NS_without_yields,124
+without-remove-redundant-sets without-generate-less,snapshot_isolation_directly_as_NS_without_yields,126
+without-bidirectional without-remove-redundant-sets without-generate-less,snapshot_isolation_directly_as_NS_without_yields,124
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less,snapshot_isolation_directly_as_NS_without_yields,121
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less,snapshot_isolation_directly_as_NS_without_yields,127
+without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,126
+without-bidirectional without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,126
+without-remove-redundant-parts without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,119
+without-bidirectional without-remove-redundant-parts without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,119
+without-remove-redundant-sets without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,121
+without-bidirectional without-remove-redundant-sets without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,119
+without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,117
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,119
+without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,117
+without-bidirectional without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,117
+without-remove-redundant-parts without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,121
+without-bidirectional without-remove-redundant-parts without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,118
+without-remove-redundant-sets without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,120
+without-bidirectional without-remove-redundant-sets without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,120
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,116
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_without_yields,110
+all-on,snapshot_isolation_directly_as_NS_with_yields,122
+without-bidirectional,snapshot_isolation_directly_as_NS_with_yields,120
+without-remove-redundant-parts,snapshot_isolation_directly_as_NS_with_yields,123
+without-bidirectional without-remove-redundant-parts,snapshot_isolation_directly_as_NS_with_yields,128
+without-remove-redundant-sets,snapshot_isolation_directly_as_NS_with_yields,129
+without-bidirectional without-remove-redundant-sets,snapshot_isolation_directly_as_NS_with_yields,127
+without-remove-redundant-parts without-remove-redundant-sets,snapshot_isolation_directly_as_NS_with_yields,133
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets,snapshot_isolation_directly_as_NS_with_yields,124
+without-generate-less,snapshot_isolation_directly_as_NS_with_yields,125
+without-bidirectional without-generate-less,snapshot_isolation_directly_as_NS_with_yields,122
+without-remove-redundant-parts without-generate-less,snapshot_isolation_directly_as_NS_with_yields,129
+without-bidirectional without-remove-redundant-parts without-generate-less,snapshot_isolation_directly_as_NS_with_yields,138
+without-remove-redundant-sets without-generate-less,snapshot_isolation_directly_as_NS_with_yields,143
+without-bidirectional without-remove-redundant-sets without-generate-less,snapshot_isolation_directly_as_NS_with_yields,137
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less,snapshot_isolation_directly_as_NS_with_yields,138
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less,snapshot_isolation_directly_as_NS_with_yields,135
+without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,131
+without-bidirectional without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,143
+without-remove-redundant-parts without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,141
+without-bidirectional without-remove-redundant-parts without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,138
+without-remove-redundant-sets without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,126
+without-bidirectional without-remove-redundant-sets without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,122
+without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,139
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,129
+without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,126
+without-bidirectional without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,125
+without-remove-redundant-parts without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,124
+without-bidirectional without-remove-redundant-parts without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,132
+without-remove-redundant-sets without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,131
+without-bidirectional without-remove-redundant-sets without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,127
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,129
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,snapshot_isolation_directly_as_NS_with_yields,132
+all-on,state_machine,158
+without-bidirectional,state_machine,159
+without-remove-redundant-parts,state_machine,3689
+without-bidirectional without-remove-redundant-parts,state_machine,2435
+without-remove-redundant-sets,state_machine,137
+without-bidirectional without-remove-redundant-sets,state_machine,144
+without-remove-redundant-parts without-remove-redundant-sets,state_machine,398
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets,state_machine,392
+without-generate-less,state_machine,101
+without-bidirectional without-generate-less,state_machine,100
+without-remove-redundant-parts without-generate-less,state_machine,101
+without-bidirectional without-remove-redundant-parts without-generate-less,state_machine,101
+without-remove-redundant-sets without-generate-less,state_machine,99
+without-bidirectional without-remove-redundant-sets without-generate-less,state_machine,97
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less,state_machine,107
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less,state_machine,102
+without-smart-kleene-order,state_machine,138
+without-bidirectional without-smart-kleene-order,state_machine,139
+without-remove-redundant-parts without-smart-kleene-order,state_machine,1533
+without-bidirectional without-remove-redundant-parts without-smart-kleene-order,state_machine,3175
+without-remove-redundant-sets without-smart-kleene-order,state_machine,140
+without-bidirectional without-remove-redundant-sets without-smart-kleene-order,state_machine,145
+without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,state_machine,408
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-smart-kleene-order,state_machine,246
+without-generate-less without-smart-kleene-order,state_machine,104
+without-bidirectional without-generate-less without-smart-kleene-order,state_machine,98
+without-remove-redundant-parts without-generate-less without-smart-kleene-order,state_machine,100
+without-bidirectional without-remove-redundant-parts without-generate-less without-smart-kleene-order,state_machine,106
+without-remove-redundant-sets without-generate-less without-smart-kleene-order,state_machine,99
+without-bidirectional without-remove-redundant-sets without-generate-less without-smart-kleene-order,state_machine,104
+without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,state_machine,104
+without-bidirectional without-remove-redundant-parts without-remove-redundant-sets without-generate-less without-smart-kleene-order,state_machine,102
