@@ -8,7 +8,6 @@ OUTPUT_DIR = r"/home/guyamir/RustroverProjects/ser/optimization_experiments/petr
 SUMMARY_CSV = os.path.join(OUTPUT_DIR, "petri_size_stats_final_timeout_30_seconds.csv")
 PLOT_PATH = os.path.join(OUTPUT_DIR, "petri_size_reduction_plot.pdf")
 
-
 def generate_plot(df: pd.DataFrame, output_path: str):
     """
     Given a filtered DataFrame with columns:
@@ -34,31 +33,48 @@ def generate_plot(df: pd.DataFrame, output_path: str):
     fig, ax = plt.subplots(figsize=(8, 5))
 
     # Plot bars
-    ax.bar(x[0] - width/2, pre_places, width, label="Before", facecolor="forestgreen",edgecolor="black", linewidth=1)
-    ax.bar(x[0] + width/2, post_places, width, label="After", facecolor="lightgreen",edgecolor="black", linewidth=1)
-    ax.bar(x[1] - width/2, pre_trans, width, facecolor="darkorange", edgecolor="black", linewidth=1)
+    ax.bar(x[0] - width/2, pre_places, width, label="Before", facecolor="forestgreen", edgecolor="black", linewidth=1)
+    ax.bar(x[0] + width/2, post_places, width, label="After",  facecolor="lightgreen", edgecolor="black", linewidth=1)
+    ax.bar(x[1] - width/2, pre_trans,  width, facecolor="darkorange", edgecolor="black", linewidth=1)
     ax.bar(x[1] + width/2, post_trans, width, facecolor="peachpuff", edgecolor="black", linewidth=1)
 
-    # Annotate
+    # Annotate with larger font
     max_height = max(pre_places, post_places, pre_trans, post_trans)
     y_offset = max_height * 0.02
+    annotation_fontsize = 18
     for i, height in enumerate([pre_places, post_places]):
         x_pos = x[0] + (i*2-1)*width/2
-        ax.text(x_pos, height + y_offset, ["Before", "After"][i], ha="center")
+        ax.text(x_pos, height + y_offset,
+                ["Before", "After"][i],
+                ha="center",
+                fontsize=annotation_fontsize,
+                fontweight="bold")
     for i, height in enumerate([pre_trans, post_trans]):
         x_pos = x[1] + (i*2-1)*width/2
-        ax.text(x_pos, height + y_offset, ["Before", "After"][i], ha="center")
+        ax.text(x_pos, height + y_offset,
+                ["Before", "After"][i],
+                ha="center",
+                fontsize=annotation_fontsize,
+                fontweight="bold")
+
+    # Optionally bump up tick labels too
+    ax.tick_params(axis='x', labelsize=annotation_fontsize)
+    ax.tick_params(axis='y', labelsize=annotation_fontsize)
 
     ax.set_xticks(x)
     ax.set_xticklabels(categories)
-    ax.set_ylabel("Average Count")
-    ax.set_title("Average Petri Net Size Before and After Pruning")
+    ax.set_ylabel("Average Count", fontsize=annotation_fontsize)
+    # Larger title
+    # ax.set_title("Average Petri Net Size Before and After Pruning",
+                 # fontsize=18,
+                 # fontweight="bold")
     ax.set_ylim(0, max_height * 1.1)
     ax.yaxis.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
     fig.tight_layout()
 
     fig.savefig(output_path)
     plt.close(fig)
+
 
 
 if __name__ == "__main__":
