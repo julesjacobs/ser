@@ -5,7 +5,7 @@ import numpy as np
 
 # Directory where the new summary CSV lives
 OUTPUT_DIR = r"/home/guyamir/RustroverProjects/ser/optimization_experiments/petri_size"
-SUMMARY_CSV = os.path.join(OUTPUT_DIR, "petri_size_stats.csv")
+SUMMARY_CSV = os.path.join(OUTPUT_DIR, "petri_size_stats_final_timeout_30_seconds.csv")
 PLOT_PATH = os.path.join(OUTPUT_DIR, "petri_size_reduction_plot.pdf")
 
 
