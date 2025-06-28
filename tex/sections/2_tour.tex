@@ -259,74 +259,32 @@ As mentioned, as serial execution of a these two request will always result to
 $A+B=2\cdot (100\$+50\$)=300\$$, with either a final state of $[A=150\$, B=150\$]$ or $[A=100\$, B=200\$]$, depending on the scheduled serializable order.
 
 
-\subsection{Example 5}
-
-\guy{suddenly I'm not so sure about this example. It's sound but maybe a bit dumb?}
-
-\begin{minipage}[t]{1.0\textwidth}
-	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sume of 0 active monitors)}]
-		// initialize both monitors to be active
-		N_1_ACTIVE := 1
-		N_2_ACTIVE := 1
-		
-		request main:
-			// take snapshot
-			n_1_active_snapshot := N_1_ACTIVE
-			n_2_active_snapshot := N_2_ACTIVE
-			yield
-			
-			if (n_1_active_snapshot == 1) and (n_2_active_snapshot == 1):
-			// if both nodes active --- choose which one to deactivate 
-				if (?): 
-					  N_1_ACTIVE := 0
-				else:
-					  N_2_ACTIVE := 0
-				
-			return N_1_ACTIVE + N_2_ACTIVE  // total active nodes
-			
-		
-		request activate_n1:
-			    N_1_ACTIVE := 1
-		
-		request activate_n2:
-			    N_2_ACTIVE := 1
-		
-		
-	\end{lstlisting}
-\end{minipage}
-
-%only 0 in non-serializable runs!
-
-%\todo{start}
-
-%/snapshot_isolation_directly_as_NS_with_yields
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_with\_yields.pdf}
-	\caption{Snapshot Isolation with Yields.}
-	\label{fig:snapshotIsolationJsonWithYields}
-\end{figure}
-
-
-
-%/snapshot_isolation_directly_as_NS_without_yields
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_without\_yields.pdf}
-	\caption{Snapshot Isolation with Yields.}
-	\label{fig:snapshotIsolationJsonWithoutYields}
-\end{figure}
-
-
-\todo{maybe we have: (1) a copy of the global automaton; (2) a copy of the local automaton (with yields) with coloring of edges that don't exist in the one without yields}
-
 
 
 %\newpage
-\subsection{Example 6}
-example - 7
+\subsection{Example 5}
+
+The following example motivates our routing‐policy programs in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a controller can adjust the global network control policy. The controller can also send control packets to each switch, causing it to adopt the routing policy dictated by the controller.
+%
+An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes—node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST})—serving as ingress points where traffic may nondeterministically enter. The controller selects one of two policies: a \textcolor{ForestGreen}{green} policy, which routes traffic from West to East, or a \textcolor{red}{red} policy, which routes it in the opposite direction.
+
+
+%// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
+%else:
+%G := 0 // red policy
+%// [out, switch 0] <--- [WEST, switch 1] <--- [EAST, switch 2] 
+
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{plots/east_west_routing.pdf}
+	\caption{Routing policy in example 5.}
+	\label{fig:BgpRoutingPolicies}
+\end{figure}
+
+dfbldfb
+
 
 \begin{minipage}[t]{1.0\textwidth}
 	\begin{lstlisting}[caption={BGP (non serializable --- cycles can appear)}]
@@ -365,17 +323,72 @@ example - 7
 \end{minipage}
 
 
-%// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
-%else:
-%G := 0 // red policy
-%// [out, switch 0] <--- [WEST, switch 1] <--- [EAST, switch 2] 
+
+
+
+
+\subsection{Example 6}
+
+\guy{suddenly I'm not so sure about this example. It is indeed sound but maybe a bit silly?}
+
+\begin{minipage}[t]{1.0\textwidth}
+	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sume of 0 active monitors)}]
+			// initialize both monitors to be active
+			N_1_ACTIVE := 1
+			N_2_ACTIVE := 1
+			
+			request main:
+				// take snapshot
+				n_1_active_snapshot := N_1_ACTIVE
+				n_2_active_snapshot := N_2_ACTIVE
+				yield
+				
+				if (n_1_active_snapshot == 1) and (n_2_active_snapshot == 1):
+				// if both nodes active --- choose which one to deactivate 
+					if (?): 
+						  N_1_ACTIVE := 0
+					else:
+						  N_2_ACTIVE := 0
+					
+				return N_1_ACTIVE + N_2_ACTIVE  // total active nodes
+				
+			
+			request activate_n1:
+				    N_1_ACTIVE := 1
+			
+			request activate_n2:
+				    N_2_ACTIVE := 1
+			
+			
+		\end{lstlisting}
+\end{minipage}
+
+%only 0 in non-serializable runs!
+
+%\todo{start}
+
+%/snapshot_isolation_directly_as_NS_with_yields
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.5\linewidth]{plots/east_west_routing.pdf}
-	\caption{Routing policy in example 7.}
-	\label{fig:pdfimage}
+	\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_with\_yields.pdf}
+	\caption{Snapshot Isolation with Yields.}
+	\label{fig:snapshotIsolationJsonWithYields}
 \end{figure}
+
+
+
+%/snapshot_isolation_directly_as_NS_without_yields
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_without\_yields.pdf}
+	\caption{Snapshot Isolation with Yields.}
+	\label{fig:snapshotIsolationJsonWithoutYields}
+\end{figure}
+
+
+\todo{maybe we have: (1) a copy of the global automaton; (2) a copy of the local automaton (with yields) with coloring of edges that don't exist in the one without yields}
 
 
 %\begin{figure}[h]

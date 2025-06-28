@@ -26,16 +26,22 @@
 \newpage
 
 
-\paragraph{Motivation:}
+\subsection{Motivating Example}
 
-example - 1
+Next, we give an example motivating the on the use of an automatic checker for program serializability.In particular, we will show how even small, toy programs can be surprisingly difficult to reason about when assessing their serializable behavior.
+%
+Observe the simple program depicted in Listing~\ref{lst:MotivatingExample1Ser}. Each request call \textit{foo} gives rise to a fresh in-flight	packet. The variable ``X'' is global, and shared among all in-flight requests, while the variable ``y'' is local variable, per each request. 
+%
+As there are no yields, it is straightforward to see that the program is trivially serializable, with every request \textit{foo}: (i) assigning 1 to the global variable X; (ii) assigning y to have the value of X, i.e. 1; (iii) assigning X the value 0; and (iv) returning y. This results to every (request,response) pair to be of the form \textit{(foo, 1)}.
+%
+The program is slightly altered (in Listing~\ref{lst:MotivatingExample2NonSer}), by adding a yield operation between the aforementioned steps (i) and (ii). Now, by running two \textit{foo} requests that interleave, it is possible to attain a \textit{(foo,0)} request/response pair, which is unattainable in any serial execution of Listing~\ref{lst:MotivatingExample2NonSer} --- as any such serial execution is equivalent to Listing~\ref{lst:MotivatingExample1Ser}, which always responds ``1'' to any request \textit{foo}.
 
-	
-	
+
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{minipage}[t]{\textwidth}
-		\begin{lstlisting}[caption={Without yield or lock (serializable)}]
+		\begin{lstlisting}[caption={Without yield or lock (serializable)},
+			label={lst:MotivatingExample1Ser}]
     request foo: 
         X := 1 
         // no yield
@@ -46,11 +52,12 @@ example - 1
 	\end{minipage}
 	\vspace{1em}
 	\begin{minipage}[t]{\textwidth}
-		\begin{lstlisting}[caption={With yield (not serializable)}]
+		\begin{lstlisting}[caption={With yield (not serializableSer)},
+			label={lst:MotivatingExample2NonSer}]
     request foo: 
         X := 1 
         yield 
-        y := X + 1
+        y := X 
         X := 0
         return y 	
 		\end{lstlisting}
@@ -58,7 +65,8 @@ example - 1
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={With yield and lock (serializable)}]
+	\begin{lstlisting}[caption={With yield and lock (serializable)},
+		label={lst:MotivatingExample3Ser}]
     request foo: 
         // lock
         while (L == 1): 
@@ -76,198 +84,11 @@ example - 1
 	\end{lstlisting}
 \end{minipage}
 
+The program is altered once again in in Listing~\ref{lst:MotivatingExample3Ser}, by adding a fresh global variable ``L'', indicating if the critical section is locked ($L=1$) or not ($L=0$).
+By adding a global lock variable, even if an interleaving occurs, the lock will allow only the first request to terminate, and hence release the lock for the next request. Hence, despite having yields, we attain serializable executions, and only \textit{(foo,1)} request/response pairs are produced, similar to the original program in Listing~\ref{lst:MotivatingExample1Ser}.
 
 %\todo{guy - START}
 
-\[
-req \coloneq 
-\Bigg \{
-\Bigg [
-\begin{array}{c c c}
-	\text{
-		\begin{tikzpicture}[baseline=(textnode.base)]
-			\node[
-			draw=black,
-			fill=ForestGreen!20,
-			text=black,
-			diamond,
-			aspect=2,
-			inner sep=4pt
-			] (textnode) {foo};
-		\end{tikzpicture}
-	} 
-	&
-	\rightarrow
-	&
-	\bigg(
-	\begin{tabular}{c c}
-		\text{\large\textcolor{Peach}{[y=0]}},\quad & 
-		\begin{minipage}{0.14\linewidth}
-			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-X := 1 
-yield 
-y := X + 1
-X := 0
-return y
-			\end{lstlisting}
-		\end{minipage}
-	\end{tabular}
-	\bigg)
-\end{array}
-\Bigg ]
-\Bigg \}
-\]
 
-
-\[
-resp \coloneq
-\Bigg \{
-\Bigg [ 
-\begin{array}{c c c}
-	\bigg(
-	\begin{tabular}{c c}
-		\text{\large\textcolor{Peach}{[y=0]}},\quad & 
-		\begin{minipage}{0.11\linewidth}
-			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-return y
-			\end{lstlisting}
-		\end{minipage}
-	\end{tabular}
-	\bigg)
-	&
-	\rightarrow
-	&
-	\text{
-		\begin{tikzpicture}[baseline=(textnode.base)]
-			\node[
-			draw=black,                      % ← outline color
-			fill=RedViolet!20,            % ← light green fill
-			text=black,
-			diamond,
-			aspect=2,
-			inner sep=4pt
-			] (textnode) {0};
-		\end{tikzpicture}
-	} 
-\end{array}
-\Bigg ]
-,
-%\quad
-\Bigg [ 
-\begin{array}{c c c}
-	\bigg(
-	\begin{tabular}{c c}
-		\text{\large\textcolor{Peach}{[y=1]}},\quad & 
-		\begin{minipage}{0.11\linewidth}
-			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-return y
-			\end{lstlisting}
-		\end{minipage}
-	\end{tabular}
-	\bigg)
-	&
-	\rightarrow
-	&
-	\text{
-		\begin{tikzpicture}[baseline=(textnode.base), scale=0.7]
-			\node[
-			draw=black,                      % ← outline color
-			fill=RedViolet!20,            % ← light green fill
-			text=black,
-			diamond,
-			aspect=2,
-			inner sep=4pt
-			] (textnode) {1};
-		\end{tikzpicture}
-	} 
-\end{array}
-\Bigg ] 
-\Bigg \} 
-\]
-
-
-
-
-
-\[
-\begin{array}{l}
-	\delta := 
-	\Bigg\{ 
-	\Bigg[
-	\Bigg(
-	\text{\Large\textcolor{NavyBlue}{[X=0]}},\quad
-	\bigg(
-	\begin{tabular}{c c}
-		\text{\large\textcolor{Peach}{[y=0]}},\quad & 
-		\begin{minipage}{0.14\linewidth}
-			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-X := 1
-yield
-y := X + 1
-X := 0
-return y
-			\end{lstlisting}
-		\end{minipage}
-	\end{tabular}
-	\bigg)
-	\Bigg)
-	\rightarrow
-	\Bigg(
-	\text{\Large\textcolor{NavyBlue}{[X=1]}},\quad
-	\bigg(
-	\begin{tabular}{c c}
-		\text{\large\textcolor{Peach}{[y=0]}},\quad & 
-		\begin{minipage}{0.14\linewidth}
-			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-y := X + 1
-X := 0
-return y
-			\end{lstlisting}
-		\end{minipage}
-	\end{tabular}
-	\bigg)
-	\Bigg)
-	\Bigg]
-	\bigcup\ \ldots, \\[1em]
-	\quad
-	\ldots
-	\bigcup\ 
-	\Bigg[
-	\Bigg(
-	\text{\Large\textcolor{NavyBlue}{[X=1]}},\quad
-	\bigg(
-	\begin{tabular}{c c}
-		\text{\large\textcolor{Peach}{[y=0]}},\quad & 
-		\begin{minipage}{0.14\linewidth}
-			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-y := X + 1
-X := 0
-return y
-			\end{lstlisting}
-		\end{minipage}
-	\end{tabular}
-	\bigg)
-	\Bigg)
-	\rightarrow
-	\Bigg(
-	\text{\Large\textcolor{NavyBlue}{[X=0]}},\quad
-	\bigg(
-	\begin{tabular}{c c}
-		\text{\large\textcolor{Peach}{[y=1]}},\quad & 
-		\begin{minipage}{0.11\linewidth}
-			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-return y
-			\end{lstlisting}
-		\end{minipage}
-	\end{tabular}
-	\bigg)
-	\Bigg)
-	\Bigg]
-	\bigcup\ \ldots
-	\Bigg\}
-\end{array}
-\]
-
-\todo{emphasize that there are states we didn't add}
 
 
