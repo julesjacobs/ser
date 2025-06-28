@@ -278,16 +278,42 @@ An instance of a simple network with two competing policies is shown in Fig.~\re
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.5\linewidth]{plots/east_west_routing.pdf}
+	\includegraphics[width=0.8\linewidth]{plots/east_west_routing.pdf}
 	\caption{Routing policy in example 5.}
 	\label{fig:BgpRoutingPolicies}
 \end{figure}
 
-dfbldfb
+This SDN-controlled routing policy is realized in the pseudo code of Listing~\ref{lst:BgpNonSerializable}. T
+%
+The program includes a single global variable $G$, indicating if the current routing policy is the  \textcolor{ForestGreen}{green} policy ($G=1$) or the \textcolor{red}{red} policy ($G=0$).
+%
+The program has three types of requests:
+\begin{itemize}
+	
+	\item 
+	\textit{policy update}: represents a controller updates, and nondeterministically decides whether to update the policy (i.e., flip the value of  variable $G$) or not.
+	
+	\item 
+	\textit{route\_from\_west}: this request represents a packet entering the network from the \textit{WEST} node (node 1).
+	
+	\item 
+	\textit{route\_from\_east}: this request represents a packet entering the network from the \textit{EAST} node (node 2).
+	
+\end{itemize}
+
+
+Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
+%
+The return value of the \textit{route\_from\_west} requests is the sum \textit{(current+current+visited\_east)}. This is an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
+%
+The program is not serializable, as an interleaving can bring to final return value of \textit{(current+current+visited\_east)=1} (with \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when updated the routing policy after a a request has already been routed based on the previous policy.
+Acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
+Similarly, routing cycles are attained via non serializable executions also for the  \textit{route\_from\_east} requests.
+
 
 
 \begin{minipage}[t]{1.0\textwidth}
-	\begin{lstlisting}[caption={BGP (non serializable --- cycles can appear)}]
+	\begin{lstlisting}[caption={BGP (non serializable --- cycles can appear)},label={lst:BgpNonSerializable}]
 	    // initialize accounts
 	    G := 0
 	    
