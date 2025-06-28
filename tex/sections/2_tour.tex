@@ -1,17 +1,35 @@
-\section{Tour / examples}
-\label{sec:tour}
-
 \newpage
 
 
+\section{Tour / examples}
+\label{sec:tour}
 
-\vspace{2em}
-example - 2
+Next, we will walk through a series of 9 examples, in varying level of complexity. Each example will demonstrate different aspects of serializable vs non-serializable programs.
+%
+We note that, unless explicitly state otherwise, all global and local variables are initialized to 0.
+
+
+\subsection{Example 1}
+
+We start with a basic example in Listing~\ref{lst:BasicNonSer} and~\ref{lst:BasicSer}. The program includes a single request (``A''), a single local variable (``x'') per each program; and a single global variable (``FLAG'') shared among all program. 
+%
+In in Listing~\ref{lst:BasicNonSer}, each request: (i) assigns the the local variable x the value of FLAG (hence, x:=0 for the first request); (ii) non-deterministically decides whether to yield or not; and then (iii) updates the global FLAG variable to 1 and returns the local copy of x. 
+%
+It is straightforward to see that this simple program is not serializable. Specifically, every serial execution indicates the the first request $A$ will return ``0'' (as X:=FLAG, which is initially 0). As the first thread assigns FLAG:=1 before exiting, any subsequent execution will assign x:=1 and hence return 1. Differently put, for any serial execution with i packets/threads --- we have exactly one (first) request/response pair (A,0), and $(i-1)$ pairs of (A,1).
+%
+However, given that the first packet yields, it is possible for another packet to subsequently run the program after the first packet yields. his will allow two packets to have x=0, and hence any number of arbitrary packets can have multiple (A,0) pairs. Hence, Listing~\ref{lst:BasicNonSer} is not serializable.
+
+
+The program described in Listing~\ref{lst:BasicSer} include an additional ``else'' branch, which non deterministically flips the value of ``x''. This change makes the program serializable, as intuitively, the returned value of x does not depend on the assignment of FLAG.
+
+%\vspace{2em}
+%example - 2
 
 % Second row
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Not serializable: {(A,0),(A,0)}}]
+	\begin{lstlisting}[caption={Not serializable: {(A,0),(A,0)}},
+	label={lst:BasicNonSer}]
 			request A: 
 			    x := FLAG 
 			
@@ -26,7 +44,8 @@ example - 2
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Serializable}]
+	\begin{lstlisting}[caption={Serializable},
+		label={lst:BasicSer}]
 			request A: 
 			    x := FLAG
 			
