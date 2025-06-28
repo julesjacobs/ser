@@ -325,7 +325,7 @@ example - 3
 		        
 		        
 		    X := X + 1
-		
+			  return X		
 		
 		request decr: 
 		    while (X == 0): 
@@ -333,6 +333,7 @@ example - 3
 		        
 		        
 		    X := X - 1
+			  return X
 	\end{lstlisting}
 \end{minipage}
 \hfill
@@ -344,7 +345,7 @@ example - 3
 		    y := X
 		    yield
 		    X := y + 1
-		
+	      return X		
 		
 		request decr: 
 		    while (X == 0):
@@ -352,6 +353,7 @@ example - 3
 		    y := X
 		    yield
 		    X := y - 1
+	      return X
 	\end{lstlisting}
 \end{minipage}
 	
@@ -379,6 +381,15 @@ example - 4
                 N_2_ACTIVE := 0
 
         return N_1_ACTIVE + N_2_ACTIVE  // total active nodes
+        
+        
+        request activate_n1:
+        	N_1_ACTIVE := 1
+        
+        request activate_n2:
+        	N_2_ACTIVE := 1
+        
+        
 \end{lstlisting}
 \end{minipage}
 	
@@ -608,7 +619,7 @@ One output that is attainable only via non-serializable executions is
 \]
 
 
-\newpage
+%\newpage
 
 
 example – 9
