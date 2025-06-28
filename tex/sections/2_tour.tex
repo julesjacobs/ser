@@ -8,25 +8,46 @@ Next, we will walk through a series of 9 examples, in varying level of complexit
 %
 We note that, unless explicitly state otherwise, all global and local variables are initialized to 0.
 
+\subsection{Basic Examples}
 
-\subsection{Example 1}
+\subsubsection{Example 1}
 
-We start with a basic example in Listing~\ref{lst:BasicNonSer} and~\ref{lst:BasicSer}. The program includes a single request (``A''), a single local variable (``x'') per each program; and a single global variable (``FLAG'') shared among all program. 
+We start with a basic example in Listing~\ref{lst:BasicSer} and~\ref{lst:BasicNonSer}, describing a single request (``A''), a single local variable (``x'') per each program; and a single global variable (``FLAG'') shared among all program. 
 %
-In in Listing~\ref{lst:BasicNonSer}, each request: (i) assigns the the local variable x the value of FLAG (hence, x:=0 for the first request); (ii) non-deterministically decides whether to yield or not; and then (iii) updates the global FLAG variable to 1 and returns the local copy of x. 
+In Listing~\ref{lst:BasicSer} a thread assigns to x the value of FLAG (hence, initially, x:=0). Then, the thread non-deterministically chooses whether to yield, or to flip th value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned. 
 %
-It is straightforward to see that this simple program is not serializable. Specifically, every serial execution indicates the the first request $A$ will return ``0'' (as X:=FLAG, which is initially 0). As the first thread assigns FLAG:=1 before exiting, any subsequent execution will assign x:=1 and hence return 1. Differently put, for any serial execution with i packets/threads --- we have exactly one (first) request/response pair (A,0), and $(i-1)$ pairs of (A,1).
+Note that the presence of the else branch makes the program serializable, as intuitively, the returned value of x does not depend on the assignment of FLAG.
 %
-However, given that the first packet yields, it is possible for another packet to subsequently run the program after the first packet yields. his will allow two packets to have x=0, and hence any number of arbitrary packets can have multiple (A,0) pairs. Hence, Listing~\ref{lst:BasicNonSer} is not serializable.
+However, this changes in  Listing~\ref{lst:BasicNonSer}. In which case there is no ``else'' branch and x is always assigned the value of FLAG.
+%
+It is straightforward to see that this updated makes the program non-serializable. Any serial execution will afford the first request $A$ the matching returned value``0'' (as X:=FLAG, which is initially 0). As the first thread also assigns FLAG:=1 before exiting, any subsequent execution will assign x:=1 and hence return 1. Differently put, for any serial execution with i packets/threads --- we have exactly one (first) request/response pair (A,0), and $(i-1)$ pairs of (A,1).
+%
+However, given that the first packet can also yield, it is possible for another packet to subsequently run the program after the first packet yields and before it returns. This, in turn, will allow two packets to have x=0, and hence any number of arbitrary packets can have multiple (A,0) pairs. Hence, Listing~\ref{lst:BasicNonSer} is not serializable.
 
 
-The program described in Listing~\ref{lst:BasicSer} include an additional ``else'' branch, which non deterministically flips the value of ``x''. This change makes the program serializable, as intuitively, the returned value of x does not depend on the assignment of FLAG.
+
 
 %\vspace{2em}
 %example - 2
 
 % Second row
 \noindent
+\begin{minipage}[t]{0.45\textwidth}
+	\begin{lstlisting}[caption={Serializable},
+		label={lst:BasicSer}]
+		request A: 
+		x := FLAG
+		
+		if (?):
+			yield
+		else:
+			x := 1 - x
+		
+		FLAG := 1
+		return x
+	\end{lstlisting}
+\end{minipage}
+\hfill
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable: {(A,0),(A,0)}},
 	label={lst:BasicNonSer}]
@@ -42,31 +63,27 @@ The program described in Listing~\ref{lst:BasicSer} include an additional ``else
 			    return x
 		\end{lstlisting}
 \end{minipage}%
-\hfill
-\begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Serializable},
-		label={lst:BasicSer}]
-			request A: 
-			    x := FLAG
-			
-			    if (?):
-			        yield
-			    else:
-			        x := 1 - x
-			
-			    FLAG := 1
-			    return x
-		\end{lstlisting}
-\end{minipage}
 
-\vspace{2em}
+
+
+\subsubsection{Example 2}
+The following program pairs have a single global variable ``X'', and two requests --- \textit{incr} which increments X by 1, and \textit{decr} which decrements X by 1. Both program have while loops which guarantee that X will always be assigned a value between 0 to 3, otherwise the while loop will yield an infinitum. Both requests return the value of X after updating it.
+%
+In the first case, Listing~\ref{lst:FredSer} presents a serializable execution, due to the absence of any yield between the increment/decrement of X, and its return. Equivalently, in each of the requests, the update of X and it's returned can be thought of as \textit{a single atomic execution}.
+%
+However, in Listing~\ref{lst:FredNonSer},we add an additional yield (and a local variable y), in each of the requests, between the update of X and it's return.
+%
+This updates allows to request of the same type to update X to the same value --- something that is not possible in any serial execution. 
+
+%\vspace{2em}
 %\newpage
-example - 3
+%example - 3
 
 % Third row
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Fred (serializable)}]
+	\begin{lstlisting}[caption={Fred (serializable)},
+		label={lst:FredSer}]
 			request incr: 
 			    while (X == 3):
 			        yield
@@ -86,7 +103,8 @@ example - 3
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Fred2 (not serializable)}]
+	\begin{lstlisting}[caption={Fred2 (not serializable)},
+		label={lst:FredNonSer}]
 			request incr:
 			    while (X == 3):
 			        yield
@@ -104,6 +122,52 @@ example - 3
 		      return X
 		\end{lstlisting}
 \end{minipage}
+	
+	
+\subsubsection{Example 3}	
+\todo{continue}	
+%example - 6
+
+
+% Second row
+\noindent
+\begin{minipage}[t]{0.45\textwidth}
+	\begin{lstlisting}[caption={Complex while (serializable)}]
+		    request flip: 
+		        X := 1 - X 
+		    
+		    request main:
+		        i := 5
+		        while (i > 0):
+		            while (X == 0):
+		                pass
+		            while (X == 1):
+		                pass
+		            i := i - 1
+		        
+		        return 1       
+				\end{lstlisting}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+	\begin{lstlisting}[caption={Complex while with yields (not serializable)}]
+		    request flip: 
+		        X := 1 - X 
+		
+		    request main:
+		        i := 5
+		        while (i > 0):
+		            while (X == 0):
+		                yield
+		            while (X == 1):
+		                yield
+		            i := i - 1
+		
+		        return 1        
+					\end{lstlisting}
+\end{minipage}
+	
+	
 	
 \newpage
 
@@ -221,46 +285,6 @@ example - 5
 %\newpage
 
 
-example - 6
-
-
-% Second row
-\noindent
-\begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Complex while (serializable)}]
-	    request flip: 
-	        X := 1 - X 
-	    
-	    request main:
-	        i := 5
-	        while (i > 0):
-	            while (X == 0):
-	                pass
-	            while (X == 1):
-	                pass
-	            i := i - 1
-	        
-	        return 1       
-			\end{lstlisting}
-\end{minipage}%
-\hfill
-\begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Complex while with yields (not serializable)}]
-	    request flip: 
-	        X := 1 - X 
-	
-	    request main:
-	        i := 5
-	        while (i > 0):
-	            while (X == 0):
-	                yield
-	            while (X == 1):
-	                yield
-	            i := i - 1
-	
-	        return 1        
-				\end{lstlisting}
-\end{minipage}
 
 
 
