@@ -8,21 +8,21 @@ Next, we will walk through a series of 9 examples, in varying level of complexit
 %
 We note that, unless explicitly state otherwise, all global and local variables are initialized to 0.
 
-\subsection{Basic Examples}
+\subsection{Example 1}
 
-\subsubsection{Example 1}
+%\subsubsection{Example 1}
 
 We start with a basic example in Listing~\ref{lst:BasicSer} and~\ref{lst:BasicNonSer}, describing a single request (``A''), a single local variable (``x'') per each program; and a single global variable (``FLAG'') shared among all program. 
 %
-In Listing~\ref{lst:BasicSer} a thread assigns to x the value of FLAG (hence, initially, x:=0). Then, the thread non-deterministically chooses whether to yield, or to flip th value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned. 
+In Listing~\ref{lst:BasicSer} an in-flight request assigns to x the value of FLAG (hence, initially, x:=0). Then, the request non-deterministically chooses whether to yield, or to flip th value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned. 
 %
 Note that the presence of the else branch makes the program serializable, as intuitively, the returned value of x does not depend on the assignment of FLAG.
 %
 However, this changes in  Listing~\ref{lst:BasicNonSer}. In which case there is no ``else'' branch and x is always assigned the value of FLAG.
 %
-It is straightforward to see that this updated makes the program non-serializable. Any serial execution will afford the first request $A$ the matching returned value``0'' (as X:=FLAG, which is initially 0). As the first thread also assigns FLAG:=1 before exiting, any subsequent execution will assign x:=1 and hence return 1. Differently put, for any serial execution with i packets/threads --- we have exactly one (first) request/response pair (A,0), and $(i-1)$ pairs of (A,1).
+It is straightforward to see that this updated makes the program non-serializable. Any serial execution will afford the first request $A$ the matching returned value``0'' (as X:=FLAG, which is initially 0). As the first request also assigns FLAG:=1 before exiting, any subsequent execution will assign x:=1 and hence return 1. Differently put, for any serial execution with i requests --- we have exactly one (first) request/response pair (A,0), and $(i-1)$ pairs of (A,1).
 %
-However, given that the first packet can also yield, it is possible for another packet to subsequently run the program after the first packet yields and before it returns. This, in turn, will allow two packets to have x=0, and hence any number of arbitrary packets can have multiple (A,0) pairs. Hence, Listing~\ref{lst:BasicNonSer} is not serializable.
+However, given that the first request can also yield, it is possible for another request to subsequently run the program after the first request yields and before it returns. This, in turn, will allow two requests to have x=0, and hence any number of arbitrary requests can have multiple (A,0) pairs. Hence, Listing~\ref{lst:BasicNonSer} is not serializable.
 
 
 
@@ -64,9 +64,9 @@ However, given that the first packet can also yield, it is possible for another 
 		\end{lstlisting}
 \end{minipage}%
 
+\subsection{Example 2}
 
-
-\subsubsection{Example 2}
+%\subsubsection{Example 2}
 The following program pairs have a single global variable ``X'', and two requests --- \textit{incr} which increments X by 1, and \textit{decr} which decrements X by 1. Both program have while loops which guarantee that X will always be assigned a value between 0 to 3, otherwise the while loop will yield an infinitum. Both requests return the value of X after updating it.
 %
 In the first case, Listing~\ref{lst:FredSer} presents a serializable execution, due to the absence of any yield between the increment/decrement of X, and its return. Equivalently, in each of the requests, the update of X and it's returned can be thought of as \textit{a single atomic execution}.
@@ -123,16 +123,25 @@ This updates allows to request of the same type to update X to the same value --
 		\end{lstlisting}
 \end{minipage}
 	
-	
-\subsubsection{Example 3}	
-\todo{continue}	
+\subsection{Example 3}
+%\subsubsection{Example 3}	
+%\todo{continue}	
 %example - 6
+
+The next pair of examples cover a setting in which there is a single global variable (X) and a single local variable per each in-flight request. The \textit{flip} requests flips the bit of the single initial variable X (initialized to 0); the \textit{main} request attempts to decrement i five times.
+%
+It is straightforward to observe that the program in Listing~\ref{lst:ComplexWhileSer} is trivially serializable, as there are no yields.
+%
+However, by adding the two yields and updating the program (see Listing~\ref{lst:ComplexWhileNonSer}) the program becomes non-serializable. This can be observed as follows --- given a single in-flight request, the value of X is with 0 or 1 and hence, exactly one of the while loops will run indefinitely. Hence and serializable execution will result into a set of without any (main,1) pairs, but rather only, perhaps terminating \textit{flip} requests.
+%
+However, given at least $i=5$ interleavings of in-flight \textit{flip} requests, it is possible for a \textit{main} request to terminate and bypass all while loops.
 
 
 % Second row
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Complex while (serializable)}]
+	\begin{lstlisting}[caption={Complex while (serializable)},
+		label={lst:ComplexWhileSer}]
 		    request flip: 
 		        X := 1 - X 
 		    
@@ -150,7 +159,8 @@ This updates allows to request of the same type to update X to the same value --
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Complex while with yields (not serializable)}]
+	\begin{lstlisting}[caption={Complex while with yields (not serializable)},
+		label={lst:ComplexWhileNonSer}]
 		    request flip: 
 		        X := 1 - X 
 		
@@ -169,77 +179,23 @@ This updates allows to request of the same type to update X to the same value --
 	
 	
 	
-\newpage
+\subsection{Example 4}
+%\subsubsection{Example 4: Banking System}
 
-example - 4
+The next example emulates a simple bank system, as motivated by Chandy and Lamport's seminal paper~\cite{ChLa85}. The system operates on two accounts of the same user --- denoted with the global variables $A$ and $B$, and initialized respectively to have $100\$$ and $50\$$ respectively. 
+%
+Each \textit{transfer} request allocates $50\$$ from account $A$ 0p account $B$, and every \textit{interest} request adds $t\%$ interest to each account (for simplicity, we chose $t=100\%$, hence doubling the funds in each account, per each request). We note that for simplicity we depict two accounts, although any number can be used.
+%
+Both requests return the final client funds in both the accounts.  
+%
+Listing~\ref{lst:BankSer} depicts a serializable version of this banking system (without any yields), while Listing~\ref{lst:BankNonSer} include yields in each of the requests, between the adjustment of accounts $A$ and $B$ (we note that this also represents real world systems in which the account can be sharded and partitioned across different nodes).
+%
 
-\begin{minipage}[t]{1.0\textwidth}
-\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sume of 0 active monitors)}]
-	// initialize both monitors to be active
-    N_1_ACTIVE := 1
-    N_2_ACTIVE := 1
-	
-    request main:
-        // take snapshot
-        n_1_active_snapshot := N_1_ACTIVE
-        n_2_active_snapshot := N_2_ACTIVE
-        yield
-		
-        if (n_1_active_snapshot == 1) and (n_2_active_snapshot == 1):
-            // if both nodes active --- choose which one to deactivate 
-            if (?): 
-                N_1_ACTIVE := 0
-            else:
-                N_2_ACTIVE := 0
-
-        return N_1_ACTIVE + N_2_ACTIVE  // total active nodes
-        
-        
-        request activate_n1:
-        	N_1_ACTIVE := 1
-        
-        request activate_n2:
-        	N_2_ACTIVE := 1
-        
-        
-\end{lstlisting}
-\end{minipage}
-	
-%only 0 in non-serializable runs!
-
-%\todo{start}
-
-%/snapshot_isolation_directly_as_NS_with_yields
-
-\begin{figure}[h]
-	\centering
-\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_with\_yields.pdf}
-	\caption{Snapshot Isolation with Yields.}
-	\label{fig:snapshotIsolationJsonWithYields}
-\end{figure}
-
-
-
-%/snapshot_isolation_directly_as_NS_without_yields
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_without\_yields.pdf}
-	\caption{Snapshot Isolation with Yields.}
-	\label{fig:snapshotIsolationJsonWithoutYields}
-\end{figure}
-
-
-\todo{maybe we have: (1) a copy of the global automaton; (2) a copy of the local automaton (with yields) with coloring of edges that don't exist in the one without yields}
-
-
-\newpage
-
-example - 5
 
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={bank (serializable)}]
+	\begin{lstlisting}[caption={bank (serializable)},
+		label={lst:BankSer}]
 	    // initialize accounts
 	    A := 100
 	    B := 50
@@ -261,7 +217,8 @@ example - 5
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={bank with yields (non serializable)}]
+	\begin{lstlisting}[caption={bank with yields (non serializable)},
+		label={lst:BankNonSer}]
 	    // initialize accounts
 	    A := 100
 	    B := 50
@@ -282,14 +239,86 @@ example - 5
 		\end{lstlisting}
 \end{minipage}
 	
+
+Interestingly, in this setting serializability (or it's lack thereof) corresponds to the correctness invariants pertaining to the program. Specifically, in every serializable execution, it holds that for $A_{\textit{before}},B_{\textit{before}}$ marking the amount before running a single \textit{interest} request, and any number of \textit{transfer} requests (and $A_{\textit{after}},B_{\textit{after}}$ marking the corresponding state after those requests), then:
+\[
+\bigl(A_{\mathit{after}} + B_{\mathit{after}}\bigr)
+= (1 + t\%)\,\bigl(A_{\mathit{before}} + B_{\mathit{before}}\bigr).
+\]
+
+This invariant always holds for any such serial execution, while having the specific division \textit{between} accounts $A$ and $B$ depending on the actual order of the serial execution.
+%
+However, this correctness invariant does not hold for non serializable executions. For example, in a setting in which there is a single \textit{transfer}request, which deduces $50\%$ from account $A$, and then yields (at a state in which $[A=50\$,B=50\$]$ holds); subsequently followed by a  \textit{interest} request which runs until completion, in which case  $[A=100\$,B=100\$]$, and then, the remainder of the yielded \textit{transfer} request is executed, resulting finally to $[A=100\$, B=150\$]$.  This result in $50\$$ being ``missing'' for our system, due to this non serializable behavior.
+%
+As mentioned, as serial execution of a these two request will always result to 
+$A+B=2\cdot (100\$+50\$)=300\$$, with either a final state of $[A=150\$, B=150\$]$ or $[A=100\$, B=200\$]$, depending on the scheduled serializable order.
+
+
+\subsection{Example 5}
+
+\begin{minipage}[t]{1.0\textwidth}
+	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sume of 0 active monitors)}]
+		// initialize both monitors to be active
+		N_1_ACTIVE := 1
+		N_2_ACTIVE := 1
+		
+		request main:
+			// take snapshot
+			n_1_active_snapshot := N_1_ACTIVE
+			n_2_active_snapshot := N_2_ACTIVE
+			yield
+			
+			if (n_1_active_snapshot == 1) and (n_2_active_snapshot == 1):
+			// if both nodes active --- choose which one to deactivate 
+				if (?): 
+					  N_1_ACTIVE := 0
+				else:
+					  N_2_ACTIVE := 0
+				
+			return N_1_ACTIVE + N_2_ACTIVE  // total active nodes
+			
+		
+		request activate_n1:
+			    N_1_ACTIVE := 1
+		
+		request activate_n2:
+			    N_2_ACTIVE := 1
+		
+		
+	\end{lstlisting}
+\end{minipage}
+
+%only 0 in non-serializable runs!
+
+%\todo{start}
+
+%/snapshot_isolation_directly_as_NS_with_yields
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_with\_yields.pdf}
+	\caption{Snapshot Isolation with Yields.}
+	\label{fig:snapshotIsolationJsonWithYields}
+\end{figure}
+
+
+
+%/snapshot_isolation_directly_as_NS_without_yields
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1.0\linewidth]{plots/snapshot\_isolation\_JSON\_without\_yields.pdf}
+	\caption{Snapshot Isolation with Yields.}
+	\label{fig:snapshotIsolationJsonWithoutYields}
+\end{figure}
+
+
+\todo{maybe we have: (1) a copy of the global automaton; (2) a copy of the local automaton (with yields) with coloring of edges that don't exist in the one without yields}
+
+
+
 %\newpage
-
-
-
-
-
-\newpage
-
+\subsection{Example 6}
 example - 7
 
 \begin{minipage}[t]{1.0\textwidth}
@@ -349,90 +378,90 @@ example - 7
 %	\label{fig:pdfimage}
 %\end{figure}
 
-\newpage
-
-
-example – 8
-
-\noindent
-\begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={foo (serializable)}]
-	request foo: 
-	    if (?):
-	        X := (X + 2) % 3 
-	        // no yield
-	        return X
-	
-	    else:
-	        X := (X + 1) % 3
-	        // no yield
-	        return X
-		\end{lstlisting}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.45\textwidth}
-\begin{lstlisting}[caption={foo (non serializable)}]
-request foo: 
-     if (?):
-         X := (X + 2) % 3 
-         yield
-         return X
-
-     else:
-         X := (X + 1) % 3
-         yield
-         return X
-	\end{lstlisting}
-\end{minipage}
-
-One output that is attainable only via non-serializable executions is 
-\[
-\{(foo,1),(foo,1),(foo,1),(foo,3)\}
-\]
-
-
 %\newpage
-
-
-example – 9
-
-\noindent
-\begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={foo (serializable)}]
-request foo:
-    if(STOP == 0):
-        X := (X + 1) % 4
-
-    yield
-
-    if(STOP == 0):
-        X := (X + 1) % 4
-
-        STOP := ?
-        
-        if(STOP == 1):
-	        return X
-        return 0
-	\end{lstlisting}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={foo (non serializable)}]
-request foo:
-    if(STOP == 0):
-        X := (X + 1) % 4
-
-    yield
-
-    if(STOP == 0):
-        X := (X + 2) % 4
-
-        STOP := ?
-        
-        if(STOP == 1):
-	        return X
-        return 0
-	\end{lstlisting}
-\end{minipage}
+%
+%
+%example – 8
+%
+%\noindent
+%\begin{minipage}[t]{0.45\textwidth}
+%	\begin{lstlisting}[caption={foo (serializable)}]
+%	request foo: 
+%	    if (?):
+%	        X := (X + 2) % 3 
+%	        // no yield
+%	        return X
+%	
+%	    else:
+%	        X := (X + 1) % 3
+%	        // no yield
+%	        return X
+%		\end{lstlisting}
+%\end{minipage}
+%\hfill
+%\begin{minipage}[t]{0.45\textwidth}
+%\begin{lstlisting}[caption={foo (non serializable)}]
+%request foo: 
+%     if (?):
+%         X := (X + 2) % 3 
+%         yield
+%         return X
+%
+%     else:
+%         X := (X + 1) % 3
+%         yield
+%         return X
+%	\end{lstlisting}
+%\end{minipage}
+%
+%One output that is attainable only via non-serializable executions is 
+%\[
+%\{(foo,1),(foo,1),(foo,1),(foo,3)\}
+%\]
+%
+%
+%%\newpage
+%
+%
+%example – 9
+%
+%\noindent
+%\begin{minipage}[t]{0.45\textwidth}
+%	\begin{lstlisting}[caption={foo (serializable)}]
+%request foo:
+%    if(STOP == 0):
+%        X := (X + 1) % 4
+%
+%    yield
+%
+%    if(STOP == 0):
+%        X := (X + 1) % 4
+%
+%        STOP := ?
+%        
+%        if(STOP == 1):
+%	        return X
+%        return 0
+%	\end{lstlisting}
+%\end{minipage}
+%\hfill
+%\begin{minipage}[t]{0.45\textwidth}
+%	\begin{lstlisting}[caption={foo (non serializable)}]
+%request foo:
+%    if(STOP == 0):
+%        X := (X + 1) % 4
+%
+%    yield
+%
+%    if(STOP == 0):
+%        X := (X + 2) % 4
+%
+%        STOP := ?
+%        
+%        if(STOP == 1):
+%	        return X
+%        return 0
+%	\end{lstlisting}
+%\end{minipage}
 
 
