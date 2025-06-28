@@ -6,7 +6,12 @@
 
 Next, we will walk through a series of 9 examples, in varying level of complexity. Each example will demonstrate different aspects of serializable vs non-serializable programs.
 %
-We note that, unless explicitly state otherwise, all global and local variables are initialized to 0.
+Global variables are depicted with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
+%
+Unless explicitly state otherwise, all global and local variables are initialized to 0.
+%
+The ``\textit{?}'' symbol depicts a nondeterministic choice between ``0'' and ``1''. All other constructs (\textit{while}, \textit{yield} \textit{if}) are in their regular meaning.
+\guy{Is the above paragraph clear?}
 
 \subsection{Example 1}
 
@@ -35,7 +40,7 @@ However, given that the first request can also yield, it is possible for another
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
 		label={lst:BasicSer}]
-		request A: 
+	request A: 
 		x := FLAG
 		
 		if (?):
@@ -255,6 +260,8 @@ $A+B=2\cdot (100\$+50\$)=300\$$, with either a final state of $[A=150\$, B=150\$
 
 
 \subsection{Example 5}
+
+\guy{suddenly I'm not so sure about this example. It's sound but maybe a bit dumb?}
 
 \begin{minipage}[t]{1.0\textwidth}
 	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sume of 0 active monitors)}]
