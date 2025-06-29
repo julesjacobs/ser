@@ -48,14 +48,14 @@ def generate_plot(df: pd.DataFrame, output_path: str):
                 ["Before", "After"][i],
                 ha="center",
                 fontsize=annotation_fontsize,
-                fontweight="bold")
+                fontweight="normal")
     for i, height in enumerate([pre_trans, post_trans]):
         x_pos = x[1] + (i*2-1)*width/2
         ax.text(x_pos, height + y_offset,
                 ["Before", "After"][i],
                 ha="center",
                 fontsize=annotation_fontsize,
-                fontweight="bold")
+                fontweight="normal")
 
     # Optionally bump up tick labels too
     ax.tick_params(axis='x', labelsize=annotation_fontsize)
@@ -67,7 +67,7 @@ def generate_plot(df: pd.DataFrame, output_path: str):
     # Larger title
     # ax.set_title("Average Petri Net Size Before and After Pruning",
                  # fontsize=18,
-                 # fontweight="bold")
+                 # fontweight="normal")
     ax.set_ylim(0, max_height * 1.1)
     ax.yaxis.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
     fig.tight_layout()
