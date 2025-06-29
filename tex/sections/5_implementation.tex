@@ -61,6 +61,19 @@ The \texttt{ser} crate implements a complete workflow for Petri-net reachability
 
 \subsection{Optimizations}
 
+\paragraph{Bidirectional Pruning of the Petri Net}
+Before any heavy symbolic reasoning takes place, we apply a bidirectional reachability filter to the underlying Petri net.  In the forward pass, we traverse from the initial marking to identify all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint.  By intersecting these two reachable sets, we remove every component of the net that cannot both originate and contribute to a solution.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
+
+\paragraph{Redundant‐Constraint Elimination}
+When manipulating Presburger sets or their semilinear representations, it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents exponential blow‐up of case distinctions during solver invocations.
+
+\paragraph{Generate‐Less Constraint Generation}
+During set‐construction—especially when introducing new existentially‐quantified variables or combining transition effects—we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This “generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description, trading off completeness of intermediate case‐enumeration for concise final representations.  In benchmarks with large state‐spaces, it can reduce the number of intermediate branches by orders of magnitude.
+
+\paragraph{Smart Kleene‐Star Expansion Order}
+Expanding Kleene closures (the “\(\mathsf{*}\)” operator) can blow up expressions if done naively in a fixed left‐to‐right order.  Instead, we analyze the structure of subexpressions under the Kleene operator—estimating their branching factor and likely convergence speed—and reorder them so that simpler, low‐branching components are expanded first.  This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  The net effect is a much more controlled expansion process, improving both time and memory usage on challenging examples.
+
+
 \begin{figure}[htbp]
 	\centering
 	
