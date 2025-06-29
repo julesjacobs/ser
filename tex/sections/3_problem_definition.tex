@@ -1,3 +1,5 @@
+\newpage
+
 \section{Problem Definition}
 \label{sec:problem-definition}
 
@@ -175,3 +177,211 @@ Whether
 \)
 holds is undecidable.
 \end{theorem}
+
+\subsection{Example for NS}
+
+Recall the code snipped from Listing~\ref{lst:MotivatingExample1Ser}:
+
+
+\begin{minipage}[t]{0.45\textwidth}
+	\begin{lstlisting}[caption={Without yield or lock (serializable)},
+			label={lst:MotivatingExample1Ser}]
+			request foo: 
+			X := 1 
+			// no yield
+			y := X 
+			X := 0
+			return y 
+		\end{lstlisting}
+\end{minipage}
+
+\[
+req \coloneq 
+\Bigg \{
+\Bigg [
+\begin{array}{c c c}
+	\text{
+			\begin{tikzpicture}[baseline=(textnode.base)]
+					\node[
+					draw=black,
+					fill=ForestGreen!20,
+					text=black,
+					diamond,
+					aspect=2,
+					inner sep=4pt
+					] (textnode) {foo};
+				\end{tikzpicture}
+		} 
+	&
+	\rightarrow
+	&
+	\bigg(
+	\begin{tabular}{c c}
+	\text{\large\textcolor{Peach}{[y=0]}},\quad & 
+	\begin{minipage}{0.14\linewidth}
+			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+X := 1 
+yield 
+y := X + 1
+X := 0
+return y
+				\end{lstlisting}
+		\end{minipage}
+\end{tabular}
+	\bigg)
+\end{array}
+\Bigg ]
+\Bigg \}
+\]
+
+
+\[
+resp \coloneq
+\Bigg \{
+\Bigg [ 
+\begin{array}{c c c}
+\bigg(
+\begin{tabular}{c c}
+\text{\large\textcolor{Peach}{[y=0]}},\quad & 
+\begin{minipage}{0.11\linewidth}
+		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+return y
+			\end{lstlisting}
+	\end{minipage}
+\end{tabular}
+\bigg)
+&
+\rightarrow
+&
+\text{
+\begin{tikzpicture}[baseline=(textnode.base)]
+		\node[
+		draw=black,                      % ← outline color
+		fill=RedViolet!20,            % ← light green fill
+		text=black,
+		diamond,
+		aspect=2,
+		inner sep=4pt
+		] (textnode) {0};
+	\end{tikzpicture}
+} 
+\end{array}
+\Bigg ]
+,
+%\quad
+\Bigg [ 
+\begin{array}{c c c}
+\bigg(
+\begin{tabular}{c c}
+\text{\large\textcolor{Peach}{[y=1]}},\quad & 
+\begin{minipage}{0.11\linewidth}
+		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+return y
+			\end{lstlisting}
+	\end{minipage}
+\end{tabular}
+\bigg)
+&
+\rightarrow
+&
+\text{
+\begin{tikzpicture}[baseline=(textnode.base), scale=0.7]
+		\node[
+		draw=black,                      % ← outline color
+		fill=RedViolet!20,            % ← light green fill
+		text=black,
+		diamond,
+		aspect=2,
+		inner sep=4pt
+		] (textnode) {1};
+	\end{tikzpicture}
+} 
+\end{array}
+\Bigg ] 
+\Bigg \} 
+\]
+
+
+
+
+
+\[
+\begin{array}{l}
+\delta := 
+\Bigg\{ 
+\Bigg[
+\Bigg(
+\text{\Large\textcolor{NavyBlue}{[X=0]}},\quad
+\bigg(
+\begin{tabular}{c c}
+\text{\large\textcolor{Peach}{[y=0]}},\quad & 
+\begin{minipage}{0.14\linewidth}
+		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+X := 1
+yield
+y := X + 1
+X := 0
+return y
+			\end{lstlisting}
+	\end{minipage}
+\end{tabular}
+\bigg)
+\Bigg)
+\rightarrow
+\Bigg(
+\text{\Large\textcolor{NavyBlue}{[X=1]}},\quad
+\bigg(
+\begin{tabular}{c c}
+\text{\large\textcolor{Peach}{[y=0]}},\quad & 
+\begin{minipage}{0.14\linewidth}
+		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+y := X + 1
+X := 0
+return y
+			\end{lstlisting}
+	\end{minipage}
+\end{tabular}
+\bigg)
+\Bigg)
+\Bigg]
+\bigcup\ \ldots, \\[1em]
+\quad
+\ldots
+\bigcup\ 
+\Bigg[
+\Bigg(
+\text{\Large\textcolor{NavyBlue}{[X=1]}},\quad
+\bigg(
+\begin{tabular}{c c}
+\text{\large\textcolor{Peach}{[y=0]}},\quad & 
+\begin{minipage}{0.14\linewidth}
+		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+y := X + 1
+X := 0
+return y
+			\end{lstlisting}
+	\end{minipage}
+\end{tabular}
+\bigg)
+\Bigg)
+\rightarrow
+\Bigg(
+\text{\Large\textcolor{NavyBlue}{[X=0]}},\quad
+\bigg(
+\begin{tabular}{c c}
+\text{\large\textcolor{Peach}{[y=1]}},\quad & 
+\begin{minipage}{0.11\linewidth}
+		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+return y
+			\end{lstlisting}
+	\end{minipage}
+\end{tabular}
+\bigg)
+\Bigg)
+\Bigg]
+\bigcup\ \ldots
+\Bigg\}
+\end{array}
+\]
+
+\todo{emphasize that there are states we didn't add}
