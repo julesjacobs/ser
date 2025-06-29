@@ -7,7 +7,7 @@ request init {
 }
 
 // a decentralized network in which at least one node needs to be active and monitor the network at any given moment
-// if the snapshot records two active nodes, a transaction can non-deterministically choose whether (and which) node to turn to inactive
+// if the snapshot records two active nodes, a transaction can non-deterministically choose which node to turn to inactive
 
 request main {
 	while (X == 0){

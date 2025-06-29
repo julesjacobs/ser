@@ -28,11 +28,10 @@
 
 \subsection{Motivating Example}
 
-Next, we give an example motivating the on the use of an automatic checker for program serializability.In particular, we will show how even small, toy programs can be surprisingly difficult to reason about when assessing their serializable behavior.
+
+Observe the simple program depicted in Listing~\ref{lst:MotivatingExample1Ser}. Each request call \textit{foo} gives rise to a fresh in-flight request. The variable ``X'' is global, and shared among all in-flight requests, while the variable ``y'' is local variable, per each request. 
 %
-Observe the simple program depicted in Listing~\ref{lst:MotivatingExample1Ser}. Each request call \textit{foo} gives rise to a fresh in-flight	packet. The variable ``X'' is global, and shared among all in-flight requests, while the variable ``y'' is local variable, per each request. 
-%
-As there are no yields, it is straightforward to see that the program is trivially serializable, with every request \textit{foo}: (i) assigning 1 to the global variable X; (ii) assigning y to have the value of X, i.e. 1; (iii) assigning X the value 0; and (iv) returning y. This results to every (request,response) pair to be of the form \textit{(foo, 1)}.
+As there are no yields, it is straightforward to see that the program is trivially serializable, with every request \textit{foo}: (i) assigning 1 to the global variable X; (ii) assigning to y to have the value of X, i.e., always 1; (iii) assigning to X the value 0; and (iv) returning the response y. This results to every (request,response) pair to be of the form \textit{(foo, 1)}.
 %
 The program is slightly altered (in Listing~\ref{lst:MotivatingExample2NonSer}), by adding a yield operation between the aforementioned steps (i) and (ii). Now, by running two \textit{foo} requests that interleave, it is possible to attain a \textit{(foo,0)} request/response pair, which is unattainable in any serial execution of Listing~\ref{lst:MotivatingExample2NonSer} --- as any such serial execution is equivalent to Listing~\ref{lst:MotivatingExample1Ser}, which always responds ``1'' to any request \textit{foo}.
 
@@ -85,9 +84,10 @@ The program is slightly altered (in Listing~\ref{lst:MotivatingExample2NonSer}),
 \end{minipage}
 
 The program is altered once again in in Listing~\ref{lst:MotivatingExample3Ser}, by adding a fresh global variable ``L'', indicating if the critical section is locked ($L=1$) or not ($L=0$).
-By adding a global lock variable, even if an interleaving occurs, the lock will allow only the first request to terminate, and hence release the lock for the next request. Hence, despite having yields, we attain serializable executions, and only \textit{(foo,1)} request/response pairs are produced, similar to the original program in Listing~\ref{lst:MotivatingExample1Ser}.
+By adding a global lock variable, even if an interleaving occurs after yielding, the lock will allow only the first request to terminate, and will then release the lock for the next request. Hence, despite having yields, we attain serializable executions, and only \textit{(foo,1)} request/response pairs are produced, similar to the original program in Listing~\ref{lst:MotivatingExample1Ser}.
+%
+This simple example demonstrates the motivation for automatic serializability checking, as even small, toy programs can be surprisingly difficult to reason about when assessing their serializable behavior.
 
-%\todo{guy - START}
 
 
 

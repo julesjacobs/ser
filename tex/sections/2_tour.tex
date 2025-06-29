@@ -357,6 +357,25 @@ Similarly, routing cycles are attained via non serializable executions also for 
 
 \guy{suddenly I'm not so sure about this example. It is indeed sound but maybe a bit silly?}
 
+
+The next program is motivated by system monitoring.
+The system has two nodes (represented by the global variables $N_1$ and $N_2$) which monitor ongoing traffic, and are originally both active (as indicated by their initial values [$N_1=1,N_2=1$]).
+%
+The \textit{main} request takes a ``snapshot'' of the system, i.e., locally record the current activation status of each of the two nodes.
+%
+Subsequently, if both nodes are active, each in-flight request thread  non-deterministically decides which of the two nodes to deactivate, i.e. set [$N_i:=0$]. This policy is consistent with real-world settings in order to maintain overall energy efficiency.
+%
+The \textit{main} request eventually returns the current sum of active nodes in the system.
+%
+In order for the system to be reactive for multiple iterations, our setting include also two additional requests, \textit{activate\_1, activate\_n2} which activate the node in question.
+%
+We note that the program is non-serializable due to the yield operation that appears immediately after the recording (snapshot) of the node activity. One such example for a non-serializable behavior is two \textit{main} requests which record two active monitor nodes and yield; Then, having each request turn off the complement node. As a result of each request operating based on its isolated ``snapshot'' of the initial global state, both monitor nodes can be turned off and we can attain a request with \textit{(main, 0)} (for $[N_1+N_2=0+0=0]$).
+%
+We note that in any serializable execution, the no two \textit{main} requests can record that both monitors are active, and hence, they cannot both have an interleaving in which each separate monitor is deactivated (hence, a response of 0 is unattainable in serializable executions).
+
+
+
+
 \begin{minipage}[t]{1.0\textwidth}
 	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sume of 0 active monitors)}]
 			// initialize both monitors to be active
