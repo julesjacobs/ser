@@ -248,7 +248,7 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 \end{minipage}
 	
 
-Interestingly, in this setting serializability (or it's lack thereof) corresponds to the correctness invariants pertaining to the program. Specifically, in every serializable execution, it holds that for $A_{\textit{before}},B_{\textit{before}}$ marking the amount before running a single \textit{interest} request, and any number of \textit{transfer} requests (and $A_{\textit{after}},B_{\textit{after}}$ marking the corresponding state after those requests), then:
+Interestingly, in this setting, serializability also corresponds to correctness invariants pertaining to the program. Specifically, in every serializable execution, it holds that for $A_{\textit{before}},B_{\textit{before}}$ marking the funds before running a single \textit{interest} request, and any number of \textit{transfer} requests (and $A_{\textit{after}},B_{\textit{after}}$ marking the corresponding state after those requests), then:
 \[
 \bigl(A_{\mathit{after}} + B_{\mathit{after}}\bigr)
 = (1 + t\%)\,\bigl(A_{\mathit{before}} + B_{\mathit{before}}\bigr).
@@ -256,9 +256,9 @@ Interestingly, in this setting serializability (or it's lack thereof) correspond
 
 This invariant always holds for any such serial execution, while having the specific division \textit{between} accounts $A$ and $B$ depending on the actual order of the serial execution.
 %
-However, this correctness invariant does not hold for non serializable executions. For example, in a setting in which there is a single \textit{transfer}request, which deduces $50\%$ from account $A$, and then yields (at a state in which $[A=50\$,B=50\$]$ holds); subsequently followed by a  \textit{interest} request which runs until completion, in which case  $[A=100\$,B=100\$]$, and then, the remainder of the yielded \textit{transfer} request is executed, resulting finally to $[A=100\$, B=150\$]$.  This result in $50\$$ being ``missing'' for our system, due to this non serializable behavior.
+However, this correctness invariant does not hold for non serializable executions. For example, in a setting in which there is a single \textit{transfer} request, which deduces $50\%$ from account $A$, and then yields (resulting to a temporary state in which $[A=50\$,B=50\$]$); subsequently followed by a  \textit{interest} request which runs until completion, in which case  $[A=100\$,B=100\$]$, and then, the remainder of the yielded \textit{transfer} request is executed, resulting finally to $[A=100\$, B=150\$]$.  This result in $50\$$ ``missing'' from our system, due to this non serializable behavior.
 %
-As mentioned, as serial execution of a these two request will always result to 
+As mentioned, a serial execution of a these two request will always result to 
 $A+B=2\cdot (100\$+50\$)=300\$$, with either a final state of $[A=150\$, B=150\$]$ or $[A=100\$, B=200\$]$, depending on the scheduled serializable order.
 
 
