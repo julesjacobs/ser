@@ -30,7 +30,7 @@ def generate_plot(df: pd.DataFrame, output_path: str):
     x = np.arange(len(categories))
     width = 0.35
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     # Plot bars
     ax.bar(x[0] - width/2, pre_places, width, label="Before", facecolor="forestgreen", edgecolor="black", linewidth=1)
@@ -41,7 +41,7 @@ def generate_plot(df: pd.DataFrame, output_path: str):
     # Annotate with larger font
     max_height = max(pre_places, post_places, pre_trans, post_trans)
     y_offset = max_height * 0.02
-    annotation_fontsize = 18
+    annotation_fontsize = 25
     for i, height in enumerate([pre_places, post_places]):
         x_pos = x[0] + (i*2-1)*width/2
         ax.text(x_pos, height + y_offset,
