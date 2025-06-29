@@ -267,9 +267,9 @@ $A+B=2\cdot (100\$+50\$)=300\$$, with either a final state of $[A=150\$, B=150\$
 %\newpage
 \subsection{Example 5}
 
-The following example motivates our routing‐policy programs in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a controller can adjust the global network control policy. The controller can also send control packets to each switch, causing it to adopt the routing policy dictated by the controller.
+The following example motivates our routing‐policy programs in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adopt its updated routing as dictated by the updates.
 %
-An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes—node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST})—serving as ingress points where traffic may nondeterministically enter. The controller selects one of two policies: a \textcolor{ForestGreen}{green} policy, which routes traffic from West to East, or a \textcolor{red}{red} policy, which routes it in the opposite direction.
+An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST}), serving as ingress points from where traffic may nondeterministically enter the network. The controller selects one of two policies: a \textcolor{ForestGreen}{green} policy, which routes traffic from West to East, or a \textcolor{red}{red} policy, which routes it in the opposite direction.
 
 
 %// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
@@ -286,15 +286,15 @@ An instance of a simple network with two competing policies is shown in Fig.~\re
 	\label{fig:BgpRoutingPolicies}
 \end{figure}
 
-This SDN-controlled routing policy is realized in the pseudo code of Listing~\ref{lst:BgpNonSerializable}. T
+This SDN-controlled routing policy is realized in the pseudo code in Listing~\ref{lst:BgpNonSerializable}.
 %
-The program includes a single global variable $G$, indicating if the current routing policy is the  \textcolor{ForestGreen}{green} policy ($G=1$) or the \textcolor{red}{red} policy ($G=0$).
+The program includes a single global variable $G$, indicating if the current routing policy is the  \textcolor{ForestGreen}{green} policy ($[G=1]$) or the \textcolor{red}{red} policy ($[G=0]$).
 %
 The program has three types of requests:
 \begin{itemize}
 	
 	\item 
-	\textit{policy update}: represents a controller updates, and nondeterministically decides whether to update the policy (i.e., flip the value of  variable $G$) or not.
+	\textit{policy update}: represents a controller  update, which nondeterministically decides whether to update the policy (i.e., flip the value of  variable $G$) or not.
 	
 	\item 
 	\textit{route\_from\_west}: this request represents a packet entering the network from the \textit{WEST} node (node 1).
@@ -305,13 +305,13 @@ The program has three types of requests:
 \end{itemize}
 
 
-Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
+Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the chosen routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
 %
 The return value of the \textit{route\_from\_west} requests is the sum \textit{(current+current+visited\_east)}. This is an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
 %
-The program is not serializable, as an interleaving can bring to final return value of \textit{(current+current+visited\_east)=1} (with \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when updated the routing policy after a a request has already been routed based on the previous policy.
-Acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
-Similarly, routing cycles are attained via non serializable executions also for the  \textit{route\_from\_east} requests.
+The program is not serializable, as witnessed by an interleaving that can give rise to final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when updated the routing policy after a request has already been routed based on the previous policy.
+Legal, acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
+Potential routing cycles can also be observed via non serializable executions also for the  \textit{route\_from\_east} requests.
 
 
 
