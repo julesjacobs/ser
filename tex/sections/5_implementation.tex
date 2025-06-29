@@ -3,6 +3,7 @@
 \section{Implementation}
 \label{sec:implementation}
 
+
 The implementation..
 
 \begin{enumerate}
@@ -10,6 +11,44 @@ The implementation..
 	\item Code architecture
 	\item Optimizations
 \end{enumerate}
+
+
+
+\subsection{Code Architecture}
+
+\label{subsec:codeArchitecture}
+
+The \texttt{ser} crate implements a complete workflow for Petri-net reachability analysis using Presburger arithmetic. From user input to final report, the components collaborate as follows:
+
+\begin{enumerate}
+	\item \textbf{Input \& Parsing.} A textual description of a Petri net (places, transitions, initial marking) and optional logical constraints is fed into the parser. The grammar module lexes and parses both net definitions and SMT-style constraint expressions, producing an abstract syntax tree (AST) for each.
+	
+	\item \textbf{AST to Symbolic Model.} The ASTs are translated into two parallel internal representations:
+	\begin{itemize}
+		\item A concrete \texttt{Petri<P>} model capturing the graph structure and initial marking.
+		\item A symbolic \texttt{PresburgerSet<P>} or \texttt{QuantifiedSet} encapsulating constraints over token counts.
+	\end{itemize}
+	
+	\item \textbf{Semilinear Conversion.} Symbolic sets are normalized into semilinear form (finite union of linear sets). This step tightly couples the Presburger module with the semilinear abstraction, enabling efficient union, projection, and intersection operations.
+	
+	\item \textbf{Reachability Engine.} The core algorithm invokes a “complement-and-reach” strategy:
+	\begin{itemize}
+		\item For each semilinear constraint, compute its complement and intersect it with the reachable markings.
+		\item Use DNF-style iteration (via \texttt{can\_reach\_presburger}) and recursive pruning to check emptiness.
+		\item Optionally delegate heavy Presburger queries to an external SMT/SMPT backend.
+	\end{itemize}
+	
+	\item \textbf{Proof \& Certificate Handling.} If a reachability query succeeds or fails, a proof certificate is generated or consumed. The proof parser reconstructs high-level formulas and associates each algorithmic step with symbolic witnesses.
+	
+	\item \textbf{Instrumentation \& Logging.} Throughout the pipeline, size and performance metrics (number of places, transitions, constraint complexity, timings) are recorded. The logger outputs structured CSV/JSON logs for later analysis.
+	
+	\item \textbf{Debug Report Generation.} Finally, a human-readable HTML report is assembled: it embeds the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs. This interactive report allows users to drill down into each transition firing, constraint check, and proof obligation.
+	
+	\item \textbf{Output Delivery.} The crate exposes a simple CLI and library API. Users obtain either a Boolean reachability verdict (with optional certificate), raw log files, or a full HTML debug report, depending on invocation flags.
+\end{enumerate}
+
+%\noindent
+%This linear pipeline - \emph{parse} -> \emph{model} -> \emph{normalize} -> \emph{analyze} -> \emph{prove} -> \emph{report} --- ensures a clear separation of concerns, easy extensibility (e.g., swapping backends), and comprehensive traceability from input to certified result.```
 
 
 \begin{figure}[htbp]
@@ -20,7 +59,7 @@ The implementation..
 \end{figure}
 
 
-
+\subsection{Optimizations}
 
 \begin{figure}[htbp]
 	\centering
