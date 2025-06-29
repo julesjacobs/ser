@@ -4,30 +4,33 @@
 \section{Tour / examples}
 \label{sec:tour}
 
-Next, we will walk through a series of 9 examples, in varying level of complexity. Each example will demonstrate different aspects of serializable vs non-serializable programs.
+Next, we will walk through a series of examples, in varying level of complexity. Each example will demonstrate different aspects of serializable vs non-serializable programs.
+%
+The first examples are relatively basic, while the last examples have higher complexity and are motivated by real word problems, e.g., BGP routing policy updates.
 %
 Global variables are depicted with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
 %
 Unless explicitly state otherwise, all global and local variables are initialized to 0.
 %
-The ``\textit{?}'' symbol depicts a nondeterministic choice between ``0'' and ``1''. All other constructs (\textit{while}, \textit{yield} \textit{if}) are in their regular meaning.
+The ``\textit{?}'' symbol depicts a nondeterministic choice between ``0'' and ``1''. All other constructs (\textit{while}, \textit{yield} \textit{if}) have their common interpretation.
+
 \guy{Is the above paragraph clear?}
 
 \subsection{Example 1}
 
 %\subsubsection{Example 1}
 
-We start with a basic example in Listing~\ref{lst:BasicSer} and~\ref{lst:BasicNonSer}, describing a single request (``A''), a single local variable (``x'') per each program; and a single global variable (``FLAG'') shared among all program. 
+We start with a basic example, describing a single request (``A''), a single local variable (``x'') per each request; and a single global variable (``FLAG'') shared among all in-flight requests. 
 %
-In Listing~\ref{lst:BasicSer} an in-flight request assigns to x the value of FLAG (hence, initially, x:=0). Then, the request non-deterministically chooses whether to yield, or to flip th value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned. 
+In Listing~\ref{lst:BasicSer} an in-flight request assigns to x the value of FLAG (hence, initially, $[x:=0]$). Then, the request non-deterministically chooses whether to yield, or to flip the value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned as the response to request $A$. 
 %
-Note that the presence of the else branch makes the program serializable, as intuitively, the returned value of x does not depend on the assignment of FLAG.
+Note that the presence of the \textit{else} branch renders the program serializable, as intuitively, the returned value of x does not depend on the assignment of FLAG.
 %
 However, this changes in  Listing~\ref{lst:BasicNonSer}. In which case there is no ``else'' branch and x is always assigned the value of FLAG.
 %
-It is straightforward to see that this updated makes the program non-serializable. Any serial execution will afford the first request $A$ the matching returned value``0'' (as X:=FLAG, which is initially 0). As the first request also assigns FLAG:=1 before exiting, any subsequent execution will assign x:=1 and hence return 1. Differently put, for any serial execution with i requests --- we have exactly one (first) request/response pair (A,0), and $(i-1)$ pairs of (A,1).
+It is straightforward to see that this update makes the program non-serializable. Any serial execution will afford the first request $A$ the matching returned value``0'' (as $[X:=FLAG]$, which is initially 0). As the first request also assigns $[FLAG:=1]$ before exiting, any subsequent execution will assign $[x:=1]$ and hence return the response 1. Differently put, for any serial execution with i requests --- we have exactly one (first) request/response pair \textit{(A,0)}, and $(i-1)$ pairs of \textit{(A,1)}.
 %
-However, given that the first request can also yield, it is possible for another request to subsequently run the program after the first request yields and before it returns. This, in turn, will allow two requests to have x=0, and hence any number of arbitrary requests can have multiple (A,0) pairs. Hence, Listing~\ref{lst:BasicNonSer} is not serializable.
+However, given that the first request can also \textit{yield}, it is possible for another request to subsequently run the program after the first request yields and before it returns. This, in turn, will allow two requests to have $[x=0]$, and hence, any number of arbitrary requests can have multiple \textit{(A,0)} pairs. Thus, Listing~\ref{lst:BasicNonSer} is not serializable.
 
 
 
@@ -74,11 +77,11 @@ However, given that the first request can also yield, it is possible for another
 %\subsubsection{Example 2}
 The following program pairs have a single global variable ``X'', and two requests --- \textit{incr} which increments X by 1, and \textit{decr} which decrements X by 1. Both program have while loops which guarantee that X will always be assigned a value between 0 to 3, otherwise the while loop will yield an infinitum. Both requests return the value of X after updating it.
 %
-In the first case, Listing~\ref{lst:FredSer} presents a serializable execution, due to the absence of any yield between the increment/decrement of X, and its return. Equivalently, in each of the requests, the update of X and it's returned can be thought of as \textit{a single atomic execution}.
+In the first case, Listing~\ref{lst:FredSer} presents a serializable execution, due to the absence of any yield between the increment/decrement of X, and its return. Equivalently, in each of the requests, the update of X and the returned value can be thought of as \textit{a single atomic execution}.
 %
-However, in Listing~\ref{lst:FredNonSer},we add an additional yield (and a local variable y), in each of the requests, between the update of X and it's return.
+However, in Listing~\ref{lst:FredNonSer},we add an additional yield (and a local variable ``y''), occurring in each of the requests, between the update of X and it's return.
 %
-This updates allows to request of the same type to update X to the same value --- something that is not possible in any serial execution. 
+This updates allows request of the same type to update X to the same value --- something that is not possible in any serial execution. 
 
 %\vspace{2em}
 %\newpage
@@ -137,9 +140,9 @@ The next pair of examples cover a setting in which there is a single global vari
 %
 It is straightforward to observe that the program in Listing~\ref{lst:ComplexWhileSer} is trivially serializable, as there are no yields.
 %
-However, by adding the two yields and updating the program (see Listing~\ref{lst:ComplexWhileNonSer}) the program becomes non-serializable. This can be observed as follows --- given a single in-flight request, the value of X is with 0 or 1 and hence, exactly one of the while loops will run indefinitely. Hence and serializable execution will result into a set of without any (main,1) pairs, but rather only, perhaps terminating \textit{flip} requests.
+However, by adding the two yields and updating the program (see Listing~\ref{lst:ComplexWhileNonSer}) it becomes non-serializable. This can be observed as follows --- given a single in-flight request, the value of X is either 0 or 1, and hence, exactly one of the while loops will run indefinitely. Thus, any serializable execution will result into a set without any \textit{(main,1)} pairs, but rather only, perhaps terminating \textit{flip} requests.
 %
-However, given at least $i=5$ interleavings of in-flight \textit{flip} requests, it is possible for a \textit{main} request to terminate and bypass all while loops.
+However, given at least $i=5$ interleaving of in-flight \textit{flip} requests, it is possible for a \textit{main} request to terminate and bypass all while loops, something that cannot occur in serializable executions.
 
 
 % Second row
@@ -187,13 +190,13 @@ However, given at least $i=5$ interleavings of in-flight \textit{flip} requests,
 \subsection{Example 4}
 %\subsubsection{Example 4: Banking System}
 
-The next example emulates a simple bank system, as motivated by Chandy and Lamport's seminal paper~\cite{ChLa85}. The system operates on two accounts of the same user --- denoted with the global variables $A$ and $B$, and initialized respectively to have $100\$$ and $50\$$ respectively. 
+The next example emulates a simple banking system, as motivated by Chandy and Lamport's seminal paper~\cite{ChLa85}. The system operates on two accounts of the same user --- denoted with the global variables $A$ and $B$, and initialized to have $100\$$ and $50\$$ respectively. 
 %
-Each \textit{transfer} request allocates $50\$$ from account $A$ 0p account $B$, and every \textit{interest} request adds $t\%$ interest to each account (for simplicity, we chose $t=100\%$, hence doubling the funds in each account, per each request). We note that for simplicity we depict two accounts, although any number can be used.
+Each \textit{transfer} request allocates $50\$$ from account $A$ to account $B$, and every \textit{interest} request adds $t\%$ interest to each account. For simplicity, and without loss of generality, we chose $t=100\%$, hence doubling the funds in each account, per each such request. We also note that for simplicity we depict two accounts ($A$ and $B$), although this example is valid for any number of accounts.
 %
-Both requests return the final client funds in both the accounts.  
+Both requests return the sum of final client funds in both the accounts.  
 %
-Listing~\ref{lst:BankSer} depicts a serializable version of this banking system (without any yields), while Listing~\ref{lst:BankNonSer} include yields in each of the requests, between the adjustment of accounts $A$ and $B$ (we note that this also represents real world systems in which the account can be sharded and partitioned across different nodes).
+Listing~\ref{lst:BankSer} depicts a serializable version of this banking system (without any yields), while Listing~\ref{lst:BankNonSer} includes yields in each of the requests, between the adjustment of accounts $A$ and $B$ (we note that this also represents real world systems in which the account can be sharded and partitioned across different nodes).
 %
 
 
