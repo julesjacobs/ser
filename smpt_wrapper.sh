@@ -3,8 +3,8 @@
 # SMPT Wrapper Script
 # This script activates the SMPT virtual environment and runs SMPT
 
-SMPT_DIR="/Users/jules/git/ser/SMPT"
-VENV_DIR="$SMPT_DIR/smpt_venv"
+SMPT_DIR="/home/guyamir/Documents/guy/SMPT"
+VENV_DIR="$SMPT_DIR/myenv"
 
 if [ ! -d "$VENV_DIR" ]; then
     echo "Error: SMPT virtual environment not found at $VENV_DIR"

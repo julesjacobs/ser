@@ -54,7 +54,7 @@ request route_from_WEST {
 	};
 	
 	current + current + visited_east // return a unique identifier of the pair (current_switch, visited_east) 
-	// if current=0 (left exit) and visited_east=1 then it cycle (in which case the return value is 2*0 + 1 = 1)
+	// if current=0 (left exit) and visited_east=1 then it cycles (in which case the return value is 2*0 + 1 = 1)
 	// legal serial executions are either returning 0 (in the case that current=0, and visited_east=0) 
 	// or 7 (in the case that current=3, and visited_east=1)
 }
