@@ -1,0 +1,21 @@
+request foo_with_locks { 
+	
+	// lock code (start)
+	while (L == 1) {
+		yield
+	};
+	L := 1;
+	
+	
+	// original foo code (except the return value)
+	X := 1; 
+	yield; 
+	y := X; 
+	X := 0;
+	
+	// unlock	
+	L := 0;
+	
+	// original foo return value
+	y 
+}

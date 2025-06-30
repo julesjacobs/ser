@@ -1,0 +1,57 @@
+{
+  "initial_global": "EmptyCart",
+  "requests": [
+    [
+      "AddItem",
+      "Shopping"
+    ],
+    [
+      "RemoveItem",
+      "Shopping"
+    ],
+    [
+      "Checkout",
+      "Shopping"
+    ]
+  ],
+  "responses": [
+    [
+      "Shopping",
+      "ItemAdded"
+    ],
+    [
+      "Shopping",
+      "ItemRemoved"
+    ],
+    [
+      "Processing",
+      "OrderComplete"
+    ]
+  ],
+  "transitions": [
+    [
+      "Shopping",
+      "EmptyCart",
+      "Shopping",
+      "ItemsInCart"
+    ],
+    [
+      "Shopping",
+      "ItemsInCart",
+      "Shopping",
+      "ItemsInCart"
+    ],
+    [
+      "Shopping",
+      "ItemsInCart",
+      "Processing",
+      "OrderProcessing"
+    ],
+    [
+      "Processing",
+      "OrderProcessing",
+      "Shopping",
+      "EmptyCart"
+    ]
+  ]
+}

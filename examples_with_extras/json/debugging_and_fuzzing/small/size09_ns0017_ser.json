@@ -1,0 +1,37 @@
+{
+  "initial_global": "G0",
+  "requests": [
+    [
+      "Req0",
+      "L0"
+    ]
+  ],
+  "responses": [
+    [
+      "L0",
+      "Resp0"
+    ],
+    [
+      "L1",
+      "Resp1"
+    ],
+    [
+      "L0",
+      "Resp2"
+    ]
+  ],
+  "transitions": [
+    [
+      "L0",
+      "G0",
+      "L0",
+      "G0"
+    ],
+    [
+      "L0",
+      "G0",
+      "L1",
+      "G0"
+    ]
+  ]
+}

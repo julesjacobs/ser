@@ -1,0 +1,11 @@
+{
+  "initial_global": "G",
+  "requests": [
+    ["A", "LA"],
+    ["B", "LB"]
+  ],
+  "responses": [
+    ["LA", "RespA"]
+  ],
+  "transitions": []
+}
