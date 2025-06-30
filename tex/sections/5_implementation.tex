@@ -18,10 +18,17 @@ The implementation..
 
 \label{subsec:codeArchitecture}
 
-The \texttt{ser} crate implements a complete workflow for Petri-net reachability analysis using Presburger arithmetic. From user input to final report, the components collaborate as follows:
+Our tool implements an end-to-end serializability checker for an arbitrary inputs program. If the program is serializable, we return a proof thereof; otherwise, if it is not serializable --- a counterexample is given to the user, for an interleaving that can result to (request,response) pairs that are unattainable in any serial execution.
+%
+Our workflow translates the decidability problem to an equivalent Petri Net reachability question (for unbounded nets). in which (i) the Petri Net represents all possible interleavings of the problem; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all (request,response) pairs that cannot be attained in any serial execution.
+%
+As Petri Net reachability is Ackermann complete, we added various optimizations to expedite the search process, both in the Petri Net level and the property encoding level.
+%
+The pipeline of our approach is depicted in Fig.~\ref{fig:full_program_flow}, and includes the following components:
+ 
 
 \begin{enumerate}
-	\item \textbf{Input \& Parsing.} A textual description of a Petri net (places, transitions, initial marking) and optional logical constraints is fed into the parser. The grammar module lexes and parses both net definitions and SMT-style constraint expressions, producing an abstract syntax tree (AST) for each.
+	\item \textbf{Input \& Parsing.} Our model receives one of two textual representation of the program in question: (i) a \textit{ser} program with the syntax described in Sec.\todo{add}; or (ii) a \textit{json} file which directly encode the transitions of our networking system. Given that the user feeds the former, an additional parsing step takes place, in which the input program is parsed to an expression tree and then translated to an equivalent networking system.
 	
 	\item \textbf{AST to Symbolic Model.} The ASTs are translated into two parallel internal representations:
 	\begin{itemize}
