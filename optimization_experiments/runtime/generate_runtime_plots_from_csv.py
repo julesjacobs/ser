@@ -37,26 +37,21 @@ def make_label(row):
     if not on:
         return 'none'
     if len(on) == len(flag_cols):
-        return 'all ON'
+        return 'all'
     return '+'.join(on)
 
 df['combination'] = df.apply(make_label, axis=1)
 
 # --- DEFINE A CONSISTENT COLOR MAP FOR ALL PLOTS ---
-# get all unique combination labels once (sorted for consistency)
 combination_labels = sorted(df['combination'].unique())
-# grab the default matplotlib color cycle
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-# map each combination label to a specific, fixed color
-color_map = {
-    combo: colors[i % len(colors)]
-    for i, combo in enumerate(combination_labels)
-}
+color_map = {combo: colors[i % len(colors)] for i, combo in enumerate(combination_labels)}
 
 # Matplotlib style settings
 plt.style.use('seaborn-whitegrid')
 plt.rcParams.update({
-    'font.size': 18,
+    'font.size': 25,
+    'legend.fontsize': 25,
     'figure.facecolor': 'white',
     'axes.facecolor': 'white',
     'axes.edgecolor': 'black',
@@ -65,7 +60,6 @@ plt.rcParams.update({
     'grid.linewidth': 0.5
 })
 
-# simple aggregation helper for bar plots
 def agg(series):
     return series.mean()
 
@@ -76,22 +70,17 @@ def plot_cumulative_solved(group, timeout_ms, log_scale=False):
         ax.set_xscale('log')
 
     for combo in combination_labels:
-        # extract and sort times for this combo
         times = np.sort(group.loc[group['combination'] == combo, 'elapsed_ms_num'].values)
         solved_cum = np.cumsum(times < timeout_ms) / len(times) * 100
-        # plot with fixed color
-        ax.plot(np.minimum(times, timeout_ms),
-                solved_cum,
-                linewidth=2,
-                label=combo,
-                color=color_map[combo])
+        ax.plot(np.minimum(times, timeout_ms), solved_cum, linewidth=3, label=combo, color=color_map[combo])
 
-    ax.axhline(100, linestyle='--', color='gray', alpha=0.5)
-    ax.set_xlabel('Time (ms)', fontsize=18)
-    ax.set_ylabel('% of instances solved', fontsize=18)
+    ax.axhline(100, linestyle='--', color='gray', alpha=0.5, linewidth=2)
+    ax.set_xlabel('Time (ms)', fontsize=25)
+    ax.set_ylabel('% solved', fontsize=25)
     ax.grid(True)
-    ax.tick_params(axis='both', labelsize=18)
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=14)
+    ax.tick_params(axis='both', labelsize=25)
+    # Place a vertical legend at bottom right inside plot
+    ax.legend(loc='lower right', frameon=False)
     fig.tight_layout()
     suffix = 'log' if log_scale else 'linear'
     out = os.path.join(output_dir, f"timeout_{timeout_ms}_cumulative_solved_{suffix}.pdf")
@@ -102,51 +91,31 @@ def plot_cumulative_solved(group, timeout_ms, log_scale=False):
 # main processing function
 def process():
     df_f = df.copy()
-
     for timeout_ms in timeout_values:
         grp = df_f[df_f['timeout_ms'] == timeout_ms]
-
-        # Print total timeouts per combination
         print(f"Timeout counts (timeout={timeout_ms} ms):")
         for combo in combination_labels:
-            sub = grp[grp['combination'] == combo]
-            count_to = (sub['elapsed_ms_num'] >= timeout_ms).sum()
+            count_to = (grp[grp['combination']==combo]['elapsed_ms_num'] >= timeout_ms).sum()
             print(f"  {combo}: {count_to} rows with elapsed_ms >= {timeout_ms}")
-
-        # apply optional filter by flag sums
         if filter_by_flag_sums:
             grp = grp[grp[flag_cols].sum(axis=1).isin(allowed_flag_sums)]
-
-        # First plot: average time bar chart
-        metric = grp.groupby('combination')['elapsed_ms_num'] \
-                    .agg(agg).sort_values(ascending=False)
-        fig, ax = plt.subplots(figsize=(8, max(4, len(metric) * 0.5)))
-        # assign bar colors in same fixed order
-        bar_colors = [color_map[combo] for combo in metric.index]
+        metric = grp.groupby('combination')['elapsed_ms_num'].agg(agg).sort_values(ascending=False)
+        fig, ax = plt.subplots(figsize=(10, 6))
+#         fig, ax = plt.subplots(figsize=(10, max(6, len(metric)*0.5)))
+        bar_colors = [color_map[c] for c in metric.index]
         bars = ax.barh(metric.index, metric.values, color=bar_colors, edgecolor='black')
-
-        # annotate bars with values
         for bar in bars:
             w = bar.get_width()
-            ax.text(
-                w + max(metric.values)*0.01,
-                bar.get_y() + bar.get_height()/2,
-                f"{w:.1f}",
-                va='center',
-                fontsize=14
-            )
-
-        ax.set_xlabel("Average time (ms)", fontsize=18)
+            ax.text(w + max(metric.values)*0.01, bar.get_y()+bar.get_height()/2, f"{w:.1f}", va='center', fontsize=25)
+        ax.set_xlabel("Average time (ms)", fontsize=25)
         ax.grid(axis='x')
-        ax.tick_params(axis='both', labelsize=18)
-        ax.set_xlim(0, 1300)
+        ax.tick_params(axis='both', labelsize=25)
+        ax.set_xlim(0,1300)
         fig.tight_layout()
         out1 = os.path.join(output_dir, f"timeout_{timeout_ms}_avg_common.pdf")
         fig.savefig(out1, dpi=300, bbox_inches='tight')
         plt.close(fig)
         print(f"Wrote {out1}")
-
-        # Cumulative-solved plots (linear and log)
         plot_cumulative_solved(grp, timeout_ms, log_scale=False)
         plot_cumulative_solved(grp, timeout_ms, log_scale=True)
 
