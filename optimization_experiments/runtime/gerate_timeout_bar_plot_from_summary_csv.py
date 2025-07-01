@@ -63,16 +63,25 @@ labels = labels[::-1]
 ser_pct = ser_pct[::-1]
 non_ser_pct = non_ser_pct[::-1]
 
+# ─── swap 'without ordering' ↔ 'without remove-redundant' ───
+i_remove = labels.index('without remove-redundant')
+i_order  = labels.index('without ordering')
+# swap labels
+labels[i_remove], labels[i_order] = labels[i_order], labels[i_remove]
+# swap SER %
+ser_pct[i_remove], ser_pct[i_order] = ser_pct[i_order], ser_pct[i_remove]
+# swap non-SER %
+non_ser_pct[i_remove], non_ser_pct[i_order] = non_ser_pct[i_order], non_ser_pct[i_remove]
+
 # Plotting
 plt.rcParams.update({'font.size': 20})
 
 y = np.arange(len(labels))
 height = 0.35
 
-# fig, ax = plt.subplots(figsize=(18, 7))
 fig, ax = plt.subplots(figsize=(12, 7), constrained_layout=True)
 
-# Draw Non-SER (red) at bottom of each pair, SER (blue) at top
+# Draw Non-SER at bottom of each pair, SER at top
 bars_non = ax.barh(
     y - height/2, non_ser_pct, height,
     label='Non-SER',
@@ -102,7 +111,6 @@ for bar in bars_non + bars_ser:
 ax.set_xlabel('% solved instances', fontsize=20)
 ax.set_yticks(y)
 ax.set_yticklabels(labels)
-# ax.set_title('Percentage of Solved Instances by Configuration', fontsize=20)
 
 # Legend outside at bottom-left, with SER first
 ax.legend(
