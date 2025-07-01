@@ -9,6 +9,14 @@
 \end{enumerate}
 
 
+\noindent
+\textbf{Experimentation details.}
+All experiments ran on a second generation Lenovo Notebook ThinkPad P16s, with 16 AMD cores and a RAM of 58 GB, with a Linux Ubuntu 24.04.2 operating system.
+%
+We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
+ 
+
+
 \subsection{Benchmarks Overview}
 \label{subsec:benchmarks}
 
@@ -19,7 +27,7 @@
 	\item \textbf{Concurrency \& locking loops}: Concurrent looping patterns with locking and tricky interactions.
 	\item \textbf{Non-deterministic choice \& randomness}: Random choice and non-deterministic branching benchmarks.
 	\item \textbf{Networking \& system protocols}: Networking protocols and system-level monitoring.
-	\item \textbf{Multi-request workflows}: Benchmarks modelling multiple requests or sequential interactions.
+	\item \textbf{Multi-request workflows}: Benchmarks modeling multiple requests or sequential interactions.
 	\item \textbf{JSON state-machine examples}: Example JSON-encoded state machine workflows.
 \end{itemize}
 
@@ -212,8 +220,10 @@
 	\end{minipage}\hfill
 	\begin{minipage}[t]{0.48\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{plots/petri_size_reduction_plot.pdf}
-		\captionof{figure}{Reduction of Petri nets size (places and transitions) through bidirectional pruning (50 benchmarks, timeout 30 seconds).}
+		\includegraphics[width=\linewidth]{plots/petri_size_reduction_plot_timeout_120s.pdf}
+		\captionof{figure}{Reduction of Petri nets size (places and transitions) via bidirectional pruning 
+%(timeout 120 seconds)
+.}
 		\label{fig:petri_size_reduction}
 	\end{minipage}
 \end{center}
@@ -221,19 +231,25 @@
 
 
 
+
 	
-\begin{tabular}{l c c c c}
-	\toprule
+\begin{table}[H]
+	\centering
+	\begin{tabular}{l c c c c}
+		\toprule
 	& \multicolumn{2}{c}{num components} & \multicolumn{2}{c}{periods per component} \\
 	\cmidrule(lr){2-3} \cmidrule(lr){4-5}
 	& mean & max & mean & max \\
 	\midrule
-	baseline (all optimizations)    &  3.28 (+0\%) &  22.00 (+0\%) & 1.36 (+0\%) &  4.00 (+0\%) \\
-	baseline - remove\_redundant & 10.24 (+6.97\%) & 194 (+172\%)& \textbf{1.79 (+0.43\%)} & 11 (+7\%) \\
-	baseline - generate\_less    &\textbf{782.38 (+779.10\%)}&\textbf{20484 (+20462\%)}&1.65 (+0.29\%)& \textbf{15 (+11\%)} \\
-	baseline - smart\_order      &  3.36 (+0.09\%) &  22.00 (+0\%) & 1.38 (+0.02\%) &  4.00 (+0\%) \\
-	\bottomrule
-\end{tabular}
-\textbf{The Table compares experiment running with a 30 second timeout}
+	baseline (all ON)         &   3.09    &   22    &   1.38   &    6   \\
+	no\_remove\_redundant     &  10.04    &  194    &   \textbf{1.83}   &   13   \\
+	no\_generate\_less        &\textbf{3{,}371.44}    &\textbf{147{,}464}   &   1.70   &   \textbf{29}   \\
+	no\_smart\_order          &   3.18    &   22    &   1.40   &    6   \\
+  \bottomrule
+  \end{tabular}
+  \caption{Comparison of experiment runs with a 120-second timeout.}
+\end{table}
+
+
 
 \newpage

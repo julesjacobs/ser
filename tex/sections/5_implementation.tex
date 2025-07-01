@@ -18,34 +18,43 @@ The implementation..
 
 \label{subsec:codeArchitecture}
 
-The \texttt{ser} crate implements a complete workflow for Petri-net reachability analysis using Presburger arithmetic. From user input to final report, the components collaborate as follows:
+Our tool implements an end-to-end serializability checker for an arbitrary inputs program. If the program is serializable, we return a proof thereof; otherwise, if it is not serializable --- a counterexample is given to the user, for an interleaving that can result to (request,response) pairs that are unattainable in any serial execution.
+%
+Our workflow translates the decidability problem to an equivalent Petri Net reachability question (for unbounded nets). in which (i) the Petri Net represents all possible interleavings of the problem; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all (request,response) pairs that cannot be attained in any serial execution.
+%
+As Petri Net reachability is Ackermann complete, we added various optimizations to expedite the search process, both in the Petri Net level and the property encoding level.
+%
+The pipeline of our approach is depicted in Fig.~\ref{fig:full_program_flow}, and includes the following components:
+ 
 
 \begin{enumerate}
-	\item \textbf{Input \& Parsing.} A textual description of a Petri net (places, transitions, initial marking) and optional logical constraints is fed into the parser. The grammar module lexes and parses both net definitions and SMT-style constraint expressions, producing an abstract syntax tree (AST) for each.
+	\item \textbf{Input \& Parsing.} Our model receives one of two textual representation of the program in question: (i) a \texttt{ser} program with the syntax described in Sec.\todo{add}; or (ii) a \texttt{JSON} file which directly encode the transitions of our networking system (NS). Given that the user feeds the former, an additional parsing step takes place, in which the input program is parsed (using the \texttt{parser.rs} module) to an expression tree and then translated to an equivalent networking system. The NS is represented as a struct in the \texttt{ns.rs} module. 
 	
-	\item \textbf{AST to Symbolic Model.} The ASTs are translated into two parallel internal representations:
-	\begin{itemize}
-		\item A concrete \texttt{Petri<P>} model capturing the graph structure and initial marking.
-		\item A symbolic \texttt{PresburgerSet<P>} or \texttt{QuantifiedSet} encapsulating constraints over token counts.
-	\end{itemize}
+	\item \textbf{Petri Net (PN) Conversion.} The NS is the translated into a Petri Net (see the \texttt{petri.rs} module) which represents the interleavings of the NS. Each place represents a local state or a global state, and each token represents a single in-flight request or a terminated response. The PN is encoded in the de-facto standard \texttt{.net} encoding, in order to be compatible with off-the-shelf PN reachability solvers. 
 	
-	\item \textbf{Semilinear Conversion.} Symbolic sets are normalized into semilinear form (finite union of linear sets). This step tightly couples the Presburger module with the semilinear abstraction, enabling efficient union, projection, and intersection operations.
+	\item \textbf{Semilinear Conversion.} 
+	This includes a set of modules (\texttt{kleene.rs}, \texttt{semilinear.rs}, and \texttt{presburger.rs}) which eventually generate a smeilinear set encoding of the non serializable outputs. This conversion is done by the following pipeline: (1) the NS is translated to an NFA encoding all possible (request,response) pairs of the input program; (2) This NFA is translated to a regex (via Kleene's Theorem) and then project (via the Parikh Image) to a semilinear set. The (finite) encoding of the semilinear set symbolically represents all outputs attained via serializable executions of the program, running for an unbounded number of steps; (3) finally, we complement the semilinear set to attain a semilinear set encoding all outputs unattainable via serial executions. At the end of the pipeline, an {XML}-formatted output encodes an LTL reachability query over the PN, which encapsulates constraints over token counts.
 	
-	\item \textbf{Reachability Engine.} The core algorithm invokes a “complement-and-reach” strategy:
-	\begin{itemize}
-		\item For each semilinear constraint, compute its complement and intersect it with the reachable markings.
-		\item Use DNF-style iteration (via \texttt{can\_reach\_presburger}) and recursive pruning to check emptiness.
-		\item Optionally delegate heavy Presburger queries to an external SMT/SMPT backend.
-	\end{itemize}
 	
-	\item \textbf{Proof \& Certificate Handling.} If a reachability query succeeds or fails, a proof certificate is generated or consumed. The proof parser reconstructs high-level formulas and associates each algorithmic step with symbolic witnesses.
+	\item \textbf{Reachability Engine.} The PN and the reachability query are fed to a state-of-the-art PN reachability solver, which runs \textit{Bounded Model Checking} (BMC) in search of a counterexample; and \textit{State Equation} in order to prove reachability. This engine is implemented in the \textit{reachability.rs} and \textit{reachability\_with\_proofs.rs}  modules.
+	%
+	In order to expedite the reachability search, the we replace the single ``large'' PN and query with multiple smaller PNs, each coupled with a sub-query encoding a separate disjunct in the original query.
+	We iteratively solve the disjuncts one-by-one, until reaching \texttt{SAT}, in which case, we have a counterexample; otherwise, if a disjunct is \texttt{UNSAT}, we continue to the next one. If all disjuncts are unsatisfiable, we render the original encoding as unreachable.
 	
-	\item \textbf{Instrumentation \& Logging.} Throughout the pipeline, size and performance metrics (number of places, transitions, constraint complexity, timings) are recorded. The logger outputs structured CSV/JSON logs for later analysis.
 	
-	\item \textbf{Debug Report Generation.} Finally, a human-readable HTML report is assembled: it embeds the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs. This interactive report allows users to drill down into each transition firing, constraint check, and proof obligation.
+	\item \textbf{Proof \& Certificate Handling.} If the query is \texttt{SAT}, we reconstruct an NS-level non-serializable execution and validates it's correctness. Otherwise, if all disjuncts are \texttt{UNSAT}, our proof module extract an inductive invariant proof for each disjunct. We subsequently ``stich'' these proofs to a single inductive invariant of the full query, and project it to the NS-level, representing a full proof for why serializability holds. Our checker also validates that the inductive invariant is correct, i.e., (i) includes the initial state of the system; (ii) is inductive with regard to the transitions; and (iii) implies that the reachability query is \texttt{UNSAT}, and hence implying serializability. 
+	
+	
+	\item \textbf{Instrumentation \& Logging.} Throughout the pipeline, size and performance metrics (number of places, transitions, constraint complexity, timings) are recorded. The logger outputs structured \texttt{CSV} and \texttt{JSON} logs for later analysis.
+	
+	\item \textbf{Debug Report Generation.} Finally, a human-readable \texttt{HTML} report is assembled: it embeds the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs. This interactive report allows users to drill down into each transition firing, constraint check, and proof obligation.
 	
 	\item \textbf{Output Delivery.} The crate exposes a simple CLI and library API. Users obtain either a Boolean reachability verdict (with optional certificate), raw log files, or a full HTML debug report, depending on invocation flags.
+	
+	\item \textbf{Optimizations.} As we extensively elaborate later, we also include multiple optimizations, both re represent the semilinear sets succinctly, and to prune the PN. These optimizations significantly reduce the search space and expedite the reachability search.
 \end{enumerate}
+
+
 
 %\noindent
 %This linear pipeline - \emph{parse} -> \emph{model} -> \emph{normalize} -> \emph{analyze} -> \emph{prove} -> \emph{report} --- ensures a clear separation of concerns, easy extensibility (e.g., swapping backends), and comprehensive traceability from input to certified result.```
@@ -54,7 +63,8 @@ The \texttt{ser} crate implements a complete workflow for Petri-net reachability
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=1.0\textwidth]{plots/full_program_flow.pdf}
-	\caption{Full program flow. If the program is unreachable --- a serializability proof is produced; otherwise, if it is reachable --- a counterexample trace is generated.}
+	\caption{Full program flow. If the program is unreachable --- a serializability proof is produced; otherwise, if it is reachable --- a counterexample trace is generated.
+	For simplicity, we omit the backward arrows which translate the invariant found (if serializable) of the counterexample trace (if non serializable) back to the NS level, and to the user.}
 	\label{fig:full_program_flow}
 \end{figure}
 
@@ -62,16 +72,22 @@ The \texttt{ser} crate implements a complete workflow for Petri-net reachability
 \subsection{Optimizations}
 
 \paragraph{Bidirectional Pruning of the Petri Net}
-Before any heavy symbolic reasoning takes place, we apply a bidirectional reachability filter to the underlying Petri net.  In the forward pass, we traverse from the initial marking to identify all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint.  By intersecting these two reachable sets, we remove every component of the net that cannot both originate and contribute to a solution.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
+Before any heavy symbolic reasoning takes place, we apply a bidirectional reachability filter to the underlying Petri net.  In the forward pass, we traverse from the initial marking to identify all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
 
 \paragraph{Redundant‐Constraint Elimination}
 When manipulating Presburger sets or their semilinear representations, it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents exponential blow‐up of case distinctions during solver invocations.
+%
+%Every time you build or star a semilinear set, you prune out any “period” vectors that are rendered useless by earlier steps:. nce you’ve accumulated a bunch of LinearSet components, you try to merge any that mathematically subsume one another:
 
-\paragraph{Generate‐Less Constraint Generation}
-During set‐construction—especially when introducing new existentially‐quantified variables or combining transition effects—we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This “generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description, trading off completeness of intermediate case‐enumeration for concise final representations.  In benchmarks with large state‐spaces, it can reduce the number of intermediate branches by orders of magnitude.
+\paragraph{Generating Fewer Constraints}
+During set‐construction--- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description, trading off completeness of intermediate case‐enumeration for concise final representations.  In benchmarks with large state‐spaces, it can reduce the number of intermediate branches by orders of magnitude.
 
-\paragraph{Smart Kleene‐Star Expansion Order}
-Expanding Kleene closures (the “\(\mathsf{*}\)” operator) can blow up expressions if done naively in a fixed left‐to‐right order.  Instead, we analyze the structure of subexpressions under the Kleene operator—estimating their branching factor and likely convergence speed—and reorder them so that simpler, low‐branching components are expanded first.  This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  The net effect is a much more controlled expansion process, improving both time and memory usage on challenging examples.
+%in both the Regex and SemilinearSet Kleene-algebra instances. Concretely, instead of always building the full new structure and pruning it later, operations like union (plus) and concatenation (times) do a quick check for trivial cases and drop “zero” or “one” elements on the spo
+
+\paragraph{Doing the Kleene Elimination in a Smart Order:}
+When you converting an NFA to a single regex, we pick the next state to eliminate by heuristically choosing the  state with the fewest incoming and outgoing edges.
+This optimization allows circumventing 
+overblown expressions resulting in naive translations, especially with regard to  Kleene closures (the “\(\mathsf{*}\)” operator).  Instead, we analyze the structure of subexpressions under the various operators --- estimating their branching factor and likely convergence speed, and reorder them so that simpler, low‐branching components are expanded first.  This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  
 
 
 \begin{figure}[htbp]
