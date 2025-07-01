@@ -1,1 +1,0 @@
-request foo {x := 1; yield; y := 2}
