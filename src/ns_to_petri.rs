@@ -91,7 +91,7 @@ where
     petri
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Ord, PartialOrd)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Ord, PartialOrd, serde::Serialize, serde::Deserialize)]
 pub enum ReqPetriState<L, G, Req, Resp> {
     Local(Req, L),
     Global(G),

@@ -14,7 +14,7 @@ use std::path::Path;
 use std::sync::Mutex;
 
 /// Decision enum for reachability analysis results with proof/trace support
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Decision<P: Eq + Hash> {
     CounterExample { trace: Vec<(Vec<P>, Vec<P>)> },
     Proof { proof: Option<ProofInvariant<P>> },

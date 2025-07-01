@@ -7,13 +7,16 @@ use crate::reachability_with_proofs::Decision;
 use either::Either;
 use std::fmt::{self, Debug, Display};
 use std::hash::Hash;
+use std::fs;
+use std::path::Path;
+
 
 // Type alias to reduce complexity
 type PetriPlace<L, G, Req, Resp> =
     Either<ReqPetriState<L, G, Req, Resp>, ReqPetriState<L, G, Req, Resp>>;
 
 /// Domain-specific type representing the state of a request in the NS
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum RequestState<L, Resp> {
     /// Request is in-flight at local state L
     InFlight(L),
@@ -31,7 +34,7 @@ impl<L: Display, Resp: Display> Display for RequestState<L, Resp> {
 }
 
 /// Wrapper struct for (Req, RequestState<L, Resp>) to implement Display
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct RequestStatePair<Req, L, Resp>(pub Req, pub RequestState<L, Resp>);
 
 impl<Req: Display, L: Display, Resp: Display> Display for RequestStatePair<Req, L, Resp> {
@@ -44,7 +47,7 @@ impl<Req: Display, L: Display, Resp: Display> Display for RequestStatePair<Req, 
 }
 
 /// Wrapper struct for (Req, Resp) pairs to implement Display
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct CompletedRequestPair<Req, Resp>(pub Req, pub Resp);
 
 impl<Req: Display, Resp: Display> Display for CompletedRequestPair<Req, Resp> {
@@ -54,7 +57,7 @@ impl<Req: Display, Resp: Display> Display for CompletedRequestPair<Req, Resp> {
 }
 
 /// NS-level step in a trace
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub enum NSStep<G, L, Req, Resp> {
     /// A new request is created
     RequestStart { request: Req, initial_local: L },
@@ -75,7 +78,7 @@ pub enum NSStep<G, L, Req, Resp> {
 }
 
 /// NS-level trace representing a counterexample execution
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct NSTrace<G, L, Req, Resp> {
     /// Sequence of steps in the NS execution
     pub steps: Vec<NSStep<G, L, Req, Resp>>,
@@ -174,7 +177,7 @@ where
 }
 
 /// NS-level decision enum containing either a proof (invariant) or counterexample (trace)
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub enum NSDecision<G, L, Req, Resp>
 where
     G: Eq + Hash,
@@ -190,8 +193,164 @@ where
     NotSerializable { trace: NSTrace<G, L, Req, Resp> },
 }
 
+impl<G, L, Req, Resp> NSDecision<G, L, Req, Resp>
+where
+    G: Eq + Hash,
+    L: Eq + Hash,
+    Req: Eq + Hash,
+    Resp: Eq + Hash,
+{
+    /// Save the NSDecision to a JSON file
+    /// This method serializes the decision in a format that can be loaded later
+    /// Note: This is a simplified format for now - full serialization would require
+    /// handling all the complex nested types
+    pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), std::io::Error> 
+    where
+        G: Display,
+        L: Display,
+        Req: Display,
+        Resp: Display,
+    {
+        // For now, we'll save a simplified representation
+        let json_value = match self {
+            NSDecision::Serializable { invariant: _ } => {
+                serde_json::json!({
+                    "type": "Serializable",
+                    "note": "Full invariant serialization not yet implemented"
+                })
+            }
+            NSDecision::NotSerializable { trace } => {
+                // Convert trace to a simple format
+                let steps: Vec<serde_json::Value> = trace.steps.iter().map(|step| {
+                    match step {
+                        NSStep::RequestStart { request, initial_local } => {
+                            serde_json::json!({
+                                "type": "RequestStart",
+                                "request": request.to_string(),
+                                "initial_local": initial_local.to_string()
+                            })
+                        }
+                        NSStep::InternalStep { request, from_local, from_global, to_local, to_global } => {
+                            serde_json::json!({
+                                "type": "InternalStep",
+                                "request": request.to_string(),
+                                "from_local": from_local.to_string(),
+                                "from_global": from_global.to_string(),
+                                "to_local": to_local.to_string(),
+                                "to_global": to_global.to_string()
+                            })
+                        }
+                        NSStep::RequestComplete { request, final_local, response } => {
+                            serde_json::json!({
+                                "type": "RequestComplete",
+                                "request": request.to_string(),
+                                "final_local": final_local.to_string(),
+                                "response": response.to_string()
+                            })
+                        }
+                    }
+                }).collect();
+                
+                serde_json::json!({
+                    "type": "NotSerializable",
+                    "trace": {
+                        "steps": steps
+                    }
+                })
+            }
+        };
+        
+        let json = serde_json::to_string_pretty(&json_value)?;
+        fs::write(path, json)?;
+        Ok(())
+    }
+
+    /// Load an NSDecision from a JSON file
+    /// Note: This currently only supports the simplified format
+    pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>>
+    where
+        G: std::str::FromStr,
+        G::Err: std::error::Error + 'static,
+        L: std::str::FromStr,
+        L::Err: std::error::Error + 'static,
+        Req: std::str::FromStr,
+        Req::Err: std::error::Error + 'static,
+        Resp: std::str::FromStr,
+        Resp::Err: std::error::Error + 'static,
+    {
+        let json = fs::read_to_string(path)?;
+        let value: serde_json::Value = serde_json::from_str(&json)?;
+        
+        match value.get("type").and_then(|v| v.as_str()) {
+            Some("Serializable") => {
+                // For now, return an empty invariant
+                Ok(NSDecision::Serializable {
+                    invariant: NSInvariant { 
+                        global_invariants: HashMap::default() 
+                    }
+                })
+            }
+            Some("NotSerializable") => {
+                let trace_value = value.get("trace").ok_or("Missing trace field")?;
+                let steps_value = trace_value.get("steps").ok_or("Missing steps field")?;
+                
+                let mut steps = Vec::new();
+                if let Some(steps_array) = steps_value.as_array() {
+                    for step_value in steps_array {
+                        let step_type = step_value.get("type").and_then(|v| v.as_str()).ok_or("Missing step type")?;
+                        
+                        match step_type {
+                            "RequestStart" => {
+                                let request = step_value.get("request").and_then(|v| v.as_str()).ok_or("Missing request")?;
+                                let initial_local = step_value.get("initial_local").and_then(|v| v.as_str()).ok_or("Missing initial_local")?;
+                                
+                                steps.push(NSStep::RequestStart {
+                                    request: Req::from_str(request)?,
+                                    initial_local: L::from_str(initial_local)?,
+                                });
+                            }
+                            "InternalStep" => {
+                                let request = step_value.get("request").and_then(|v| v.as_str()).ok_or("Missing request")?;
+                                let from_local = step_value.get("from_local").and_then(|v| v.as_str()).ok_or("Missing from_local")?;
+                                let from_global = step_value.get("from_global").and_then(|v| v.as_str()).ok_or("Missing from_global")?;
+                                let to_local = step_value.get("to_local").and_then(|v| v.as_str()).ok_or("Missing to_local")?;
+                                let to_global = step_value.get("to_global").and_then(|v| v.as_str()).ok_or("Missing to_global")?;
+                                
+                                steps.push(NSStep::InternalStep {
+                                    request: Req::from_str(request)?,
+                                    from_local: L::from_str(from_local)?,
+                                    from_global: G::from_str(from_global)?,
+                                    to_local: L::from_str(to_local)?,
+                                    to_global: G::from_str(to_global)?,
+                                });
+                            }
+                            "RequestComplete" => {
+                                let request = step_value.get("request").and_then(|v| v.as_str()).ok_or("Missing request")?;
+                                let final_local = step_value.get("final_local").and_then(|v| v.as_str()).ok_or("Missing final_local")?;
+                                let response = step_value.get("response").and_then(|v| v.as_str()).ok_or("Missing response")?;
+                                
+                                steps.push(NSStep::RequestComplete {
+                                    request: Req::from_str(request)?,
+                                    final_local: L::from_str(final_local)?,
+                                    response: Resp::from_str(response)?,
+                                });
+                            }
+                            _ => return Err(format!("Unknown step type: {}", step_type).into()),
+                        }
+                    }
+                }
+                
+                Ok(NSDecision::NotSerializable {
+                    trace: NSTrace { steps }
+                })
+            }
+            _ => Err("Invalid NSDecision type".into())
+        }
+    }
+}
+
 /// NS-level invariant structure that captures per-global-state invariants
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct NSInvariant<G, L, Req, Resp>
 where
     G: Eq + Hash,
@@ -1235,6 +1394,104 @@ mod tests {
 
         assert!(result.is_ok());
         assert!(!result.unwrap()); // ∃n. a = 2n + 1 (odd) is NOT in (aa)* (even)
+    }
+
+    #[test]
+    fn test_ns_decision_serialization_serializable() {
+        use tempfile::NamedTempFile;
+
+        // Create a simple NS
+        let mut ns = NS::<String, String, String, String>::new("G1".to_string());
+        ns.add_request("req1".to_string(), "L1".to_string());
+        ns.add_response("L1".to_string(), "resp1".to_string());
+
+        // Create a simple invariant
+        let mut global_invariants = HashMap::default();
+        let var = RequestStatePair(
+            "req1".to_string(),
+            RequestState::<String, String>::Completed("resp1".to_string()),
+        );
+        let formula = Formula::Constraint(Constraint::new(
+            AffineExpr::from_var(var.clone()),
+            CompOp::Geq,
+        ));
+        let invariant = ProofInvariant::new(vec![var], formula);
+        global_invariants.insert("G1".to_string(), invariant);
+
+        let ns_invariant = NSInvariant { global_invariants };
+        let decision = NSDecision::Serializable {
+            invariant: ns_invariant,
+        };
+
+        // Save to file
+        let temp_file = NamedTempFile::new().unwrap();
+        decision.save_to_file(temp_file.path()).unwrap();
+
+        // Load from file
+        let loaded_decision = NSDecision::<String, String, String, String>::load_from_file(temp_file.path())
+            .expect("Failed to load NSDecision");
+
+        // Check that it's serializable
+        match loaded_decision {
+            NSDecision::Serializable { invariant } => {
+                // For now, we just check it loads as serializable
+                // Full invariant loading is not yet implemented
+                assert_eq!(invariant.global_invariants.len(), 0);
+            }
+            _ => panic!("Expected Serializable decision"),
+        }
+    }
+
+    #[test]
+    fn test_ns_decision_serialization_not_serializable() {
+        use tempfile::NamedTempFile;
+
+        // Create a counterexample trace
+        let steps = vec![
+            NSStep::RequestStart {
+                request: "req1".to_string(),
+                initial_local: "L1".to_string(),
+            },
+            NSStep::InternalStep {
+                request: "req1".to_string(),
+                from_local: "L1".to_string(),
+                from_global: "G1".to_string(),
+                to_local: "L2".to_string(),
+                to_global: "G2".to_string(),
+            },
+            NSStep::RequestComplete {
+                request: "req1".to_string(),
+                final_local: "L2".to_string(),
+                response: "resp1".to_string(),
+            },
+        ];
+
+        let trace = NSTrace { steps };
+        let decision = NSDecision::NotSerializable { trace };
+
+        // Save to file
+        let temp_file = NamedTempFile::new().unwrap();
+        decision.save_to_file(temp_file.path()).unwrap();
+
+        // Load from file
+        let loaded_decision = NSDecision::<String, String, String, String>::load_from_file(temp_file.path())
+            .expect("Failed to load NSDecision");
+
+        // Check that it's not serializable
+        match loaded_decision {
+            NSDecision::NotSerializable { trace } => {
+                assert_eq!(trace.steps.len(), 3);
+                // Verify first step
+                match &trace.steps[0] {
+                    NSStep::RequestStart { request, initial_local } => {
+                        assert_eq!(request, "req1");
+                        assert_eq!(initial_local, "L1");
+                    }
+                    _ => panic!("Expected RequestStart as first step"),
+                }
+            }
+            _ => panic!("Expected NotSerializable decision"),
+        }
     }
 }
 
