@@ -19,8 +19,8 @@ def compute_stats(df, combo):
 
 def main():
     # Hard-coded paths for the input CSV and the summary output CSV
-    input_csv = r'/home/guyamir/RustroverProjects/ser/optimization_experiments/semilinear_size/semilinear_size_stats_timeout_30_seconds.csv'
-    output_csv = r'/home/guyamir/RustroverProjects/ser/optimization_experiments/semilinear_size/summary_semilinear_size_stats_timeout_30_seconds.csv'
+    input_csv = r'/home/guyamir/RustroverProjects/ser/optimization_experiments/semilinear_size/semilinear_size_stats_final_timeout_120_seconds.csv'
+    output_csv = r'/home/guyamir/RustroverProjects/ser/optimization_experiments/semilinear_size/summary_semilinear_size_stats_final_timeout_120_seconds.csv'
     print(f"Loading data from {input_csv}...")
 
     # Read the CSV into a DataFrame
