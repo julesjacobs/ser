@@ -5,11 +5,37 @@ use crate::proof_parser::{Formula, ProofInvariant};
 use crate::proofinvariant_to_presburger::formula_to_presburger;
 use crate::reachability_with_proofs::Decision;
 use either::Either;
+use serde::{Serialize, Deserialize};
 use std::fmt::{self, Debug, Display};
 use std::hash::Hash;
 use std::fs;
 use std::path::Path;
 
+
+// Helper module for serializing HashMap with non-string keys
+mod tuple_vec_map {
+    use super::*;
+    use serde::{Serializer, Deserializer};
+
+    pub fn serialize<K, V, S>(m: &HashMap<K, V>, ser: S) -> Result<S::Ok, S::Error>
+    where
+        K: Serialize + Eq + std::hash::Hash,
+        V: Serialize,
+        S: Serializer,
+    {
+        m.iter().collect::<Vec<_>>().serialize(ser)
+    }
+
+    pub fn deserialize<'de, K, V, D>(de: D) -> Result<HashMap<K, V>, D::Error>
+    where
+        K: Deserialize<'de> + Eq + std::hash::Hash,
+        V: Deserialize<'de>,
+        D: Deserializer<'de>,
+    {
+        let v: Vec<(K, V)> = Vec::deserialize(de)?;
+        Ok(v.into_iter().collect())
+    }
+}
 
 // Type alias to reduce complexity
 type PetriPlace<L, G, Req, Resp> =
@@ -201,156 +227,47 @@ where
     Resp: Eq + Hash,
 {
     /// Save the NSDecision to a JSON file
-    /// This method serializes the decision in a format that can be loaded later
-    /// Note: This is a simplified format for now - full serialization would require
-    /// handling all the complex nested types
+    /// This method properly serializes the decision using serde
     pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), std::io::Error> 
     where
-        G: Display,
-        L: Display,
-        Req: Display,
-        Resp: Display,
+        G: serde::Serialize,
+        L: serde::Serialize,
+        Req: serde::Serialize,
+        Resp: serde::Serialize,
     {
-        // For now, we'll save a simplified representation
-        let json_value = match self {
-            NSDecision::Serializable { invariant: _ } => {
-                serde_json::json!({
-                    "type": "Serializable",
-                    "note": "Full invariant serialization not yet implemented"
-                })
+        // Debug: Try to serialize with better error handling
+        match serde_json::to_string_pretty(&self) {
+            Ok(json) => {
+                fs::write(path, json)?;
+                Ok(())
             }
-            NSDecision::NotSerializable { trace } => {
-                // Convert trace to a simple format
-                let steps: Vec<serde_json::Value> = trace.steps.iter().map(|step| {
-                    match step {
-                        NSStep::RequestStart { request, initial_local } => {
-                            serde_json::json!({
-                                "type": "RequestStart",
-                                "request": request.to_string(),
-                                "initial_local": initial_local.to_string()
-                            })
-                        }
-                        NSStep::InternalStep { request, from_local, from_global, to_local, to_global } => {
-                            serde_json::json!({
-                                "type": "InternalStep",
-                                "request": request.to_string(),
-                                "from_local": from_local.to_string(),
-                                "from_global": from_global.to_string(),
-                                "to_local": to_local.to_string(),
-                                "to_global": to_global.to_string()
-                            })
-                        }
-                        NSStep::RequestComplete { request, final_local, response } => {
-                            serde_json::json!({
-                                "type": "RequestComplete",
-                                "request": request.to_string(),
-                                "final_local": final_local.to_string(),
-                                "response": response.to_string()
-                            })
-                        }
-                    }
-                }).collect();
-                
-                serde_json::json!({
-                    "type": "NotSerializable",
-                    "trace": {
-                        "steps": steps
-                    }
-                })
+            Err(e) => {
+                eprintln!("Serialization error details: {:?}", e);
+                eprintln!("Error type: {}", std::any::type_name_of_val(&e));
+                Err(std::io::Error::new(std::io::ErrorKind::Other, e))
             }
-        };
-        
-        let json = serde_json::to_string_pretty(&json_value)?;
-        fs::write(path, json)?;
-        Ok(())
+        }
     }
 
     /// Load an NSDecision from a JSON file
-    /// Note: This currently only supports the simplified format
+    /// This method properly deserializes the decision using serde
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>>
     where
-        G: std::str::FromStr,
-        G::Err: std::error::Error + 'static,
-        L: std::str::FromStr,
-        L::Err: std::error::Error + 'static,
-        Req: std::str::FromStr,
-        Req::Err: std::error::Error + 'static,
-        Resp: std::str::FromStr,
-        Resp::Err: std::error::Error + 'static,
+        for<'de> G: serde::Deserialize<'de>,
+        for<'de> L: serde::Deserialize<'de>,
+        for<'de> Req: serde::Deserialize<'de>,
+        for<'de> Resp: serde::Deserialize<'de>,
     {
         let json = fs::read_to_string(path)?;
-        let value: serde_json::Value = serde_json::from_str(&json)?;
-        
-        match value.get("type").and_then(|v| v.as_str()) {
-            Some("Serializable") => {
-                // For now, return an empty invariant
-                Ok(NSDecision::Serializable {
-                    invariant: NSInvariant { 
-                        global_invariants: HashMap::default() 
-                    }
-                })
-            }
-            Some("NotSerializable") => {
-                let trace_value = value.get("trace").ok_or("Missing trace field")?;
-                let steps_value = trace_value.get("steps").ok_or("Missing steps field")?;
-                
-                let mut steps = Vec::new();
-                if let Some(steps_array) = steps_value.as_array() {
-                    for step_value in steps_array {
-                        let step_type = step_value.get("type").and_then(|v| v.as_str()).ok_or("Missing step type")?;
-                        
-                        match step_type {
-                            "RequestStart" => {
-                                let request = step_value.get("request").and_then(|v| v.as_str()).ok_or("Missing request")?;
-                                let initial_local = step_value.get("initial_local").and_then(|v| v.as_str()).ok_or("Missing initial_local")?;
-                                
-                                steps.push(NSStep::RequestStart {
-                                    request: Req::from_str(request)?,
-                                    initial_local: L::from_str(initial_local)?,
-                                });
-                            }
-                            "InternalStep" => {
-                                let request = step_value.get("request").and_then(|v| v.as_str()).ok_or("Missing request")?;
-                                let from_local = step_value.get("from_local").and_then(|v| v.as_str()).ok_or("Missing from_local")?;
-                                let from_global = step_value.get("from_global").and_then(|v| v.as_str()).ok_or("Missing from_global")?;
-                                let to_local = step_value.get("to_local").and_then(|v| v.as_str()).ok_or("Missing to_local")?;
-                                let to_global = step_value.get("to_global").and_then(|v| v.as_str()).ok_or("Missing to_global")?;
-                                
-                                steps.push(NSStep::InternalStep {
-                                    request: Req::from_str(request)?,
-                                    from_local: L::from_str(from_local)?,
-                                    from_global: G::from_str(from_global)?,
-                                    to_local: L::from_str(to_local)?,
-                                    to_global: G::from_str(to_global)?,
-                                });
-                            }
-                            "RequestComplete" => {
-                                let request = step_value.get("request").and_then(|v| v.as_str()).ok_or("Missing request")?;
-                                let final_local = step_value.get("final_local").and_then(|v| v.as_str()).ok_or("Missing final_local")?;
-                                let response = step_value.get("response").and_then(|v| v.as_str()).ok_or("Missing response")?;
-                                
-                                steps.push(NSStep::RequestComplete {
-                                    request: Req::from_str(request)?,
-                                    final_local: L::from_str(final_local)?,
-                                    response: Resp::from_str(response)?,
-                                });
-                            }
-                            _ => return Err(format!("Unknown step type: {}", step_type).into()),
-                        }
-                    }
-                }
-                
-                Ok(NSDecision::NotSerializable {
-                    trace: NSTrace { steps }
-                })
-            }
-            _ => Err("Invalid NSDecision type".into())
-        }
+        let decision = serde_json::from_str(&json)?;
+        Ok(decision)
     }
 }
 
 /// NS-level invariant structure that captures per-global-state invariants
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(bound(serialize = "G: Serialize, L: Serialize, Req: Serialize, Resp: Serialize"))]
+#[serde(bound(deserialize = "G: Deserialize<'de>, L: Deserialize<'de>, Req: Deserialize<'de>, Resp: Deserialize<'de>"))]
 pub struct NSInvariant<G, L, Req, Resp>
 where
     G: Eq + Hash,
@@ -361,6 +278,7 @@ where
     /// For each global state, invariant over RequestStatePair<Req, L, Resp>
     /// RequestState::InFlight(L) means request is in-flight at local state L
     /// RequestState::Completed(Resp) means request completed with response Resp
+    #[serde(with = "tuple_vec_map")]
     pub global_invariants: HashMap<G, ProofInvariant<RequestStatePair<Req, L, Resp>>>,
 }
 
@@ -1049,6 +967,97 @@ mod tests {
     use crate::proof_parser::{AffineExpr, CompOp, Constraint, Formula};
 
     #[test]
+    fn test_ns_decision_serialization() {
+        use crate::expr_to_ns::{Env, ExprRequest, LocalExpr};
+        use crate::parser::ExprHc;
+        
+        // Create a simple trace
+        let mut steps = Vec::new();
+        
+        // Step 1: Request start
+        // Create Env using JSON deserialization to avoid private constructor
+        let env: Env = serde_json::from_str(r#"{"vars":{"x":10}}"#).unwrap();
+        let mut table = ExprHc::new();
+        let expr = table.number(42);
+        let local_expr = LocalExpr(env.clone(), expr);
+        
+        steps.push(NSStep::RequestStart {
+            request: ExprRequest { name: "foo".to_string() },
+            initial_local: local_expr.clone(),
+        });
+        
+        // Step 2: Request complete
+        steps.push(NSStep::RequestComplete {
+            request: ExprRequest { name: "foo".to_string() },
+            final_local: local_expr,
+            response: 42,
+        });
+        
+        let trace: NSTrace<Env, LocalExpr, ExprRequest, i64> = NSTrace { steps };
+        let decision = NSDecision::NotSerializable { trace };
+        
+        // Test serialization
+        let json = serde_json::to_string_pretty(&decision).unwrap();
+        println!("Serialized NSDecision:\n{}", json);
+        
+        // Test deserialization
+        let decision2: NSDecision<Env, LocalExpr, ExprRequest, i64> = 
+            serde_json::from_str(&json).unwrap();
+        
+        // Verify they match
+        match (&decision, &decision2) {
+            (NSDecision::NotSerializable { trace: t1 }, NSDecision::NotSerializable { trace: t2 }) => {
+                assert_eq!(t1.steps.len(), t2.steps.len());
+                // More detailed comparison would require PartialEq on all types
+            }
+            _ => panic!("Deserialized decision doesn't match"),
+        }
+    }
+    
+    #[test]
+    fn test_ns_decision_file_operations() {
+        use crate::expr_to_ns::{Env, ExprRequest, LocalExpr};
+        use crate::parser::ExprHc;
+        use tempfile::NamedTempFile;
+        
+        // Create a simple trace
+        let mut steps = Vec::new();
+        
+        // Create empty Env using JSON
+        let env: Env = serde_json::from_str(r#"{"vars":{}}"#).unwrap();
+        let mut table = ExprHc::new();
+        let expr = table.number(100);
+        let local_expr = LocalExpr(env, expr);
+        
+        steps.push(NSStep::RequestStart {
+            request: ExprRequest { name: "test_req".to_string() },
+            initial_local: local_expr.clone(),
+        });
+        
+        let trace: NSTrace<Env, LocalExpr, ExprRequest, i64> = NSTrace { steps };
+        let decision = NSDecision::NotSerializable { trace };
+        
+        // Create a temporary file
+        let temp_file = NamedTempFile::new().unwrap();
+        let temp_path = temp_file.path();
+        
+        // Save to file
+        decision.save_to_file(temp_path).unwrap();
+        
+        // Load from file
+        let loaded_decision: NSDecision<Env, LocalExpr, ExprRequest, i64> = 
+            NSDecision::load_from_file(temp_path).unwrap();
+        
+        // Verify they match
+        match (&decision, &loaded_decision) {
+            (NSDecision::NotSerializable { trace: t1 }, NSDecision::NotSerializable { trace: t2 }) => {
+                assert_eq!(t1.steps.len(), t2.steps.len());
+            }
+            _ => panic!("Loaded decision doesn't match"),
+        }
+    }
+
+    #[test]
     fn test_simple_substitution() {
         // Create a simple proof invariant with mixed Left/Right variables
         let expr1 = AffineExpr::from_var(Either::Left(ReqPetriState::Global("G1".to_string())));
@@ -1466,7 +1475,7 @@ mod tests {
             },
         ];
 
-        let trace = NSTrace { steps };
+        let trace: NSTrace<String, String, String, String> = NSTrace { steps };
         let decision = NSDecision::NotSerializable { trace };
 
         // Save to file
@@ -1505,3 +1514,113 @@ fn is_formula_satisfied_string(formula: &Formula<String>) -> bool {
     // A formula is satisfied if the corresponding PresburgerSet is non-empty
     !presburger.is_empty()
 }
+
+    #[test]
+    fn test_env_as_key_serialization_issue() {
+        use crate::expr_to_ns::Env;
+        
+        // Create a simple test to isolate the issue
+        let mut map: HashMap<Env, i32> = HashMap::default();
+        
+        let env1: Env = serde_json::from_str(r#"{"vars":{"x":10}}"#).unwrap();
+        let env2: Env = serde_json::from_str(r#"{"vars":{"y":20}}"#).unwrap();
+        
+        map.insert(env1, 100);
+        map.insert(env2, 200);
+        
+        // This should fail with "key must be a string"
+        let result = serde_json::to_string(&map);
+        
+        match result {
+            Ok(json) => panic!("Unexpected success: {}", json),
+            Err(e) => {
+                println!("Expected error: {}", e);
+                assert!(e.to_string().contains("key must be a string"));
+            }
+        }
+    }
+    
+    #[test]
+    fn test_ns_invariant_with_env_key() {
+        use crate::expr_to_ns::{Env, ExprRequest, LocalExpr};
+        use crate::proof_parser::{Formula, ProofInvariant};
+        
+        // Create an Env as key
+        let env: Env = serde_json::from_str(r#"{"vars":{"x":10}}"#).unwrap();
+        
+        // Create a simple proof invariant
+        let proof_inv = ProofInvariant {
+            variables: vec![],
+            formula: Formula::And(vec![]),
+        };
+        
+        // Create NSInvariant with Env as key
+        let mut global_invariants = HashMap::default();
+        global_invariants.insert(env, proof_inv);
+        
+        let invariant: NSInvariant<Env, LocalExpr, ExprRequest, i64> = NSInvariant {
+            global_invariants,
+        };
+        
+        // Test serialization - this should work with tuple_vec_map
+        let result = serde_json::to_string_pretty(&invariant);
+        match result {
+            Ok(json) => {
+                println!("NSInvariant serialized successfully:\n{}", json);
+                
+                // Test deserialization
+                let invariant2: NSInvariant<Env, LocalExpr, ExprRequest, i64> = 
+                    serde_json::from_str(&json).expect("Failed to deserialize");
+                assert_eq!(invariant.global_invariants.len(), invariant2.global_invariants.len());
+            },
+            Err(e) => panic!("Failed to serialize NSInvariant: {}", e),
+        }
+    }
+    
+    #[test]
+    fn test_ns_decision_serializable_with_env() {
+        use crate::expr_to_ns::{Env, ExprRequest, LocalExpr};
+        use crate::proof_parser::{Formula, ProofInvariant};
+        
+        // Create an Env as key
+        let env: Env = serde_json::from_str(r#"{"vars":{"x":10}}"#).unwrap();
+        
+        // Create a simple proof invariant
+        let proof_inv = ProofInvariant {
+            variables: vec![],
+            formula: Formula::And(vec![]),
+        };
+        
+        // Create NSInvariant with Env as key
+        let mut global_invariants = HashMap::default();
+        global_invariants.insert(env, proof_inv);
+        
+        let invariant: NSInvariant<Env, LocalExpr, ExprRequest, i64> = NSInvariant {
+            global_invariants,
+        };
+        
+        // Create NSDecision::Serializable
+        let decision = NSDecision::Serializable { invariant };
+        
+        // Test serialization - this should work with tuple_vec_map
+        let result = serde_json::to_string_pretty(&decision);
+        match result {
+            Ok(json) => {
+                println!("NSDecision::Serializable serialized successfully:\n{}", json);
+                
+                // Test deserialization
+                let decision2: NSDecision<Env, LocalExpr, ExprRequest, i64> = 
+                    serde_json::from_str(&json).expect("Failed to deserialize");
+                
+                // Verify it's serializable
+                match decision2 {
+                    NSDecision::Serializable { invariant } => {
+                        assert_eq!(invariant.global_invariants.len(), 1);
+                    },
+                    _ => panic!("Expected Serializable decision"),
+                }
+            },
+            Err(e) => panic!("Failed to serialize NSDecision: {}", e),
+        }
+    }
+

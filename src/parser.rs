@@ -1,18 +1,19 @@
 use hash_cons::{Hc, HcTable};
 use std::fmt;
+use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
-#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd, serde::Serialize, serde::Deserialize)]
 pub enum Expr {
-    Assign(String, Hc<Expr>),
-    Equal(Hc<Expr>, Hc<Expr>),
-    Add(Hc<Expr>, Hc<Expr>),
-    Subtract(Hc<Expr>, Hc<Expr>),
-    Sequence(Hc<Expr>, Hc<Expr>),
-    If(Hc<Expr>, Hc<Expr>, Hc<Expr>),
-    While(Hc<Expr>, Hc<Expr>),
-    Not(Hc<Expr>),
-    And(Hc<Expr>, Hc<Expr>),
-    Or(Hc<Expr>, Hc<Expr>),
+    Assign(String, #[serde(with = "hc_expr_serde")] Hc<Expr>),
+    Equal(#[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>),
+    Add(#[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>),
+    Subtract(#[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>),
+    Sequence(#[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>),
+    If(#[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>),
+    While(#[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>),
+    Not(#[serde(with = "hc_expr_serde")] Hc<Expr>),
+    And(#[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>),
+    Or(#[serde(with = "hc_expr_serde")] Hc<Expr>, #[serde(with = "hc_expr_serde")] Hc<Expr>),
     Yield,
     Exit,
     Unknown,
@@ -20,14 +21,15 @@ pub enum Expr {
     Variable(String),
 }
 
-#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd, serde::Serialize, serde::Deserialize)]
 pub struct Program {
     pub requests: Vec<Request>,
 }
 
-#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Ord, PartialOrd, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     pub name: String,
+    #[serde(with = "hc_expr_serde")]
     pub body: Hc<Expr>,
 }
 
@@ -54,6 +56,42 @@ impl fmt::Display for Expr {
         }
     }
 }
+
+// Custom serialization module for Hc<Expr>
+pub mod hc_expr_serde {
+    use super::*;
+    
+    // Serialize Hc<Expr> by serializing the inner Expr
+    pub fn serialize<S>(hc: &Hc<Expr>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Dereference to get the inner Expr and serialize it
+        (**hc).serialize(serializer)
+    }
+    
+    // Deserialize by deserializing an Expr and wrapping in Hc
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Hc<Expr>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // We need access to a hash cons table, which is a problem...
+        // For now, we'll create a temporary one - this is not ideal
+        // In a real implementation, we'd need to pass the table somehow
+        thread_local! {
+            static TEMP_TABLE: std::cell::RefCell<HcTable<Expr>> = std::cell::RefCell::new(HcTable::new());
+        }
+        
+        let expr = Expr::deserialize(deserializer)?;
+        
+        TEMP_TABLE.with(|table| {
+            Ok(table.borrow_mut().hashcons(expr))
+        })
+    }
+}
+
+// Now we need to tell serde to use our custom module for Hc<Expr> fields
+// We'll need to update the Expr enum to use this
 
 pub struct ExprHc {
     table: HcTable<Expr>,
@@ -1239,5 +1277,78 @@ mod tests {
         let expr2 = parse(&regenerated_source, &mut table).unwrap();
 
         assert_eq!(expr, expr2);
+    }
+    
+    #[test]
+    fn test_expr_serialization() {
+        let mut table = ExprHc::new();
+        
+        // Test simple number
+        let num_expr = table.number(42);
+        let json = serde_json::to_string(&*num_expr).unwrap();
+        println!("Number expr JSON: {}", json);
+        let deserialized: Expr = serde_json::from_str(&json).unwrap();
+        assert_eq!(*num_expr, deserialized);
+        
+        // Test variable
+        let var_expr = table.variable("x".to_string());
+        let json = serde_json::to_string(&*var_expr).unwrap();
+        println!("Variable expr JSON: {}", json);
+        let deserialized: Expr = serde_json::from_str(&json).unwrap();
+        assert_eq!(*var_expr, deserialized);
+        
+        // Test arithmetic expression
+        let x = table.variable("x".to_string());
+        let y = table.variable("y".to_string());
+        let add_expr = table.add(x, y);
+        let json = serde_json::to_string(&*add_expr).unwrap();
+        println!("Add expr JSON: {}", json);
+        let deserialized: Expr = serde_json::from_str(&json).unwrap();
+        assert_eq!(*add_expr, deserialized);
+        
+        // Test complex expression with nesting
+        let x = table.variable("x".to_string());
+        let zero = table.number(0);
+        let one = table.number(1);
+        let cond = table.equal(x.clone(), zero);
+        let assign = table.assign("y".to_string(), one);
+        let if_expr = table.if_expr(cond, assign, x);
+        let json = serde_json::to_string(&*if_expr).unwrap();
+        println!("If expr JSON: {}", json);
+        let deserialized: Expr = serde_json::from_str(&json).unwrap();
+        assert_eq!(*if_expr, deserialized);
+    }
+    
+    #[test]
+    fn test_program_serialization() {
+        let mut table = ExprHc::new();
+        
+        // Create a simple program
+        let x = table.variable("x".to_string());
+        let one = table.number(1);
+        let body = table.assign("x".to_string(), one);
+        
+        let program = Program {
+            requests: vec![
+                Request {
+                    name: "foo".to_string(),
+                    body: body.clone(),
+                },
+                Request {
+                    name: "bar".to_string(),
+                    body: x.clone(),
+                },
+            ],
+        };
+        
+        let json = serde_json::to_string_pretty(&program).unwrap();
+        println!("Program JSON:\n{}", json);
+        
+        let deserialized: Program = serde_json::from_str(&json).unwrap();
+        assert_eq!(program.requests.len(), deserialized.requests.len());
+        assert_eq!(program.requests[0].name, deserialized.requests[0].name);
+        assert_eq!(*program.requests[0].body, *deserialized.requests[0].body);
+        assert_eq!(program.requests[1].name, deserialized.requests[1].name);
+        assert_eq!(*program.requests[1].body, *deserialized.requests[1].body);
     }
 }

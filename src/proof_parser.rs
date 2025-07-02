@@ -2,15 +2,43 @@ use crate::deterministic_map::HashMap;
 use crate::kleene::Kleene; // <-- bring in zero()
 use crate::presburger::{Constraint as PConstraint, PresburgerSet, QuantifiedSet, Variable};
 use either::Either;
+use serde::{Serialize, Deserialize};
 use std::fmt::{self, Display};
 use std::fs;
 use std::hash::Hash;
 use std::path::Path;
 
+// Helper module for serializing HashMap with non-string keys
+mod tuple_vec_map {
+    use super::*;
+
+    pub fn serialize<K, V, S>(m: &HashMap<K, V>, ser: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        K: Serialize + Eq + std::hash::Hash,
+        V: Serialize,
+        S: serde::Serializer,
+    {
+        m.iter().collect::<Vec<_>>().serialize(ser)
+    }
+
+    pub fn deserialize<'de, K, V, D>(de: D) -> std::result::Result<HashMap<K, V>, D::Error>
+    where
+        K: Deserialize<'de> + Eq + std::hash::Hash,
+        V: Deserialize<'de>,
+        D: serde::Deserializer<'de>,
+    {
+        let v: Vec<(K, V)> = Vec::deserialize(de)?;
+        Ok(v.into_iter().collect())
+    }
+}
+
 /// Affine expression: sum of terms (coefficient * variable) + constant
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(bound(serialize = "T: Serialize"))]
+#[serde(bound(deserialize = "T: Deserialize<'de>"))]
 pub struct AffineExpr<T: Eq + Hash> {
     /// Map from variable to coefficient
+    #[serde(with = "tuple_vec_map")]
     terms: HashMap<Variable<T>, i64>,
     constant: i64,
 }

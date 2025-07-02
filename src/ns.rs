@@ -833,6 +833,59 @@ where
         // Return the original result as the primary result
         result_original
     }
+
+    /// Create a serializability certificate (NSDecision) without full visualization
+    pub fn create_certificate(&self, out_dir: &str) -> crate::ns_decision::NSDecision<G, L, Req, Resp>
+    where
+        G: Clone + Ord + Hash + Display + std::fmt::Debug,
+        L: Clone + Ord + Hash + Display + std::fmt::Debug,
+        Req: Clone + Ord + Hash + Display + std::fmt::Debug,
+        Resp: Clone + Ord + Hash + Display + std::fmt::Debug,
+    {
+        use crate::ns_to_petri::*;
+        use ReqPetriState::*;
+
+        // Initialize debug logger
+        let program_name = std::path::Path::new(out_dir)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("unknown")
+            .to_string();
+
+        crate::reachability::init_debug_logger(
+            program_name.clone(),
+            format!("Network System: {:?}", self),
+        );
+
+        // Convert to Petri net
+        let mut places_that_must_be_zero = HashSet::default();
+        let petri = ns_to_petri_with_requests(self).rename(|st| match st {
+            Response(_, _) => Right(st),
+            Global(_) => Left(st),
+            Local(_, _) | Request(_) => {
+                places_that_must_be_zero.insert(st.clone());
+                Left(st)
+            }
+        });
+        let places_that_must_be_zero: Vec<_> = places_that_must_be_zero.into_iter().collect();
+
+        // Create serialized automaton semilinear set
+        let ser: SemilinearSet<_> = self.serialized_automaton_kleene(|req, resp| {
+            SemilinearSet::singleton(SparseVector::unit(Response(req, resp)))
+        });
+
+        // Run the proof-based analysis to get Decision
+        let result_with_proofs =
+            crate::reachability_with_proofs::is_petri_reachability_set_subset_of_semilinear_new(
+                petri.clone(),
+                &places_that_must_be_zero,
+                ser.clone(),
+                out_dir,
+            );
+
+        // Convert Petri decision to NS decision
+        crate::ns_decision::petri_decision_to_ns(result_with_proofs, self)
+    }
 }
 
 fn display_vec<T: Display>(v: &[T]) -> String {

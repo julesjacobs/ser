@@ -6,7 +6,7 @@ use crate::deterministic_map::{HashMap, HashSet};
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Eq, PartialEq, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Env {
     vars: HashMap<String, i64>,
 }
@@ -450,7 +450,7 @@ pub fn run_expr(
 }
 
 // Request type that holds the request name
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ExprRequest {
     pub name: String,
 }
@@ -462,8 +462,8 @@ impl std::fmt::Display for ExprRequest {
 }
 
 // We need a wrapper type since we can't implement Display directly for a tuple
-#[derive(Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
-pub struct LocalExpr(pub Local, pub Hc<Expr>);
+#[derive(Clone, Eq, PartialEq, Hash, PartialOrd, Ord, Debug, serde::Serialize, serde::Deserialize)]
+pub struct LocalExpr(pub Local, #[serde(with = "crate::parser::hc_expr_serde")] pub Hc<Expr>);
 
 impl std::fmt::Display for LocalExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -581,4 +581,106 @@ pub fn program_to_ns(
     }
 
     ns
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_env_serialization() {
+        // Create an environment with some variables
+        let mut env = Env::new();
+        env = env.insert("x".to_string(), 42);
+        env = env.insert("y".to_string(), -5);
+        env = env.insert("count".to_string(), 100);
+        
+        // Serialize to JSON
+        let json = serde_json::to_string(&env).unwrap();
+        println!("Serialized Env: {}", json);
+        
+        // Deserialize back
+        let env2: Env = serde_json::from_str(&json).unwrap();
+        
+        // Check equality
+        assert_eq!(env, env2);
+        
+        // Check individual values
+        assert_eq!(env2.get("x"), 42);
+        assert_eq!(env2.get("y"), -5);
+        assert_eq!(env2.get("count"), 100);
+        assert_eq!(env2.get("nonexistent"), 0); // Default value
+    }
+    
+    #[test]
+    fn test_empty_env_serialization() {
+        let env = Env::new();
+        let json = serde_json::to_string(&env).unwrap();
+        let env2: Env = serde_json::from_str(&json).unwrap();
+        assert_eq!(env, env2);
+    }
+    
+    #[test]
+    fn test_expr_request_serialization() {
+        // Create a request
+        let req = ExprRequest {
+            name: "foo".to_string(),
+        };
+        
+        // Serialize to JSON
+        let json = serde_json::to_string(&req).unwrap();
+        println!("Serialized ExprRequest: {}", json);
+        
+        // Deserialize back
+        let req2: ExprRequest = serde_json::from_str(&json).unwrap();
+        
+        // Check equality
+        assert_eq!(req, req2);
+        assert_eq!(req2.name, "foo");
+    }
+    
+    #[test]
+    fn test_expr_request_special_chars() {
+        // Test with special characters in name
+        let req = ExprRequest {
+            name: "request/with\\special\"chars".to_string(),
+        };
+        
+        let json = serde_json::to_string(&req).unwrap();
+        let req2: ExprRequest = serde_json::from_str(&json).unwrap();
+        
+        assert_eq!(req, req2);
+    }
+    
+    #[test]
+    fn test_local_expr_serialization() {
+        use crate::parser::ExprHc;
+        
+        // Create a LocalExpr
+        let mut env = Env::new();
+        env = env.insert("x".to_string(), 10);
+        env = env.insert("y".to_string(), 20);
+        
+        let mut table = ExprHc::new();
+        let x_var = table.variable("x".to_string());
+        let y_var = table.variable("y".to_string());
+        let expr = table.add(x_var, y_var);
+        
+        let local_expr = LocalExpr(env.clone(), expr.clone());
+        
+        // Serialize to JSON
+        let json = serde_json::to_string_pretty(&local_expr).unwrap();
+        println!("LocalExpr JSON:\n{}", json);
+        
+        // Deserialize back
+        let local_expr2: LocalExpr = serde_json::from_str(&json).unwrap();
+        
+        // Check equality
+        assert_eq!(local_expr.0, local_expr2.0); // Check Env equality
+        assert_eq!(*local_expr.1, *local_expr2.1); // Check Expr equality
+        
+        // Verify the environment values
+        assert_eq!(local_expr2.0.get("x"), 10);
+        assert_eq!(local_expr2.0.get("y"), 20);
+    }
 }

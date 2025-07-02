@@ -1,18 +1,17 @@
 #!/bin/bash
+# Wrapper script to run SMPT from virtual environment
 
-# SMPT Wrapper Script
-# This script activates the SMPT virtual environment and runs SMPT
+# Get the directory of this script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-SMPT_DIR="/home/guyamir/Documents/guy/SMPT"
-VENV_DIR="$SMPT_DIR/myenv"
-
-if [ ! -d "$VENV_DIR" ]; then
-    echo "Error: SMPT virtual environment not found at $VENV_DIR"
-    echo "Please run the install_smpt.sh script first."
+# Check if virtual environment exists
+VENV_PATH="$SCRIPT_DIR/SMPT/smpt_venv"
+if [ ! -d "$VENV_PATH" ]; then
+    echo "❌ SMPT virtual environment not found at $VENV_PATH"
+    echo "   Run ./install_smpt.sh to install SMPT"
     exit 1
 fi
 
 # Activate virtual environment and run SMPT
-cd "$SMPT_DIR"
-source "$VENV_DIR/bin/activate"
+source "$VENV_PATH/bin/activate"
 python -m smpt "$@"
