@@ -334,6 +334,19 @@ def generate_cactus_plot(stats: List[Dict[str, Any]], output_dir: str) -> None:
     all_configs = set(list(config_avg_times.keys()) + list(config_timeouts.keys()))
     colors = plt.cm.tab10(np.linspace(0, 1, len(all_configs)))
     
+    # Calculate max time across all configurations to set x-axis limit
+    max_time = 0
+    for config_times in config_avg_times.values():
+        if config_times:
+            config_max = max(config_times.values())
+            max_time = max(max_time, config_max)
+    
+    # Add some padding to the max time (10% or at least 1 second)
+    if max_time > 0:
+        x_max = max_time * 1.1
+    else:
+        x_max = 10  # Default if no data
+    
     # Plot each configuration
     config_labels = sorted(set(list(config_avg_times.keys()) + list(config_timeouts.keys())))
     for idx, config in enumerate(config_labels):
@@ -353,7 +366,8 @@ def generate_cactus_plot(stats: List[Dict[str, Any]], output_dir: str) -> None:
             
             # Add starting point at 0% from the beginning of the plot
             # This creates the step function effect
-            sorted_times_extended = [0] + sorted_times + [12.0]
+            # Also extend to x_max to show the horizontal line
+            sorted_times_extended = [0] + sorted_times + [x_max]
             percentages_extended = [0] + percentages + [percentages[-1]]
             
             # Plot the step function with label showing solved/total for this config
@@ -374,8 +388,8 @@ def generate_cactus_plot(stats: List[Dict[str, Any]], output_dir: str) -> None:
     ax.set_ylabel('Percentage of Examples Solved (%)', fontsize=14)
     ax.set_title('Cactus Plot: Optimization Configuration Performance', fontsize=16, pad=20)
     
-    # Set x-axis to linear scale
-    ax.set_xlim(0, 12)
+    # Set x-axis to linear scale with dynamic upper limit
+    ax.set_xlim(0, x_max)
     ax.set_ylim(0, 105)
     
     # Add grid
