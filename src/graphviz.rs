@@ -1,6 +1,20 @@
 use std::fs::{self, create_dir_all};
 use std::path::Path;
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+/// Global flag for visualization generation
+pub static VIZ_GENERATION_ENABLED: AtomicBool = AtomicBool::new(true);
+
+/// Set whether visualization generation is enabled
+pub fn set_viz_enabled(enabled: bool) {
+    VIZ_GENERATION_ENABLED.store(enabled, Ordering::SeqCst);
+}
+
+/// Check whether visualization generation is enabled
+pub fn viz_enabled() -> bool {
+    VIZ_GENERATION_ENABLED.load(Ordering::SeqCst)
+}
 
 /// Save GraphViz DOT files to disk and generate visualizations
 ///

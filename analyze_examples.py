@@ -75,7 +75,7 @@ def run_single_analysis(file_path, timeout_arg, extra_flags, use_cache=False):
         cpu = time.time() - start
 
     out = result.stdout + result.stderr
-    timeout_flag = 'SMPT timeout:' in out or 'Analysis timed out' in out
+    timeout_flag = 'SMPT timeout:' in out or 'Analysis timed out' in out or '⏱️ RESULT: TIMEOUT' in out
 
     orig = 'Unknown'
     proof = 'Unknown'
@@ -103,6 +103,9 @@ def run_single_analysis(file_path, timeout_arg, extra_flags, use_cache=False):
                 trace_valid = False
             elif '❌ COUNTEREXAMPLE TRACE FOUND' in out:
                 trace_valid = True
+        elif '⏱️ RESULT: TIMEOUT' in out:
+            orig = 'SMPT Timeout'
+            proof = 'SMPT Timeout'
     else:
         if timeout_flag:
             orig = proof = 'SMPT Timeout'
@@ -224,6 +227,8 @@ def main():
     parser.add_argument('--without-smart-kleene-order', action='store_true', help='Disable smart Kleene ordering')
     parser.add_argument('--without-bidirectional', action='store_true',
                         help='Disable bidirectional optimization')  # <— new
+    parser.add_argument('--no-viz', action='store_true', help='Disable visualization generation')
+    parser.add_argument('--path', type=str, help='Specific file or directory to analyze')
     parser.add_argument('--all-optimizations', action='store_true', 
                         help='Run with all optimizations enabled (default)')
     parser.add_argument('--no-optimizations', action='store_true',
@@ -239,10 +244,30 @@ def main():
     cache = known_args.use_cache
     
     # Get files list
-    files = sorted(
-        list(Path('examples/ser').glob('*.ser')) +
-        list(Path('examples/json').glob('*.json'))
-    )
+    if known_args.path:
+        path = Path(known_args.path)
+        if path.is_file():
+            # Single file
+            if path.suffix in ['.ser', '.json']:
+                files = [path]
+            else:
+                parser.error(f"Unsupported file type: {path.suffix}. Only .ser and .json files are supported.")
+        elif path.is_dir():
+            # Directory - recursively find all .ser and .json files
+            files = sorted(
+                list(path.rglob('*.ser')) + 
+                list(path.rglob('*.json'))
+            )
+            if not files:
+                parser.error(f"No .ser or .json files found in directory: {path}")
+        else:
+            parser.error(f"Path does not exist: {path}")
+    else:
+        # Default behavior - analyze examples directory
+        files = sorted(
+            list(Path('examples/ser').glob('*.ser')) +
+            list(Path('examples/json').glob('*.json'))
+        )
     
     # Check for conflicting options
     if known_args.all_optimizations and known_args.no_optimizations:
@@ -256,36 +281,48 @@ def main():
         print("\n📊 Configuration 1/6: All optimizations disabled")
         extras_noopt = ['--without-bidirectional', '--without-remove-redundant', 
                         '--without-generate-less', '--without-smart-kleene-order']
+        if known_args.no_viz:
+            extras_noopt.append('--no-viz')
         extras_noopt.extend(extra)
         run_analysis(files, timeout, jobs, cache, extras_noopt, "_no_optimizations")
         
         # 2. All optimizations
         print("\n📊 Configuration 2/6: All optimizations enabled")
         extras_all = []
+        if known_args.no_viz:
+            extras_all.append('--no-viz')
         extras_all.extend(extra)
         run_analysis(files, timeout, jobs, cache, extras_all, "_all_optimizations")
         
         # 3. Only bidirectional pruning
         print("\n📊 Configuration 3/6: Only bidirectional pruning")
         extras_b = ['--without-remove-redundant', '--without-generate-less', '--without-smart-kleene-order']
+        if known_args.no_viz:
+            extras_b.append('--no-viz')
         extras_b.extend(extra)
         run_analysis(files, timeout, jobs, cache, extras_b, "_only_bidirectional")
         
         # 4. Only remove redundant
         print("\n📊 Configuration 4/6: Only remove redundant")
         extras_r = ['--without-bidirectional', '--without-generate-less', '--without-smart-kleene-order']
+        if known_args.no_viz:
+            extras_r.append('--no-viz')
         extras_r.extend(extra)
         run_analysis(files, timeout, jobs, cache, extras_r, "_only_remove_redundant")
         
         # 5. Only generate less
         print("\n📊 Configuration 5/6: Only generate less")
         extras_g = ['--without-bidirectional', '--without-remove-redundant', '--without-smart-kleene-order']
+        if known_args.no_viz:
+            extras_g.append('--no-viz')
         extras_g.extend(extra)
         run_analysis(files, timeout, jobs, cache, extras_g, "_only_generate_less")
         
         # 6. Only smart Kleene order
         print("\n📊 Configuration 6/6: Only smart Kleene order")
         extras_s = ['--without-bidirectional', '--without-remove-redundant', '--without-generate-less']
+        if known_args.no_viz:
+            extras_s.append('--no-viz')
         extras_s.extend(extra)
         run_analysis(files, timeout, jobs, cache, extras_s, "_only_smart_kleene")
         
@@ -305,6 +342,8 @@ def main():
         # First run with all optimizations
         print("\n📊 Pass 1: With all optimizations enabled")
         extras_opt = []
+        if known_args.no_viz:
+            extras_opt.append('--no-viz')
         extras_opt.extend(extra)
         run_analysis(files, timeout, jobs, cache, extras_opt, "_optimized")
         
@@ -312,6 +351,8 @@ def main():
         print("\n📊 Pass 2: With all optimizations disabled")
         extras_noopt = ['--without-bidirectional', '--without-remove-redundant', 
                         '--without-generate-less', '--without-smart-kleene-order']
+        if known_args.no_viz:
+            extras_noopt.append('--no-viz')
         extras_noopt.extend(extra)
         run_analysis(files, timeout, jobs, cache, extras_noopt, "_unoptimized")
         
@@ -333,6 +374,10 @@ def main():
             extras.append('--without-smart-kleene-order')
         if known_args.without_bidirectional:
             extras.append('--without-bidirectional')
+    
+    # Add --no-viz flag if specified
+    if known_args.no_viz:
+        extras.append('--no-viz')
     
     # append other unknown flags
     extras.extend(extra)

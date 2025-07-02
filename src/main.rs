@@ -48,6 +48,10 @@ fn print_usage() {
         "--open".green()
     );
     println!(
+        "  {}                Disable visualization generation (for benchmarking)",
+        "--no-viz".green()
+    );
+    println!(
         "  {}   Disable optimizations (default: optimizations ON)",
         "--without-bidirectional".green()
     );
@@ -115,6 +119,10 @@ fn main() {
         match args[i].as_str() {
             "--open" => {
                 open_files = true;
+                i += 1;
+            }
+            "--no-viz" => {
+                graphviz::set_viz_enabled(false);
                 i += 1;
             }
             "--check-smpt" => {
@@ -325,30 +333,32 @@ where
     }
 
     // Generate GraphViz output for the Network System
-    println!();
-    println!(
-        "{} {}",
-        "🎨".cyan(),
-        "Generating GraphViz visualization...".cyan().bold()
-    );
+    if graphviz::viz_enabled() {
+        println!();
+        println!(
+            "{} {}",
+            "🎨".cyan(),
+            "Generating GraphViz visualization...".cyan().bold()
+        );
 
-    match ns.save_graphviz(out_dir, open_files) {
-        Ok(files) => {
-            println!(
-                "{} the following Network System files:",
-                "Successfully generated".green().bold()
-            );
-            for file in files {
-                println!("- {}", file.green());
+        match ns.save_graphviz(out_dir, open_files) {
+            Ok(files) => {
+                println!(
+                    "{} the following Network System files:",
+                    "Successfully generated".green().bold()
+                );
+                for file in files {
+                    println!("- {}", file.green());
+                }
             }
-        }
-        Err(err) => {
-            eprintln!(
-                "{} NS visualization: {}",
-                "Failed to save".red().bold(),
-                err
-            );
-            process::exit(1);
+            Err(err) => {
+                eprintln!(
+                    "{} NS visualization: {}",
+                    "Failed to save".red().bold(),
+                    err
+                );
+                process::exit(1);
+            }
         }
     }
 
@@ -357,30 +367,35 @@ where
     println!(
         "{} {}",
         "🔄".cyan(),
-        "Converting to Petri net and generating visualization..."
-            .cyan()
-            .bold()
+        "Converting to Petri net...".cyan().bold()
     );
     let petri = ns_to_petri::ns_to_petri(ns);
 
     // Generate Petri net visualization
-    match petri.save_graphviz(out_dir, open_files) {
-        Ok(files) => {
-            println!(
-                "{} the following Petri net files:",
-                "Successfully generated".green().bold()
-            );
-            for file in files {
-                println!("- {}", file.green());
+    if graphviz::viz_enabled() {
+        println!(
+            "{} {}",
+            "🎨".cyan(),
+            "Generating Petri net visualization...".cyan().bold()
+        );
+        match petri.save_graphviz(out_dir, open_files) {
+            Ok(files) => {
+                println!(
+                    "{} the following Petri net files:",
+                    "Successfully generated".green().bold()
+                );
+                for file in files {
+                    println!("- {}", file.green());
+                }
             }
-        }
-        Err(err) => {
-            eprintln!(
-                "{} Petri net visualization: {}",
-                "Failed to save".red().bold(),
-                err
-            );
-            process::exit(1);
+            Err(err) => {
+                eprintln!(
+                    "{} Petri net visualization: {}",
+                    "Failed to save".red().bold(),
+                    err
+                );
+                process::exit(1);
+            }
         }
     }
 
@@ -404,33 +419,40 @@ where
     println!(
         "{} {}",
         "🔄".cyan(),
-        "Converting to Petri net with requests and generating visualization..."
-            .cyan()
-            .bold()
+        "Converting to Petri net with requests...".cyan().bold()
     );
     let petri_with_requests = ns_to_petri::ns_to_petri_with_requests(ns);
 
-    // Use the same output directory for Petri net with requests
-    // Create a custom method or modify the underlying implementation to use a different viz_type
-    // For now, we need to make a direct call to the graphviz module
-    let dot_content = petri_with_requests.to_graphviz();
-    match crate::graphviz::save_graphviz(&dot_content, out_dir, "petri_with_requests", open_files) {
-        Ok(files) => {
-            println!(
-                "{} the following Petri net with requests files:",
-                "Successfully generated".green().bold()
-            );
-            for file in files {
-                println!("- {}", file.green());
+    // Generate visualization if enabled
+    if graphviz::viz_enabled() {
+        println!(
+            "{} {}",
+            "🎨".cyan(),
+            "Generating Petri net with requests visualization...".cyan().bold()
+        );
+        
+        // Use the same output directory for Petri net with requests
+        // Create a custom method or modify the underlying implementation to use a different viz_type
+        // For now, we need to make a direct call to the graphviz module
+        let dot_content = petri_with_requests.to_graphviz();
+        match crate::graphviz::save_graphviz(&dot_content, out_dir, "petri_with_requests", open_files) {
+            Ok(files) => {
+                println!(
+                    "{} the following Petri net with requests files:",
+                    "Successfully generated".green().bold()
+                );
+                for file in files {
+                    println!("- {}", file.green());
+                }
             }
-        }
-        Err(err) => {
-            eprintln!(
-                "{} Petri net with requests visualization: {}",
-                "Failed to save".red().bold(),
-                err
-            );
-            process::exit(1);
+            Err(err) => {
+                eprintln!(
+                    "{} Petri net with requests visualization: {}",
+                    "Failed to save".red().bold(),
+                    err
+                );
+                process::exit(1);
+            }
         }
     }
 
