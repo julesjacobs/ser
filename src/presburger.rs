@@ -270,8 +270,6 @@ impl<T: Eq + Clone + Ord + Debug + ToString> PresburgerSet<T> {
                 self.mapping.remove(idx);
             }
             None => {
-                // still print your debug message
-                println!("Trying to project out a variable that's not there");
             }
         }
         self
