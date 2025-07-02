@@ -24,6 +24,7 @@ mod semilinear;
 mod size_logger;
 mod smpt;
 mod spresburger;
+mod stats;
 mod utils;
 
 use colored::*;
@@ -515,6 +516,9 @@ where
 
 fn process_json_file(file_path: &str, open_files: bool) {
     println!("{} {}", "Processing JSON file:".blue().bold(), file_path);
+    
+    // Initialize stats collection
+    stats::start_analysis(file_path.to_string());
 
     let content = match fs::read_to_string(file_path) {
         Ok(content) => content,
@@ -558,9 +562,15 @@ fn process_json_file(file_path: &str, open_files: bool) {
     if let Err(err) = fs::copy(file_path, &dst_json) {
         eprintln!("{} JSON file: {}", "Failed to copy".red().bold(), err);
     }
+    
+    // Finalize stats collection
+    stats::finalize_stats();
 }
 
 fn process_ser_file(file_path: &str, open_files: bool) {
+    // Initialize stats collection
+    stats::start_analysis(file_path.to_string());
+    
     println!();
     println!(
         "{}",
@@ -645,6 +655,9 @@ fn process_ser_file(file_path: &str, open_files: bool) {
     if let Err(err) = fs::copy(file_path, &dst_ser) {
         eprintln!("{} SER file: {}", "Failed to copy".red().bold(), err);
     }
+    
+    // Finalize stats collection
+    stats::finalize_stats();
 }
 
 // Recursively process all files in a directory and its subdirectories
@@ -979,6 +992,13 @@ where
                 }
             }
         }
+        ns_decision::NSDecision::Timeout { message } => {
+            println!("{} {}", "Certificate type:".cyan(), "TIMEOUT".yellow().bold());
+            println!();
+            println!("{} {}", "⏱️".yellow(), "Analysis timed out".yellow());
+            println!("  {}", message);
+            false
+        }
     }
 }
 
@@ -1181,6 +1201,11 @@ fn check_certificate_for_json_file(file_path: &str) {
         ns_decision::NSDecision::NotSerializable { .. } => {
             println!();
             println!("{} {}", "Certificate type:".cyan(), "NOT SERIALIZABLE".red().bold());
+            true
+        }
+        ns_decision::NSDecision::Timeout { .. } => {
+            println!();
+            println!("{} {}", "Certificate type:".cyan(), "TIMEOUT".yellow().bold());
             true
         }
     };

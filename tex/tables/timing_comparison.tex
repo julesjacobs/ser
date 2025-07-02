@@ -1,0 +1,29 @@
+\begin{tabular}{lccccc}
+\toprule
+Example & Unopt. & Opt. & Speedup & Create & Check \\
+\midrule
+\texttt{data_flow} & 9.3s & 6.6s & 1.4× & 938ms & 1.6s \\
+\texttt{ex} & 3.5s & 2.7s & 1.3× & 318ms & 88ms \\
+\texttt{flag_non_ser} & 8.2s & 3.1s & 2.6× & 763ms & 0ms \\
+\texttt{flag_non_ser_turned_ser} & 2.6s & 2.5s & 1.1× & 5ms & 11ms \\
+\texttt{fred_arith_tricky} & 8.4s & 8.1s & 1.0× & 5.2s & 0ms \\
+\texttt{fred_arith_tricky2} & 7.2s & 4.8s & 1.5× & 417ms & 0ms \\
+\texttt{fred_arith_tricky3} & 5.2s & 9.5s & 0.5× & 834ms & 0ms \\
+\texttt{funny} & 2.7s & 2.7s & 1.0× & 386ms & 0ms \\
+\texttt{if_while_with_req} & 2.1s & 1.7s & 1.2× & 2ms & 3ms \\
+\texttt{modulo_nonser} & 9.7s & 3.1s & 3.1× & 595ms & 0ms \\
+\texttt{nested_while} & 2.4s & 1.8s & 1.3× & 1ms & 1ms \\
+\texttt{nondet} & 9.1s & 3.7s & 2.4× & 286ms & 49ms \\
+\texttt{nondet2} & 7.2s & 6.8s & 1.1× & 1.4s & 0ms \\
+\texttt{nondet_impl} & 5.1s & 3.0s & 1.7× & 457ms & 0ms \\
+\texttt{self_loop} & 3.1s & 2.3s & 1.3× & 2ms & 3ms \\
+\texttt{self_loop2} & 6.4s & 5.7s & 1.1× & 3ms & 13ms \\
+\texttt{simple_nonser} & 4.1s & 4.1s & 1.0× & 596ms & 0ms \\
+\texttt{simple_nonser2} & 3.6s & 3.9s & 0.9× & 343ms & 0ms \\
+\texttt{simple_nonser2_minus_yields_is_ser} & 2.4s & 3.5s & 0.7× & 4ms & 2ms \\
+\texttt{simple_nonser2_turned_ser_with_locks} & 3.7s & 4.2s & 0.9× & 348ms & 95ms \\
+\texttt{simple_nonser3} & 3.1s & 3.7s & 0.8× & 422ms & 0ms \\
+\texttt{stop} & 8.8s & 9.5s & 0.9× & 5.5s & 0ms \\
+\texttt{stop3} & 7.2s & 5.4s & 1.3× & 583ms & 0ms \\
+\bottomrule
+\end{tabular}

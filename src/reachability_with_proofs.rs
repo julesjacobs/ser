@@ -18,6 +18,7 @@ use std::sync::Mutex;
 pub enum Decision<P: Eq + Hash> {
     CounterExample { trace: Vec<(Vec<P>, Vec<P>)> },
     Proof { proof: Option<ProofInvariant<P>> },
+    Timeout { message: String },
 }
 
 /// Global debug logger for reachability analysis
@@ -200,6 +201,15 @@ where
                 );
                 Decision::Proof { proof }
             }
+            Decision::Timeout { message } => {
+                // Analysis timed out
+                debug_logger.step(
+                    "Final Result",
+                    "Analysis TIMED OUT",
+                    &message,
+                );
+                Decision::Timeout { message }
+            }
         }
     })
 }
@@ -269,6 +279,13 @@ where
         for (i, quantified_set) in disjuncts.iter().enumerate() {
             debug_logger.log_disjunct_start(i, quantified_set);
             println!("Checking disjunct {}: {}", i, quantified_set);
+            
+            // Record initial petri net size for this disjunct
+            let initial_places = petri.get_places().len();
+            let initial_transitions = petri.get_transitions().len();
+            
+            // Start disjunct stats collection
+            crate::stats::start_disjunct_analysis(i, initial_places, initial_transitions);
 
             match can_reach_quantified_set(petri.clone(), quantified_set.clone(), out_dir, i) {
                 Decision::CounterExample { trace } => {
@@ -292,6 +309,14 @@ where
                     if let Some(p) = proof {
                         disjunct_proofs.push(p);
                     }
+                }
+                Decision::Timeout { message } => {
+                    debug_logger.step(
+                        &format!("Disjunct {} Result", i),
+                        "Analysis TIMED OUT",
+                        &format!("Disjunct {}: TIMEOUT - {}", i, message),
+                    );
+                    return Decision::Timeout { message };
                 }
             }
         }
@@ -455,6 +480,9 @@ where
 
                 Decision::Proof { proof: final_proof }
             }
+            Decision::Timeout { message } => {
+                Decision::Timeout { message }
+            }
         }
     })
 }
@@ -615,10 +643,16 @@ where
             Decision::Proof { proof }
         }
         SmptVerificationOutcome::Error { message } => {
-            eprintln!("CRITICAL ERROR: SMPT verification failed: {}", message);
-            eprintln!("Cannot determine serializability - analysis is inconclusive");
-            eprintln!("This could indicate a bug in the verification pipeline");
-            panic!("SMPT verification failed: {}", message);
+            eprintln!("SMPT verification error: {}", message);
+            // Check if this is a timeout error
+            if message.contains("timeout") || message.contains("timed out") {
+                Decision::Timeout { message }
+            } else {
+                eprintln!("CRITICAL ERROR: SMPT verification failed: {}", message);
+                eprintln!("Cannot determine serializability - analysis is inconclusive");
+                eprintln!("This could indicate a bug in the verification pipeline");
+                panic!("SMPT verification failed: {}", message);
+            }
         }
     }
 }
@@ -687,6 +721,9 @@ where
 
         // Track the number of transitions after pruning
         let transitions_after = petri.get_transitions().len();
+        
+        // Record pruning iteration
+        crate::stats::record_pruning_iteration();
 
         debug_logger.step(
             &format!("Pruning Results - Iteration {}", iteration),
@@ -765,6 +802,9 @@ where
 
             let csv_path = Path::new(out_dir).join("petri_size_stats.csv");
             log_petri_size_csv(&csv_path, &after).expect("Failed to log Petri‐net size (post‐pruning)");
+            
+            // Finalize disjunct stats
+            crate::stats::finalize_disjunct(after.num_places, after.num_transitions);
 
             let result =
                 crate::smpt::can_reach_constraint_set(petri, constraints, out_dir, disjunct_id);

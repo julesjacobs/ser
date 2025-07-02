@@ -217,6 +217,8 @@ where
     },
     /// Program is not serializable with counterexample trace
     NotSerializable { trace: NSTrace<G, L, Req, Resp> },
+    /// Analysis timed out
+    Timeout { message: String },
 }
 
 impl<G, L, Req, Resp> NSDecision<G, L, Req, Resp>
@@ -844,6 +846,9 @@ where
             // Convert Petri net trace to NS-level trace
             let ns_trace = convert_petri_trace_to_ns(trace, ns);
             NSDecision::NotSerializable { trace: ns_trace }
+        }
+        Decision::Timeout { message } => {
+            NSDecision::Timeout { message }
         }
     }
 }

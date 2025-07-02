@@ -142,43 +142,10 @@ def analyze_file(fp, timeout, idx, extra_flags, use_cache):
     return res
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Analyze .ser examples with optional cargo flags (optimized only)",
-        allow_abbrev=False
-    )
-    parser.add_argument('--timeout', type=int, help='Timeout seconds')
-    parser.add_argument('--jobs', type=int, help='Parallel jobs')
-    parser.add_argument('--use-cache', action='store_true', help='Enable caching')
-    parser.add_argument('--without-remove-redundant', action='store_true', help='Disable redundant removal')
-    parser.add_argument('--without-generate-less', action='store_true', help='Disable generate-less optimization')
-    parser.add_argument('--without-smart-kleene-order', action='store_true', help='Disable smart Kleene ordering')
-    parser.add_argument('--without-bidirectional', action='store_true',
-                        help='Disable bidirectional optimization')  # <— new
-    known_args, extra = parser.parse_known_args()
-
-    timeout = known_args.timeout
-    jobs = known_args.jobs or os.cpu_count() or 4
-    cache = known_args.use_cache
-    # collect flags to forward
-    extras = []
-    if known_args.without_remove_redundant:
-        extras.append('--without-remove-redundant')
-    if known_args.without_generate_less:
-        extras.append('--without-generate-less')
-    if known_args.without_smart_kleene_order:
-        extras.append('--without-smart-kleene-order')
-    if known_args.without_bidirectional:
-        extras.append('--without-bidirectional')            # <— new
-    # append other unknown flags
-    extras.extend(extra)
-
+def run_analysis(files, timeout, jobs, cache, extras, suffix=""):
+    """Run analysis on files with given options."""
     print(f"🔍 Analyzing (.ser & .json) with {jobs} jobs, timeout={timeout or 'none'}, "
-    f"cache={'on' if cache else 'off'}, extras={extras}")
-    files = sorted(
-        list(Path('examples/ser').glob('*.ser')) +
-        list(Path('examples/json').glob('*.json'))
-    )
+          f"cache={'on' if cache else 'off'}, extras={extras}")
     print(f"Found {len(files)} examples")
 
     results = []
@@ -202,9 +169,9 @@ def main():
     if nv_traces:
         print('❌ Non-validated traces for:', ', '.join(nv_traces))
 
-    out_md = 'serializability_report.md'
+    out_md = f'serializability_report{suffix}.md'
     with open(out_md, 'w') as f:
-        f.write(f"# Serializability Analysis Report\n"
+        f.write(f"# Serializability Analysis Report{' - ' + suffix.title() if suffix else ''}\n"
                 f"Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
                 f"Extras: {extras}\n\n")
         f.write("|Example|Result|CPU(s)|Valid?|\n|--|--|--|--|\n")
@@ -241,7 +208,136 @@ def main():
         f.write(f"- Not serializable: {ns_cnt} (valid traces: {vt}, invalid: {it})\n")
         f.write(f"- Timeouts: {to_cnt}, Errors: {err}, Total: {len(results)}\n")
 
-    print("✅ Done. Report:", out_md)
+    print(f"✅ Done. Report: {out_md}")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Analyze .ser examples with optional cargo flags (optimized only)",
+        allow_abbrev=False
+    )
+    parser.add_argument('--timeout', type=int, help='Timeout seconds')
+    parser.add_argument('--jobs', type=int, help='Parallel jobs')
+    parser.add_argument('--use-cache', action='store_true', help='Enable caching')
+    parser.add_argument('--without-remove-redundant', action='store_true', help='Disable redundant removal')
+    parser.add_argument('--without-generate-less', action='store_true', help='Disable generate-less optimization')
+    parser.add_argument('--without-smart-kleene-order', action='store_true', help='Disable smart Kleene ordering')
+    parser.add_argument('--without-bidirectional', action='store_true',
+                        help='Disable bidirectional optimization')  # <— new
+    parser.add_argument('--all-optimizations', action='store_true', 
+                        help='Run with all optimizations enabled (default)')
+    parser.add_argument('--no-optimizations', action='store_true',
+                        help='Run with all optimizations disabled')
+    parser.add_argument('--optimization-comparison', action='store_true',
+                        help='Run twice: once with all optimizations, once without')
+    parser.add_argument('--full-optimization-study', action='store_true',
+                        help='Run 6 times: no opts, all opts, and each individual opt')
+    known_args, extra = parser.parse_known_args()
+
+    timeout = known_args.timeout
+    jobs = known_args.jobs or os.cpu_count() or 4
+    cache = known_args.use_cache
+    
+    # Get files list
+    files = sorted(
+        list(Path('examples/ser').glob('*.ser')) +
+        list(Path('examples/json').glob('*.json'))
+    )
+    
+    # Check for conflicting options
+    if known_args.all_optimizations and known_args.no_optimizations:
+        parser.error("Cannot use --all-optimizations and --no-optimizations together")
+    
+    # Handle full optimization study mode
+    if known_args.full_optimization_study:
+        print("🔬 Running full optimization study (6 configurations)...")
+        
+        # 1. No optimizations
+        print("\n📊 Configuration 1/6: All optimizations disabled")
+        extras_noopt = ['--without-bidirectional', '--without-remove-redundant', 
+                        '--without-generate-less', '--without-smart-kleene-order']
+        extras_noopt.extend(extra)
+        run_analysis(files, timeout, jobs, cache, extras_noopt, "_no_optimizations")
+        
+        # 2. All optimizations
+        print("\n📊 Configuration 2/6: All optimizations enabled")
+        extras_all = []
+        extras_all.extend(extra)
+        run_analysis(files, timeout, jobs, cache, extras_all, "_all_optimizations")
+        
+        # 3. Only bidirectional pruning
+        print("\n📊 Configuration 3/6: Only bidirectional pruning")
+        extras_b = ['--without-remove-redundant', '--without-generate-less', '--without-smart-kleene-order']
+        extras_b.extend(extra)
+        run_analysis(files, timeout, jobs, cache, extras_b, "_only_bidirectional")
+        
+        # 4. Only remove redundant
+        print("\n📊 Configuration 4/6: Only remove redundant")
+        extras_r = ['--without-bidirectional', '--without-generate-less', '--without-smart-kleene-order']
+        extras_r.extend(extra)
+        run_analysis(files, timeout, jobs, cache, extras_r, "_only_remove_redundant")
+        
+        # 5. Only generate less
+        print("\n📊 Configuration 5/6: Only generate less")
+        extras_g = ['--without-bidirectional', '--without-remove-redundant', '--without-smart-kleene-order']
+        extras_g.extend(extra)
+        run_analysis(files, timeout, jobs, cache, extras_g, "_only_generate_less")
+        
+        # 6. Only smart Kleene order
+        print("\n📊 Configuration 6/6: Only smart Kleene order")
+        extras_s = ['--without-bidirectional', '--without-remove-redundant', '--without-generate-less']
+        extras_s.extend(extra)
+        run_analysis(files, timeout, jobs, cache, extras_s, "_only_smart_kleene")
+        
+        print("\n✅ Full optimization study complete!")
+        print("📋 Generated reports:")
+        print("  - serializability_report_no_optimizations.md")
+        print("  - serializability_report_all_optimizations.md")
+        print("  - serializability_report_only_bidirectional.md")
+        print("  - serializability_report_only_remove_redundant.md")
+        print("  - serializability_report_only_generate_less.md")
+        print("  - serializability_report_only_smart_kleene.md")
+        return
+    
+    # Handle optimization comparison mode
+    if known_args.optimization_comparison:
+        print("🔄 Running optimization comparison...")
+        # First run with all optimizations
+        print("\n📊 Pass 1: With all optimizations enabled")
+        extras_opt = []
+        extras_opt.extend(extra)
+        run_analysis(files, timeout, jobs, cache, extras_opt, "_optimized")
+        
+        # Second run without optimizations
+        print("\n📊 Pass 2: With all optimizations disabled")
+        extras_noopt = ['--without-bidirectional', '--without-remove-redundant', 
+                        '--without-generate-less', '--without-smart-kleene-order']
+        extras_noopt.extend(extra)
+        run_analysis(files, timeout, jobs, cache, extras_noopt, "_unoptimized")
+        
+        print("\n✅ Optimization comparison complete!")
+        return
+    
+    # collect flags to forward
+    extras = []
+    if known_args.no_optimizations:
+        extras.extend(['--without-bidirectional', '--without-remove-redundant', 
+                       '--without-generate-less', '--without-smart-kleene-order'])
+    else:
+        # Individual optimization flags
+        if known_args.without_remove_redundant:
+            extras.append('--without-remove-redundant')
+        if known_args.without_generate_less:
+            extras.append('--without-generate-less')
+        if known_args.without_smart_kleene_order:
+            extras.append('--without-smart-kleene-order')
+        if known_args.without_bidirectional:
+            extras.append('--without-bidirectional')
+    
+    # append other unknown flags
+    extras.extend(extra)
+    
+    run_analysis(files, timeout, jobs, cache, extras)
 
 
 if __name__ == '__main__':

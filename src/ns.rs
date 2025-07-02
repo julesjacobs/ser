@@ -603,8 +603,10 @@ where
         Req: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
         Resp: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
     {
-        // Create certificate
-        let decision = self.create_certificate(out_dir);
+        // Create certificate with timing
+        let decision = crate::stats::record_certificate_creation_time(|| {
+            self.create_certificate(out_dir)
+        });
         
         // Save certificate to standard location
         let cert_path = format!("{}/certificate.json", out_dir);
@@ -622,8 +624,10 @@ where
             }
         };
         
-        // Verify and return result
-        let result = self.verify_ns_decision(&loaded_decision);
+        // Verify and return result with timing
+        let result = crate::stats::record_certificate_checking_time(|| {
+            self.verify_ns_decision(&loaded_decision)
+        });
         
         // Print result with consistent formatting
         println!();
@@ -660,7 +664,20 @@ where
                 println!();
                 trace.pretty_print(self);
             }
+            crate::ns_decision::NSDecision::Timeout { message } => {
+                println!();
+                println!("⏱️ ANALYSIS TIMED OUT");
+                println!();
+                println!("{}", message);
+            }
         }
+        
+        // Determine the result and stats string based on decision type
+        let (result_emoji, result_text, stats_result) = match &loaded_decision {
+            crate::ns_decision::NSDecision::Serializable { .. } => ("✅", "SERIALIZABLE".green().bold(), "serializable"),
+            crate::ns_decision::NSDecision::NotSerializable { .. } => ("❌", "NOT SERIALIZABLE".red().bold(), "not_serializable"),
+            crate::ns_decision::NSDecision::Timeout { .. } => ("⏱️", "TIMEOUT".yellow().bold(), "timeout"),
+        };
         
         println!();
         println!(
@@ -669,20 +686,16 @@ where
         );
         println!(
             "{} {}",
-            if result { "✅" } else { "❌" },
-            format!(
-                "RESULT: {}",
-                if result {
-                    "SERIALIZABLE".green().bold()
-                } else {
-                    "NOT SERIALIZABLE".red().bold()
-                }
-            )
+            result_emoji,
+            format!("RESULT: {}", result_text)
         );
         println!(
             "{}",
             "════════════════════════════════════════════════════════════".bright_black()
         );
+        
+        // Record result in stats
+        crate::stats::set_analysis_result(stats_result);
         
         result
     }
@@ -726,6 +739,20 @@ where
         let ser: SemilinearSet<_> = self.serialized_automaton_kleene(|req, resp| {
             SemilinearSet::singleton(SparseVector::unit(Response(req, resp)))
         });
+        
+        // Collect Petri net size stats
+        let places_count = petri.get_places().len();
+        let transitions_count = petri.get_transitions().len();
+        crate::stats::set_petri_net_sizes(places_count, transitions_count);
+        
+        // Collect semilinear set stats
+        let semilinear_stats = crate::stats::SemilinearSetStats {
+            num_components: ser.components.len(),
+            components: ser.components.iter().map(|c| crate::stats::SemilinearComponent {
+                periods: c.periods.len(),
+            }).collect(),
+        };
+        crate::stats::set_semilinear_stats(semilinear_stats);
 
         // Run the proof-based analysis to get Decision
         let result_with_proofs =
@@ -764,6 +791,11 @@ where
                     eprintln!("Warning: Invalid counterexample trace found in certificate");
                     false
                 }
+            }
+            crate::ns_decision::NSDecision::Timeout { .. } => {
+                // Timeout means we cannot determine serializability
+                eprintln!("Warning: Analysis timed out - cannot determine serializability");
+                false
             }
         }
     }

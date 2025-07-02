@@ -1,0 +1,30 @@
+\begin{tabular}{lcccccc}
+\toprule
+Example & No Opt & B & R & G & S & All Opt \\
+\midrule
+\texttt{data_flow} & 4.1s & 7.3s & -- & -- & 9.3s & 6.6s \\
+\texttt{ex} & 2.4s & 3.3s & 4.2s & 5.2s & 3.5s & 2.7s \\
+\texttt{flag_non_ser} & 7.1s & 3.4s & 8.7s & 8.8s & 8.2s & 3.1s \\
+\texttt{flag_non_ser_turned_ser} & 1.9s & 2.8s & 2.9s & 3.8s & 2.6s & 2.5s \\
+\texttt{fred_arith_tricky} & 8.4s & -- & -- & -- & -- & 8.1s \\
+\texttt{fred_arith_tricky2} & 3.7s & 6.1s & 6.6s & 7.7s & 7.2s & 4.8s \\
+\texttt{fred_arith_tricky3} & 5.2s & -- & -- & -- & -- & 9.5s \\
+\texttt{funny} & 2.7s & 3.1s & 2.6s & 4.1s & 2.7s & 2.7s \\
+\texttt{if_while_with_req} & 2.6s & 2.2s & 2.0s & 2.9s & 2.1s & 1.7s \\
+\texttt{nested_while} & 2.0s & 2.4s & 2.5s & 2.6s & 2.4s & 1.8s \\
+\texttt{nondet} & 5.1s & 5.4s & 9.6s & -- & 9.1s & 3.7s \\
+\texttt{nondet2} & 4.7s & 7.6s & 8.0s & 8.3s & 7.2s & 6.8s \\
+\texttt{nondet_impl} & 2.9s & 4.6s & 4.8s & 5.5s & 5.1s & 3.0s \\
+\texttt{self_loop} & 2.0s & 2.4s & 2.4s & 3.2s & 3.1s & 2.3s \\
+\texttt{self_loop2} & 3.5s & 6.6s & 6.9s & 6.4s & 6.4s & 5.7s \\
+\texttt{simple_nonser} & 3.0s & 4.2s & 4.7s & 4.0s & 4.1s & 4.1s \\
+\texttt{simple_nonser2} & 2.9s & 3.7s & 4.0s & 3.4s & 3.6s & 3.9s \\
+\texttt{simple_nonser2_minus_yields_is_ser} & 2.4s & 3.1s & 3.6s & 2.7s & 2.4s & 3.5s \\
+\texttt{simple_nonser2_turned_ser_with_locks} & 2.9s & 4.5s & 4.5s & 4.1s & 3.7s & 4.2s \\
+\texttt{simple_nonser3} & 2.6s & 3.8s & 4.3s & 3.6s & 3.1s & 3.7s \\
+\texttt{stop} & 8.8s & -- & -- & -- & -- & 9.5s \\
+\texttt{stop3} & 5.4s & 7.2s & 8.2s & 7.4s & 7.2s & 5.4s \\
+\bottomrule
+\end{tabular}
+
+% B = Bidirectional Pruning, R = Remove Redundant, G = Generate Less, S = Smart Kleene Order

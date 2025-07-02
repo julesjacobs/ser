@@ -349,6 +349,9 @@ where
 {
     // Get debug logger from global state
     let debug_logger = crate::reachability::get_debug_logger();
+    
+    // Record SMPT call
+    crate::stats::increment_smpt_calls();
 
     // Check cache if enabled
     if is_cache_enabled() {
@@ -932,6 +935,7 @@ where
     } else {
         // Check for timeout patterns
         let error_msg = if output.status.code() == Some(1) && stdout.trim() == "# Hello" {
+            crate::stats::increment_smpt_timeouts();
             format!(
                 "SMPT timeout: Analysis timed out after {}s. Try increasing timeout or enabling optimizations.",
                 timeout_seconds.unwrap_or(get_smpt_timeout())
@@ -940,6 +944,7 @@ where
             && stdout.contains("# Bye bye")
             && !stdout.contains("FORMULA")
         {
+            crate::stats::increment_smpt_timeouts();
             format!(
                 "SMPT timeout: Analysis timed out after {}s (completed startup but no results). Try increasing timeout or enabling optimizations.",
                 timeout_seconds.unwrap_or(get_smpt_timeout())
