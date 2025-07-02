@@ -321,7 +321,7 @@ impl<T: fmt::Display + Eq + Hash> fmt::Display for Constraint<T> {
 }
 
 /// Normalized formula (no Not or Implies)
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Formula<T: Eq + Hash> {
     Constraint(Constraint<T>),
     And(Vec<Formula<T>>),

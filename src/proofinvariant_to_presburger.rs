@@ -4,6 +4,28 @@ use crate::proof_parser::{Constraint as ProofConstraint, Formula, ProofInvariant
 use either::Either;
 use std::fmt::Display;
 use std::hash::Hash;
+use std::cell::RefCell;
+use std::collections::HashMap;
+
+// Thread-local cache for formula_to_presburger
+// Key is a string representation of (formula, mapping)
+thread_local! {
+    static FORMULA_CACHE: RefCell<HashMap<String, PresburgerSet<String>>> = RefCell::new(HashMap::new());
+}
+
+/// Clear the formula_to_presburger cache
+pub fn clear_formula_cache() {
+    FORMULA_CACHE.with(|cache| {
+        cache.borrow_mut().clear();
+    });
+}
+
+/// Get the current size of the formula_to_presburger cache
+pub fn formula_cache_size() -> usize {
+    FORMULA_CACHE.with(|cache| {
+        cache.borrow().len()
+    })
+}
 
 /// Convert a single affine constraint to a PresburgerSet
 /// Note: This only works when T is String since that's what the proof parser uses
@@ -23,6 +45,34 @@ pub fn from_affine_constraint(
 
 /// Convert a Formula to PresburgerSet
 pub fn formula_to_presburger(
+    formula: &Formula<String>,
+    mapping: &[String],
+) -> PresburgerSet<String> {
+    // Create a cache key from the formula and mapping
+    let cache_key = format!("{:?}|{:?}", formula, mapping);
+    
+    // Check if we have a cached result
+    let cached_result = FORMULA_CACHE.with(|cache| {
+        cache.borrow().get(&cache_key).cloned()
+    });
+    
+    if let Some(result) = cached_result {
+        return result;
+    }
+    
+    // Compute the result
+    let result = formula_to_presburger_impl(formula, mapping);
+    
+    // Store in cache
+    FORMULA_CACHE.with(|cache| {
+        cache.borrow_mut().insert(cache_key, result.clone());
+    });
+    
+    result
+}
+
+/// Internal implementation of formula_to_presburger (not memoized)
+fn formula_to_presburger_impl(
     formula: &Formula<String>,
     mapping: &[String],
 ) -> PresburgerSet<String> {
