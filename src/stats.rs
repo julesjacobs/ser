@@ -247,7 +247,7 @@ fn append_stats_to_file(stats: &SerializabilityStats) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open("serializability_stats.jsonl")?;
+        .open("serializability_stats.json")?;
     
     let json = serde_json::to_string(stats)?;
     writeln!(file, "{}", json)?;
