@@ -13,7 +13,6 @@ use either::*;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
-use std::path::Path;
 
 use crate::kleene::{Kleene, Regex, nfa_to_kleene};
 use crate::semilinear::*;
@@ -597,241 +596,95 @@ where
 {
     /// Check if the network system is serializable using both methods and report results
     #[must_use]
-    pub fn is_serializable(&self, out_dir: &str) -> bool {
-        use crate::ns_to_petri::*;
-        use ReqPetriState::*;
-
-        // Initialize debug logger
-        let program_name = std::path::Path::new(out_dir)
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("unknown")
-            .to_string();
-
-        crate::reachability::init_debug_logger(
-            program_name.clone(),
-            format!("Network System: {:?}", self),
-        );
-        let start_time = std::time::Instant::now();
-
-        // Initialize and get reference to debug logger for ns-level logging
-        let debug_logger = crate::reachability::get_debug_logger();
-        debug_logger.step(
-            "Initialization",
-            "Starting serializability analysis",
-            &format!("Program: {}\nOutput directory: {}", program_name, out_dir),
-        );
-
-        let mut places_that_must_be_zero = HashSet::default();
-        let petri = ns_to_petri_with_requests(self).rename(|st| match st {
-            Response(_, _) => Right(st),
-            Global(_) => Left(st),
-            Local(_, _) | Request(_) => {
-                places_that_must_be_zero.insert(st.clone());
-                Left(st)
-            }
-        });
-        let places_that_must_be_zero: Vec<_> = places_that_must_be_zero.into_iter().collect();
-
-        debug_logger.log_petri_net(
-            "Original Petri Net",
-            "Petri net converted from Network System",
-            &petri,
-        );
-        debug_logger.step(
-            "Places to Zero",
-            "Places that must be zero for serializability",
-            &format!(
-                "Places: [{}]",
-                places_that_must_be_zero
-                    .iter()
-                    .map(|p| p.to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
-        );
-
-        let ser: SemilinearSet<_> = self.serialized_automaton_kleene(|req, resp| {
-            SemilinearSet::singleton(SparseVector::unit(Response(req, resp)))
-        });
-
-        debug_logger.log_semilinear_set(
-            "Serialized Automaton",
-            "Expected serializable behavior as semilinear set",
-            &ser,
-        );
-
-        // Also print to console for debugging
-        println!("\nSerialized automaton semilinear set:");
-        println!("{}", ser);
-
-        // make csv in the <out/benchmark> directory
-        debug_logger.log_semilinear_set_for_optimization_comparison(
-            program_name.clone(),
-            "Serialized Automaton",
-            "Expected serializable behavior as semilinear set",
-            &ser,
-            Path::new(out_dir),
-        );
-
-        // keep track for optimization experiment
-        debug_logger.log_semilinear_set_for_optimization_comparison(
-            program_name,
-            "Serialized Automaton",
-            "Expected serializable behavior as semilinear set",
-            &ser,
-            Path::new("optimization_experiments/semilinear_size"),
-        );
-
-        // clone here so we can still use it below
-        let petri_for_trace = petri.clone();
-
-        // Call original version
-        let result_original =
-            crate::reachability::is_petri_reachability_set_subset_of_semilinear_new(
-                petri.clone(),
-                &places_that_must_be_zero,
-                ser.clone(),
-                out_dir,
-            );
-
-        // Call new proof-based version
-        let result_with_proofs =
-            crate::reachability_with_proofs::is_petri_reachability_set_subset_of_semilinear_new(
-                petri.clone(),
-                &places_that_must_be_zero,
-                ser.clone(),
-                out_dir,
-            );
-
-        let total_time = start_time.elapsed().as_millis() as u64;
-        let result_original_str = if result_original {
-            "Serializable"
-        } else {
-            "Not serializable"
-        };
-        // Determine the proof-based result based on Decision variant
-        let (result_proofs_bool, result_proofs_str) = match &result_with_proofs {
-            crate::reachability_with_proofs::Decision::Proof { .. } => (true, "Serializable"),
-            crate::reachability_with_proofs::Decision::CounterExample { .. } => {
-                (false, "Not serializable")
+    pub fn is_serializable(&self, out_dir: &str) -> bool 
+    where
+        G: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
+        L: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
+        Req: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
+        Resp: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
+    {
+        // Create certificate
+        let decision = self.create_certificate(out_dir);
+        
+        // Save certificate to standard location
+        let cert_path = format!("{}/certificate.json", out_dir);
+        if let Err(err) = decision.save_to_file(&cert_path) {
+            eprintln!("Warning: Failed to save certificate: {}", err);
+            // Continue with the in-memory decision
+        }
+        
+        // Load certificate from file
+        let loaded_decision = match crate::ns_decision::NSDecision::load_from_file(&cert_path) {
+            Ok(d) => d,
+            Err(err) => {
+                eprintln!("Warning: Failed to load certificate: {}. Using in-memory decision.", err);
+                decision
             }
         };
-
-        // Report results
-        println!("Serializability check results:");
-        println!(
-            "  Original method: {}",
-            if result_original {
-                "Serializable"
-            } else {
-                "Not serializable"
-            }
-        );
-        println!(
-            "  Proof-based method: {} ({})",
-            match &result_with_proofs {
-                crate::reachability_with_proofs::Decision::Proof { .. } => "Proof",
-                crate::reachability_with_proofs::Decision::CounterExample { .. } =>
-                    "CounterExample",
-            },
-            result_proofs_str
-        );
-
-        // Print proof or counterexample details with color
+        
+        // Verify and return result
+        let result = self.verify_ns_decision(&loaded_decision);
+        
+        // Print result with consistent formatting
         println!();
-
-        // ANSI color codes
-        const CYAN: &str = "\x1b[36m";
-        const GREEN: &str = "\x1b[32m";
-        const RED: &str = "\x1b[31m";
-        const YELLOW: &str = "\x1b[33m";
-        const BOLD: &str = "\x1b[1m";
-        const RESET: &str = "\x1b[0m";
-
-        println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
-        println!("{}{}PROOF/COUNTEREXAMPLE DETAILS:{}", BOLD, CYAN, RESET);
-        println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
-
-        // Convert Petri decision to NS decision
-        let ns_decision =
-            crate::ns_decision::petri_decision_to_ns(result_with_proofs.clone(), self);
-
-        match ns_decision {
+        println!(
+            "{}",
+            "────────────────────────────────────────────────────────────".bright_black()
+        );
+        println!(
+            "{} {}",
+            "🔍".yellow(),
+            "SERIALIZABILITY ANALYSIS".yellow().bold()
+        );
+        println!(
+            "{}",
+            "────────────────────────────────────────────────────────────".bright_black()
+        );
+        
+        // Print the semilinear set for compatibility
+        println!();
+        println!("Serialized automaton semilinear set:");
+        println!("{}", self.serialized_automaton_semilinear());
+        
+        // Print decision details
+        match &loaded_decision {
             crate::ns_decision::NSDecision::Serializable { invariant } => {
-                println!("{}{}✅ PROOF CERTIFICATE FOUND{}", BOLD, GREEN, RESET);
-
-                // Pretty print NS-level invariants with verification
+                println!();
+                println!("✅ PROOF CERTIFICATE FOUND");
                 println!();
                 invariant.pretty_print_with_verification(self);
-
-                // Also show original Petri net proof for debugging if available
-                if let crate::reachability_with_proofs::Decision::Proof { proof: Some(p) } =
-                    &result_with_proofs
-                {
-                    println!();
-                    println!("{}Original Petri net proof:{}", YELLOW, RESET);
-                    println!(
-                        "{}   Number of variables: {}{}",
-                        YELLOW,
-                        p.variables.len(),
-                        RESET
-                    );
-                    println!("{}   Proof invariant:{}", YELLOW, RESET);
-                    let vars_str = p
-                        .variables
-                        .iter()
-                        .map(|v| format!("{}", v))
-                        .collect::<Vec<_>>()
-                        .join(", ");
-                    println!("      ({}) ↦ {}", vars_str, p.formula);
-
-                    // Also print all places in the Petri net for comparison
-                    println!("{}   All Petri net places:{}", YELLOW, RESET);
-                    let all_places = petri_for_trace.get_places();
-                    for place in &all_places {
-                        println!("      - {}", place);
-                    }
-                }
             }
             crate::ns_decision::NSDecision::NotSerializable { trace } => {
-                println!("{}{}❌ COUNTEREXAMPLE TRACE FOUND{}", BOLD, RED, RESET);
                 println!();
-
-                // Pretty print NS-level trace
+                println!("❌ COUNTEREXAMPLE TRACE FOUND");
+                println!();
                 trace.pretty_print(self);
-
-                // Also show original Petri net trace for debugging
-                if let crate::reachability_with_proofs::Decision::CounterExample {
-                    trace: petri_trace,
-                } = &result_with_proofs
-                {
-                    println!();
-                    println!("{}Original Petri net trace:{}", YELLOW, RESET);
-                    print_counterexample_trace(&petri_for_trace, petri_trace);
-                }
             }
         }
-        println!("{}{}{}{}", BOLD, CYAN, "=".repeat(80), RESET);
+        
         println!();
-
-        // Verify consistency
-        if result_original != result_proofs_bool {
-            eprintln!("WARNING: Results differ between original and proof-based methods!");
-            eprintln!("  Original: {}", result_original);
-            eprintln!("  Proof-based: {}", result_proofs_bool);
-        } else {
-            println!("✓ Both methods agree on the result");
-        }
-
-        // Finalize debug report
-        if let Err(e) = debug_logger.finalize(result_original_str.to_string(), total_time, out_dir)
-        {
-            eprintln!("Warning: Failed to generate debug report: {}", e);
-        }
-
-        // Return the original result as the primary result
-        result_original
+        println!(
+            "{}",
+            "════════════════════════════════════════════════════════════".bright_black()
+        );
+        println!(
+            "{} {}",
+            if result { "✅" } else { "❌" },
+            format!(
+                "RESULT: {}",
+                if result {
+                    "SERIALIZABLE".green().bold()
+                } else {
+                    "NOT SERIALIZABLE".red().bold()
+                }
+            )
+        );
+        println!(
+            "{}",
+            "════════════════════════════════════════════════════════════".bright_black()
+        );
+        
+        result
     }
 
     /// Create a serializability certificate (NSDecision) without full visualization
@@ -885,6 +738,34 @@ where
 
         // Convert Petri decision to NS decision
         crate::ns_decision::petri_decision_to_ns(result_with_proofs, self)
+    }
+
+    /// Verify an NSDecision against this Network System
+    /// Returns true if the system is serializable based on the decision
+    pub fn verify_ns_decision(&self, decision: &crate::ns_decision::NSDecision<G, L, Req, Resp>) -> bool
+    where
+        G: Clone + Ord + Hash + Display + std::fmt::Debug,
+        L: Clone + Ord + Hash + Display + std::fmt::Debug,
+        Req: Clone + Ord + Hash + Display + std::fmt::Debug,
+        Resp: Clone + Ord + Hash + Display + std::fmt::Debug,
+    {
+        match decision {
+            crate::ns_decision::NSDecision::Serializable { invariant } => {
+                // If we have a valid proof, the system is serializable
+                invariant.check_proof(self).is_ok()
+            }
+            crate::ns_decision::NSDecision::NotSerializable { trace } => {
+                // If we have a valid counterexample trace, the system is NOT serializable
+                // So we return false (not serializable)
+                if self.check_trace(trace).is_ok() {
+                    false // Valid counterexample means not serializable
+                } else {
+                    // Invalid trace - this shouldn't happen, but we can't conclude serializability
+                    eprintln!("Warning: Invalid counterexample trace found in certificate");
+                    false
+                }
+            }
+        }
     }
 }
 

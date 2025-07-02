@@ -82,16 +82,27 @@ def run_single_analysis(file_path, timeout_arg, extra_flags, use_cache=False):
     trace_valid = None
     proof_valid = None
     if result.returncode == 0:
-        if 'Original method: Serializable' in out:
+        # Check for the new output format
+        if '✅ RESULT: SERIALIZABLE' in out:
             orig = 'Serializable'
-        elif 'Original method: Not serializable' in out:
-            orig = 'Not serializable'
-        if 'Proof-based method: Proof' in out:
             proof = 'Serializable'
-            proof_valid = '✅ Proof certificate is VALID' in out
-        elif 'Proof-based method: CounterExample' in out:
+            # Check for proof certificate validity
+            if '✅ Proof certificate is VALID' in out:
+                proof_valid = True
+            elif '❌ Proof certificate is INVALID' in out:
+                proof_valid = False
+            elif '✅ PROOF CERTIFICATE FOUND' in out:
+                proof_valid = True
+        elif '❌ RESULT: NOT SERIALIZABLE' in out:
+            orig = 'Not serializable'
             proof = 'Not serializable'
-            trace_valid = '✅ Trace is valid!' in out
+            # Check for trace validity
+            if '✅ Trace is valid!' in out:
+                trace_valid = True
+            elif '❌ Trace is INVALID!' in out:
+                trace_valid = False
+            elif '❌ COUNTEREXAMPLE TRACE FOUND' in out:
+                trace_valid = True
     else:
         if timeout_flag:
             orig = proof = 'SMPT Timeout'
@@ -196,25 +207,29 @@ def main():
         f.write(f"# Serializability Analysis Report\n"
                 f"Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
                 f"Extras: {extras}\n\n")
-        f.write("|Example|Orig|Proof|CPU(s)|Trace|Proof Cert|\n|--|--|--|--|--|--|\n")
+        f.write("|Example|Result|CPU(s)|Valid?|\n|--|--|--|--|\n")
         for r in results:
-            t = 'N/A' if r['trace_valid'] is None else ('✅' if r['trace_valid'] else '❌')
-            p = 'N/A' if r['proof_verification'] is None else ('✅' if r['proof_verification'] else '❌')
+            # Determine validation status
+            if r['original_result'] == 'Serializable':
+                valid = 'N/A' if r['proof_verification'] is None else ('✅' if r['proof_verification'] else '❌')
+            elif r['original_result'] == 'Not serializable':
+                valid = 'N/A' if r['trace_valid'] is None else ('✅' if r['trace_valid'] else '❌')
+            else:
+                valid = 'N/A'
             # wrap filename in backticks for nicer Markdown
-            f.write(f"| `{r['filename']}` |{r['original_result']}|{r['proof_result']}|"
-                    f"{r['duration']}|{t}|{p}|\n")
+            f.write(f"| `{r['filename']}` |{r['original_result']}|{r['duration']}|{valid}|\n")
 
         # summary counts
         s_cnt = sum(r['original_result'] == 'Serializable' and r['proof_result'] == 'Serializable'
                     for r in results)
-        vp = sum(r['proof_verification']
+        vp = sum(r['proof_verification'] == True
                  for r in results
                  if r['original_result'] == 'Serializable'
                  and r['proof_result'] == 'Serializable')
         ip = s_cnt - vp
         ns_cnt = sum(r['original_result'] == 'Not serializable' and r['proof_result'] == 'Not serializable'
                      for r in results)
-        vt = sum(r['trace_valid']
+        vt = sum(r['trace_valid'] == True
                  for r in results
                  if r['original_result'] == 'Not serializable'
                  and r['proof_result'] == 'Not serializable')

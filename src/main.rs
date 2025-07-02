@@ -296,10 +296,10 @@ fn main() {
 // Process a Network System: generate visualizations for NS, Petri net, and Petri net with requests
 fn process_ns<G, L, Req, Resp>(ns: &NS<G, L, Req, Resp>, out_dir: &str, open_files: bool)
 where
-    G: Clone + Ord + Hash + Display + std::fmt::Debug,
-    L: Clone + Ord + Hash + Display + std::fmt::Debug,
-    Req: Clone + Ord + Hash + Display + std::fmt::Debug,
-    Resp: Clone + Ord + Hash + Display + std::fmt::Debug,
+    G: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
+    L: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
+    Req: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
+    Resp: Clone + Ord + Hash + Display + std::fmt::Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
 {
     // Clear the output directory if it exists
     if Path::new(out_dir).exists() {
