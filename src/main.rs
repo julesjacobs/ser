@@ -472,46 +472,8 @@ where
 
     // Check serializability
     println!();
-    println!(
-        "{}",
-        "────────────────────────────────────────────────────────────".bright_black()
-    );
-    println!(
-        "{} {}",
-        "🔍".yellow(),
-        "SERIALIZABILITY ANALYSIS".yellow().bold()
-    );
-    println!(
-        "{}",
-        "────────────────────────────────────────────────────────────".bright_black()
-    );
-
-    // Print the semilinear set before analysis
-    println!();
-    println!("Serialized automaton semilinear set:");
-    println!("{}", ns.serialized_automaton_semilinear());
-    let serializable = ns.is_serializable(out_dir);
-    println!();
-    println!(
-        "{}",
-        "════════════════════════════════════════════════════════════".bright_black()
-    );
-    println!(
-        "{} {}",
-        if serializable { "✅" } else { "❌" },
-        format!(
-            "RESULT: {}",
-            if serializable {
-                "SERIALIZABLE".green().bold()
-            } else {
-                "NOT SERIALIZABLE".red().bold()
-            }
-        )
-    );
-    println!(
-        "{}",
-        "════════════════════════════════════════════════════════════".bright_black()
-    );
+    // Run serializability analysis (this prints all results internally)
+    let _ = ns.is_serializable(out_dir);
 }
 
 fn process_json_file(file_path: &str, open_files: bool) {
