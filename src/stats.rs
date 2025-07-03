@@ -244,10 +244,13 @@ impl StatsCollector {
 }
 
 fn append_stats_to_file(stats: &SerializabilityStats) -> std::io::Result<()> {
+    // Ensure out directory exists
+    std::fs::create_dir_all("out")?;
+    
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open("serializability_stats.jsonl")?;
+        .open("out/serializability_stats.jsonl")?;
     
     let json = serde_json::to_string(stats)?;
     writeln!(file, "{}", json)?;
