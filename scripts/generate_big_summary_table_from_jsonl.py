@@ -188,8 +188,6 @@ def generate_table(summary, out_path):
         # footer
         tex.write(r"""\bottomrule
 	\end{tabular*}
-	\caption{Overview of benchmarks with combined categories and updated serializability markings.}
-	\label{tab:benchmarks-all}
 \end{table}
 """)
     print(f"Wrote LaTeX table to {out_path}")
