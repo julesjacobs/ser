@@ -8,6 +8,10 @@ INPUT_JSONL = "out/serializability_stats.jsonl"
 SUMMARY_CSV = "out/jsonl_summarizing_table.csv"
 OUTPUT_TEX = "tex/tables/big_table_summary.tex"
 
+# timeout threshold
+TIMEOUT_IN_SECOND = 300
+TIMEOUT_MS = 1000 * TIMEOUT_IN_SECOND
+
 # map CSV result → LaTeX symbol
 SYMBOLS = {
     "serializable": r"\greencmark",
@@ -85,15 +89,20 @@ def summarize_jsonl_to_csv(input_path, output_path):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(input_path) as jf, open(output_path, "w", newline="") as cf:
         writer = csv.writer(cf)
-        writer.writerow(["benchmark","result","certificate running time","total running time"])
+        writer.writerow([
+            "benchmark",
+            "result",
+            "certificate running time",
+            "total running time"
+        ])
         for line in jf:
             if not line.strip():
                 continue
             rec = json.loads(line)
-            bm = os.path.basename(rec.get("example",""))
-            res = rec.get("result","")
-            cert = rec.get("certificate_creation_time_ms","")
-            total = rec.get("total_time_ms","")
+            bm = os.path.basename(rec.get("example", ""))
+            res = rec.get("result", "")
+            cert = rec.get("certificate_creation_time_ms", "")
+            total = rec.get("total_time_ms", "")
             writer.writerow([bm, res, cert, total])
     print(f"Wrote CSV summary to {output_path}")
 
@@ -104,13 +113,13 @@ def load_summary(csv_path):
         reader = csv.DictReader(cf)
         for row in reader:
             res = row["result"]
-            cert = row["certificate running time"] if res!="timeout" else ""
-            total = row["total running time"]     if res!="timeout" else ""
+            cert = row["certificate running time"]
+            total = row["total running time"]
             summary[row["benchmark"]] = (res, cert, total)
     return summary
 
 def generate_table(summary, out_path):
-    """Write the LaTeX table using summary data."""
+    """Write the LaTeX table using summary data and timeout logic."""
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w") as tex:
         # header
@@ -143,16 +152,29 @@ def generate_table(summary, out_path):
         for cat, benches in CATEGORIES:
             tex.write(f"\t\t\\multirow{{{len(benches)}}}{{=}}{{{cat}}}")
             for i, bm in enumerate(benches):
-                res, cert, total = summary.get(bm, ("","", ""))
+                res, cert, total = summary.get(bm, ("", "", ""))
                 sym = SYMBOLS.get(res, "")
                 feats = FEATURES_COLS[bm]
-                # each row: (first has multirow already), others start with &
-                prefix = "" if i==0 else "\t\t"
-                tex.write(f"{prefix} & \\texttt{{{bm}}} & {sym} {feats} & {cert} & {total} \\\\\n")
-           #  only separate categories, not before bottomrule
+
+                # timeout overrides
+                if res == "timeout":
+                    cert_disp = r"\texttt{T.O.}"
+                    total_disp = r"\texttt{T.O.}"
+                else:
+                    cert_disp = cert
+                    try:
+                        total_ms = int(total)
+                    except ValueError:
+                        total_ms = 0
+                    if total_ms >= TIMEOUT_MS:
+                        total_disp = r"\texttt{T.O.}"
+                    else:
+                        total_disp = total
+
+                prefix = "" if i == 0 else "\t\t"
+                tex.write(f"{prefix} & \\texttt{{{bm}}} & {sym} {feats} & {cert_disp} & {total_disp} \\\\\n")
             tex.write("\t\t\\midrule\n")
         # footer
-        # footer: use \bottomrule (no stray \t) and no extra midrule above
         tex.write(r"""\bottomrule
 	\end{tabular*}
 	\caption{Overview of benchmarks with combined categories and updated serializability markings.}
