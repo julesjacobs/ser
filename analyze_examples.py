@@ -75,7 +75,7 @@ def run_single_analysis(file_path, timeout_arg, extra_flags, use_cache=False):
         cpu = time.time() - start
 
     out = result.stdout + result.stderr
-    timeout_flag = 'SMPT timeout:' in out or 'Analysis timed out' in out or '⏱️ RESULT: TIMEOUT' in out
+    timeout_flag = 'SMPT timeout:' in out or 'Analysis timed out' in out or '⏱️ RESULT: TIMEOUT' in out or 'Number of components in semilinear set is too large' in out
 
     orig = 'Unknown'
     proof = 'Unknown'
