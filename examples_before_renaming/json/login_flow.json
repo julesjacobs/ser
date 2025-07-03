@@ -1,0 +1,45 @@
+{
+  "initial_global": "NoSession",
+  "requests": [
+    [
+      "Login",
+      "Start"
+    ],
+    [
+      "Query",
+      "LoggedIn"
+    ],
+    [
+      "Logout",
+      "LoggedIn"
+    ]
+  ],
+  "responses": [
+    [
+      "Start",
+      "Welcome"
+    ],
+    [
+      "LoggedIn",
+      "QueryResult"
+    ],
+    [
+      "Start",
+      "GoodBye"
+    ]
+  ],
+  "transitions": [
+    [
+      "Start",
+      "NoSession",
+      "LoggedIn",
+      "ActiveSession"
+    ],
+    [
+      "LoggedIn",
+      "ActiveSession",
+      "Start",
+      "NoSession"
+    ]
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "initial_global": "Empty",
+  "requests": [
+    [
+      "GetData",
+      "Waiting"
+    ],
+    [
+      "SaveData",
+      "Ready"
+    ]
+  ],
+  "responses": [
+    [
+      "DataReceived",
+      "Success"
+    ],
+    [
+      "Ready",
+      "Acknowledge"
+    ]
+  ],
+  "transitions": [
+    [
+      "Waiting",
+      "Empty",
+      "DataReceived",
+      "HasData"
+    ],
+    [
+      "DataReceived",
+      "HasData",
+      "Ready",
+      "Empty"
+    ]
+  ]
+}
