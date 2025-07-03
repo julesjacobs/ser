@@ -585,10 +585,12 @@ impl<K: Eq + Hash + Clone + Ord> Kleene for SemilinearSet<K> {
         let mut result_components = Vec::new();
         // We use bit masks to iterate over all non-empty subsets of components
         let n = components.len();
-        assert!(
-            n <= 30,
-            "Number of components in semilinear set is too large"
-        );
+        if n > 30 {
+            // Log this as a timeout before panicking
+            crate::stats::set_analysis_result("timeout");
+            crate::stats::finalize_stats();
+            panic!("Number of components in semilinear set is too large");
+        }
         for mask in 0..(1 << n) {
             // Determine subset X for this mask
             let mut subset_base = SparseVector {
