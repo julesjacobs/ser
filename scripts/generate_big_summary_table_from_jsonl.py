@@ -149,9 +149,11 @@ def generate_table(summary, out_path):
                 # each row: (first has multirow already), others start with &
                 prefix = "" if i==0 else "\t\t"
                 tex.write(f"{prefix} & \\texttt{{{bm}}} & {sym} {feats} & {cert} & {total} \\\\\n")
+           #  only separate categories, not before bottomrule
             tex.write("\t\t\\midrule\n")
         # footer
-        tex.write(r"""\t\bottomrule
+        # footer: use \bottomrule (no stray \t) and no extra midrule above
+        tex.write(r"""\bottomrule
 	\end{tabular*}
 	\caption{Overview of benchmarks with combined categories and updated serializability markings.}
 	\label{tab:benchmarks-all}
