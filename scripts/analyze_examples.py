@@ -267,8 +267,8 @@ def main():
     else:
         # Default behavior - analyze examples directory
         files = sorted(
-            list(Path('../examples/ser').glob('*.ser')) +
-            list(Path('../examples/json').glob('*.json'))
+            list(Path('examples/ser').glob('*.ser')) +
+            list(Path('examples/json').glob('*.json'))
         )
     
     # Check for conflicting options
