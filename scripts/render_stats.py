@@ -384,23 +384,27 @@ def generate_cactus_plot(stats: List[Dict[str, Any]], output_dir: str) -> None:
                     color=colors[idx % len(colors)], marker='o', markersize=4, alpha=0.8)
     
     # Set up axes
-    ax.set_xlabel('Time (seconds)', fontsize=14)
-    ax.set_ylabel('Percentage of Examples Solved (%)', fontsize=14)
-    ax.set_title('Cactus Plot: Optimization Configuration Performance', fontsize=16, pad=20)
+    ax.set_xlabel('Time (seconds)', fontsize=20)
+    ax.set_ylabel('Examples Solved (%)', fontsize=20)
+    # ax.set_title('Cactus Plot: Optimization Configuration Performance', fontsize=16, pad=20)
     
     # Set x-axis to linear scale with dynamic upper limit
     ax.set_xlim(0, x_max)
     ax.set_ylim(0, 105)
-    
+
+
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
+
     # Add grid
     ax.grid(True, which='both', alpha=0.3)
     
     # Add legend
-    ax.legend(loc='lower right', title='Configuration', fontsize=10, title_fontsize=12)
+    ax.legend(loc='lower right', title='Configuration', fontsize=18, title_fontsize=16)
     
     # Add a note about the configuration labels
-    note_text = 'B=Bidirectional, R=Remove Redundant, G=Generate Less, S=Smart Kleene'
-    fig.text(0.5, 0.02, note_text, ha='center', fontsize=10, style='italic')
+    # note_text = 'B=Bidirectional, R=Remove Redundant, G=Generate Less, S=Smart Kleene'
+    # fig.text(0.5, 0.02, note_text, ha='center', fontsize=10, style='italic')
     
     # Tight layout with space for note
     plt.tight_layout()
@@ -460,7 +464,7 @@ def generate_summary_statistics(stats: List[Dict[str, Any]]) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Generate LaTeX tables from serializability statistics")
-    parser.add_argument('--input', default='out/serializability_stats.jsonl', help='Input JSONL file')
+    parser.add_argument('--input', default='../out/serializability_stats.jsonl', help='Input JSONL file')
     parser.add_argument('--output-dir', default='tex/tables/', help='Output directory for LaTeX tables')
     parser.add_argument('--skip-plot', action='store_true', help='Skip cactus plot generation')
     args = parser.parse_args()
