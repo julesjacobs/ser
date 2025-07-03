@@ -126,6 +126,7 @@ pub struct StatsCollector {
     start_time: Option<Instant>,
     certificate_creation_start: Option<Instant>,
     certificate_checking_start: Option<Instant>,
+    was_saved: bool,
 }
 
 impl StatsCollector {
@@ -135,6 +136,7 @@ impl StatsCollector {
             start_time: None,
             certificate_creation_start: None,
             certificate_checking_start: None,
+            was_saved: false,
         }
     }
 
@@ -232,6 +234,11 @@ impl StatsCollector {
     }
 
     pub fn finalize_and_save(&mut self) {
+        if self.was_saved {
+            return;
+        }
+        self.was_saved = true;
+
         if let (Some(start), Some(mut stats)) = (self.start_time.take(), self.current_stats.take()) {
             stats.total_time_ms = start.elapsed().as_millis() as u64;
             

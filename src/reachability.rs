@@ -506,6 +506,9 @@ where
                 );
                 eprintln!("Cannot determine serializability - analysis is inconclusive");
                 eprintln!("This could indicate a bug when --without-bidirectional is used");
+                // Log this as an error to the JSONL file before panicking
+                crate::stats::set_analysis_result("error");
+                crate::stats::finalize_stats();
                 panic!("SMPT verification failed: {}", message);
             }
         }

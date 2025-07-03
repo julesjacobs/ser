@@ -496,6 +496,7 @@ where
     println!();
     // Run serializability analysis (this prints all results internally)
     let _ = ns.is_serializable(out_dir);
+    stats::finalize_stats();
 }
 
 fn process_json_file(file_path: &str, open_files: bool) {

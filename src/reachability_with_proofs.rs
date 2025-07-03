@@ -651,6 +651,9 @@ where
                 eprintln!("CRITICAL ERROR: SMPT verification failed: {}", message);
                 eprintln!("Cannot determine serializability - analysis is inconclusive");
                 eprintln!("This could indicate a bug in the verification pipeline");
+                // Log this as an error to the JSONL file before panicking
+                crate::stats::set_analysis_result("error");
+                crate::stats::finalize_stats();
                 panic!("SMPT verification failed: {}", message);
             }
         }
