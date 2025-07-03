@@ -16,7 +16,7 @@ TIMEOUT_MS = 1000 * TIMEOUT_IN_SECOND
 SYMBOLS = {
     "serializable": r"\greencmark",
     "not_serializable": r"\xmark",
-    "timeout": "?"
+    "timeout": r"\textbf{?}"
 }
 
 # categories and their benchmarks (in order)
