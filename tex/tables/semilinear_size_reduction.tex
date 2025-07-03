@@ -1,0 +1,16 @@
+\begin{table}[H]
+	\centering
+	\begin{tabular}{l c c c c}
+		\toprule
+		& \multicolumn{2}{c}{num components} & \multicolumn{2}{c}{periods per component} \\
+		\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+		& mean & max & mean & max \\
+		\midrule
+	baseline (all ON) & 2.59 & 9 & 1.82 & 9 \\
+	no\_remove\_redundant & 6.44 & 81 & \textbf{2.59} & \textbf{34} \\
+	no\_generate\_less & \textbf{81.66} & \textbf{1{,}284} & 1.30 & 14 \\
+	no\_smart\_order & 2.71 & 9 & 1.85 & 9 \\
+  \bottomrule
+	\end{tabular}
+	\caption{Comparison of experiment runs with a 120-second timeout.}
+\end{table}
