@@ -4,12 +4,12 @@ import csv
 import os
 
 # Hard-coded paths
-INPUT_JSONL = "out/serializability_stats.jsonl"
-SUMMARY_CSV = "out/jsonl_summarizing_table.csv"
+INPUT_JSONL = "out/serializability_stats_1000s.jsonl"
+SUMMARY_CSV = "out/jsonl_summarizing_table_1000s.csv"
 OUTPUT_TEX = "tex/tables/big_table_summary.tex"
 
 # timeout threshold
-TIMEOUT_IN_SECOND = 300
+TIMEOUT_IN_SECOND = 1000
 TIMEOUT_MS = 1000 * TIMEOUT_IN_SECOND
 
 # map CSV result → LaTeX symbol
