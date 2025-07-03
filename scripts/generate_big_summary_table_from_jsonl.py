@@ -9,7 +9,7 @@ SUMMARY_CSV = "out/jsonl_summarizing_table.csv"
 OUTPUT_TEX = "tex/tables/big_table_summary.tex"
 
 # timeout threshold
-TIMEOUT_IN_SECOND = 1000
+TIMEOUT_IN_SECOND = 500
 TIMEOUT_MS = 1000 * TIMEOUT_IN_SECOND
 
 # map CSV result → LaTeX symbol
