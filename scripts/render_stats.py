@@ -464,7 +464,7 @@ def generate_summary_statistics(stats: List[Dict[str, Any]]) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Generate LaTeX tables from serializability statistics")
-    parser.add_argument('--input', default='../out/serializability_stats.jsonl', help='Input JSONL file')
+    parser.add_argument('--input', default='out/serializability_stats.jsonl', help='Input JSONL file')
     parser.add_argument('--output-dir', default='tex/tables/', help='Output directory for LaTeX tables')
     parser.add_argument('--skip-plot', action='store_true', help='Skip cactus plot generation')
     args = parser.parse_args()
