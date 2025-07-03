@@ -158,8 +158,8 @@ def generate_table(summary, out_path):
 
                 # timeout overrides
                 if res == "timeout":
-                    cert_disp = r"\texttt{T.O.}"
-                    total_disp = r"\texttt{T.O.}"
+                    cert_disp = r"\texttt{TIMEOUT}"
+                    total_disp = r"\texttt{TIMEOUT}"
                 else:
                     cert_disp = cert
                     try:
@@ -167,7 +167,7 @@ def generate_table(summary, out_path):
                     except ValueError:
                         total_ms = 0
                     if total_ms >= TIMEOUT_MS:
-                        total_disp = r"\texttt{T.O.}"
+                        total_disp = r"\texttt{TIMEOUT}"
                     else:
                         total_disp = total
 
