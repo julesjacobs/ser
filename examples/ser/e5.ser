@@ -1,18 +1,17 @@
 request foo {
-    b := 0;
-    y := 0;
-    while(y == 0 || y == 1 || y == 2 || y == 3) {
-        tmp := X;
-        yield;
-        if(tmp == X){ b := 1 }else{0}; // if we see X not changed, set b := 1
-        y := y + 1
-    };
-    b
+    while (X == 0) {
+		if (?) 
+		{
+		    X := 0;
+		    yield
+		} else 
+		{
+	     	    X := 1
+		}
+	};
+	X
 }
 
-request set0 { 
-    if(Q == 0){ X := 0; Q := 1 }else{0}  
-}
-request set1 { 
-    if(Q == 0){ X := 1; Q := 1 }else{0}  
-}
+
+
+
