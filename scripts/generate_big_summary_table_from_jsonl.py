@@ -19,6 +19,10 @@ SYMBOLS = {
     "timeout": r"\textbf{?}"
 }
 
+# when a timeout occurs, override based on these sets
+HARD_SERIALIZABLE = {"g2.ser"}
+HARD_NON_SERIALIZABLE = {"c1.ser", "e2.ser"}
+
 # categories and their benchmarks (in order)
 CATEGORIES = [
     ("Core expressions", ["a1.ser","a2.ser","a3.ser","a4.ser","a5.ser","a6.ser","a7.ser"]),
@@ -112,10 +116,11 @@ def load_summary(csv_path):
     with open(csv_path) as cf:
         reader = csv.DictReader(cf)
         for row in reader:
-            res = row["result"]
-            cert = row["certificate running time"]
-            total = row["total running time"]
-            summary[row["benchmark"]] = (res, cert, total)
+            summary[row["benchmark"]] = (
+                row["result"],
+                row["certificate running time"],
+                row["total running time"]
+            )
     return summary
 
 def generate_table(summary, out_path):
@@ -153,10 +158,18 @@ def generate_table(summary, out_path):
             tex.write(f"\t\t\\multirow{{{len(benches)}}}{{=}}{{{cat}}}")
             for i, bm in enumerate(benches):
                 res, cert, total = summary.get(bm, ("", "", ""))
-                sym = SYMBOLS.get(res, "")
-                feats = FEATURES_COLS[bm]
+                # pick symbol, with override on timeout
+                if res == "timeout":
+                    if bm in HARD_SERIALIZABLE:
+                        sym = SYMBOLS["serializable"]
+                    elif bm in HARD_NON_SERIALIZABLE:
+                        sym = SYMBOLS["not_serializable"]
+                    else:
+                        sym = SYMBOLS["timeout"]
+                else:
+                    sym = SYMBOLS.get(res, "")
 
-                # timeout overrides
+                # timing display
                 if res == "timeout":
                     cert_disp = r"\texttt{TIMEOUT}"
                     total_disp = r"\texttt{TIMEOUT}"
@@ -171,6 +184,7 @@ def generate_table(summary, out_path):
                     else:
                         total_disp = total
 
+                feats = FEATURES_COLS[bm]
                 prefix = "" if i == 0 else "\t\t"
                 tex.write(f"{prefix} & \\texttt{{{bm}}} & {sym} {feats} & {cert_disp} & {total_disp} \\\\\n")
             tex.write("\t\t\\midrule\n")
