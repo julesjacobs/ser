@@ -141,6 +141,7 @@ impl StatsCollector {
     }
 
     pub fn start_new_analysis(&mut self, example: String) {
+        self.was_saved = false;  // Reset for new analysis
         self.start_time = Some(Instant::now());
         self.current_stats = Some(SerializabilityStats {
             timestamp: Utc::now(),
