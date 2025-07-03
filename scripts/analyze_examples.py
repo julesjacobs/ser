@@ -172,7 +172,9 @@ def run_analysis(files, timeout, jobs, cache, extras, suffix=""):
     if nv_traces:
         print('❌ Non-validated traces for:', ', '.join(nv_traces))
 
-    out_md = f'serializability_report{suffix}.md'
+    # Ensure out directory exists
+    os.makedirs('out', exist_ok=True)
+    out_md = f'out/serializability_report{suffix}.md'
     with open(out_md, 'w') as f:
         f.write(f"# Serializability Analysis Report{' - ' + suffix.title() if suffix else ''}\n"
                 f"Generated: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
@@ -328,12 +330,12 @@ def main():
         
         print("\n✅ Full optimization study complete!")
         print("📋 Generated reports:")
-        print("  - serializability_report_no_optimizations.md")
-        print("  - serializability_report_all_optimizations.md")
-        print("  - serializability_report_only_bidirectional.md")
-        print("  - serializability_report_only_remove_redundant.md")
-        print("  - serializability_report_only_generate_less.md")
-        print("  - serializability_report_only_smart_kleene.md")
+        print("  - out/serializability_report_no_optimizations.md")
+        print("  - out/serializability_report_all_optimizations.md")
+        print("  - out/serializability_report_only_bidirectional.md")
+        print("  - out/serializability_report_only_remove_redundant.md")
+        print("  - out/serializability_report_only_generate_less.md")
+        print("  - out/serializability_report_only_smart_kleene.md")
         return
     
     # Handle optimization comparison mode

@@ -1,5 +1,0 @@
-net {simple-net-3}
-tr t1 P1 -> P2 
-tr t2 P2 -> P3 
-tr t3 P2 P3 -> P1 
-pl P1 (2)

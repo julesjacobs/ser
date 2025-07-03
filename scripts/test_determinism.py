@@ -19,7 +19,7 @@ def run_analysis(run_num, output_dir, timeout=10):
     print(f"Run {run_num}: Running analysis...")
     
     # Run the analysis
-    cmd = ["python3", "analyze_examples.py", "--timeout", str(timeout)]
+    cmd = ["python3", "scripts/analyze_examples.py", "--timeout", str(timeout)]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
@@ -30,7 +30,7 @@ def run_analysis(run_num, output_dir, timeout=10):
         return False
     
     # Copy the report to the output directory
-    src_report = "serializability_report.md"
+    src_report = "out/serializability_report.md"
     if os.path.exists(src_report):
         dst_report = os.path.join(output_dir, f"report_{run_num:03d}.md")
         shutil.copy2(src_report, dst_report)
