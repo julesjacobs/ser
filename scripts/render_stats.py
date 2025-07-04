@@ -388,8 +388,8 @@ def generate_cactus_plot(stats: List[Dict[str, Any]], output_dir: str) -> None:
                     color=colors[idx % len(colors)], marker='o', markersize=4, alpha=0.8)
 
     # Set up axes
-    ax.set_xlabel('Time (seconds)', fontsize=20)
-    ax.set_ylabel('Examples Solved (%)', fontsize=20)
+    ax.set_xlabel('Time (seconds)', fontsize=25)
+    ax.set_ylabel('Examples Solved (%)', fontsize=25)
     # ax.set_title('Cactus Plot: Optimization Configuration Performance', fontsize=16, pad=20)
 
     # Set x-axis to linear scale with dynamic upper limit
@@ -397,14 +397,14 @@ def generate_cactus_plot(stats: List[Dict[str, Any]], output_dir: str) -> None:
     ax.set_ylim(0, 105)
 
 
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
+    plt.xticks(fontsize=25)
+    plt.yticks(fontsize=25)
 
     # Add grid
     ax.grid(True, which='both', alpha=0.3)
 
     # Add legend
-    ax.legend(loc='lower right', title='Configuration', fontsize=18, title_fontsize=16)
+    ax.legend(loc='lower right', title='Configuration', fontsize=20, title_fontsize=20)
 
     # Add a note about the configuration labels
     # note_text = 'B=Bidirectional, R=Remove Redundant, G=Generate Less, S=Smart Kleene'
