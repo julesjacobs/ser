@@ -524,11 +524,42 @@ return y
 
 \todo{emphasize that there are states we didn't add}
 
-% Subsection: Non-Serializability Reachability Query (in LTL)
-\subsection{Non-Serializability Reachability Query (in LTL)}
+
+
+
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1.1\textwidth]{plots/code_2_NS.png}
+	\caption{Network System for interleaving executions of Listing~\ref{lst:MotivatingExample2NonSer} program.}
+	\label{fig:code2ExampleNS}
+\end{figure}
+
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{plots/code_2_NFA.png}
+	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample2NonSer} program.}
+	\label{fig:code2ExampleNFA}
+\end{figure}
+
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{plots/code_2_PN_with_annotation.png}
+	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample2NonSer} program. Note that there is no firing sequence that can reach the place representing a response of ``0'', i.e., the bottom right place.}
+	\label{fig:code2ExamplePN}
+\end{figure}
+
+
+
+
+\subsection{Non-Serializability Counterexample}
 \label{sec:ns-reach-query}
 
-We consider the following LTL reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN}:
+Regarding the aforementioned program, we automatically generate the following LTL reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if satisfiable, indicates the program is not serializable):
+
 \[
 \exists\,M.\; \textcolor{blue}{P2} \ge 0 \wedge \textcolor{blue}{P3} \ge 0 \wedge P1 = 0 \wedge P4 = 0
 \wedge P5 = 0 \wedge P6 = 0 \wedge \textcolor{red}{P7} = 0 \wedge \textcolor{red}{P8} \ge 1.
@@ -540,31 +571,7 @@ M^* = \{\textcolor{blue}{P3}(1),\;\textcolor{red}{P7}(1),\;\textcolor{red}{P8}(1
 is reachable.  Table~\ref{tab:reach-seq} lists a firing sequence that leads to $M^*$.{\color{red}$\blacklozenge_1$}
 
 
-%
-%\begin{table}[ht]
-%	\centering
-%	\caption{Firing sequence reaching the target marking $M^*$}
-%	\label{tab:reach-seq}
-%	\begin{tabular}{c l c c c l}
-%		\toprule
-%		\textbf{Step} & \textbf{Firing} & \multicolumn{3}{c}{\textbf{Marking after firing}} & \textbf{Description} \\
-%		\cmidrule(lr){3-5}
-%		& & \textbf{Global} & \textbf{Local} & \textbf{Responses} & \\
-%		\midrule
-%		0 & --                             & {\color{blue}P3(1)}               & --                      &                                         &  no requests; \color{blue}{[X=0]}\\
-%		1 & t1{\color{ForestGreen}$\blacklozenge$} & {\color{blue}P3(1)}                               & P1(1)                   & --                                        & first request {\color{ForestGreen}$\blacklozenge$};\color{blue}{[X=0]} \\
-%		2 & t1{\color{ForestGreen}$\blacklozenge$} & {\color{blue}P3(1)}                               & P1(2)                   & --                                        & second request {\color{ForestGreen}$\blacklozenge$}; \color{blue}{[X=0]} \\
-%		3 & t3                                      & {\color{blue}P2(1)} & P1(1),P4(1)            &                                         &  \\
-%		4 & t2                                      & {\color{blue}P2(1)} & P4(2)                  & --                                        &  \\
-%		5 & t4                                      & {\color{blue}P3(1)}               & P5(1),P4(1)            & --                                        &  \\
-%		6 & t6                         & {\color{blue}P3(1)}               & P4(1)                   & {\color{red}P7(1)}                        &  \\
-%		7 & t5                                      & {\color{blue}P3(1)}               & P6(1)                   & {\color{red}P7(1)}                        &  \\
-%		8 & t7                         & {\color{blue}P3(1)}                             & --                      & {\color{red}P7(1),\color{red}P8(1)}        &  \\
-%		\bottomrule
-%	\end{tabular}
-%\end{table}
-%
-%
+
 
 
 \begin{table}[ht]
@@ -611,28 +618,28 @@ is reachable.  Table~\ref{tab:reach-seq} lists a firing sequence that leads to $
 		& {\color{blue}P2(1)}                  
 		& P1(1),P4(1)                          
 		& --                                   
-	&                                    {\color{blue}[X=1]}    
+		&                                    {\color{blue}[X=1]}    
 		&                                    {\color{black}$\blacklozenge_\text{until yield}$}, {\color{ForestGreen}$\blacklozenge_\text{main}$}   
 		& --                                    \\
 		4 & t2                                  
 		& {\color{blue}P2(1)}                  
 		& P4(2)                                
 		& --                                    
-	&                                    {\color{blue}[X=1]}    
+		&                                    {\color{blue}[X=1]}    
 		&                                    {\color{black}$\blacklozenge_\text{until yield}$}, {\color{black}$\blacklozenge_\text{until yield}$}   
 		& --                                    \\
 		5 & t4                                  
 		& {\color{blue}P3(1)}                  
 		& P5(1),P4(1)                          
 		& --                                    
-	&                                   {\color{blue}[X=0]}     
+		&                                   {\color{blue}[X=0]}     
 		&                                    {\color{black}$\blacklozenge_\text{after yield}$}, {\color{black}$\blacklozenge_\text{until yield}$}   
 		& --                                    \\
 		6 & t6                     
 		& {\color{blue}P3(1)}                  
 		& P4(1)                                
 		& {\color{red}P7(1)}                    
-	&                                      	{\color{blue}[X=0]}  
+		&                                      	{\color{blue}[X=0]}  
 		&                                    {\color{black}$\blacklozenge_\text{until yield}$}   
 		&                                   {\color{red}$\blacklozenge_1$}     \\
 		7 & t5                                  
@@ -653,64 +660,9 @@ is reachable.  Table~\ref{tab:reach-seq} lists a firing sequence that leads to $
 	\end{tabular}
 \end{table}
 
+\newpage
 
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.9\textwidth]{plots/code_1_NS.png}
-	\caption{Network System for interleaving executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
-	\label{fig:code1ExampleNS}
-\end{figure}
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.35\textwidth]{plots/code_1_NFA.png}
-	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
-	\label{fig:code1ExampleNFA}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.5\textwidth]{plots/code_1_PN_with_annotation.png}
-	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
-	\label{fig:code1ExamplePN}
-\end{figure}
-
-%
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=1.1\textwidth]{plots/code_2_NS.png}
-	\caption{Network System for interleaving executions of Listing~\ref{lst:MotivatingExample2NonSer} program.}
-	\label{fig:code2ExampleNS}
-\end{figure}
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.5\textwidth]{plots/code_2_NFA.png}
-	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample2NonSer} program.}
-	\label{fig:code2ExampleNFA}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.7\textwidth]{plots/code_2_PN_with_annotation.png}
-	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample2NonSer} program. Note that there is no firing sequence that can reach the place representing a response of ``0'', i.e., the bottom right place.}
-	\label{fig:code2ExamplePN}
-\end{figure}
-
-
-
-%
-
+\subsection{Serializability Proof Example}
 
 \begin{figure}[htbp]
 	\centering
