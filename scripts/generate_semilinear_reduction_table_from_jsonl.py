@@ -24,25 +24,25 @@ df = pd.concat([df.drop(columns=["options"]), opts], axis=1)
 # 3. Define the four target optimization scenarios
 # ───────────────────────────────────────────────────────────────────────────────
 scenarios = {
-    "baseline (all ON)": {
+    "all optimizations (baseline)": {
         "bidirectional_pruning": True,
         "remove_redundant":     True,
         "generate_less":        True,
         "smart_kleene_order":   True,
     },
-    "no_remove_redundant": {
+    "without remove-redundant": {
         "bidirectional_pruning": True,
         "remove_redundant":     False,
         "generate_less":        True,
         "smart_kleene_order":   True,
     },
-    "no_generate_less": {
+    "without generate-less": {
         "bidirectional_pruning": True,
         "remove_redundant":     True,
         "generate_less":        False,
         "smart_kleene_order":   True,
     },
-    "no_smart_order": {
+    "without smart-kleene-order": {
         "bidirectional_pruning": True,
         "remove_redundant":     True,
         "generate_less":        True,
@@ -126,7 +126,7 @@ rows = []
 for name, row in stats_df.iterrows():
     scen = name.replace("_", "\\_")
     # mean components
-    mnc = fmt_float(row["mean_num_components"])
+    mnc = fmt_int(row["mean_num_components"])
     if row["mean_num_components"] == max_mean_comps:
         mnc = f"\\textbf{{{mnc}}}"
     # max components
@@ -134,7 +134,7 @@ for name, row in stats_df.iterrows():
     if row["max_num_components"] == max_max_comps:
         xnc = f"\\textbf{{{xnc}}}"
     # mean periods
-    mp = fmt_float(row["mean_periods"])
+    mp = fmt_int(row["mean_periods"])
     if row["mean_periods"] == max_mean_per:
         mp = f"\\textbf{{{mp}}}"
     # max periods
