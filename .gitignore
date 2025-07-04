@@ -27,7 +27,6 @@ test_graphviz/network.svg
 
 
 tex/*.gz  
-tex/*.pdf 
 tex/*.out 
 tex/*.log 
 tex/*.blg 
