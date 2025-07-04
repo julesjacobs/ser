@@ -273,9 +273,9 @@ We plan on making all our code, benchmarks raw results publicly available with t
 	\end{minipage}\hfill
 	\begin{minipage}[t]{0.48\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{plots/petri_size_reduction_plot_timeout_120s.pdf}
+		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
 		\captionof{figure}{Reduction of Petri nets size (places and transitions) via bidirectional pruning 
-%(timeout 120 seconds)
+%(timeout 150 seconds)
 .}
 		\label{fig:petri_size_reduction}
 	\end{minipage}
@@ -285,24 +285,15 @@ We plan on making all our code, benchmarks raw results publicly available with t
 
 
 
-	
-\begin{table}[H]
-	\centering
-	\begin{tabular}{l c c c c}
-		\toprule
-	& \multicolumn{2}{c}{num components} & \multicolumn{2}{c}{periods per component} \\
-	\cmidrule(lr){2-3} \cmidrule(lr){4-5}
-	& mean & max & mean & max \\
-	\midrule
-	baseline (all ON)         &   3.09    &   22    &   1.38   &    6   \\
-	no\_remove\_redundant     &  10.04    &  194    &   \textbf{1.83}   &   13   \\
-	no\_generate\_less        &\textbf{3{,}371.44}    &\textbf{147{,}464}   &   1.70   &   \textbf{29}   \\
-	no\_smart\_order          &   3.18    &   22    &   1.40   &    6   \\
-  \bottomrule
-  \end{tabular}
-  \caption{Comparison of experiment runs with a 120-second timeout.}
-\end{table}
 
+
+%\begin{table}[H]
+%	\centering
+%	% Load the tabular from the external file:
+%	\input{tables/big_table_summary.tex}
+%	\caption{Comparison of experiment runs with a 150-second timeout.}
+%	\label{tab:semilinear-size-reduction}
+%\end{table}
 
 
 \newpage
