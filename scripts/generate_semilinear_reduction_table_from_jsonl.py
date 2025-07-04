@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import math
 import json
 import pandas as pd
 
@@ -115,8 +116,10 @@ max_max_per    = stats_df["max_periods"].max()
 # 8. Formatters (and bold the maxima)
 # ───────────────────────────────────────────────────────────────────────────────
 def fmt_float(x):
-    s = f"{x:,.2f}"
-    return s.replace(",", "{,}")
+    # s = f"{x:,.2f}"
+    # return s.replace(",", "{,}")
+    # always round upward, then format as integer
+    return fmt_int(math.ceil(x))
 
 def fmt_int(x):
     s = f"{int(x):,}"
@@ -126,7 +129,7 @@ rows = []
 for name, row in stats_df.iterrows():
     scen = name.replace("_", "\\_")
     # mean components
-    mnc = fmt_int(row["mean_num_components"])
+    mnc = fmt_float(row["mean_num_components"])
     if row["mean_num_components"] == max_mean_comps:
         mnc = f"\\textbf{{{mnc}}}"
     # max components
@@ -134,7 +137,7 @@ for name, row in stats_df.iterrows():
     if row["max_num_components"] == max_max_comps:
         xnc = f"\\textbf{{{xnc}}}"
     # mean periods
-    mp = fmt_int(row["mean_periods"])
+    mp = fmt_float(row["mean_periods"])
     if row["mean_periods"] == max_mean_per:
         mp = f"\\textbf{{{mp}}}"
     # max periods
