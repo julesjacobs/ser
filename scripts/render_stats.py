@@ -371,7 +371,8 @@ def generate_cactus_plot(stats: List[Dict[str, Any]], output_dir: str) -> None:
             percentages_extended = [0] + percentages + [percentages[-1]]
             
             # Plot the step function with label showing solved/total for this config
-            total_attempted = len(times_list) + len(timeouts)
+            # total_attempted = len(times_list) + len(timeouts)
+            total_attempted = 47
             label = f"{config} ({len(times_list)}/{total_attempted})"
             ax.step(sorted_times_extended, percentages_extended, where='post', linewidth=2.5, label=label, 
                     color=colors[idx % len(colors)], alpha=0.8)

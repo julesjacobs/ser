@@ -161,7 +161,6 @@ with open(OUTPUT_TEX, "w") as f:
         f.write(f"	{scen} & {mnc} & {xnc} & {mp} & {xp} \\\\\n")
     f.write(r"""  \bottomrule
 	\end{tabular}
-	\caption{Comparison of experiment runs with a 120-second timeout.}
 \end{table}
 """)
 
