@@ -116,10 +116,10 @@ max_max_per    = stats_df["max_periods"].max()
 # 8. Formatters (and bold the maxima)
 # ───────────────────────────────────────────────────────────────────────────────
 def fmt_float(x):
-    # s = f"{x:,.2f}"
-    # return s.replace(",", "{,}")
+    s = f"{x:,.2f}"
+    return s.replace(",", "{,}")
     # always round upward, then format as integer
-    return fmt_int(math.ceil(x))
+    #return fmt_int(math.ceil(x))
 
 def fmt_int(x):
     s = f"{int(x):,}"
