@@ -188,7 +188,7 @@ Recall the code snipped from Listing~\ref{lst:MotivatingExample1Ser}:
 			label={lst:MotivatingExample1Ser}]
 	request main: 
 			X := 1 
-			// no yield
+			yield
 			y := X 
 			X := 0
 			return y 
@@ -528,7 +528,7 @@ return y
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=1.1\textwidth]{plots/code_1_NS.png}
+	\includegraphics[width=0.9\textwidth]{plots/code_1_NS.png}
 	\caption{Network System for interleaving executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
 	\label{fig:code1ExampleNS}
 \end{figure}
