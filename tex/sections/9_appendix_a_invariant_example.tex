@@ -59,7 +59,7 @@ Define the predicate
 	
 	\medskip\noindent
 	\textbf{(3) Refutation of the property.}
-	Suppose for contradiction that both $I(P)$ and
+	Suppose for contradiction that both $I(P)$ and it holds that:
 	\[
 	\phi(P):\quad
 	P_{1}=0,\;
@@ -69,9 +69,11 @@ Define the predicate
 	P_{5}=0,\;
 	P_{6}=0,\;
 	P_{7}=0,\;
-	P_{8}\ge1
-	\]
-	hold.  From
+	P_{8}\ge1.
+	\] 
+	
+	\noindent
+	From
 	\[
 	e_{2}-e_{1}+P_{3}-1=0
 	\quad\text{and}\quad
@@ -90,7 +92,8 @@ Define the predicate
 	and from the assumption that $P_6=0$, we get $e_{0}=e_{3}=P_{8}$.
 	
 	
-	  Similarly, another equality gives
+	\noindent
+	Similarly, another equality gives
 	\[
 	P_{2}=P_{4}+P_{8},
 	\]
@@ -101,16 +104,16 @@ Define the predicate
 	as we also assume that $P_4=0$.
 	
 	
-	But $\phi$ also gives $P_{3}\ge0$ and $P_{8}\ge1$, hence $P_{3}=0$, $P_{8}=1$.  Then
-	\[
-	e_{2}-e_{1}+P_{3}-1=0 \quad \implies \quad e_{2}-e_{1}+0-1=0
-	\quad\implies\quad
-	e_{2}-e_{1}=1,
-	\]
-	contradicting $-e_{2}+e_{1}=0$.  Thus $I\land\phi$ is unsatisfiable, i.e.\ 
-	\[
-	I(P)\;\Longrightarrow\;\neg\phi(P).
-	\]
+	\noindent
+	But $\phi$ also gives $P_{3}\ge0$ and $P_{8}\ge1$, hence $P_{3}=0$.  
+	Furthermore, as our invariant includes a conjunction with $\bigl(P_{4}-1\ge0\;\lor\;\textcolor{black}{P_{3}}-1\ge0\bigr)$, and as (if we assume by negation that the semilinear set is reachable), thus $P_4=0$, then in order for both the invariant and the property to hold, then $P_3 \ge 1$, in contradiction with $P_3=0$.
+	%
+	  Thus $I\land\phi$ is unsatisfiable, i.e., 
+	%\[
+	$
+	I(P)\;\Longrightarrow\;\neg\phi(P)$
+	.
+	%\]
 	This completes the proof that $I$ is an inductive invariant refuting the given property.
 \end{proof}
 
