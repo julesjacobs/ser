@@ -764,5 +764,74 @@ However, this semilinear encoding (of non serializability) is \textit{unreachabl
 \]
 
 
+We then revert this invariant to match our Network System, and project it to inputs/outputs of the system.
+%
+We get the following inductive invariants for each of the two global state:
+
+\begin{proof}
+	
+	\medskip\noindent
+	\textbf{Case 1: Global state \textcolor{blue}{[L=0,X=0]}.}
+	The projection is
+	\[
+	\bigl(\,\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$},\;
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}\bigr)
+	\;\mapsto\;
+	\exists\,e_{0},\dots,e_{5}\ge0.\;
+	\begin{aligned}[t]
+		& e_{2}-e_{1}=0,\quad
+		e_{2}-e_{5}=0,\quad
+		-e_{1}+e_{4}=0,\\
+		& -e_{4}+\bigl(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}\bigr)=0,\quad
+		-e_{0}+e_{3}=0,\quad
+		-e_{3}+\bigl(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\bigr)=0,\\
+		& -e_{2}+e_{1}+e_{0}=0,\quad
+		-e_{2}+e_{1}=0.
+	\end{aligned}
+	\]
+	From these:
+	\[
+	e_{2}=e_{1},\;
+	e_{5}=e_{1},\;
+	e_{4}=e_{1},\;
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}=e_{1},\;
+	e_{3}=e_{0},\;
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}=e_{0},
+	\]
+	and
+	\[
+	-e_{2}+e_{1}+e_{0}=0\;\Longrightarrow\;e_{0}=0.
+	\]
+	Thus
+	\[
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
+	=0,
+	\]
+	so no request from \(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\) exists in state
+	\textcolor{blue}{[L=0,X=0]}.
+	
+	\medskip\noindent
+	\textbf{Case 2: Global state \textcolor{blue}{[L=1,X=1]}.}
+	The projection is
+	\[
+	\bigl(\,\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$},\;
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/1\bigr)
+	\;\mapsto\;
+	\exists\,e_{0},\dots,e_{5}.\;\bot,
+	\]
+	which is unsatisfiable.  Hence no completed‐request pair—and in particular no \(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)—can occur in this state.
+	
+	\medskip\noindent
+	\textbf{Conclusion.}
+	In all reachable states
+	it holds that there cannot be any request/response pairs of type
+	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
+	$.
+	%
+	Furthermore, this indicates that the only attainable request/response pairs are of the form 	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}
+	$, which are in the language of of NFA for serial executions. Thus, this program is serializable.
+\end{proof}
+
+
 
 \newpage
