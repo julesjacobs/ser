@@ -84,7 +84,7 @@ During set‐construction--- especially when introducing new existentially‐qua
 
 %in both the Regex and SemilinearSet Kleene-algebra instances. Concretely, instead of always building the full new structure and pruning it later, operations like union (plus) and concatenation (times) do a quick check for trivial cases and drop “zero” or “one” elements on the spo
 
-\paragraph{Doing the Kleene Elimination in a Smart Order:}
+\paragraph{Executing the Kleene Elimination in a Strategic Order:}
 When you converting an NFA to a single regex, we pick the next state to eliminate by heuristically choosing the  state with the fewest incoming and outgoing edges.
 This optimization allows circumventing 
 overblown expressions resulting in naive translations, especially with regard to  Kleene closures (the “\(\mathsf{*}\)” operator).  Instead, we analyze the structure of subexpressions under the various operators --- estimating their branching factor and likely convergence speed, and reorder them so that simpler, low‐branching components are expanded first.  This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  

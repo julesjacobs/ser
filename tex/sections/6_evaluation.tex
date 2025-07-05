@@ -10,7 +10,7 @@
 
 
 \noindent
-\textbf{Experimentation details.}
+\textbf{Experimental Setup.}
 All experiments ran on a second generation Lenovo Notebook ThinkPad P16s, with 16 AMD cores and a RAM of 58 GB, with a Linux Ubuntu 24.04.2 operating system.
 %
 We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
@@ -33,206 +33,6 @@ We plan on making all our code, benchmarks raw results publicly available with t
 
 \subsection{Results}
 
-%\FloatBarrier      
-%
-%\begin{table}[H]
-%	\centering
-%	\small
-%	% increase horizontal padding between columns
-%	\setlength{\tabcolsep}{5pt}
-%	\renewcommand{\arraystretch}{0.9}
-%	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}%
-%			p{2cm}   % Category
-%			p{1.5cm} % Benchmark
-%			c c c c c c % Features: If, While, ?, Arith, Yield, Multi-req
-%			r r       % certification creation, total time
-%			c         % Serializable
-%		}
-%		\toprule
-%		\multicolumn{2}{c}{\textbf{Benchmark}}
-%		& \multicolumn{6}{c}{\textbf{Features}}
-%		& \multicolumn{2}{c}{\textbf{Runtime (ms)}}
-%		& \textbf{Serializable} \\
-%		\cmidrule(lr){3-8} \cmidrule(lr){9-10}
-%		& 
-%		& If & While & \texttt{?} & Arith & Yield & Multi-req
-%		& Cert. & Total
-%		& \\
-%		\midrule
-%		
-%		\multirow{7}{=}{Core expressions}
-%		& \texttt{a1.ser} &  & \cmark &  &  &       &  & –  & –   & \cmark \\
-%		& \texttt{a2.ser} &  &        &  &  & \cmark &  & –  & –   &       \\
-%		& \texttt{a3.ser} &  &        &  &  &       &  & –  & –   & \cmark \\
-%		& \texttt{a4.ser} &  &        &  &  & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{a5.ser} &  & \cmark &  &  & \cmark & \cmark & –  & –   &       \\
-%		& \texttt{a6.ser} &  &        &  &  & \cmark & \cmark & –  & –   &       \\
-%		& \texttt{a7.ser} & \cmark & \cmark &  &  & \cmark &  & –  & –   &       \\
-%		\midrule
-%		
-%		\multirow{4}{=}{State machines}
-%		& \texttt{b1.json} & \cmark &        &  &  &    \cmark   & \cmark & –  & –   &       \\
-%		& \texttt{b2.json} & \cmark &        &  &  &   \cmark    & \cmark & –  & –   &       \\
-%		& \texttt{b3.json} & \cmark &        &  &  &    \cmark   & \cmark & –  & –   &       \\
-%		& \texttt{b4.json} & \cmark &        &  &  &   \cmark    & \cmark & –  & –   &       \\
-%		\midrule
-%		
-%		\multirow{8}{=}{Fred (mixed arithmetic)}
-%		& \texttt{c1.ser} &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{c2.ser} &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{c3.ser} &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{c4.ser} &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{c5.ser} &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{c6.ser} &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{c7.ser} &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{c8.ser} &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		\midrule
-%		
-%		\multirow{7}{=}{Circular increment}
-%		& \texttt{d1.ser} & \cmark &  & \cmark &  &  \cmark &  & –  & –   & \cmark \\
-%		& \texttt{d2.ser} & \cmark & \cmark & \cmark &  & \cmark &  & –  & –   & \cmark \\
-%		& \texttt{d3.ser} & \cmark &        & \cmark &  &   \cmark &  & –  & –   & \cmark \\
-%		& \texttt{d4.ser} & \cmark &        & \cmark &  &   \cmark &  & –  & –   & \cmark \\
-%		& \texttt{d5.ser} & \cmark & \cmark & \cmark &  &  \cmark &  & –  & –   & \cmark \\
-%		& \texttt{d6.ser} & \cmark & \cmark & \cmark &  &     \cmark &  & –  & –   & \cmark \\
-%		& \texttt{d7.ser} & \cmark &        &  &  & \cmark &  & –  & –   & \cmark \\
-%		\midrule
-%		
-%		\multirow{8}{=}{Concurrency \& locking loops}
-%		& \texttt{e1.ser} &  & \cmark &  &  & \cmark &  & –  & –   & \cmark \\
-%		& \texttt{e2.ser} & \cmark & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{e3.ser} & \cmark & \cmark &  & \cmark &   \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{e4.ser} & \cmark & \cmark &  &  \cmark &   \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{e5.ser} & \cmark & \cmark &  & \cmark &  \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{e6.ser} &  \cmark & \cmark & \cmark &  & \cmark &  & –  & –   & \cmark \\
-%		& \texttt{e7.ser} & \cmark & \cmark & \cmark &  & \cmark &  & –  & –   & \cmark \\
-%		& \texttt{e8.ser} &  & \cmark &  &  &   \cmark & & –  & –   &       \\
-%		\midrule
-%		
-%		\multirow{9}{=}{Non-deterministic \& randomness}
-%		& \texttt{f1.ser} & \cmark &    \cmark    & \cmark &  & \cmark &  & –  & –   & \cmark \\
-%		& \texttt{f2.ser} & \cmark &   \cmark     & \cmark &  & \cmark &  & –  & –   & \cmark \\
-%		& \texttt{f3.ser} &  &        &  & \cmark &   \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{f4.ser} &  &     \cmark   &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{f5.ser} & \cmark &        & \cmark &  &       &  & –  & –   &       \\
-%		& \texttt{f6.ser} & \cmark &        & \cmark &  & \cmark &  & –  & –   &       \\
-%		& \texttt{f7.ser} & \cmark &        & \cmark &  &  \cmark &  & –  & –   &       \\
-%		& \texttt{f8.ser} & \cmark &        & \cmark &  &   \cmark &  & –  & –   &       \\
-%		& \texttt{f9.ser} & \cmark &        & \cmark &  &  \cmark &  & –  & –   &       \\
-%		\midrule
-%		
-%		\multirow{7}{=}{Networking \& system protocols}
-%		& \texttt{g1.ser} & \cmark & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{g2.ser} & \cmark & \cmark &  & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{g3.ser} & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{g4.ser} & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{g5.ser} & \cmark & \cmark & \cmark & \cmark &   \cmark & \cmark & –  & –   & \cmark \\
-%		& \texttt{g6.ser} & \cmark &        & \cmark & \cmark & \cmark &  & –  & –   & \cmark \\
-%		& \texttt{g7.ser} & \cmark &        & \cmark & \cmark &       &  & –  & –   & \cmark \\
-%		\bottomrule
-%	\end{tabular*}
-%	\caption{Overview of benchmarks with combined categories and updated serializability markings.}
-%\label{tab:benchmarks-all}
-%\end{table}
-%
-
-\begin{table}[H]
-	\centering
-	\small
-	% increase horizontal padding between columns
-	\setlength{\tabcolsep}{5pt}
-	\renewcommand{\arraystretch}{0.9}
-	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}%
-			p{2cm}   % Category
-			p{1.5cm} % Benchmark
-			c        % Serializable (now here)
-			c c c c c c % Features: If, While, ?, Arith, Yield, Multi-req
-			r r       % certification creation, total time
-		}
-		\toprule
-		\multicolumn{2}{c}{\textbf{Benchmark}}
-		& \textbf{Serializable}
-		& \multicolumn{6}{c}{\textbf{Features}}
-		& \multicolumn{2}{c}{\textbf{Runtime (ms)}} \\
-		\cmidrule(lr){1-2} \cmidrule(lr){3-3} \cmidrule(lr){4-9} \cmidrule(lr){10-11}
-		& 
-		&
-		& If & While & \texttt{?} & Arith & Yield & Multi-req
-		& Cert. & Total \\
-		\midrule
-		
-		\multirow{7}{=}{Core expressions}
-		& \texttt{a1.ser} &      &  & \cmark &  &  &       &  & –  & –   \\
-		& \texttt{a2.ser} &      &  &        &  &  & \cmark &  & –  & –   \\
-		& \texttt{a3.ser} &      &  &        &  &  &       &  & –  & –   \\
-		& \texttt{a4.ser} &      &  &        &  &  & \cmark & \cmark & –  & –   \\
-		& \texttt{a5.ser} &      &  & \cmark &  &  & \cmark & \cmark & –  & –   \\
-		& \texttt{a6.ser} &      &  &        &  &  & \cmark & \cmark & –  & –   \\
-		& \texttt{a7.ser} &      & \cmark & \cmark &  &  & \cmark &  & –  & –   \\
-		\midrule
-		
-		\multirow{4}{=}{State machines}
-		& \texttt{b1.json} &      & \cmark &        &  &  & \cmark   & \cmark & –  & –   \\
-		& \texttt{b2.json} &      & \cmark &        &  &  & \cmark    & \cmark & –  & –   \\
-		& \texttt{b3.json} &      & \cmark &        &  &  & \cmark   & \cmark & –  & –   \\
-		& \texttt{b4.json} &      & \cmark &        &  &  & \cmark    & \cmark & –  & –   \\
-		\midrule
-		
-		\multirow{8}{=}{Fred (mixed arithmetic)}
-		& \texttt{c1.ser} &      &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{c2.ser} &      &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{c3.ser} &      &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{c4.ser} &      &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{c5.ser} &      &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{c6.ser} &      &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{c7.ser} &      &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{c8.ser} &      &  & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		\midrule
-		
-		\multirow{5}{=}{Circular increment}
-		& \texttt{d1.ser} &      & \cmark & \cmark & \cmark &  & \cmark &  & –  & –   \\
-		& \texttt{d2.ser} &      & \cmark &        & \cmark &  &   \cmark &  & –  & –   \\
-		& \texttt{d3.ser} &      & \cmark & \cmark & \cmark &  &  \cmark &  & –  & –   \\
-		& \texttt{d4.ser} &      & \cmark & \cmark & \cmark &  &     \cmark &  & –  & –   \\
-		& \texttt{d5.ser} &      & \cmark &        &  &  & \cmark &  & –  & –   \\
-		\midrule
-		
-		\multirow{7}{=}{Concurrency \& locking loops}
-		& \texttt{e1.ser} &      &  & \cmark &  &  & \cmark &  & –  & –   \\
-		& \texttt{e2.ser} &      & \cmark & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{e3.ser} &      & \cmark & \cmark &  & \cmark &   \cmark & \cmark & –  & –   \\
-		& \texttt{e4.ser} &      & \cmark & \cmark &  &  \cmark &   \cmark & \cmark & –  & –   \\
-		& \texttt{e5.ser} &      & \cmark & \cmark & \cmark &  & \cmark &  & –  & –   \\
-		& \texttt{e6.ser} &      & \cmark & \cmark & \cmark &  & \cmark &  & –  & –   \\
-		& \texttt{e7.ser} &      &  & \cmark &  &  &   \cmark &  & –  & –   \\
-		\midrule
-		
-		\multirow{9}{=}{Non-deterministic \& randomness}
-		& \texttt{f1.ser} &      & \cmark &    \cmark    & \cmark &  & \cmark &  & –  & –   \\
-		& \texttt{f2.ser} &      & \cmark &   \cmark     & \cmark &  & \cmark &  & –  & –   \\
-		& \texttt{f3.ser} &      &  &        &  & \cmark &   \cmark & \cmark & –  & –   \\
-		& \texttt{f4.ser} &      &  &     \cmark   &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{f5.ser} &      & \cmark &        & \cmark &  &       &  & –  & –   \\
-		& \texttt{f6.ser} &      & \cmark &        & \cmark &  & \cmark &  & –  & –   \\
-		& \texttt{f7.ser} &      & \cmark &        & \cmark &  &  \cmark &  & –  & –   \\
-		& \texttt{f8.ser} &      & \cmark &        & \cmark &  &   \cmark &  & –  & –   \\
-		& \texttt{f9.ser} &      & \cmark &        & \cmark &  &  \cmark &  & –  & –   \\
-		\midrule
-		
-		\multirow{7}{=}{Networking \& system protocols}
-		& \texttt{g1.ser} &      & \cmark & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{g2.ser} &      & \cmark & \cmark &  & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{g3.ser} &      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{g4.ser} &      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & –  & –   \\
-		& \texttt{g5.ser} &      & \cmark & \cmark & \cmark & \cmark &   \cmark & \cmark & –  & –   \\
-		& \texttt{g6.ser} &      & \cmark &        & \cmark & \cmark & \cmark &  & –  & –   \\
-		& \texttt{g7.ser} &      & \cmark &        & \cmark & \cmark &       &  & –  & –   \\
-		\bottomrule
-	\end{tabular*}
-	\caption{Overview of benchmarks with combined categories and updated serializability markings. All optimizations were used, as well as a timeout value of 500 seconds.}
-\label{tab:benchmarks-all}
-\end{table}
-
 
 
 \begin{table}[H]
@@ -240,7 +40,7 @@ We plan on making all our code, benchmarks raw results publicly available with t
 	% Load the tabular from the external file:
 	\input{tables/big_table_summary.tex}
 	\caption{Overview of benchmarks with combined categories and updated serializability markings. All optimizations were used, as well as a timeout value of 500 seconds.}
-\label{tab:benchmarks-all-2}
+\label{tab:benchmarks-all}
 \end{table}
 
 
