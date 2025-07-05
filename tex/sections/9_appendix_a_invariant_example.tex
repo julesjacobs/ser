@@ -55,7 +55,7 @@ Define the predicate
 	\[
 	I(M)\;\Longrightarrow\;I\bigl(t_{k}(M)\bigr).
 	\]
-	In each case the same $(e_{0},\dots,e_{5})$ can be adjusted (per the SMT certificate) to show the eight equalities and the disjunction remain valid.
+	In each case the same $(e_{0},\dots,e_{5})$ can be adjusted (per the SMT certificate) to show the eight equalities and the disjunction remain valid. See the attached file in our artifact showing the full proof.
 	
 	\medskip\noindent
 	\textbf{(3) Refutation of the property.}
@@ -108,39 +108,5 @@ Define the predicate
 	This completes the proof that $I$ is an inductive invariant refuting the given property.
 \end{proof}
 
+
 \newpage
-
-\section{Additional NS Examples}
-\label{sec:appendix}
-
-\subsection{Additional examples}
-
-The NFA/NS/PN for example 1
-
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.9\textwidth]{plots/code_1_NS.png}
-	\caption{Network System for interleaving executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
-	\label{fig:code1ExampleNS}
-\end{figure}
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.35\textwidth]{plots/code_1_NFA.png}
-	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
-	\label{fig:code1ExampleNFA}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.5\textwidth]{plots/code_1_PN_with_annotation.png}
-	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
-	\label{fig:code1ExamplePN}
-\end{figure}
-
-%
