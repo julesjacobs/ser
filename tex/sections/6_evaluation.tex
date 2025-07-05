@@ -44,72 +44,19 @@ The \textit{average} certificate generation time was $39{,}613.23$ ms across all
 %
 The \textit{median} certificate generation time was $797$ ms across all benchmarks, and $1{,}178$ ms ($773$ ms) when focusing on solely serializable (non-serializable) benchmarks.
 
-\begin{table}[H]
-	\centering
-	\begin{tabular}{lrrrrrr}
-		\toprule
-		& \multicolumn{3}{c}{Average time (ms)} & \multicolumn{3}{c}{Median time (ms)} \\
-		\cmidrule(lr){2-4} \cmidrule(lr){5-7}
-		Category
-		& \shortstack{certificate\\generation}
-		& \shortstack{certificate\\validation}
-		& total
-		& \shortstack{certificate\\generation}
-		& \shortstack{certificate\\validation}
-		& total \\
-		\midrule
-		Serializable      &   2273 &  23257 &  25531 &  1178 &  1300 &  2238 \\
-		Not serializable  &  42076 &    905 &  42980 &   773 &    78 &   830 \\
-		All               &  39613 &  13244 &  52858 &   797 &   151 &  2080 \\
-		\bottomrule
-	\end{tabular}
-\end{table}
 
-\begin{table}[H]
-	\centering
-	\begin{tabular}{lrrrrrr}
-		\toprule
-		& \multicolumn{3}{c}{Average time (ms)} & \multicolumn{3}{c}{Median time (ms)} \\
-		\cmidrule(lr){2-4} \cmidrule(lr){5-7}
-		Category
-		& \shortstack{certificate\\generation}
-		& \shortstack{certificate\\validation}
-		& total
-		& \shortstack{certificate\\generation}
-		& \shortstack{certificate\\validation}
-		& total \\
-		\midrule
-		Serializable     &  2273  & 23257 & 25531 & 1178 & 1300 & 2238 \\
-		Not serializable & 42076  &   905 & 42980 &  773 &   78 &  830 \\
-		All              & 39613  & 13244 & 52858 &  797 &  151 & 2080 \\
-		\bottomrule
-	\end{tabular}
-\end{table}
+
 
 
 
 \begin{table}[H]
 	\centering
-	\begin{tabular}{lrrrrrr}
-		\toprule
-		& \multicolumn{3}{c}{Average time (ms)} & \multicolumn{3}{c}{Median time (ms)} \\
-		\cmidrule(lr){2-4} \cmidrule(lr){5-7}
-		Category
-		& \shortstack{certificate\\generation}
-		& \shortstack{certificate\\validation}
-		& total
-		& \shortstack{certificate\\generation}
-		& \shortstack{certificate\\validation}
-		& total \\
-		\midrule
-		Serializable        &   2\,273.38 &  23\,257.31 &  25\,530.69   & 1\,178.00 &  1\,299.50 &  2\,238.50 \\
-		Not serializable    &  42\,075.84 &     904.63 &  42\,980.47   &   773.00 &     78.00 &    830.00 \\
-		All                 &  39\,613.23 &  13\,244.32 &  52\,857.55   &   797.00 &    151.00 &  2\,080.00 \\
-		\bottomrule
-	\end{tabular}
-	\caption{Average and median certificate generation, certificate validation, and total running times (in ms) for serializable, non‐serializable, and all benchmarks.}
-	\label{tab:stats-summary}
+	% Load the tabular from the external file:
+	\input{tables/average_and_mean_values_of_big_table.tex}
+\caption{Average and median certificate generation, certificate validation, and total running times (in ms) for serializable, non‐serializable, and all benchmarks.}
+\label{tab:stats-summary}
 \end{table}
+
 
 
 
