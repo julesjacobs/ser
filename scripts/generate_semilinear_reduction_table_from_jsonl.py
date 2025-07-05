@@ -155,7 +155,7 @@ with open(OUTPUT_TEX, "w") as f:
 	\centering
 	\begin{tabular}{l c c c c}
 		\toprule
-		& \multicolumn{2}{c}{num components} & \multicolumn{2}{c}{periods per component} \\
+		& \multicolumn{2}{c}{number of components} & \multicolumn{2}{c}{periods per component} \\
 		\cmidrule(lr){2-3} \cmidrule(lr){4-5}
 		& mean & max & mean & max \\
 		\midrule
