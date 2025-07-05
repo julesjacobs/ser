@@ -711,7 +711,7 @@ This program corresponds to the following Network System (NS):
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.6\textwidth]{plots/code_3_NFA.png}
+	\includegraphics[width=0.4\textwidth]{plots/code_3_NFA.png}
 	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample3Ser} program.}
 	\label{fig:code3ExampleNFA}
 \end{figure}
@@ -736,7 +736,7 @@ P_1 = 0 \wedge
 
 
 Note that this happened to be the exact same property as encoding non-serializability in the previous example, however, the Petri Net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, $X$ and $L$. 
-
+%
 However, this semilinear encoding (of non serializability) is \textit{unreachable}, as witness by the following inductive invariant:
 
 
@@ -771,8 +771,8 @@ We get the following inductive invariants for each of the two global state:
 \begin{proof}
 	
 	\medskip\noindent
-	\textbf{Case 1: Global state \textcolor{blue}{[L=0,X=0]}.}
-	The projection is
+	For global state \textcolor{blue}{[L=0,X=0]}
+	the projected invariant is:
 	\[
 	\bigl(\,\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$},\;
 	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}\bigr)
@@ -791,12 +791,10 @@ We get the following inductive invariants for each of the two global state:
 	\]
 	From these:
 	\[
-	e_{2}=e_{1},\;
-	e_{5}=e_{1},\;
-	e_{4}=e_{1},\;
-	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}=e_{1},\;
-	e_{3}=e_{0},\;
-	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}=e_{0},
+	e_{1}=e_{2}=e_{4}=e_{5}=(\;
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}),\;
+	e_{0}=e_{3}=
+	(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}),
 	\]
 	and
 	\[
@@ -804,32 +802,36 @@ We get the following inductive invariants for each of the two global state:
 	\]
 	Thus
 	\[
-	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
+(	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$})
 	=0,
 	\]
-	so no request from \(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\) exists in state
+	so (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) cannot be attained from the global state
 	\textcolor{blue}{[L=0,X=0]}.
 	
 	\medskip\noindent
-	\textbf{Case 2: Global state \textcolor{blue}{[L=1,X=1]}.}
-	The projection is
+	Case 2: Global state \textcolor{blue}{[L=1,X=1]}.
+	The projected invariant is:
+	
+	
 	\[
 	\bigl(\,\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$},\;
-	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/1\bigr)
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}\bigr)
 	\;\mapsto\;
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
-	which is unsatisfiable.  Hence no completed‐request pair—and in particular no \(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)—can occur in this state.
+	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can occur in this state.
 	
 	\medskip\noindent
 	\textbf{Conclusion.}
 	In all reachable states
 	it holds that there cannot be any request/response pairs of type
-	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
-	$.
+(	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
+	$).
 	%
-	Furthermore, this indicates that the only attainable request/response pairs are of the form 	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}
+	Furthermore, this indicates that the only attainable request/response pairs are of the form 	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
 	$, which are in the language of of NFA for serial executions. Thus, this program is serializable.
+	%
+	We further show that these invariants are \textit{inductive}: they encompass the system’s initial state and, once satisfied, remain true for all subsequent executions.
 \end{proof}
 
 
