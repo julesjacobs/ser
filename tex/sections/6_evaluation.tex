@@ -31,7 +31,177 @@ We plan on making all our code, benchmarks raw results publicly available with t
 \end{itemize}
 
 
-\subsection{Results}
+
+The benchmarks differ in their complexity and in the various features pertaining to them --- branching, loops, randomness, multiple requests, etc. 
+%
+
+\subsection{Runtime Results}
+We ran our tool on all 47 benchmarks, out of which 27 are serializable programs, and the remaining 20 are non serializable benchmarks. 
+For each benchmark, we measured the time for deciding the reachability query, indicating serializability, as well as the overall time, including validation of the invariant proof (if serializable) or the validation of the counterexample (if not serializable). These experiments ran in parallel, with $16$ cores, an a \texttt{TIMEOUT} threshold of 500 seconds and with all four optimizations. As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool full solved 26/27 serializable benchmarks 
+and 19/20 no serializable benchmarks. 
+%
+The \textit{average} certificate generation time was $39{,}613.23$ ms across all benchmarks, and $2{,}273.38$ ms ($42{,}075.84$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+%
+The \textit{median} certificate generation time was $797$ ms across all benchmarks, and $1{,}178$ ms ($773$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{lrrrrrr}
+		\toprule
+		& \multicolumn{3}{c}{Average time (ms)} & \multicolumn{3}{c}{Median time (ms)} \\
+		\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+		Category
+		& \shortstack{certificate\\generation}
+		& \shortstack{certificate\\validation}
+		& total
+		& \shortstack{certificate\\generation}
+		& \shortstack{certificate\\validation}
+		& total \\
+		\midrule
+		Serializable      &   2273 &  23257 &  25531 &  1178 &  1300 &  2238 \\
+		Not serializable  &  42076 &    905 &  42980 &   773 &    78 &   830 \\
+		All               &  39613 &  13244 &  52858 &   797 &   151 &  2080 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{lrrrrrr}
+		\toprule
+		& \multicolumn{3}{c}{Average time (ms)} & \multicolumn{3}{c}{Median time (ms)} \\
+		\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+		Category
+		& \shortstack{certificate\\generation}
+		& \shortstack{certificate\\validation}
+		& total
+		& \shortstack{certificate\\generation}
+		& \shortstack{certificate\\validation}
+		& total \\
+		\midrule
+		Serializable     &  2273  & 23257 & 25531 & 1178 & 1300 & 2238 \\
+		Not serializable & 42076  &   905 & 42980 &  773 &   78 &  830 \\
+		All              & 39613  & 13244 & 52858 &  797 &  151 & 2080 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{lrrrrrr}
+		\toprule
+		& \multicolumn{3}{c}{Average time (ms)} & \multicolumn{3}{c}{Median time (ms)} \\
+		\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+		Category
+		& \shortstack{certificate\\generation}
+		& \shortstack{certificate\\validation}
+		& total
+		& \shortstack{certificate\\generation}
+		& \shortstack{certificate\\validation}
+		& total \\
+		\midrule
+		Serializable        &   2\,273.38 &  23\,257.31 &  25\,530.69   & 1\,178.00 &  1\,299.50 &  2\,238.50 \\
+		Not serializable    &  42\,075.84 &     904.63 &  42\,980.47   &   773.00 &     78.00 &    830.00 \\
+		All                 &  39\,613.23 &  13\,244.32 &  52\,857.55   &   797.00 &    151.00 &  2\,080.00 \\
+		\bottomrule
+	\end{tabular}
+	\caption{Average and median certificate generation, certificate validation, and total running times (in ms) for serializable, non‐serializable, and all benchmarks.}
+	\label{tab:stats-summary}
+\end{table}
+
+
+
+
+%=== Overall ===
+%Certificate running time:
+%Average = 39613.23
+%Median  = 797.00
+%
+%Certificate validation time:
+%Average = 13244.32
+%Median  = 151.00
+%
+%Total running time:
+%Average = 52857.55
+%Median  = 2080.00
+%
+%=== Serializable Only ===
+%Certificate running time:
+%Average = 2273.38
+%Median  = 1178.00
+%
+%Certificate validation time:
+%Average = 23257.31
+%Median  = 1299.50
+%
+%Total running time:
+%Average = 25530.69
+%Median  = 2238.50
+%
+%=== Non-Serializable Only ===
+%Certificate running time:
+%Average = 42075.84
+%Median  = 773.00
+%
+%Certificate validation time:
+%Average = 904.63
+%Median  = 78.00
+%
+%Total running time:
+%Average = 42980.47
+%Median  = 830.00
+%
+%=== Percentiles (Overall) ===
+%Certificate running time percentiles:
+%25th percentile = 553.50
+%50th percentile = 797.00
+%100th percentile = 502810.00
+%
+%Certificate validation time percentiles:
+%25th percentile = 66.50
+%50th percentile = 151.00
+%100th percentile = 282370.00
+%
+%Total running time percentiles:
+%25th percentile = 615.00
+%50th percentile = 2080.00
+%100th percentile = 503336.00
+%
+%=== Percentiles (Serializable) ===
+%Certificate running time percentiles:
+%25th percentile = 312.00
+%50th percentile = 1178.00
+%100th percentile = 9858.00
+%
+%Certificate validation time percentiles:
+%25th percentile = 115.75
+%50th percentile = 1299.50
+%100th percentile = 282370.00
+%
+%Total running time percentiles:
+%25th percentile = 456.50
+%50th percentile = 2238.50
+%100th percentile = 292228.00
+%
+%=== Percentiles (Non-Serializable) ===
+%Certificate running time percentiles:
+%25th percentile = 628.50
+%50th percentile = 773.00
+%100th percentile = 356195.00
+%
+%Certificate validation time percentiles:
+%25th percentile = 50.00
+%50th percentile = 78.00
+%100th percentile = 15227.00
+%
+%Total running time percentiles:
+%25th percentile = 707.00
+%50th percentile = 830.00
+%100th percentile = 356299.00
+
+
 
 
 
