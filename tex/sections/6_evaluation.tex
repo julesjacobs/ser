@@ -40,10 +40,13 @@ We ran our tool on all 47 benchmarks, out of which 27 are serializable programs,
 For each benchmark, we measured the time for deciding the reachability query, indicating serializability, as well as the overall time, including validation of the invariant proof (if serializable) or the validation of the counterexample (if not serializable). These experiments ran in parallel, with $16$ cores, an a \texttt{TIMEOUT} threshold of 500 seconds and with all four optimizations. As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool full solved 26/27 serializable benchmarks 
 and 19/20 no serializable benchmarks. 
 %
-The \textit{average} certificate generation time was $39{,}613.23$ ms across all benchmarks, and $2{,}273.38$ ms ($42{,}075.84$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+The \textit{average} total runtime was $52{,}857.55$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing on solely serializable (non-serializable) benchmarks.
 %
-The \textit{median} certificate generation time was $797$ ms across all benchmarks, and $1{,}178$ ms ($773$ ms) when focusing on solely serializable (non-serializable) benchmarks.
-
+The \textit{median} total runtime was $2{,}080$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+%
+We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the total average time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our \todo{PN? System} system and checking that the final counterexample can be attained.
+%
+We report the full results in Table~\ref{tab:stats-summary}, and elaborate on the per-benchmark results in Table~\ref{tab:benchmarks-all}.
 
 
 
@@ -53,7 +56,7 @@ The \textit{median} certificate generation time was $797$ ms across all benchmar
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/average_and_mean_values_of_big_table.tex}
-\caption{Average and median certificate generation, certificate validation, and total running times (in ms) for serializable, non‐serializable, and all benchmarks.}
+\caption{Average and median certificate generation, certificate validation, and total running times (in ms) for serializable, non‐serializable, and all benchmarks. These values are rounded to the nearest integer, to reduce clutter.}
 \label{tab:stats-summary}
 \end{table}
 
