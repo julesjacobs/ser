@@ -14,13 +14,21 @@
 All experiments ran on a second generation Lenovo Notebook ThinkPad P16s, with 16 AMD cores and a RAM of 58 GB, with a Linux Ubuntu 24.04.2 operating system.
 %
 We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
+%
+For the underlying Petri Net reachability solver we used SMPT~\cite{AmDa23}, a state-of-the-art reachability solver which supports \textit{unbounded} reachability queries, and which we extended to support our setting (for example, we needed to extend the solver to support proof generation). 
+%
+We note that other off-the-shelf solvers can be used as well.
+%
+All our code, benchmarks, and raw experimental results will be made publicly available with the final version of this paper.
  
 
 
-\subsection{Benchmarks Overview}
+\subsection{Benchmarks Overview} 
 \label{subsec:benchmarks}
 
 \begin{itemize}
+	
+	\item \todo{update benchmark overview}
 	\item \textbf{Core expressions \& multi request workflows}: Benchmarks testing arithmetic, boolean, and simple control expression.
 	\item \textbf{Fred (mixed arithmetic)}: Mixed control and arithmetic transformations (Fred series).
 	\item \textbf{Stop (circular-increment) series}: Circular increment loops and variants.
@@ -155,7 +163,7 @@ We report the full results in Table~\ref{tab:stats-summary}, and elaborate on th
 
 
 
-\begin{table}[H]
+\begin{table}[htbp]
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/big_table_summary.tex}
@@ -166,21 +174,33 @@ We report the full results in Table~\ref{tab:stats-summary}, and elaborate on th
 
 \subsection{Optimization Analysis}
 
+For our next batch of experiments, we compared the various combinations of our four optimizations, and analyzed their effect on the overall runtime and space resources.
+%
+All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
 
-%\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.4\textwidth]{plots/petri_size_reduction_plot.pdf}
-%	\caption{Size reduction of Petri nets through optimization techniques. The plot shows the reduction in the number of places and transitions after applying our optimization passes. Averaged on all Petri Nets of 50 benchmarks (timeout 30 seconds).}
-%	\label{fig:petri_size_reduction}
-%\end{figure}
+\subsubsection{Runtime Optimization}
+
+\todo{cactus plot}
 
 
-%\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.4\textwidth]{plots/timeout_10000_cumulative_solved_linear.pdf}
-%	\caption{Size reduction of Petri nets through optimization techniques. The plot shows the reduction in the number of places and transitions after applying our optimization passes. Averaged on all Petri Nets of 50 benchmarks (timeout 30 seconds).}
-%	\label{fig:runtime}
-%\end{figure}
+See Fig.~\ref{fig:timeout_cumulative_solved_log}.
+
+\subsubsection{Space Optimization}
+
+\paragraph{Size reduction of Petri Nets.}
+
+bla
+See the results in Fig.~\ref{fig:petri_size_reduction}
+
+
+%Number of values for 'Before' bars:          47
+%Number of values for 'After' bars:           224
+%Average number of places before pruning:     23.91
+%Average number of places after pruning:      12.79
+%Average number of transitions before pruning: 37.30
+%Average number of transitions after pruning:  12.61
+
+
 
 
 
@@ -203,11 +223,14 @@ We report the full results in Table~\ref{tab:stats-summary}, and elaborate on th
 
 
 
+\paragraph{Size reduction of semilinear sets.}
+
+bla
+See Table~\ref{tab:semilinear-size-reduction}.
 
 
 
-
-\begin{table}[H]
+\begin{table}[htbp]
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/semilinear_size_reduction.tex}
