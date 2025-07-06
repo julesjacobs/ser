@@ -69,7 +69,7 @@ $S\subseteq\mathbb{N}^P$ be fixed.
 \begin{definition}[Backward Over-Approximation]
 	Let
 	\[
-	Y_0 = \{\,p\in P \mid \exists M\in S:\;M(p)>0\}
+	Y_0 = \{\,p\in P \mid \exists M\in S:\;M(p)\neq0\}
 	\]
 	be the places unconstrained to zero by the target.  Define
 	$\mathcal{B}:\mathcal{P}(P\cup T)\to\mathcal{P}(P\cup T)$ by
@@ -114,7 +114,7 @@ Intuitively, $P'$ contains exactly those places that
 	\quad\text{and}\quad
 	M \xrightarrow{\sigma_2} M'
 	\quad\text{with}\quad
-	M'(p)>0
+	M(p)>0
 	\quad\text{and}\quad
 	M'\in S.
 	\]
@@ -139,7 +139,7 @@ Intuitively, $P'$ contains exactly those places that
 	
 	\paragraph{(2) Backward-relevance.}
 	Again, since $p$ is witnessable, there is a suffix
-	$\sigma_2\in T^*$ from $M$ to $M'\in S$ with $M'(p)>0$.  Working
+	$\sigma_2\in T^*$ from $M$ to $M'\in S$ with $M(p)>0$.  Working
 	backwards from $S$, every place that can contribute to satisfying
 	semilinear constraints appears in the backward fixed-point $Y^*_P$.
 	Thus $p\in Y^*_P$.
