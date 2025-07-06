@@ -25,9 +25,9 @@ M_0 \;\xrightarrow{\sigma}\; M
 \quad\text{for some}\;\sigma\in T^*.
 \]
 %
-The \emph{reachability problem} asks, given $(N,M)$, whether $M$ is reachable from $M_0$.  In the
+The \emph{reachability problem} asks, given $(N,M)$, whether $M$ is reachable from $M_0$.  Surprisingly, even in the
 \emph{unbounded} setting (where places may hold arbitrarily many tokens) this problem is
-decidable~\cite{Ma81,Ko82,La92}, and with
+decidable~\cite{Ma81,Ko82,La92}, although with
 Ackermann-complete~\cite{CzWo22} complexity.
 
 \paragraph{Semilinear sets and Park’s theorem.}
@@ -37,9 +37,11 @@ S \;=\; \bigcup_{i=1}^m \Bigl\{\mathbf b_i + \sum_{j=1}^{r_i} n_j\,\mathbf p_{i,
 \;\Big|\; n_j\in\mathbb N\Bigr\}.
 \]
 
-Semilinear sets coincide exactly with the sets definable in Presburger arithmetic~\cite{Pr29}.
+For $b_i, p_{i,j}\in \mathbb N^k $ being k-dimensional vectors of non-negative values.
 %
-By Parkh's theorem~\cite{Parikh66}, the Parikh Image of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
+Semilinear sets coincide exactly with the sets definable in \textit{Presburger arithmetic}~\cite{Pr29}.
+%
+By Parikh's theorem~\cite{Parikh66}, the Parikh Image of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
 finite description of its Parikh Image.
 
 \subsection{Basic Algorithm (without Optimizations)}
@@ -47,25 +49,56 @@ finite description of its Parikh Image.
 Let \(\mathcal S\) be the parsed Network System, with set of global states \(G\).  
 
 \begin{enumerate}
-	\item \textbf{Serializability automaton.}  
+	\item  \textbf{Serializability automaton.}  
 	We define an NFA
-	\[
-	\mathcal A_{\mathrm{ser}}(\mathcal S)
-	= \bigl(Q,\Sigma,\delta,q_0,F\bigr)
-	\quad\text{where }Q = G,
-	\]
-	\(\Sigma\) is the set of request/response actions, and
-	\((q \xrightarrow{a} q')\in\delta\) iff \(\mathcal S\) can move from global
-	state \(q\) to \(q'\) via action \(a\) in a purely serial execution.
 	
-	Its language \(L(\mathcal A_{\mathrm{ser}})\subseteq\Sigma^*\) is exactly
-	the set of serial traces, and we define
+\[
+\mathcal A_{\mathrm{ser}}(\mathcal S)
+= \bigl(Q,\Sigma,\delta,q_0,F\bigr),
+\quad
+Q = G
+\quad\text{(the set of the NS’s global states)}
+\]
+\[
+\Sigma
+= \Bigl\{
+{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
+{\color{red}\blacklozenge_{\mathit{resp}}}
+\;\Big|\;
+{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{Req},\;
+{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{Resp}
+\Bigr\}
+\]
+\[
+\delta \;\subseteq\; Q \times \Sigma_{	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
+	{\color{red}\blacklozenge_{\mathit{resp}}}} \times Q,
+\quad
+\bigl(q \xrightarrow{%
+	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
+	{\color{red}\blacklozenge_{\mathit{resp}}}%
+} q'\bigr)
+\;\Longleftrightarrow\;
+\begin{array}{l}
+	\mathcal S \text{ at global state } q
+	\;\text{issues}\;
+	{\color{ForestGreen}\blacklozenge_{\mathit{req}}},\\[0.5ex]
+	\text{after completion of the request, it receives}\;
+	{\color{red}\blacklozenge_{\mathit{resp}}},\\[0.5ex]
+	\text{arriving at global state } q'
+\end{array}
+\]
+
+	
+	(i.e.\ each transition is a request/response pair).  Its language
+	\(L(\mathcal A_{\mathrm{ser}})\subseteq\Sigma^*\) is exactly the set of serial
+	request/response traces, and we define the semilinear set of serial executions
 	\[
 	\mathsf{Ser}(\mathcal S)
 	\;=\;
-	\Parikh\bigl(L(\mathcal A_{\mathrm{ser}})\bigr)
+	\mathsf{Parikh}\bigl(L(\mathcal A_{\mathrm{ser}})\bigr)
 	\;\subseteq\;\mathbb N^{|\Sigma|}.
 	\]
+	
 	
 	\item \textbf{Interleaving Petri net.}  
 	Construct
