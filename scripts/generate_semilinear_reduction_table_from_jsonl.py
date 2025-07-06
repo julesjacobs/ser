@@ -22,6 +22,12 @@ opts = df["options"].apply(pd.Series)
 df = pd.concat([df.drop(columns=["options"]), opts], axis=1)
 
 # ───────────────────────────────────────────────────────────────────────────────
+# 2.5. Filter out all timeout runs
+# ───────────────────────────────────────────────────────────────────────────────
+# this is because there are instances that we short-circuit T.O. if the semilinear set is too large
+df = df[df["result"] != "timeout"].copy()
+
+# ───────────────────────────────────────────────────────────────────────────────
 # 3. Define the four target optimization scenarios
 # ───────────────────────────────────────────────────────────────────────────────
 scenarios = {
@@ -157,7 +163,7 @@ with open(OUTPUT_TEX, "w") as f:
 		\toprule
 		& \multicolumn{2}{c}{number of components} & \multicolumn{2}{c}{periods per component} \\
 		\cmidrule(lr){2-3} \cmidrule(lr){4-5}
-		& mean & max & mean & max \\
+		& average & max & average & max \\
 		\midrule
 """)
     for scen, mnc, xnc, mp, xp in rows:
