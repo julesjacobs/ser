@@ -181,12 +181,11 @@ holds is undecidable.
 \subsection{NS Example: Non-Serializability }
 \label{sec:ns-non-serializable}
 
-Recall the code snipped from Listing~\ref{lst:MotivatingExample1Ser}:
+Recall the code snipped from Listing~\ref{lst:MotivatingExample2NonSer}:
 
 
 \begin{minipage}[t]{0.3\textwidth}
-	\begin{lstlisting}[caption={Without yield or lock (serializable)},
-			label={lst:MotivatingExample1Ser}]
+	\begin{lstlisting}[caption={Without yield or lock (serializable)}]
 	request main: 
 			X := 1 
 			yield
@@ -678,52 +677,7 @@ is reachable.  Table~\ref{tab:reach-seq} lists a firing sequence that leads to $
 
 Now, we observe again the adjusted program (as previously described in Listing~\ref{lst:MotivatingExample3Ser}):
 
-
-\begin{minipage}[t]{0.3\textwidth}
-	\begin{lstlisting}[caption={With yield and lock (serializable)},
-		label={lst:MotivatingExample3SerAgain}]
-	request foo: 
-		// lock
-		while (L == 1): 
-			yield
-		L := 1 
-		
-		X := 1
-		yield
-		y := X 
-		X := 0
-		
-		// unlock    
-		L := 0
-		return y 
-	\end{lstlisting}
-\end{minipage}
-
-This program corresponds to the following Network System (NS):
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=1.1\textwidth]{plots/code_3_NS.png}
-	\caption{Network System for interleaving executions of Listing~\ref{lst:MotivatingExample3Ser} program.}
-	\label{fig:code3ExampleNS}
-\end{figure}
-
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.4\textwidth]{plots/code_3_NFA.png}
-	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample3Ser} program.}
-	\label{fig:code3ExampleNFA}
-\end{figure}
-
-
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.8\textwidth]{plots/code_3_PN_with_annotation.png}
-	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample3Ser} program.}
-	\label{fig:code3ExamplePN}
-\end{figure}
+We present the corresponding Network System, Serailizability NFA, and Interleaving Petri Net in Appendix~\ref{appendix:MoreNsExamples}.
 
 Non-serializability corresponds to the above Petri Net being able to reach the following marking:
 
