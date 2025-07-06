@@ -269,26 +269,26 @@ $A+B=2\cdot (100\$+50\$)=300\$$, with either a final state of $[A=150\$, B=150\$
 
 The following example motivates our routing‐policy programs in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adopt its updated routing as dictated by the updates.
 %
-An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST}), serving as ingress points from where traffic may nondeterministically enter the network. The controller selects one of two policies: a \textcolor{ForestGreen}{green} policy, which routes traffic from West to East, or a \textcolor{red}{red} policy, which routes it in the opposite direction.
+An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST}), serving as ingress points from where traffic may nondeterministically enter the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or a \textcolor{orange}{orange} policy, which routes it in the opposite direction.
 
 
 %// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
 %else:
-%G := 0 // red policy
+%B := 0 // red/orange policy
 %// [out, switch 0] <--- [WEST, switch 1] <--- [EAST, switch 2] 
 
 
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.7\linewidth]{plots/east_west_routing.pdf}
+	\includegraphics[width=0.7\linewidth]{plots/east_west_routing_updated_colors.pdf}
 	\caption{Routing policy in example 5.}
 	\label{fig:BgpRoutingPolicies}
 \end{figure}
 
 This SDN-controlled routing policy is realized in the pseudo code in Listing~\ref{lst:BgpNonSerializable}.
 %
-The program includes a single global variable $G$, indicating if the current routing policy is the  \textcolor{ForestGreen}{green} policy ($[G=1]$) or the \textcolor{red}{red} policy ($[G=0]$).
+The program includes a single global variable $B$, indicating if the current routing policy is the  \textcolor{NavyBlue}{blue} policy ($[B=1]$) or the \textcolor{orange}{orange} policy ($[B=0]$).
 %
 The program has three types of requests:
 \begin{itemize}
@@ -321,28 +321,28 @@ Potential routing cycles can also be observed via non serializable executions al
 \begin{minipage}[t]{1.0\textwidth}
 	\begin{lstlisting}[caption={BGP (non serializable --- cycles can appear)},label={lst:BgpNonSerializable}]
 	    // initialize accounts
-	    G := 0
+	    B := 0
 	    
 	    request policy_update:
 	    if (?):
-	        G := 1  // green policy 
+	        B := 1  // blue policy 
 	    else:
-	        G := 0 // red policy
+	        B := 0 // orange policy
 			
 	    request route_from_west:
 	        visited_east := 0
 	        current := 1
 	        while (current == 2) or (current == 3): // still routing        
 	            if (current == 1): // west (switch 1)
-	                if (G == 1): // green policy
+	                if (B == 1): // blue policy
 	                    current := 2
-	                else: // red policy
+	                else: // orange policy
 	                    current := 1
 	            if (current == 2): // east (switch 2)
 	                visited_east := 1
-	                if (G == 1): // green policy
+	                if (B == 1): // blue policy
 	                    current := 3
-	                else: // red policy
+	                else: // orange policy
 	                    current := 1
 	 
 	            yield
