@@ -262,9 +262,11 @@ Table~\ref{tab:semilinear-size-reduction} include a summary of the results, when
 %
 Specifically, we compare both the mean and the average (i) number of components; and (ii) period vectors per each component.
 %
-As can be seen, the redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the mean and maximal number of components, with the latter being especially effective in reducing the average (max) number of components to be $155$ ($853$) times more compact than the baseline.
+As can be seen, the redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the mean and maximal number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, and the average number of components to be $223$ more compact, when compared to the baseline.
 %
-In fact, for both these optimizations the 
+In fact, for both these optimizations are even more effective as, in order to conduct a fair comparison, we analyzed only benchmarks that terminated in all combinations.
+%
+This, we do not include cases in which these two optimizations rendered the original semilinear set intractable, due to having over $2^30$ components (!), hence timing-out and being excluded from the analysis.
 
 
 
