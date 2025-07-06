@@ -25,6 +25,17 @@ M_0 \;\xrightarrow{\sigma}\; M
 \quad\text{for some}\;\sigma\in T^*.
 \]
 %
+A transition \(t\in T\) is \emph{enabled} at a marking \(M\in\mathbb N^P\) iff
+\[
+M \;\ge\; \mathsf{pre}(t)
+\quad(\text{coordinate‐wise}).
+\]
+Firing \(t\) yields the new marking
+\[
+M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t).
+\]
+
+%
 The \emph{reachability problem} asks, given $(N,M)$, whether $M$ is reachable from $M_0$.  Surprisingly, even in the
 \emph{unbounded} setting (where places may hold arbitrarily many tokens) this problem is
 decidable~\cite{Ma81,Ko82,La92}, although with
@@ -99,28 +110,83 @@ Q = G
 	\;\subseteq\;\mathbb N^{|\Sigma|}.
 	\]
 	
+	\item 
+	\textbf{Interleaving Petri Net.}
 	
-	\item \textbf{Interleaving Petri net.}  
-	Construct
+	We build
 	\[
 	N_{\mathrm{int}}(\mathcal S)
-	= (P, T, \mathsf{pre}, \mathsf{post}, M_0),
+	= (P,\,T,\,\mathsf{pre},\,\mathsf{post},\,M_0),
 	\]
-	whose transitions correspond to individual requests/responses of \(\mathcal S\),
-	and whose places are partitioned
+	where
 	\[
-	P = P_G \;\cup\; P_R \;\cup\; P_{\mathrm{aux}},
+	P
+	=
+	P_G \;\cup\; P_{L} \;\cup\; P_{Req,Resp}
 	\]
-	where \(P_G\) encodes the current global state and \(P_R\) records the multiset
-	of responses seen so far.  By construction, every marking \(M\) reachable in
-	\(N_{\mathrm{int}}\) corresponds to some interleaved execution of \(\mathcal S\).
 	
-	Define the projection
+	for 
+	\[
+	P_G 
+	= \{\,p_g \mid g\in G\}
+	\quad 
+	P_L 
+	= \{\,p_\ell \mid \ell\in L\}
+	\quad
+	P_{Req,Resp}=
+	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
+	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{Req}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{Resp}\},
+	\]
+	with \(G\) the global states, \(L\) the in‐flight local states (request‐state + remaining program), and \(\mathit{Resp}\) the response labels.
+	
+	Transitions are partitioned as
+	\[
+	T = T_{\mathit{req}} \;\cup\; T_{\delta}\;\cup\;T_{\mathit{resp}},
+	\]
+	where
+	\[
+	T_{\mathit{req}} = \{\,t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}} \mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{Req}\},\quad
+	T_{\delta} = \{\,t_{(\ell,g)\to(\ell',g')} \mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta_{\mathcal S}\},\quad
+	T_{\mathit{resp}} = \{\,t_{{\color{red}\blacklozenge_{\mathit{resp}}}} \mid {\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{Resp}\}.
+	\]
+	
+	Their pre/post vectors are:
+	\[
+	\begin{alignedat}{3}
+		\mathsf{pre}\bigl(t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}}\bigr)
+		&= \mathbf0, &
+		\mathsf{post}\bigl(t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}}\bigr)
+		&= \mathbf1_{p_{\ell_r}}, 
+		&&\text{for each }{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{Req},\\
+		\mathsf{pre}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
+		&= \mathbf1_{p_\ell} + \mathbf1_{p_g}, &
+		\mathsf{post}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
+		&= \mathbf1_{p_{\ell'}} + \mathbf1_{p_{g'}}, 
+		&&\text{for each }(\ell,g)\!\to\!(\ell',g')\in\delta_{\mathcal S},\\
+		\mathsf{pre}\bigl(t_{{\color{red}\blacklozenge_{\mathit{resp}}}}\bigr)
+		&= \mathbf1_{p_\ell}, &
+		\mathsf{post}\bigl(t_{{\color{red}\blacklozenge_{\mathit{resp}}}}\bigr)
+		&= \mathbf1_{p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}}, 
+		&&\text{for each }{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{Resp}\ (\ell\text{ the matching local state).}
+	\end{alignedat}
+	\]
+	
+	Finally, the initial marking is
+	\[
+	M_0(p_{g_0}) = 1,
+	\quad
+	M_0(p) = 0 \text{ for all }p\neq p_{g_0},
+	\]
+	where \(g_0\) is the initial global state of \(\mathcal S\).  
+	
+	
+	
+	Define the projection of all reachable marking to the places representing completed request/response pairs:
 	\[
 	\pi \;:\;\mathbb N^P \;\longrightarrow\;\mathbb N^{P_R}
-	\quad\bigl(\pi(M)\bigr)(p)\;=\;M(p)\text{ for }p\in P_R.
+	\quad\bigl(\pi(M)\bigr)(p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}})\;=\;M(p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}})\text{ for }p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}}\in P_{Req,Resp}.
 	\]
-	Then the set of all interleaving Parikh-vectors is
+	Then the set of all  ${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$ pairs of the NS, attained by any interleaving, is:
 	\[
 	\mathsf{Int}(\mathcal S)
 	\;=\;
@@ -129,7 +195,7 @@ Q = G
 	
 	\item \textbf{Non-serializable set.}  
 	Let
-	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\).
+	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., all ${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$ pairs that \textit{cannot} be attained via a serializable execution.
 	
 	\item \textbf{Reachability encoding.}  
 	Ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that
