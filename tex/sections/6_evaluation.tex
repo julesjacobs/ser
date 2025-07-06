@@ -26,21 +26,37 @@ All our code, benchmarks, and raw experimental results will be made publicly ava
 \subsection{Benchmarks Overview} 
 \label{subsec:benchmarks}
 
-\begin{itemize}
-	
-	\item \todo{update benchmark overview and category names}
-	\item \textbf{Core expressions \& multi request workflows}: Benchmarks testing arithmetic, boolean, and simple control expression.
-	\item \textbf{Fred (mixed arithmetic)}: Mixed control and arithmetic transformations (Fred series).
-	\item \textbf{Stop (circular-increment) series}: Circular increment loops and variants.
-	\item \textbf{Concurrency \& locking loops}: Concurrent looping patterns with locking and tricky interactions.
-	\item \textbf{Non-deterministic choice \& randomness}: Random choice and non-deterministic branching benchmarks.
-	\item \textbf{Networking \& system protocols}: Networking protocols and system-level monitoring.
-	\item \textbf{JSON state-machine examples}: Example JSON-encoded state machine workflows.
-\end{itemize}
+As there are no standard benchmarks for evaluating serializability, we hand-coded dozens of programs in our abstract network-system language. These benchmarks span a wide range of complexity --- covering branching, looping constructs, arithmetic operations, non-deterministic choices, and multi-request workflows that manipulate both shared (global) variables and per-request (local) state. 
+%
+We include both serializable and non-serializable instances, and summarize the benchmarks' features and categorizations in Table~\ref{tab:benchmarks-all}. 
+%
+In particular, our most sophisticated examples are drawn from realistic networking and system-protocol scenarios, including stateful firewalls, BGP routing, network monitoring, and more --- highlighting the serializability challenges inherent in real-world distributed programs.
 
-
-
-The benchmarks differ in their complexity and in the various features pertaining to them --- branching, loops, randomness, multiple requests, etc. 
+%As there are no official benchmarks for evaluating serializability, we hand-coded dozes of programs in our abstract network-system language.
+%%
+%The benchmarks vary in the complexity, and have multiple features: branching, loops, arithmetic, non-determinism, and multiple requests and responses, operating on both shared (global) variables and per-request (local) variables.
+%%
+%The benchmarks include both serializable and non-serializable instances, as we summarize in Table.~\ref{tab:benchmarks-all}, based on a category and feature-wise breakdown.
+%%
+%Especially, we wish to note the final category of complex examples as motivated by real-world systems and networking programs.
+%%
+%These include a stateful firewall, BGP routing, network monitoring and additional examples.
+%
+%\begin{itemize}
+%		
+%	\item \todo{update benchmark overview and category names}
+%	\item \textbf{Core expressions \& multi request workflows}: Benchmarks testing arithmetic, boolean, and simple control expression.
+%	\item \textbf{Fred (mixed arithmetic)}: Mixed control and arithmetic transformations (Fred series).
+%	\item \textbf{Stop (circular-increment) series}: Circular increment loops and variants.
+%	\item \textbf{Concurrency \& locking loops}: Concurrent looping patterns with locking and tricky interactions.
+%	\item \textbf{Non-deterministic choice \& randomness}: Random choice and non-deterministic branching benchmarks.
+%	\item \textbf{Networking \& system protocols}: Networking protocols and system-level monitoring.
+%	\item \textbf{JSON state-machine examples}: Example JSON-encoded state machine workflows.
+%\end{itemize}
+%
+%
+%
+%The benchmarks differ in their complexity and in the various features pertaining to them --- branching, loops, randomness, multiple requests, etc. 
 %
 
 \subsection{Runtime Results}
