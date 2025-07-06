@@ -181,7 +181,7 @@ All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
 \subsubsection{Runtime Optimization}
 
 We ran all benchmarks with each of the following six optimization combinations: 
-(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidrectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints(marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
+(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidrectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
 (v) with strategic Kleene elimination(marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
 and finally, with (vi) all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
 %
@@ -252,8 +252,19 @@ With all optimizations enabled, we evaluated the impact of our bidirectional pru
 
 \paragraph{Semilinear set size reduction.}
 
-bla
-See Table~\ref{tab:semilinear-size-reduction}.
+Finally, our last batch of experiment analyzed the size reduction in the semilinear set.
+%
+Towards this end, we ran all our benchmarks with all optimizations, to serve as a baseline. 
+%
+Then, we analyzed the effect of the three semilinear-related optimizations, i.e., all but the bidirectional pruning which effects the Petri Net size. for each of these three optimizations, we ran the benchmarks with all optimizations \textit{except} the one checked.
+%
+Table~\ref{tab:semilinear-size-reduction} include a summary of the results, when comparing the semilinear set size.
+%
+Specifically, we compare both the mean and the average (i) number of components; and (ii) period vectors per each component.
+%
+As can be seen, the redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the mean and maximal number of components, with the latter being especially effective in reducing the average (max) number of components to be $155$ ($853$) times more compact than the baseline.
+%
+In fact, for both these optimizations the 
 
 
 
