@@ -267,7 +267,10 @@ As can be seen, the redundant constraint elimination and the generate-less-const
 In fact, for both these optimizations are even more effective as, in order to conduct a fair comparison, we analyzed only benchmarks that terminated in all combinations.
 %
 This, we do not include cases in which these two optimizations rendered the original semilinear set intractable, due to having over $2^30$ components (!), hence timing-out and being excluded from the analysis.
+%
+This occurs especially in our state-machine serializable benchmarks which have loops in their network systems --- and hence even simple programs of this category cannot be analyzed with respect to serializability.
 
+\todo{understand why this is related to loops in the NS}
 
 
 \begin{table}[htbp]
