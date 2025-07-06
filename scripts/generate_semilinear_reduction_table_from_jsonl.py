@@ -22,10 +22,13 @@ opts = df["options"].apply(pd.Series)
 df = pd.concat([df.drop(columns=["options"]), opts], axis=1)
 
 # ───────────────────────────────────────────────────────────────────────────────
-# 2.5. Filter out all timeout runs
+# 2.5. Remove *entire* examples that ever timed out in any scenario
 # ───────────────────────────────────────────────────────────────────────────────
 # this is because there are instances that we short-circuit T.O. if the semilinear set is too large
-df = df[df["result"] != "timeout"].copy()
+# find all examples with at least one timeout
+timeout_examples = set(df.loc[df["result"] == "timeout", "example"])
+# drop them entirely
+df = df[~df["example"].isin(timeout_examples)].copy()
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 3. Define the four target optimization scenarios
