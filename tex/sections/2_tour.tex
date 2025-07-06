@@ -269,7 +269,7 @@ $A+B=2\cdot (100\$+50\$)=300\$$, with either a final state of $[A=150\$, B=150\$
 
 The following example motivates our routing‐policy programs in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adopt its updated routing as dictated by the updates.
 %
-An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST}), serving as ingress points from where traffic may nondeterministically enter the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or a \textcolor{orange}{orange} policy, which routes it in the opposite direction.
+An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST}), serving as ingress points from where traffic may nondeterministically enter the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or a \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
 
 
 %// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
@@ -288,7 +288,7 @@ An instance of a simple network with two competing policies is shown in Fig.~\re
 
 This SDN-controlled routing policy is realized in the pseudo code in Listing~\ref{lst:BgpNonSerializable}.
 %
-The program includes a single global variable $B$, indicating if the current routing policy is the  \textcolor{NavyBlue}{blue} policy ($[B=1]$) or the \textcolor{orange}{orange} policy ($[B=0]$).
+The program includes a single global variable $B$, indicating if the current routing policy is the  \textcolor{NavyBlue}{blue} policy ($[B=1]$) or the \textcolor{darkorange}{orange} policy ($[B=0]$).
 %
 The program has three types of requests:
 \begin{itemize}
