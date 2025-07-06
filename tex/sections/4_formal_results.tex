@@ -227,11 +227,82 @@ Q = G
 \end{itemize}
 \end{enumerate}
 
+
+\guy{should we add/prove the following?}
+
+\begin{proposition}
+	Let $N_{\mathrm{int}}(\mathcal S)=(P,T,\mathsf{pre},\mathsf{post},M_0)$ be the interleaving Petri net constructed above, and let
+	\[
+	\pi\colon\mathbb N^P\to\mathbb N^{P_R}
+	\]
+	be the projection onto the request/response places $P_R$.  Then
+	\[
+	\mathsf{Int}(\mathcal S)
+	\;=\;
+	\{\;\pi(M)\;\mid\;M_0\xrightarrow{*}M\}.
+	\]
+\end{proposition}
+
+
 \subsection{Time/Space Complexity}
 
 \todo{consult with Jules}
 
 
 \subsection{Optimizations}
+\label{sec:optimizations}
+
+\todo{check}
+
+We apply four optimizations to the base algorithm to control intermediate blow‐up.
+
+\paragraph{(1) Bidirectional pruning.}  
+Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the “nonzero” places extracted from the Presburger constraints.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets
+\[
+T^{(0)} = T,\qquad
+\begin{aligned}
+	R_{\mathrm{fw}}^{(k)} &= \{\,t\in T^{(k)} \mid \exists\,M_0\xrightarrow{*}M\text{ in }N\text{ enabling }t\},\\
+	R_{\mathrm{bw}}^{(k)} &= \{\,t\in T^{(k)} \mid \exists\,M\xrightarrow{*}M'\text{ in }\overline N\text{ with }M'(p)>0\;(p\in\mathit{Tgt})\},\\
+	T^{(k+1)} &= R_{\mathrm{fw}}^{(k)} \;\cap\; R_{\mathrm{bw}}^{(k)}.
+\end{aligned}
+\]
+We repeat until \(T^{(k+1)}=T^{(k)}\).  In each iteration we record
+\(\Delta_{\mathrm{fw}}^{(k)}=R_{\mathrm{fw}}^{(k-1)}\setminus R_{\mathrm{fw}}^{(k)}\)
+and
+\(\Delta_{\mathrm{bw}}^{(k)}=R_{\mathrm{bw}}^{(k-1)}\setminus R_{\mathrm{bw}}^{(k)}\),
+so that, upon UNSAT, we can reconstruct an inductive invariant by applying
+backward eliminations \(\Delta_{\mathrm{bw}}^{(k)}\) then forward eliminations \(\Delta_{\mathrm{fw}}^{(k)}\)
+in reverse order of pruning :contentReference[oaicite:0]{index=0}.
+
+\paragraph{(2) Semilinear‐set pruning.}  
+Recall a semilinear set is \(S=\bigcup_{i=1}^m L_i\) with
+\(\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p\,p\mid n_p\in\mathbb N\}\).  We maintain two Boolean flags \(\mathit{REMOVE\_PARTS}\) and \(\mathit{REMOVE\_SETS}\).  When \(\mathit{REMOVE\_PARTS}=\mathsf{true}\), we replace each period‐basis \(P_i\) by
+\[
+P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\},
+\]
+dropping any “redundant” period.  When \(\mathit{REMOVE\_SETS}=\mathsf{true}\), we remove any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixpoint so no two components subsume one another.
+
+\paragraph{(3) Generate‐less constructors.}  
+For any two semilinear sets \(S,T\) we normally build
+\(\;S\mathbin{\oplus} T=\mathsf{new}(\mathrm{comp}(S)\cup\mathrm{comp}(T))\).
+If \(\mathit{GENERATE\_LESS}=\mathsf{false}\), we instead take the naïve union
+\(\;S\cup T\) (no deduplication or merging).  The same guarding applies to
+the \(\otimes\) operation and to the Kleene‐star/plus on the regex side.
+
+\paragraph{(4) Smart Kleene elimination order.}  
+When converting an NFA \(\mathcal A=(Q,\Sigma,\delta,q_0,F)\) to a regex by repeated state‐elimination, we pick the next state
+\[
+q^* = 
+\begin{cases}
+	\arg\min_{q\in Q'}\bigl(|\delta_{\mathrm{in}}(q)|+|\delta_{\mathrm{out}}(q)|\bigr)
+	&\text{if }\mathit{SMART\_ORDER}=\mathsf{true},\\
+	\text{any }q\in Q' 
+	&\text{otherwise},
+\end{cases}
+\]
+where \(Q'\subseteq Q\) are the remaining eliminable states.  This heuristic keeps the intermediate regex small.
+
+All four optimizations are enabled by default and can be toggled via the corresponding CLI flags.
+
 
 \newpage
