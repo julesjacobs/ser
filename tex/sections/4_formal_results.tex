@@ -269,40 +269,70 @@ T^{(0)} = T,\qquad
 We repeat until \(T^{(k+1)}=T^{(k)}\).  In each iteration we record
 \(\Delta_{\mathrm{fw}}^{(k)}=R_{\mathrm{fw}}^{(k-1)}\setminus R_{\mathrm{fw}}^{(k)}\)
 and
-\(\Delta_{\mathrm{bw}}^{(k)}=R_{\mathrm{bw}}^{(k-1)}\setminus R_{\mathrm{bw}}^{(k)}\),
-so that, upon UNSAT, we can reconstruct an inductive invariant by applying
-backward eliminations \(\Delta_{\mathrm{bw}}^{(k)}\) then forward eliminations \(\Delta_{\mathrm{fw}}^{(k)}\)
-in reverse order of pruning :contentReference[oaicite:0]{index=0}.
+\(\Delta_{\mathrm{bw}}^{(k)}=R_{\mathrm{bw}}^{(k-1)}\setminus R_{\mathrm{bw}}^{(k)}\).
+%
+This optimization allows to significant;y prune the Petri Net while still over-approximating all reachable markings (see the proof in Appendix~\ref{appendix:BidirectionalProof}).
 
 \paragraph{(2) Semilinear‐set pruning.}  
 Recall a semilinear set is \(S=\bigcup_{i=1}^m L_i\) with
-\(\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p\,p\mid n_p\in\mathbb N\}\).  We maintain two Boolean flags \(\mathit{REMOVE\_PARTS}\) and \(\mathit{REMOVE\_SETS}\).  When \(\mathit{REMOVE\_PARTS}=\mathsf{true}\), we replace each period‐basis \(P_i\) by
+\(\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p\,p\mid n_p\in\mathbb N\}\).  
+%
+We replace each period‐basis \(P_i\) by
 \[
 P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\},
 \]
-dropping any “redundant” period.  When \(\mathit{REMOVE\_SETS}=\mathsf{true}\), we remove any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixpoint so no two components subsume one another.
+dropping any ``redundant” period, and remove any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixpoint so no two components subsume one another.
 
-\paragraph{(3) Generate‐less constructors.}  
-For any two semilinear sets \(S,T\) we normally build
-\(\;S\mathbin{\oplus} T=\mathsf{new}(\mathrm{comp}(S)\cup\mathrm{comp}(T))\).
-If \(\mathit{GENERATE\_LESS}=\mathsf{false}\), we instead take the naïve union
-\(\;S\cup T\) (no deduplication or merging).  The same guarding applies to
-the \(\otimes\) operation and to the Kleene‐star/plus on the regex side.
+\paragraph{(3) Generating fewer constraints.}  
+Let $\mathrm{comp}(S)=\{L_1,\dots,L_m$ 
+be the multiset of linear components of the semilinear set 
+\(\displaystyle S=\bigcup_{i=1}^m L_i\), where each 
+\(\;L_i=b_i+\langle P_i\rangle\) with \(b_i\in\mathbb N^d\) and 
+\(P_i\subseteq\mathbb N^d\).  Define the pruning operator
+\[
+\mathrm{new}(\mathcal C)
+\;=\;
+\bigcup\bigl\{\,L\in\mathcal C \;\bigm|\;\nexists\,L'\in\mathcal C\setminus\{L\}:\;L'\subsetneq L\bigr\},
+\]
+which removes any component strictly containing another.  
 
-\paragraph{(4) Smart Kleene elimination order.}  
-When converting an NFA \(\mathcal A=(Q,\Sigma,\delta,q_0,F)\) to a regex by repeated state‐elimination, we pick the next state
+Then we replace the naïve semilinear‐set operations (and their semilinear ``meaning'') by
+\[
+S\;+\;T
+\;=\;
+\mathrm{new}\bigl(\mathrm{comp}(S)\,\cup\,\mathrm{comp}(T)\bigr),
+\]
+\[
+S\;\cdot\;T
+\;=\;
+\mathrm{new}\Bigl(\{\,L_i\cdot L'_j \mid L_i\in\mathrm{comp}(S),\;L'_j\in\mathrm{comp}(T)\}\Bigr),
+\]
+where for
+\(\;L_i=b_i+\langle P_i\rangle,\;L'_j=b'_j+\langle P'_j\rangle\) we set
+$
+L_i\cdot L'_j
+=\;(b_i+b'_j)\;+\;\langle\,P_i\cup P'_j\,\rangle.
+$
+Finally, for Kleene‐star and plus on the regex side one similarly applies
+\(\mathrm{new}(\cdot)\) to the collection of “folded” components instead of
+building all intermediate ones:
+\[
+S^*
+=\mathrm{new}\Bigl(\bigcup_{k\ge0}\bigl(\mathrm{comp}(S)\bigr)^k\Bigr),
+\qquad
+S^+
+=S\cdot S^*.
+\]
+
+\paragraph{(4) Strategic Kleene elimination order.}  
+When converting an NFA \(\mathcal A=(Q,\Sigma,\delta,q_0,F)\) to a regex by repeated state‐elimination, then instead of choosing an arbitrary state $q\in Q'$, we pick the next state
 \[
 q^* = 
-\begin{cases}
 	\arg\min_{q\in Q'}\bigl(|\delta_{\mathrm{in}}(q)|+|\delta_{\mathrm{out}}(q)|\bigr)
-	&\text{if }\mathit{SMART\_ORDER}=\mathsf{true},\\
-	\text{any }q\in Q' 
-	&\text{otherwise},
-\end{cases}
 \]
-where \(Q'\subseteq Q\) are the remaining eliminable states.  This heuristic keeps the intermediate regex small.
 
-All four optimizations are enabled by default and can be toggled via the corresponding CLI flags.
+
+where \(Q'\subseteq Q\) are the remaining states remaining to be eliminated.  This heuristic keeps the intermediate regex small.
 
 
 \newpage
