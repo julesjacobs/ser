@@ -87,7 +87,7 @@ Regarding linearizability, the easier, membership problem is
 \texttt{NP}-complete in 
 general, as proven by Gibbons and Korach~\cite{GiKo97}. Their result was later 
 extended to \textit{collections}~\cite{EmEn18}.
-\guy{Mark could you check EmEn18?}
+%\guy{Mark could you check EmEn18?}
 %
 The \textit{correctness problem} on the other hand, is much harder, and 
 pertains to deciding whether \textit{all} executions of a program are 
@@ -172,7 +172,7 @@ Liu et al.~\cite{LiChLiSuZhDo12} build upon \texttt{PAT}~\cite{SuLuDoPa09}
 in~\cite{LiChLiSu09, Zh11}) and verify linearizability through the lens of 
 refinement checking optimization, for a finite number of threads.
 %
-\guy{Mark, could you please check LiChLiSu09,Zh11}
+%\guy{Mark, could you please check LiChLiSu09,Zh11}
 %
 Recently, Golovin et al.~\cite{GoKoVa25} presented \texttt{RELINCHE}, a model 
 checker for bounded-linearizability, in which a predefined number of operations 
@@ -222,7 +222,7 @@ linearizability with non-fixed linearization points.
 Other techniques that depend on linearization points 
 include~\cite{OhRiVeYaYo10, ZhPeHa15, AbJoTr16}. 
 %
-\guy{Mark can you take a look at Va10, LiFe13, and ZhPeHa15?}
+%\guy{Mark can you take a look at Va10, LiFe13, and ZhPeHa15?}
 %
 We note that both the model-checking techniques (e.g.,~\cite{CeRaZuChAl10}) and 
 the static analysis techniques which rely on linearization points are 
@@ -238,9 +238,9 @@ Colvin et
 al.~\cite{CoGrLuMo06} prove that a list-based set algorithm is linearizable by 
 simulating the observed behavior with input/output automata.
 %
-\guy{Mark could you take a 2nd look at CoGrLuMo06? Not sure if this is 
-considered manual. One paper which I put in the slack channel mentioned that it 
-semiautomatically verifies linearizability of an implementation.}
+%\guy{Mark could you take a 2nd look at CoGrLuMo06? Not sure if this is 
+%considered manual. One paper which I put in the slack channel mentioned that it 
+%semiautomatically verifies linearizability of an implementation.}
 %
 Other methods demonstrate that in some cases, proofs can be simplified for specific data structure to which certain properties hold~\cite{BoEmEnMu17, FeEnMoRiSh18}.
 %
@@ -284,7 +284,7 @@ There has also been ample research in technique for linearizability  and simplif
 Other techniques for linearizability proof include the use of theorem provers, 
 e.g.~\cite{CoDoGr05, DeScWe11} and proof assistance techniques~\cite{EnKo24}.
 %
-\guy{Mark EnKo24 is the OOPSLA paper, is it legit to cite it as a proof assistance technique?} 
+%\guy{Mark EnKo24 is the OOPSLA paper, is it legit to cite it as a proof assistance technique?} 
 %Additional related work includes~\cite{BoEmEnMu17, FeEnMoRiSh18, EnKo24}.
 %
 %EnKo24: OOPSLA paper (Mark) trying to formalize and prove existing reduction techniques, and introduce a new abstraction for splitting linearizability checking scenarios (cases) and check if they covers all the checks. They don't actually check linearizability but say there it can help other checkers
@@ -353,7 +353,7 @@ Elmas et al.~\cite{ElQaSeSuTa10} also use the notion of movers and present an
 (incomplete) technique to prove linearizability by iteratively rewriting an 
 input program.
 %
-\guy{Mark can you please check out ElQaSeSuTa10}
+%\guy{Mark can you please check out ElQaSeSuTa10}
 %
 Nagar and Jagannathan~\cite{KaJa18} presented an 
 automatic static analysis technique to find violations of conflict 
@@ -377,8 +377,8 @@ non-(conflict)-serializable behaviors in causally consistent databases.
 %Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis 
 %techniques for verifying view-serializability on specific program sub-types.
 %
-\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
-	them?}
+%\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
+%	them?}
 %
 We also note that conflict serializability has been studied in relation to weak 
 memory models~\cite{EnFa16}.
@@ -392,21 +392,23 @@ memory models~\cite{EnFa16}.
 \label{sec:related:petri}
 
 In addition, our work builds on both theoretical and practical advances in 
-Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}. The undecidability we prove 
-for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, 
-HaThesis76} showing the undecidability of reachability set equivalence for 
-Petri Nets. This undecidability originates in a series of reductions from 
-Hilbert’s 10th problem, specifically the possibility of determining whether 
-there exists an integer root for Diophantine equations, a problem that was 
-later proven undecidable by Matijasēvič~\cite{Ma70}.
+Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}. 
+%The undecidability we prove 
+%for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, 
+%HaThesis76} showing the undecidability of reachability set equivalence for 
+%Petri Nets. This undecidability originates in a series of reductions from 
+%Hilbert’s 10th problem, specifically the possibility of determining whether 
+%there exists an integer root for Diophantine equations, a problem that was 
+%later proven undecidable by Matijasēvič~\cite{Ma70}.
+%%
+%Jančar~\cite{Ja95} later provided an alternative proof to this undecidability 
+%result, by showing that Petri Nets can simulate universal (and thus 
+%undecidable) 2-counter Minsky machines~\cite{Mi67}. In addition, Jančar further 
+%strengthened the original result by proving that undecidability holds even for 
+%Petri nets with just five unbounded places.
 %
-Jančar~\cite{Ja95} later provided an alternative proof to this undecidability 
-result, by showing that Petri Nets can simulate universal (and thus 
-undecidable) 2-counter Minsky machines~\cite{Mi67}. In addition, Jančar further 
-strengthened the original result by proving that undecidability holds even for 
-Petri nets with just five unbounded places.
-%
-Furthermore, our approach also builds on Petri Net reachability algorithms, 
+%Furthermore, our approach also builds on 
+as well as Petri Net reachability algorithms, 
 which determine whether a given marking is attainable. While the solution is 
 straightforward for bounded nets (through exhaustive enumeration), the solution 
 for the unbounded case is highly nontrivial, and was first solved by 
