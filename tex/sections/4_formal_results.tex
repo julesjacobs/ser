@@ -10,4 +10,110 @@
 \end{itemize}
 
 
+\subsection{Background}
 
+\paragraph{Petri nets.}
+A \emph{Petri net} is a tuple
+\[
+N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
+\]
+where \(P\) is a finite set of \emph{places}, \(T\) a finite set of \emph{transitions},
+\(\mathsf{pre},\mathsf{post}:T\to\mathbb N^P\) the input/output vectors, and
+\(M_0\in\mathbb N^P\) the initial marking.  A marking \(M\) is \emph{reachable} if
+\[
+M_0 \;\xrightarrow{\sigma}\; M
+\quad\text{for some}\;\sigma\in T^*.
+\]
+%
+The \emph{reachability problem} asks, given $(N,M)$, whether $M$ is reachable from $M_0$.  In the
+\emph{unbounded} setting (where places may hold arbitrarily many tokens) this problem is
+decidable~\cite{Ma81,Ko82,La92}, and with
+Ackermann-complete~\cite{CzWo22} complexity.
+
+\paragraph{Semilinear sets and Park’s theorem.}
+A set \(S\subseteq\mathbb N^k\) is \emph{semilinear} iff
+\[
+S \;=\; \bigcup_{i=1}^m \Bigl\{\mathbf b_i + \sum_{j=1}^{r_i} n_j\,\mathbf p_{i,j}
+\;\Big|\; n_j\in\mathbb N\Bigr\}.
+\]
+
+Semilinear sets coincide exactly with the sets definable in Presburger arithmetic~\cite{Pr29}.
+%
+By Parkh's theorem~\cite{Parikh66}, the Parikh Image of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
+finite description of its Parikh Image.
+
+\subsection{Basic Algorithm (without Optimizations)}
+
+Let \(\mathcal S\) be the parsed Network System, with set of global states \(G\).  
+
+\begin{enumerate}
+	\item \textbf{Serializability automaton.}  
+	We define an NFA
+	\[
+	\mathcal A_{\mathrm{ser}}(\mathcal S)
+	= \bigl(Q,\Sigma,\delta,q_0,F\bigr)
+	\quad\text{where }Q = G,
+	\]
+	\(\Sigma\) is the set of request/response actions, and
+	\((q \xrightarrow{a} q')\in\delta\) iff \(\mathcal S\) can move from global
+	state \(q\) to \(q'\) via action \(a\) in a purely serial execution.
+	
+	Its language \(L(\mathcal A_{\mathrm{ser}})\subseteq\Sigma^*\) is exactly
+	the set of serial traces, and we define
+	\[
+	\mathsf{Ser}(\mathcal S)
+	\;=\;
+	\Parikh\bigl(L(\mathcal A_{\mathrm{ser}})\bigr)
+	\;\subseteq\;\mathbb N^{|\Sigma|}.
+	\]
+	
+	\item \textbf{Interleaving Petri net.}  
+	Construct
+	\[
+	N_{\mathrm{int}}(\mathcal S)
+	= (P, T, \mathsf{pre}, \mathsf{post}, M_0),
+	\]
+	whose transitions correspond to individual requests/responses of \(\mathcal S\),
+	and whose places are partitioned
+	\[
+	P = P_G \;\cup\; P_R \;\cup\; P_{\mathrm{aux}},
+	\]
+	where \(P_G\) encodes the current global state and \(P_R\) records the multiset
+	of responses seen so far.  By construction, every marking \(M\) reachable in
+	\(N_{\mathrm{int}}\) corresponds to some interleaved execution of \(\mathcal S\).
+	
+	Define the projection
+	\[
+	\pi \;:\;\mathbb N^P \;\longrightarrow\;\mathbb N^{P_R}
+	\quad\bigl(\pi(M)\bigr)(p)\;=\;M(p)\text{ for }p\in P_R.
+	\]
+	Then the set of all interleaving Parikh-vectors is
+	\[
+	\mathsf{Int}(\mathcal S)
+	\;=\;
+	\bigl\{\;\pi(M)\;\bigm|\;M_0 \xrightarrow{*} M\text{ in }N_{\mathrm{int}}(\mathcal S)\bigr\}.
+	\]
+	
+	\item \textbf{Non-serializable set.}  
+	Let
+	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\).
+	
+	\item \textbf{Reachability encoding.}  
+	Ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that
+	\[
+	M_0 \xrightarrow{*} M
+	\quad\wedge\quad
+	\pi(M)\in \mathsf{NonSer}(\mathcal S).
+	\]
+	
+	\item \textbf{Decision.}  
+	\begin{itemize}
+		\item \sat: yields a counterexample interleaving \(M\) with
+		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\).
+		\item \unsat: yields an inductive (unbounded) invariant of
+		\(N_{\mathrm{int}}\), which back-translates to a proof of
+		serializability for \(\mathcal S\).
+	\end{itemize}
+\end{enumerate}
+
+\newpage
