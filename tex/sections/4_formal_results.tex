@@ -57,7 +57,7 @@ Semilinear sets coincide exactly with the sets definable in \textit{Presburger a
 By Parikh's theorem~\cite{Parikh66}, the Parikh Image of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
 finite description of its Parikh Image.
 
-\subsection{Basic Algorithm (without Optimizations)}
+\subsection{The Algorithm (without Optimizations)}
 
 Let \(\mathcal S\) be the parsed Network System, with set of global states \(G\).  
 
@@ -215,6 +215,23 @@ Q = G
 		\(N_{\mathrm{int}}\), which back-translates to a proof of
 		serializability for \(\mathcal S\).
 	\end{itemize}
+
+
+
+\item \textbf{Validation.}  
+	\begin{itemize}
+	\item if \sat we validate the reachable trace and project to to the NS semantics to represent a valid interleaving that results into request/response pairs which cannot be attained in serial executions.
+	
+	\item if \unsat:
+	we generate an inductive invariant over the interleaving Petri Net, which proves the semilinear set cannot be attained via an interleaving.
+\end{itemize}
 \end{enumerate}
+
+\subsection{Time/Space Complexity}
+
+\todo{consult with Jules}
+
+
+\subsection{Optimizations}
 
 \newpage
