@@ -28,7 +28,7 @@ All our code, benchmarks, and raw experimental results will be made publicly ava
 
 \begin{itemize}
 	
-	\item \todo{update benchmark overview}
+	\item \todo{update benchmark overview and category names}
 	\item \textbf{Core expressions \& multi request workflows}: Benchmarks testing arithmetic, boolean, and simple control expression.
 	\item \textbf{Fred (mixed arithmetic)}: Mixed control and arithmetic transformations (Fred series).
 	\item \textbf{Stop (circular-increment) series}: Circular increment loops and variants.
@@ -180,16 +180,50 @@ All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
 
 \subsubsection{Runtime Optimization}
 
-\todo{cactus plot}
+We ran all benchmarks with each of the following six optimization combinations: 
+(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidrectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints(marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
+(v) with strategic Kleene elimination(marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
+and finally, with (vi) all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
+%
+The results of the aggregated overall runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log}, and show that over $19\%$ more benchmarks are solved when using all optimizations, compared to running without any optimizations.
+%
+Not surprisingly, the best configuration is the one with all optimizations on. 
+%
+We also note that the best single-optimization configurations with regard to runtime are [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}] and [\texttt{\textbf{\text{-}\text{B}\text{-}\text{-}}}], solving over $74\%$ and $72\%$ of the benchmarks respectively. 
+%
+We also note that the two remaining optimizations, [\texttt{\textbf{\text{R}\text{-}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not by much) than without the optimizations when counting overall timeouts.
+%
+However, when comparing the combinations it seems that there an instances in which each of these optimizations \textit{strictly} improves runtime.
+%
+For example, there are instances such as \texttt{a3.ser} and \texttt{a7.ser}, in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{R}\text{-}\text{-}\text{-}}}])
+affords a speedup of between $72.2\%-85.2\%$ over the same benchmarks without this optimization.
 
 
-See Fig.~\ref{fig:timeout_cumulative_solved_log}.
+
+\begin{center}
+	\begin{minipage}[htbp]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
+		\captionof{figure}{Cumulative number of solved instances over time.}
+		\label{fig:timeout_cumulative_solved_log}
+	\end{minipage}\hfill
+	\begin{minipage}[htbp]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
+		\captionof{figure}{Reduction of Petri nets size via bidirectional pruning.}
+			%(timeout 150 seconds)
+			%.}
+		\label{fig:petri_size_reduction}
+	\end{minipage}
+\end{center}
+
+
 
 \subsubsection{Space Optimization}
 
 In addition to time complexity, out optimizations also allow reducing the space complexity of the two main components pertaining to our approach --- the Petri Net size and the semilinear set size.
 
-\paragraph{Size reduction of Petri Nets.}
+\paragraph{Petri Net size reduction.}
 
 With all optimizations enabled, we evaluated the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions before and after pruning. On average, pruning cut the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places after. It was even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ after. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net produces one pruned net for each disjunct in our reachability query. These results are summarized in Fig.~\ref{fig:petri_size_reduction}.
 
@@ -215,26 +249,8 @@ With all optimizations enabled, we evaluated the impact of our bidirectional pru
 
 
 
-\begin{center}
-		\begin{minipage}[htbp]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
-		\captionof{figure}{Cumulative number of solved instances over time with a 150-second timeout.}
-		\label{fig:timeout_cumulative_solved_log}
-	\end{minipage}\hfill
-	\begin{minipage}[htbp]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
-		\captionof{figure}{Reduction of Petri nets size (places and transitions) via bidirectional pruning 
-%(timeout 150 seconds)
-.}
-		\label{fig:petri_size_reduction}
-	\end{minipage}
-\end{center}
 
-
-
-\paragraph{Size reduction of semilinear sets.}
+\paragraph{Semilinear set size reduction.}
 
 bla
 See Table~\ref{tab:semilinear-size-reduction}.
