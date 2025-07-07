@@ -4,7 +4,7 @@
 \label{sec:problem-definition}
 
 \newcommand{\grammartag}[1]{\qquad\qquad\emph{(#1)}}
-\begin{figure}[t]
+\begin{figure}[H]
     \begin{align*}
     \mathbf{Expression}\quad e ::= &&& \\
        | & \quad 0 \mid 1 \mid 2 \mid \ldots                                && \grammartag{Numeric constants} \\
@@ -151,32 +151,25 @@ The set of all finite multisets of \((r,s)\) pairs realizable by such one-at-a-t
 \]
 \end{definition}
 
-\begin{theorem}[Serializability]
-\label{thm:int-eq-ser}
-Whether
-\(
-    \mathrm{Int}(\mathcal{N}) \;=\; \mathrm{Ser}(\mathcal{N})
-\)
-holds is decidable.
-\end{theorem}
 
-\begin{theorem}[Serial Equivalence]
-\label{thm:ser-eq-ser}
-Whether
-\(
-    \mathrm{Ser}(\mathcal{N}) \;=\; \mathrm{Ser}(\mathcal{N})
-\)
-holds is decidable.
-\end{theorem}
 
-\begin{theorem}[Interleaved Equivalence]
-\label{thm:int-eq-int}
-Whether
-\(
-    \mathrm{Int}(\mathcal{N}) \;=\; \mathrm{Int}(\mathcal{N})
-\)
-holds is undecidable.
-\end{theorem}
+%\begin{theorem}[Serial Equivalence]
+%\label{thm:ser-eq-ser}
+%Whether
+%\(
+%    \mathrm{Ser}(\mathcal{N}) \;=\; \mathrm{Ser}(\mathcal{N})
+%\)
+%holds is decidable.
+%\end{theorem}
+%
+%\begin{theorem}[Interleaved Equivalence]
+%\label{thm:int-eq-int}
+%Whether
+%\(
+%    \mathrm{Int}(\mathcal{N}) \;=\; \mathrm{Int}(\mathcal{N})
+%\)
+%holds is undecidable.
+%\end{theorem}
 
 \subsection{NS Example: Non-Serializability }
 \label{sec:ns-non-serializable}
@@ -792,4 +785,4 @@ We get the following inductive invariants for each of the two global state:
 
 
 
-\newpage
+%\newpage

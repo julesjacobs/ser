@@ -1,13 +1,13 @@
 \section{Formal results}
 \label{sec:formal-results}
 
-\begin{itemize}
-	\item Results that we rely on (petri nets, semilinear sets)
-	\item The base algorithm described in math (without any optimizations)
-	\item Time complexity
-	\item proof for correctness of bidirectional pruning
-	\item mathematical description of optimizations
-\end{itemize}
+%\begin{itemize}
+%	\item Results that we rely on (petri nets, semilinear sets)
+%	\item The base algorithm described in math (without any optimizations)
+%	\item Time complexity
+%	\item proof for correctness of bidirectional pruning
+%	\item mathematical description of optimizations
+%\end{itemize}
 
 
 \subsection{Background}
@@ -56,6 +56,12 @@ Semilinear sets coincide exactly with the sets definable in \textit{Presburger a
 %
 By Parikh's theorem~\cite{Parikh66}, the Parikh Image of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
 finite description of its Parikh Image.
+
+\paragraph{Deciding serializability in unbounded systems.}
+
+Finally, we build upon the theoretical findings of Bouajjani et al.~\cite{BoEmEnHa13} which prove the decidability of serializability in the unbounded case (originally referred to as a type of \textit{k-bounded-barrier linearizability}): $	\mathrm{Int}(\mathcal{N}) \;=\; \mathrm{Ser}(\mathcal{N})$.
+
+
 
 \subsection{The Algorithm (without Optimizations)}
 
@@ -335,4 +341,4 @@ q^* =
 where \(Q'\subseteq Q\) are the remaining states remaining to be eliminated.  This heuristic keeps the intermediate regex small.
 
 
-\newpage
+%\newpage

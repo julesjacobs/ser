@@ -277,36 +277,47 @@ An instance of a simple network with two competing policies is shown in Fig.~\re
 %B := 0 // red/orange policy
 %// [out, switch 0] <--- [WEST, switch 1] <--- [EAST, switch 2] 
 
-
-
-\begin{figure}[H]
+\begin{wrapfigure}{r}{0.45\textwidth}  % “r” = wrap on the right, width = 45% of line
 	\centering
-	\includegraphics[width=0.7\linewidth]{plots/east_west_routing_updated_colors.pdf}
+	\includegraphics[
+	width=\linewidth,
+	trim=10 15 15 5,   % {left bottom right top} — tweak as needed
+	clip
+	]{plots/east_west_routing_updated_colors.pdf}
 	\caption{Routing policy in example 5.}
 	\label{fig:BgpRoutingPolicies}
-\end{figure}
+\end{wrapfigure}
+
+%\begin{figure}[H]
+%	\centering
+%	\includegraphics[width=0.5\linewidth]{plots/east_west_routing_updated_colors.pdf}
+%	\caption{Routing policy in example 5.}
+%	\label{fig:BgpRoutingPolicies}
+%\end{figure}
 
 This SDN-controlled routing policy is realized in the pseudo code in Listing~\ref{lst:BgpNonSerializable}.
 %
 The program includes a single global variable $B$, indicating if the current routing policy is the  \textcolor{NavyBlue}{blue} policy ($[B=1]$) or the \textcolor{darkorange}{orange} policy ($[B=0]$).
 %
 The program has three types of requests:
-\begin{itemize}
-	
-	\item
+%\begin{itemize}
+%	
+%	\item
+	(i)
 	{\color{ForestGreen}$\blacklozenge_\text{policy update}$}:
 %	\textit{policy update}:
- represents a controller  update, which nondeterministically decides whether to update the policy (i.e., flip the value of  variable $G$) or not.
-	
-		\item
+ represents a controller  update, which nondeterministically decides whether to update the policy (i.e., flip the value of  variable $G$) or not;
+%	
+%		\item
+(ii)
 	{\color{ForestGreen}$\blacklozenge_\text{route\_from\_west}$}:
-	 this request represents a packet entering the network from the \textit{WEST} node (node 1).
-	
-		\item
+	 this request represents a packet entering the network from the \textit{WEST} node (node 1); and 
+%	
+%		\item
+(iii)
 {\color{ForestGreen}$\blacklozenge_\text{route\_from\_east}$}: this request represents a packet entering the network from the \textit{EAST} node (node 2).
 	
-\end{itemize}
-
+%\end{itemize}
 
 Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the chosen routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
 %
@@ -361,7 +372,8 @@ Potential routing cycles can also be observed via non serializable executions al
 
 \subsection{Example 6}
 
-\guy{suddenly I'm not so sure about this example. It is indeed sound but maybe a bit silly?}
+We add an additional example for network monitoring and \textit{snapshot isolation} in Appendix~\ref{}.
+%\guy{suddenly I'm not so sure about this example. It is indeed sound but maybe a bit silly?}
 
 
 The next program is motivated by system monitoring.
