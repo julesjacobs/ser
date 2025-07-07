@@ -26,21 +26,21 @@ This simple example demonstrates the motivation for automatic serializability ch
 \label{appendix:subsec::Ex1A:NS}
 
 
-Recall the code snipped from Listing~\ref{lst:MotivatingExample1Ser}:
+For our third motivating example, presented in Listing~\ref{lst:MotivatingExample1Ser}, we have the following NS:
 
 
-\begin{minipage}[t]{0.3\textwidth}
-	\begin{lstlisting}[caption={Without yield or lock (serializable)}]
-	request main: 
-		X := 1 
-		// no yield
-		y := X 
-		X := 0
-		return y 
-	\end{lstlisting}
-\end{minipage}
+%\begin{minipage}[t]{0.3\textwidth}
+%	\begin{lstlisting}[caption={Without yield or lock (serializable)}]
+%	request main: 
+%		X := 1 
+%		// no yield
+%		y := X 
+%		X := 0
+%		return y 
+%	\end{lstlisting}
+%\end{minipage}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.9\textwidth]{plots/code_1_NS.png}
 	\caption{Network System for interleaving executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
@@ -48,7 +48,7 @@ Recall the code snipped from Listing~\ref{lst:MotivatingExample1Ser}:
 \end{figure}
 
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.35\textwidth]{plots/code_1_NFA.png}
 	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
@@ -57,7 +57,7 @@ Recall the code snipped from Listing~\ref{lst:MotivatingExample1Ser}:
 
 
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.6\textwidth]{plots/code_1_PN_with_annotation.png}
 	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample1Ser} program.}
@@ -75,30 +75,30 @@ For details, see the main text (Sec.~\ref{sec:problem-definition}).
 \subsection{Motivating Examples \#3}
 \label{appendix:subsec:Ex1C:NS}
 
-Recall our third motivating example, presented in Listing~\ref{lst:MotivatingExample3Ser}.
+For our third motivating example, presented in Listing~\ref{lst:MotivatingExample3Ser}, we have the following NS:
 
-\begin{minipage}[t]{0.3\textwidth}
-	\begin{lstlisting}[caption={With yield and lock (serializable)}]
-		request foo: 
-			// lock
-			while (L == 1): 
-				yield
-			L := 1 
-		
-			X := 1
-			yield
-			y := X 
-			X := 0
-		
-			// unlock    
-			L := 0
-			return y 
-	\end{lstlisting}
-\end{minipage}
+%\begin{minipage}[t]{0.3\textwidth}
+%	\begin{lstlisting}[caption={With yield and lock (serializable)}]
+%		request foo: 
+%			// lock
+%			while (L == 1): 
+%				yield
+%			L := 1 
+%		
+%			X := 1
+%			yield
+%			y := X 
+%			X := 0
+%		
+%			// unlock    
+%			L := 0
+%			return y 
+%	\end{lstlisting}
+%\end{minipage}
+%
+%This program corresponds to the following Network System (NS):
 
-This program corresponds to the following Network System (NS):
-
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=1.1\textwidth]{plots/code_3_NS.png}
 	\caption{Network System for interleaving executions of Listing~\ref{lst:MotivatingExample3Ser} program.}
@@ -106,7 +106,7 @@ This program corresponds to the following Network System (NS):
 \end{figure}
 
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.4\textwidth]{plots/code_3_NFA.png}
 	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample3Ser} program.}
@@ -115,7 +115,7 @@ This program corresponds to the following Network System (NS):
 
 
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.8\textwidth]{plots/code_3_PN_with_annotation.png}
 	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample3Ser} program.}
