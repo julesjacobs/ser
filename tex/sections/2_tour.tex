@@ -89,7 +89,7 @@ This updates allows request of the same type to update X to the same value --- s
 
 % Third row
 \noindent
-\begin{minipage}[t]{0.45\textwidth}
+\begin{minipage}[!htbp]{0.45\textwidth}
 	\begin{lstlisting}[caption={Fred (serializable)},
 		label={lst:FredSer}]
 			request incr: 
@@ -110,7 +110,7 @@ This updates allows request of the same type to update X to the same value --- s
 		\end{lstlisting}
 \end{minipage}
 \hfill
-\begin{minipage}[t]{0.45\textwidth}
+\begin{minipage}[!htbp]{0.45\textwidth}
 	\begin{lstlisting}[caption={Fred2 (not serializable)},
 		label={lst:FredNonSer}]
 			request incr:
@@ -329,7 +329,7 @@ Potential routing cycles can also be observed via non serializable executions al
 
 
 
-\begin{minipage}[t]{1.0\textwidth}
+\begin{minipage}[!htbp]{1.0\textwidth}
 	\begin{lstlisting}[caption={BGP (non serializable --- cycles can appear)},label={lst:BgpNonSerializable}]
 	    // initialize accounts
 	    B := 0
