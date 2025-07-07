@@ -1,39 +1,43 @@
 \section{Introduction}
 \label{sec:introduction}
 
-\todo{Introduction goes here.}
-
-\todo{We motivate the problem of deciding serializability in programmable networks.}
-
-\todo{We talk about some related work if relevant.}
-
-\todo{We show that it's interesting with an example.}
-
-\todo{We describe our main results.}
-
-\todo{Important point: mention the french people here early on, so that the reviewers know that we are aware of them. Also explain clearly what is new here: a tool that can actually run and output certificates.}
-
-\paragraph{Contributions:}
-\begin{itemize}
-    \item Novel notion of serializability (``atomicity'' or ``semantic serializabillity'') applicable to network systems (\Cref{sec:problem-definition,sec:related:notions-of-serializability})
-    \item Decidability results (1 main theorem: \textbf{automatically proving unbounded serializability}, 2 extra theorems: ser=ser decidable, int=int undecidable) (\Cref{sec:formal-results,sec:related:deciding-serializability})
-    \item Implementation of decision procedure. Advances in semilinear sets, Petri net reachability heuristics that makes the decision procedure work. (\Cref{sec:implementation,sec:related:petri})
-     \item optimizations
-     \item case study - real world problems
-     \item proof certificate checker
-\end{itemize}
-
-\newpage
-
-
-\subsection{Motivating Example}
-
-
-Observe the simple program depicted in Listing~\ref{lst:MotivatingExample1Ser}. Each  {\color{ForestGreen}$\blacklozenge_\text{main}$} gives rise to a fresh in-flight request. The variable ``X'' is global, and shared among all in-flight requests, while the variable ``y'' is local variable, per each request. 
+%\todo{Introduction goes here.}
 %
-As there are no yields, it is straightforward to see that the program is trivially serializable, with every request {\color{ForestGreen}$\blacklozenge_\text{main}$}: (i) assigning 1 to the global variable X; (ii) assigning to y to have the value of X, i.e., always 1; (iii) assigning to X the value 0; and (iv) returning the response y ({\color{red}$\blacklozenge_1$}). This results to every (request,response) pair to be of the form {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}.
+%\todo{We motivate the problem of deciding serializability in programmable networks.}
 %
-The program is slightly altered (in Listing~\ref{lst:MotivatingExample2NonSer}), by adding a yield operation between the aforementioned steps (i) and (ii). Now, by running two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests that interleave, it is possible to attain a {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} request/response pair, which is unattainable in any serial execution of Listing~\ref{lst:MotivatingExample2NonSer} --- as any such serial execution is equivalent to Listing~\ref{lst:MotivatingExample1Ser}, which always responds {\color{red}$\blacklozenge_1$} to any request {\color{ForestGreen}$\blacklozenge_\text{main}$}.
+%\todo{We talk about some related work if relevant.}
+%
+%\todo{We show that it's interesting with an example.}
+%
+%\todo{We describe our main results.}
+%
+%\todo{Important point: mention the french people here early on, so that the reviewers know that we are aware of them. Also explain clearly what is new here: a tool that can actually run and output certificates.}
+
+%\paragraph{Contributions:}
+%\begin{itemize}
+%    \item Novel notion of serializability (``atomicity'' or ``semantic serializabillity'') applicable to network systems (\Cref{sec:problem-definition,sec:related:notions-of-serializability})
+%    \item Decidability results (1 main theorem: \textbf{automatically proving unbounded serializability}, 2 extra theorems: ser=ser decidable, int=int undecidable) (\Cref{sec:formal-results,sec:related:deciding-serializability})
+%    \item Implementation of decision procedure. Advances in semilinear sets, Petri net reachability heuristics that makes the decision procedure work. (\Cref{sec:implementation,sec:related:petri})
+%    
+%     \item optimizations
+%     \item case study - real world problems
+%     \item proof certificate checker
+%\end{itemize}
+%
+%
+
+
+In recent years, concurrent program have become highly abundant in various transactional systems. These programs allow multiple threads to run multiple programs in parallel.
+Despite the various advantages afforded by concurrent programming, such programs are especially hard to reason about, due to their complex nature.
+%
+As such, there have been various correctness criteria for concurrent programming, with each such criteria affording a different guarantee to the user.
+One such popular criteria is \textit{serializability} which, intuitively, asks whether \textit{running multiple threads in parallel always produces an equivalent output to running them serially, one after the other}. Differently put, serializability asks whether interleaving threads will output results that are otherwise unattainable in a serial execution.
+
+%
+We note that this question in non trivial for an \textit{unbounded} number of threads. For example observe the short snippets of code in Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and ~\ref{lst:MotivatingExample3Ser}. For readability, ``requests'' can be thought of as threads. Global and local variables are respectively depicted in upper-case and lower-case.
+While the first one is clearly serializable (as there are no yields), the second one is not. For example, if one thread yields, and then another thread yields (before the previous one terminated), then when then we are guaranteed to have one of the threads return ``0'', a result that is unattainable via any serial execution. Of course, having yields does not guarantee that an execution is not serializable, as observed in the third program, which is semantically equivalent to the first one.
+These examples motivate that reasoning about serializability can be complex even for very simple programs with a few threads.
+%
 
 
 \noindent
@@ -83,18 +87,36 @@ The program is slightly altered (in Listing~\ref{lst:MotivatingExample2NonSer}),
 	\end{lstlisting}
 \end{minipage}
 
-The program is altered once again in in Listing~\ref{lst:MotivatingExample3Ser}, by adding a fresh global variable ``L'', indicating if the critical section is locked ($L=1$) or not ($L=0$).
-By adding a global lock variable, even if an interleaving occurs after yielding, the lock will allow only the first request to terminate, and will then release the lock for the next request. Hence, despite having yields, we attain serializable executions, and only {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} request/response pairs are produced, similar to the original program in Listing~\ref{lst:MotivatingExample1Ser}.
+
+
+Unfortunately, serializability is impossible to enforce during runtime, and hence real world systems either (i) defer to different consistency guarantees, such as the stricter notion of \textit{conflict serializability} which pertains to the read/write accesses instead of the program semantics, and which can be enforced with two-phase locking (for additional notions see subsec~\ref{subsec:related:notions-of-serializability}). Alternatively, the PL community has put forth ample research on static analysis of concurrent programs. However, most of these work suffer from setbacks. First, they either search for \textit{violations} of serializability;or try to prove it while assuming strong assumptions, such as bounding the number of threads.
+Furthermore, many of these tools are tailored for specific concurrent data structures, and infeasible for an arbitrary setting.
 %
-This simple example demonstrates the motivation for automatic serializability checking, as even small, toy programs can be surprisingly difficult to reason about when assessing their serializable behavior.
+There has also been extensive theoretical work, most notably, we mention the work of Bouajjani et al.~\cite{BoEmEnHa13} which prove that serializability is decidable for the unbounded case (they refer to the property as $k$-bounded linearizability).
+
+
+In this work, be begin bridging these gaps, and present the first end-to-end tool to verify serializability in general programs with an arbitrary number of threads. 
+As far as we are aware, is the first tool to (i) prove that an arbitrary program is not serializable; (ii) provide an inductive proof certificate for serializability; and (iii) demonstrate this problem in the real-world task of software defined networks.
+%
+Towards this end, our decision procedure builds upon the theoretical work of Bouajjani et al.~\cite{BoEmEnHa13} which presented a reduction from serializability to Petri Net reachability.  However, as Petri Net reachability is Ackermann-complete~\cite{CzWo22}, a naive translation does not suffice, rendering such a took  highly nontrivial. This required us to develop multiple optimizations in order to scale to complex programs. 
+These include Petri Net pruning, semilinear set compression and additional manipulations with Presburger formulas.
+As we later demonstrate, these optimizations \textit{significantly} curtail the search space.
+Furthermore, motivated by the timely task of software-defined networks, we formalize our decision procedure with regard to abstract network systems, which capture a wide range of programs of interest. 
+In addition to providing theoretical proof for the correctness of such optimizations, we extensively evaluated our approach or dozens of programs.
+Furthermore, we also formalize serializability through the lens of \textit{networking systems} (NS) --- abstract multi-thread programs in which users send ``requests'' (corresponding to threads, or packets in SDN) and, after manipulating local and global (shared) variables, return responses.
+Based on our theoretical NS framework, we extensively evaluated our approach on dozens of programs with a wide range of features --- including loop constructs, branching, locks, nondeterminism and more. Notably, our benchmarks also include complex programs motivating by real world software-defined networks, such as stateful firewalls, BGP routing, an online shopping system, etc.
+  
+
+Building upon the previous theoretical work of deciding serializability, as well as the state-of-the-are in PN reachability solvers, we see this work as an important step in reasoning about concurrent programs in general, and serializability in particular.
+In addition to being the first took to validate whether an arbitrary unbounded program is not serializable, we are the first to also provide a certificate thereof and to experiment on benchmarks from the timely domain of SDN.
+Our tool, benchmarks and raw experimental results will all be made publicly available with the final version of this paper.
+
+The rest of the paper is organized as follows. In Sec.~\ref{sec:tour} we present a tour of various examples motivating the complexity of deciding serializability. In Sec.~\ref{sec:problem-definition} we formally define our problem, and the network system setting we put forth. We formalize our decision procedure and our various optimizations in Sec.~\ref{sec:formal-results}. Subsequently, we present our implementation (Sec.~\ref{sec:implementation}) and extensive evaluation (Sec.~\ref{sec:evaluation}). 
+Related work is covered in Sec.~\ref{sec:related-work}, and we conclude in Sec.~\ref{sec:discussion}.
+
+
+%\newpage
 
 
 
-
-%\begin{figure}[H]
-%	\centering
-%	\includegraphics[width=1.0\linewidth]{plots/code_1_ser_NS.png}
-%	\caption{Routing policy in example 5.}
-%	\label{fig:code1NS}
-%\end{figure}
 
