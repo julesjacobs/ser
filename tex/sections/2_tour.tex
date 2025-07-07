@@ -335,10 +335,10 @@ Potential routing cycles can also be observed via non serializable executions al
 	    B := 0
 	    
 	    request policy_update:
-	    if (?):
-	        B := 1  // blue policy 
-	    else:
-	        B := 0 // orange policy
+	        if (?):
+	            B := 1  // blue policy 
+	        else:
+	            B := 0 // orange policy
 			
 	    request route_from_west:
 	        visited_east := 0
