@@ -270,13 +270,13 @@ $A+B=2\cdot (100\$+50\$)=300\$$, with either a final state of $[A=150\$, B=150\$
 The following example motivates our routing‐policy programs in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adopt its updated routing as dictated by the updates.
 %
 An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST}), serving as ingress points from where traffic may nondeterministically enter the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or a \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
-
-
+%
+%
 %// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
 %else:
 %B := 0 // red/orange policy
 %// [out, switch 0] <--- [WEST, switch 1] <--- [EAST, switch 2] 
-
+%
 \begin{wrapfigure}{r}{0.45\textwidth}  % “r” = wrap on the right, width = 45% of line
 	\centering
 	\includegraphics[
@@ -287,14 +287,14 @@ An instance of a simple network with two competing policies is shown in Fig.~\re
 	\caption{Routing policy in example 5.}
 	\label{fig:BgpRoutingPolicies}
 \end{wrapfigure}
-
+%
 %\begin{figure}[H]
 %	\centering
 %	\includegraphics[width=0.5\linewidth]{plots/east_west_routing_updated_colors.pdf}
 %	\caption{Routing policy in example 5.}
 %	\label{fig:BgpRoutingPolicies}
 %\end{figure}
-
+%
 This SDN-controlled routing policy is realized in the pseudo code in Listing~\ref{lst:BgpNonSerializable}.
 %
 The program includes a single global variable $B$, indicating if the current routing policy is the  \textcolor{NavyBlue}{blue} policy ($[B=1]$) or the \textcolor{darkorange}{orange} policy ($[B=0]$).
@@ -316,9 +316,9 @@ The program has three types of requests:
 %		\item
 (iii)
 {\color{ForestGreen}$\blacklozenge_\text{route\_from\_east}$}: this request represents a packet entering the network from the \textit{EAST} node (node 2).
-	
+	%
 %\end{itemize}
-
+%
 Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the chosen routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
 %
 The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_from\_west}$} requests is the sum \textit{(current+current+visited\_east)}. This is an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
@@ -329,10 +329,8 @@ Potential routing cycles can also be observed via non serializable executions al
 
 
 
-\begin{minipage}[!htbp]{0.6\textwidth}
+\begin{minipage}[!htbp]{0.65\textwidth}
 	\begin{lstlisting}[caption={BGP (non serializable --- cycles can appear)},label={lst:BgpNonSerializable}]
- B := 0
- 
  request policy_update:
      if (?):
          B := 1  // blue policy 
@@ -340,7 +338,6 @@ Potential routing cycles can also be observed via non serializable executions al
          B := 0 // orange policy
 		
  request route_from_west:
-     visited_east := 0
      current := 1
      while (current == 2) or (current == 3): // still routing        
          if (current == 1): // west (switch 1)
@@ -354,9 +351,7 @@ Potential routing cycles can also be observed via non serializable executions al
                  current := 3
              else: // orange policy
                  current := 1
-
          yield
-		
      return current + current + visited_east
      
  request route_from_east: ... // dual case      
