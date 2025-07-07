@@ -57,7 +57,7 @@ However, given that the first request can also \textit{yield}, it is possible fo
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Not serializable: {(A,0),(A,0)}},
+	\begin{lstlisting}[caption={Not serializable},
 	label={lst:BasicNonSer}]
 			request A: 
 			    x := FLAG 
@@ -90,7 +90,7 @@ This updates allows request of the same type to update X to the same value --- s
 % Third row
 \noindent
 \begin{minipage}[!htbp]{0.45\textwidth}
-	\begin{lstlisting}[caption={Fred (serializable)},
+	\begin{lstlisting}[caption={Serializable},
 		label={lst:FredSer}]
 			request incr: 
 			    while (X == 3):
@@ -111,7 +111,7 @@ This updates allows request of the same type to update X to the same value --- s
 \end{minipage}
 \hfill
 \begin{minipage}[!htbp]{0.45\textwidth}
-	\begin{lstlisting}[caption={Fred2 (not serializable)},
+	\begin{lstlisting}[caption={Not serializable},
 		label={lst:FredNonSer}]
 			request incr:
 			    while (X == 3):
@@ -148,7 +148,7 @@ However, given at least $i=5$ interleaving of in-flight {\color{ForestGreen}$\bl
 % Second row
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Complex while (serializable)},
+	\begin{lstlisting}[caption={Serializable},
 		label={lst:ComplexWhileSer}]
 		    request flip: 
 		        X := 1 - X 
@@ -167,7 +167,7 @@ However, given at least $i=5$ interleaving of in-flight {\color{ForestGreen}$\bl
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={Complex while with yields (not serializable)},
+	\begin{lstlisting}[caption={Not serializable},
 		label={lst:ComplexWhileNonSer}]
 		    request flip: 
 		        X := 1 - X 
@@ -202,7 +202,7 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={bank (serializable)},
+	\begin{lstlisting}[caption={Serializable},
 		label={lst:BankSer}]
 	    // initialize accounts
 	    A := 100
@@ -225,7 +225,7 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-	\begin{lstlisting}[caption={bank with yields (non serializable)},
+	\begin{lstlisting}[caption={Not serializable},
 		label={lst:BankNonSer}]
 	    // initialize accounts
 	    A := 100
@@ -319,17 +319,17 @@ The program has three types of requests:
 	%
 %\end{itemize}
 %
-Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the chosen routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
-%
-The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_from\_west}$} requests is the sum \textit{(current+current+visited\_east)}. This is an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
-%
-The program is not serializable, as witnessed by an interleaving that can give rise to final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when updated the routing policy after a request has already been routed based on the previous policy.
-Legal, acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
-Potential routing cycles can also be observed via non serializable executions also for the  {\color{ForestGreen}$\blacklozenge_\text{route\_from\_east}$} requests.
+%Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the chosen routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
+%%
+%The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_from\_west}$} requests is the sum \textit{(current+current+visited\_east)}. This is an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
+%%
+%The program is not serializable, as witnessed by an interleaving that can give rise to final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when updated the routing policy after a request has already been routed based on the previous policy.
+%Legal, acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
+%Potential routing cycles can also be observed via non serializable executions also for the  {\color{ForestGreen}$\blacklozenge_\text{route\_from\_east}$} requests.
 
 
-
-\begin{minipage}[!htbp]{0.65\textwidth}
+\begin{center}
+\begin{minipage}[!htbp]{0.85\textwidth}
 	\begin{lstlisting}[caption={BGP (non serializable --- cycles can appear)},label={lst:BgpNonSerializable}]
  request policy_update:
      if (?):
@@ -357,10 +357,16 @@ Potential routing cycles can also be observed via non serializable executions al
  request route_from_east: ... // dual case      
 		\end{lstlisting}
 \end{minipage}
+\end{center}
 
 
-
-
+Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the chosen routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
+%
+The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_from\_west}$} requests is the sum \textit{(current+current+visited\_east)}. This is an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
+%
+The program is not serializable, as witnessed by an interleaving that can give rise to final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when updated the routing policy after a request has already been routed based on the previous policy.
+Legal, acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
+Potential routing cycles can also be observed via non serializable executions also for the  {\color{ForestGreen}$\blacklozenge_\text{route\_from\_east}$} requests.
 
 
 \subsection{Example 6}
