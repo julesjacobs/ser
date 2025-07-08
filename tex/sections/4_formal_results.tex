@@ -19,14 +19,14 @@ N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
 \]
 where \(P\) is a finite set of \emph{places}, \(T\) a finite set of \emph{transitions},
 \(\mathsf{pre},\mathsf{post}:T\to\mathbb N^P\) the input/output vectors, and
-\(M_0\in\mathbb N^P\) the initial marking (initial distribution of tokens across the places).  
+\(M_0\in\mathbb N^P\) the initial marking (initial distribution of tokens across the places). Note that throughout this work, we use the terms \textit{state} and \textit{marking} interchangeably.
 
 \noindent We say that a transition \(t\in T\) is \emph{enabled} at a marking \(M\in\mathbb N^P\) iff
 \[
 M \;\ge\; \mathsf{pre}(t)
 \quad(\text{coordinate‐wise}).
 \]
-i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$
+i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
 When $t$ is enabled at $M$, firing $t$ produces a new marking $M'$ defined as
 \[
 M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t).
@@ -47,24 +47,21 @@ Ackermann-complete~\cite{CzWo22,leroux_reachability_2022} complexity.
 %
 An example for a toy Petri Net, and both reachable and unreachable markings, appears in Appendix~\ref{appendix:toyPN}.
 
-In our work, we focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. We want to check if it is possible to reach a marking that satisfies a formula, say $F$, that is a combination of linear constraints between places. And so, a property is \textit{reachable} if there exists some $M$ in $R(N)$ such that $M \models F$, and \textit{unreachable} otherwise.
+In our work, we focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. We want to check if it is possible to reach a marking that satisfies a formula, say $F$, that is a combination of linear constraints between places. Such property is said \textit{reachable} (or \sat by analogy with SAT solving) if there exists some $M$ in $R(N)$ such that $M \models F$, and \textit{unreachable} otherwise (\unsat). 
 
 \paragraph{Verdict proofs.} 
 
-If a formula $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ and marking $M$ such that: 
+If a property $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ and marking $M$ such that: 
 \[
 M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F
 \] serves as a proof of reachability. One can verify the claim by simulating $\sigma$ from $M_0$ and checking that the resulting marking satisfies $F$.
 
-More interestingly, if $F$ is not reachable, the theory of Petri nets guarantees the existence of an inductive certificate $C$--a Presburger formula satisfying:
+More interestingly, if $F$ is not reachable, the theory of Petri nets guarantees the existence of an inductive certificate $C$, expressed as a Presburger formula, that implies $F$~\cite{leroux_general_2009,leroux_general_2010}. Such certificate satisfies the following constraints:
 \begin{enumerate}
-	\item $M_0 \models F$
-	\item For all transitions $M \xrightarrow{t} M'$, if $M \models C$4 then $M' \models C$,
+	\item $M_0 \models F$,
+	\item For all transitions $M \xrightarrow{t} M'$, if $M \models C$ then $M' \models C$,
 \item $C \Rightarrow \neg F$, i.e., all markings satisfying $C$ falsify $F$.
 \end{enumerate} 
-Such certificates act as formal proofs of unreachability~\cite{leroux_general_2009,leroux_general_2010}.
-
-
 
 \paragraph{Semilinear sets and Parik’s theorem.}
 A set \(S\subseteq\mathbb N^k\) is \emph{semilinear} iff
@@ -308,7 +305,7 @@ Each token corresponds to a single request packet, or (in the case of the global
 
 \paragraph{Counterexample Extraction.}
 
-Regarding the aforementioned program, we automatically generate the following reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if satisfiable, indicates the program is not serializable):
+Regarding the aforementioned program, we automatically generate the following reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if reachable, indicates the program is not serializable):
 
 \[
 P_1 = 0 \wedge 
@@ -421,7 +418,7 @@ Now, we observe again the adjusted program with locks (as previously described i
 %
 Due to space limitations, we relegate figures of the corresponding Network System, Serailizability NFA, and Interleaving Petri Net to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
 
-Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExamplePN}) being able to reach the following marking:
+Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExamplePN}) being able to reach a marking satisfying the following formula:
 
 \[
 \textcolor{blue}
