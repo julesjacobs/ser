@@ -1,4 +1,4 @@
-\newpage
+%\newpage
 
 \section{Related Work}
 \label{sec:related-work}
@@ -258,18 +258,9 @@ However, annotation‐based checkers and analyses are inconclusive, since failur
 %inconclusive, as any failed proof can be due to incorrect annotation of the 
 %linearization points~\cite{BoEmCoHa15}.
 %%
+\subsubsection{Manual proofs and specific data types}
 
-
-\subsubsection{Manual proofs and results for specific data types}
-
-Tasiran~\cite{Ta08} proved serializability of the \texttt{Bartok STM}, and 
-Colvin et 
-al.~\cite{CoGrLuMo06} prove that a list-based set algorithm is linearizable by 
-simulating the observed behavior with input/output automata.
-%
-%\guy{Mark could you take a 2nd look at CoGrLuMo06? Not sure if this is 
-%considered manual. One paper which I put in the slack channel mentioned that it 
-%semiautomatically verifies linearizability of an implementation.}
+Tasiran~\cite{Ta08} proved serializability of the \texttt{Bartok STM}, and Colvin et al.~\cite{CoGrLuMo06} showed list‐set linearizability via I/O automata. 
 %
 Other methods demonstrate that in some cases, proofs can be simplified for specific data structure to which certain properties hold~\cite{BoEmEnMu17, FeEnMoRiSh18}.
 %
@@ -277,41 +268,68 @@ Additional verification attempts of linearizability have been presented both
 with (e.g.~\cite{CoGrLuMo06}) and without (e.g.~\cite{DoGrLuMo04}) the use of 
 proof assistants.
 %
-Linearizability has also been proven for specific data types. For example. 
-Wing and Gong~\cite{WiGo93} prove it for  (unbounded) FIFO queues, (unbounded) 
-priority queues and other data structures. Chakraborty et al.~\cite{ChHeSeVa15} 
-later provided a method for checking linearizability of queue-based algorithms, 
-without the use of linearization points. Cern{\`y} et al.~\cite{CeRaZuChAl10} 
-present \texttt{CoLT}, a model checker for linearizability of singly-linked 
-heap-based 
-objects. However, their approach is complete only with regard to a bounded 
-number of threads. 
-%
-Bouajjani et al.~\cite{BoEnWa17} present a recursive algorithm for identifying 
-linearizability violations in priority queues (based on register automata), in 
-a method similar to the one for finding linearizability violations in stacks 
-and (regular) queues~\cite{BoEmEnHa18}.
-%
+Wing and Gong~\cite{WiGo93} established linearizability for unbounded FIFO and priority queues, and Chakraborty et al.~\cite{ChHeSeVa15} developed a queue‐checking technique. Cerný et al.’s CoLT checks singly‐linked heap objects, however, this method is complete only for bounded threads~\cite{CeRaZuChAl10}. Bouajjani et al.~\cite{BoEnWa17} present a recursive priority‐queue violation detector, akin to their stack and queue methods~\cite{BoEmEnHa18}.
 
+%
+%\todo{original}
+%
+%\subsubsection{Manual proofs and results for specific data types}
+%
+%Tasiran~\cite{Ta08} proved serializability of the \texttt{Bartok STM}, and 
+%Colvin et 
+%al.~\cite{CoGrLuMo06} prove that a list-based set algorithm is linearizable by 
+%simulating the observed behavior with input/output automata.
+%%
+%%\guy{Mark could you take a 2nd look at CoGrLuMo06? Not sure if this is 
+%%considered manual. One paper which I put in the slack channel mentioned that it 
+%%semiautomatically verifies linearizability of an implementation.}
+%%
+%Other methods demonstrate that in some cases, proofs can be simplified for specific data structure to which certain properties hold~\cite{BoEmEnMu17, FeEnMoRiSh18}.
+%%
+%Additional verification attempts of linearizability have been presented both 
+%with (e.g.~\cite{CoGrLuMo06}) and without (e.g.~\cite{DoGrLuMo04}) the use of 
+%proof assistants.
+%%
+%Linearizability has also been proven for specific data types. For example. 
+%Wing and Gong~\cite{WiGo93} prove it for  (unbounded) FIFO queues, (unbounded) 
+%priority queues and other data structures. Chakraborty et al.~\cite{ChHeSeVa15} 
+%later provided a method for checking linearizability of queue-based algorithms, 
+%without the use of linearization points. Cern{\`y} et al.~\cite{CeRaZuChAl10} 
+%present \texttt{CoLT}, a model checker for linearizability of singly-linked 
+%heap-based 
+%objects. However, their approach is complete only with regard to a bounded 
+%number of threads. 
+%%
+%Bouajjani et al.~\cite{BoEnWa17} present a recursive algorithm for identifying 
+%linearizability violations in priority queues (based on register automata), in 
+%a method similar to the one for finding linearizability violations in stacks 
+%and (regular) queues~\cite{BoEmEnHa18}.
+%%
 
 \subsubsection{Additional approaches}
 
+Some combine dynamic analysis with manual proofs, e.g., Shacham et al.~\cite{ShBrAiSaVeYa11}. Test‐generation methods include Wing and Gong~\cite{WiGo93}, Pacheco and Griswold~\cite{PrGr12,PrGr13}, Emmi et al.~\cite{EmEn17}, and Lowe’s random‐history framework~\cite{Lo17}. Simplification and proof‐assistance techniques appear in \cite{BoEmEnMu17,FeEnMoRiSh18,EnKo24}, while theorem‐prover‐based methods are in \cite{CoDoGr05,DeScWe11}.
+
 %
-Some methods combine multiple approaches, e.g., Shacham et 
-al.~\cite{ShBrAiSaVeYa11} use dynamic analysis to identify 
-violations of linearizability in concurrent data structures, and combine it 
-with a manual proof when their technique did not find a violation.
+%\todo{original}
+%\subsubsection{Additional approaches}
 %
-Other techniques attempt to generate tests for linearizability~\cite{WiGo93, 
-PrGr12, PrGr13, EmEn17}. For example, 
-Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly 
-generating histories and subsequently testing if they are 
-linearizable.
-%
-There has also been ample research in technique for linearizability  and simplifying proofs for data structures pertaining ~\cite{BoEmEnMu17, FeEnMoRiSh18, EnKo24} 
-%
-Other techniques for linearizability proof include the use of theorem provers, 
-e.g.~\cite{CoDoGr05, DeScWe11} and proof assistance techniques~\cite{EnKo24}.
+%%
+%Some methods combine multiple approaches, e.g., Shacham et 
+%al.~\cite{ShBrAiSaVeYa11} use dynamic analysis to identify 
+%violations of linearizability in concurrent data structures, and combine it 
+%with a manual proof when their technique did not find a violation.
+%%
+%Other techniques attempt to generate tests for linearizability~\cite{WiGo93, 
+%PrGr12, PrGr13, EmEn17}. For example, 
+%Lowe~\cite{Lo17} presents a testing framework for linearizability by randomly 
+%generating histories and subsequently testing if they are 
+%linearizable.
+%%
+%There has also been ample research in technique for linearizability  and simplifying proofs for data structures pertaining ~\cite{BoEmEnMu17, FeEnMoRiSh18, EnKo24} 
+%%
+%Other techniques for linearizability proof include the use of theorem provers, 
+%e.g.~\cite{CoDoGr05, DeScWe11} and proof assistance techniques~\cite{EnKo24}.
 %
 %\guy{Mark EnKo24 is the OOPSLA paper, is it legit to cite it as a proof assistance technique?} 
 %Additional related work includes~\cite{BoEmEnMu17, FeEnMoRiSh18, EnKo24}.
