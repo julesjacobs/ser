@@ -27,7 +27,7 @@ HARD_NON_SERIALIZABLE = {"c1.ser", "e2.ser"}
 CATEGORIES = [
     ("Core expressions", ["a1.ser","a2.ser","a3.ser","a4.ser","a5.ser","a6.ser","a7.ser"]),
     ("State machines", ["b1.json","b2.json","b3.json","b4.json"]),
-    ("Fred (mixed arithmetic)", ["c1.ser","c2.ser","c3.ser","c4.ser","c5.ser","c6.ser","c7.ser","c8.ser"]),
+    ("Mixed arithmetic", ["c1.ser","c2.ser","c3.ser","c4.ser","c5.ser","c6.ser","c7.ser","c8.ser"]),
     ("Circular increment", ["d1.ser","d2.ser","d3.ser","d4.ser","d5.ser"]),
     ("Concurrency \\& locking loops", ["e1.ser","e2.ser","e3.ser","e4.ser","e5.ser","e6.ser","e7.ser"]),
     ("Non-deterministic \\& randomness", ["f1.ser","f2.ser","f3.ser","f4.ser","f5.ser","f6.ser","f7.ser","f8.ser","f9.ser"]),
