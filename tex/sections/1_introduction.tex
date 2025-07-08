@@ -27,17 +27,18 @@
 %
 
 
-In recent years, concurrent systems have become highly prevalent in various transactional systems. These programs allow multiple threads to run multiple programs in parallel.
-Despite the various advantages afforded by concurrent programming, such programs are especially hard to reason about, due to their complex nature.
+In recent years, concurrent systems have become highly prevalent in various transactional systems. These programs allow an arbitrary number of threads to run multiple programs in parallel.
+Despite the various advantages afforded by concurrent systems, their programs are especially hard to reason about, due to their complex temporal nature.
 %
-As such, there have been various correctness criteria put forth, with each such criteria affording a different guarantee to the user regarding the concurrent executions in question.
-One such popular criteria is \textit{serializability} which, intuitively, asks whether \textit{running parallel threads always produces an equivalent output to running them serially, one after the other}. Differently put, serializability asks whether interleaving threads will output results that are otherwise unattainable in a serial execution.
+As such, there have been various correctness criteria put forth, with each such criteria affording a different guarantee to the user.
+One such popular criteria is \textit{serializability} which, intuitively, asks whether \textit{running parallel threads always produces an equivalent output to running them serially, one after the other}. Differently put, serializability asks whether interleaving threads could output results that are otherwise unattainable in a serial execution.
 %
-We note that this question in non trivial for an \textit{unbounded} number of threads. For example, observe the short snippets of code in Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and ~\ref{lst:MotivatingExample3Ser}. For readability, ``requests'' can be thought of as threads; global and local variables are respectively depicted in upper-case and lower-case characters.
+Although this question is trivially decidable for a bounded number of threads by enumerating all possible interleavings --- it is highly nontrivial for the \textit{unbounded} case. For example, observe the short snippets of code in Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and ~\ref{lst:MotivatingExample3Ser}. For readability, ``requests'' can be thought of as threads; global and local variables are respectively depicted in upper-case and lower-case characters.
 %
-For example, the first program is clearly serializable because there are no yields. In the second program, a thread can execute X := 1 and then yield, allowing another thread to reset X to 0 before the first thread executes y := X, so that its return y yields 0—an outcome impossible in any serial execution, since a thread running to completion would always read X as 1 before returning.
-Of course, having yields does not guarantee that an execution is necessarily not serializable, as observed in the third program, which is semantically equivalent to the first one by using an additional lock variable ``L''.
-These examples motivate that reasoning about serializability can be complex even for very simple programs with few threads running concurrently.
+The first program is clearly serializable because there are no yields. In the second program however, a thread can execute X := 1 and then yield, allowing another thread to reset X to 0 before the first thread executes y := X, so that its return y yields 0. This outcome is impossible in any serial execution, since a thread running to completion would always read X as 1 before returning.
+Of course, having yields does not guarantee that an execution is necessarily not serializable, as observed in the third snippet. This program uses an additional lock variable ``L'', which guarantees that even if an interleaving occurs, the program is semantically equivalent to the first one.
+%
+These toy examples demonstrate that reasoning about serializability can be complex even for very simple programs with few threads running concurrently.
 %
 
 
@@ -90,7 +91,7 @@ These examples motivate that reasoning about serializability can be complex even
 
 
 
-Unfortunately, serializability is impossible to enforce during runtime, and hence real world systems either (i) defer to other consistency guarantees, such as the stricter notion of \textit{conflict serializability} which pertains to the read/write accesses instead of reasoning about the (harder) program semantics, and which can be enforced with two-phase locking (for additional concurrency notions see sub-sec.~\ref{subsec:related:notions-of-serializability}). Alternatively, the PL community has conducted ample research on static analysis of concurrent programs, including the analysis of serializability and its variants. However, these works suffer from various setbacks. First, they typically search for \textit{violations} of serializability, or alternatively, try to prove it while assuming strong assumptions, such as bounding the number of threads or having prior knowledge on linearization points.
+Unfortunately, serializability is impossible to enforce during runtime, and hence real world systems either (i) defer to other consistency guarantees, such as the stricter notion of \textit{conflict serializability} which pertains to the read/write accesses instead of reasoning about the (harder) program semantics (for additional concurrency notions see sub-sec.~\ref{subsec:related:notions-of-serializability}). Alternatively, the PL community has conducted ample research on static analysis of concurrent programs, including the analysis of serializability and its variants. However, these works suffer from various setbacks. First, they typically search for \textit{violations} of serializability, or alternatively, try to prove it while assuming strong assumptions, such as bounding the number of threads or having prior knowledge on linearization points.
 Furthermore, many of these tools are tailored for specific concurrent data structures, and infeasible for an arbitrary program in a general setting.
 %
 There has also been extensive theoretical work, most notably, we mention the seminal work of Bouajjani et al.~\cite{BoEmEnHa13} which prove that serializability is decidable for the unbounded case (they refer to the general property as $k$-bounded linearizability).
@@ -99,7 +100,7 @@ There has also been extensive theoretical work, most notably, we mention the sem
 In this work, be begin bridging these gaps, and present the first end-to-end tool to verify serializability in general programs with an arbitrary number of threads. 
 As far as we are aware, this is the first decision procedure to not only identify serializability violations, but also (i) \textit{prove} that an arbitrary program is not serializable; (ii) provide an \textit{inductive proof certificate} for serializability; and (iii) demonstrate this problem on complex programs form the realm of \textit{software defined networks} (SDN).
 %
-Towards this end, our decision procedure builds upon the theoretical work of Bouajjani et al.~\cite{BoEmEnHa13} which presented a reduction from serializability to Petri Net reachability.  However, as Petri Net reachability is Ackermann-complete~\cite{CzWo22}, a naive translation does not suffice, rendering such a tool  highly nontrivial even for basic programs. To circumvent this, we developed multiple optimizations in order to scale to complex programs. 
+Towards this end, our decision procedure builds upon the theoretical work of Bouajjani et al.~\cite{BoEmEnHa13} which presented a reduction from serializability to Petri Net (PN) reachability.  However, as Petri Net reachability is Ackermann-complete~\cite{CzWo22}, a naive translation does not suffice, rendering such a tool  highly nontrivial even for basic programs. To circumvent this, we developed multiple optimizations in order to scale to complex programs. 
 Our optimizations include Petri Net pruning, semilinear set compression and additional manipulations with Presburger formulas.
 As we later demonstrate, these optimizations \textit{significantly} curtail the search space, allowing our solver to scale.
 %
@@ -107,11 +108,11 @@ Furthermore, motivated by the timely task of SDN,
 %we formalize our decision procedure with regard to our proposed framework of \textit{network systems} (NS), which capture a wide range of programs of interest
 %Furthermore, 
 we also formalize serializability through the lens of \textit{networking systems} (NS) --- abstract multi-thread programs in which users send ``requests'' (corresponding to threads, or packets in SDN) and, after manipulating local and shared global variables, return responses.
-Based on our theoretical NS framework, we extensively evaluated our approach on dozens of programs with a wide range of features --- including loop constructs, branching, locks, nondeterminism and more. Notably, our benchmarks also include complex programs motivating, such as stateful firewalls, BGP routing, an online shopping system, etc.
+Based on our theoretical NS framework, we extensively evaluated our approach on dozens of programs with a wide range of features --- including loop constructs, branching, locks, nondeterminism and more. Notably, our benchmarks also include SDN-motivated programs, such as stateful firewalls, BGP routing, an online shopping system, etc.
   
 
 Building upon the previous theoretical work of deciding serializability, as well as the state-of-the-are in PN reachability solvers, we see this work as an important step in practical reasoning about concurrent programs in general, and serializability in particular.
-In addition to being the first tool to validate whether an arbitrary unbounded program is not serializable, we are the first to also provide a certificate thereof and to experiment on benchmarks from the timely domain of SDN.
+In addition to detecting serializability violations among unbounded programs, our tool is the first to formally prove that such programs are positively serializable, and to afford a formal certificate thereof, and to experiment on benchmarks from the timely domain of SDN.
 Our tool, benchmarks and raw experimental results will all be made publicly available with the final version of this paper.
 
 The rest of the paper is organized as follows. In Sec.~\ref{sec:tour} we present a tour of various examples motivating the complexity of deciding serializability. In Sec.~\ref{sec:problem-definition} we formally define our problem, and present our abstract  network system setting. We formalize our decision procedure and our various optimizations, as well as demonstrate them in Sec.~\ref{sec:formal-results}.. Next, we present our implementation (Sec.~\ref{sec:implementation}) and extensive evaluation (Sec.~\ref{sec:evaluation}). 
