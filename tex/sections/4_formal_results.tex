@@ -46,22 +46,28 @@ decidable~\cite{Ma81,Ko82,La92}, although with
 Ackermann-complete~\cite{CzWo22,leroux_reachability_2022} complexity.
 %
 An example for a toy Petri Net, and both reachable and unreachable markings, appears in Appendix~\ref{appendix:toyPN}.
-
+%
 In our work, we focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. We want to check if it is possible to reach a marking that satisfies a formula, say $F$, that is a combination of linear constraints between places. Such property is said \textit{reachable} (or \sat by analogy with SAT solving) if there exists some $M$ in $R(N)$ such that $M \models F$, and \textit{unreachable} otherwise (\unsat). 
 
 \paragraph{Verdict proofs.} 
 
-If a property $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ and marking $M$ such that: 
-\[
-M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F
-\] serves as a proof of reachability. One can verify the claim by simulating $\sigma$ from $M_0$ and checking that the resulting marking satisfies $F$.
-
+If a property $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ and marking $M$ such that $ M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F$
+%\[
+%M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F
+%\] 
+serves as a proof of reachability. One can verify the claim by simulating $\sigma$ from $M_0$ and checking that the resulting marking satisfies $F$.
+%
 More interestingly, if $F$ is not reachable, the theory of Petri nets guarantees the existence of an inductive certificate $C$, expressed as a Presburger formula, that implies $F$~\cite{leroux_general_2009,leroux_general_2010}. Such certificate satisfies the following constraints:
-\begin{enumerate}
-	\item $M_0 \models F$,
-	\item For all transitions $M \xrightarrow{t} M'$, if $M \models C$ then $M' \models C$,
-\item $C \Rightarrow \neg F$, i.e., all markings satisfying $C$ falsify $F$.
-\end{enumerate} 
+(i) $M_0 \models F$;
+(ii) for all transitions $M \xrightarrow{t} M'$, if $M \models C$ then $M' \models C$; and
+(iii) $C \Rightarrow \neg F$, i.e., all markings satisfying $C$ falsify $F$.
+
+%
+%\begin{enumerate}
+%	\item $M_0 \models F$,
+%	\item For all transitions $M \xrightarrow{t} M'$, if $M \models C$ then $M' \models C$,
+%\item $C \Rightarrow \neg F$, i.e., all markings satisfying $C$ falsify $F$.
+%\end{enumerate} 
 
 \paragraph{Semilinear sets and Parik’s theorem.}
 A set \(S\subseteq\mathbb N^k\) is \emph{semilinear} iff
@@ -250,7 +256,7 @@ Q = G
 	See example in subsec.~\ref{subsec:ns-not-serializable}.
 	
 	\item if \unsat:
-	we generate an inductive invariant over the interleaving Petri Net, which proves the semilinear set cannot be attained via an interleaving.
+	we generate an inductive invariant over the interleaving PN, proving that the semilinear set cannot be attained via an interleaving.
 	See example in subsec.~\ref{subsec:ns-serializable}.
 \end{itemize}
 \end{enumerate}
@@ -279,16 +285,29 @@ Q = G
 
 Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS presented in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen, serial executions can produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}), while maintaining the only reachable global state $[X=0]$:
 
-\begin{figure}[!htbp]
+\begin{wrapfigure}{r}{0.5\textwidth}  % “r” = right, width = 0.5\textwidth
 	\centering
-	\includegraphics[width=0.5\textwidth,trim=0 0 0 0,clip]{plots/code_2_NFA.png}
-	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample2NonSer} program.}
+	\includegraphics[width=0.48\textwidth,trim=0 0 0 0,clip]{plots/code_2_NFA.png}
+	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample2NonSer}.}
 	\label{fig:code2ExampleNFA}
-\end{figure}
+\end{wrapfigure}
+
+%\begin{figure}[!htbp]
+%	\centering
+%	\includegraphics[width=0.5\textwidth,trim=0 0 0 0,clip]{plots/code_2_NFA.png}
+%	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample2NonSer}.}
+%	\label{fig:code2ExampleNFA}
+%\end{figure}
 
 \paragraph{Petri Net Extraction.}
 
-Finally, the NS gives rise to to generate the following Petri Net, encoding all possible interleavings of our program:
+Finally, the NS gives rise to the PN in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings.
+%
+The places represent the $\delta$ transitions of our NS --- encoding either a ``step'' of our program, or spawning a request ($t_1$, which  corresponds to spawning request {\color{ForestGreen}$\blacklozenge_\text{main}$}), or returning a response, e.g. transitions $t_6,t_7$ that corresponds to outputting responses {\color{red}$\blacklozenge_1$},{\color{red}$\blacklozenge_0$}.
+%
+Some places (\textcolor{blue}{$P_2$},\textcolor{blue}{$P_3$}) corresponds to the global state, while others ($P_1,P_4,P_5,P_6$) corresponds to the local state of an in-flight request.
+%
+Each token corresponds to a single request packet, or (in the case of the global-variable-encoding places), to the global state of the program.
 
 \begin{figure}[!htbp]
 	\centering
@@ -296,12 +315,6 @@ Finally, the NS gives rise to to generate the following Petri Net, encoding all 
 	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample2NonSer} program. Note that there doesn't exist any valid firing sequence that can reach place $P_8$, representing a response of {\color{red}$\blacklozenge_0$}.}
 	\label{fig:code2ExamplePN}
 \end{figure}
-
-The places represent the $\delta$ transitions of our NS --- encoding either a ``step'' of our program, or spawning a request ($t_1$, which  corresponds to spawning request {\color{ForestGreen}$\blacklozenge_\text{main}$}), or returning a response, e.g. transitions $t_6,t_7$ that corresponds to outputting responses {\color{red}$\blacklozenge_1$},{\color{red}$\blacklozenge_0$}.
-%
-Some places (\textcolor{blue}{$P_2$},\textcolor{blue}{$P_3$}) corresponds to the global state, while others ($P_1,P_4,P_5,P_6$) corresponds to the local state of an in-flight request.
-%
-Each token corresponds to a single request packet, or (in the case of the global-variable-encoding places), to the global state of the program.
 
 \paragraph{Counterexample Extraction.}
 
@@ -322,7 +335,7 @@ is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing seque
 
 
 
-\begin{table}[H]
+\begin{table}[!htbp]
 	\centering
 	\label{tab:reach-seq}
 	\begin{tabular}{c l c c c c c c}
@@ -417,7 +430,7 @@ is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing seque
 Now, we observe again the adjusted program with locks (as previously described in Listing~\ref{lst:MotivatingExample3Ser}).
 %
 Due to space limitations, we relegate figures of the corresponding Network System, Serailizability NFA, and Interleaving Petri Net to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
-
+%
 Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExamplePN}) being able to reach a marking satisfying the following formula:
 
 \[
@@ -541,7 +554,7 @@ We get the following inductive invariants for each of the two (reachable) global
 \subsection{Optimizations}
 \label{sec:optimizations}
 
-\todo{check}
+%\todo{check}
 
 We apply four optimizations to the base algorithm to control intermediate blow‐up in the size of both the PN and the constructed semilinear set.
 

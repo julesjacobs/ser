@@ -4,47 +4,48 @@
 \section{Proof: Bidirectional Optimization Correctness}
 \label{appendix:BidirectionalProof}
 
-\subsection{Preliminaries}
-
-\begin{definition}[Petri Net]
-	A \emph{Petri net} is a tuple
-	\[
-	N = (P,\,T,\,\Pre,\,\Post)
-	\]
-	where
-	\begin{itemize}
-		\item $P$ is a finite set of \emph{places},
-		\item $T$ is a finite set of \emph{transitions},
-		\item $\Pre: P\times T \to \mathbb{N}$ is the \emph{pre-incidence} function,
-		\item $\Post: P\times T \to \mathbb{N}$ is the \emph{post-incidence} function.
-	\end{itemize}
-\end{definition}
-
-\begin{definition}[Marking]
-	A \emph{marking} is a function $M: P \to \mathbb{N}$. We write $M(p)$
-	for the number of tokens in place $p$.  The initial marking is
-	denoted $M_0$.  A transition $t\in T$ is \emph{enabled} at marking
-	$M$ if $\forall p\in P:\,M(p)\ge\Pre(p,t)$.  Firing $t$ yields the
-	new marking
-	\[
-	M' = M - \Pre(\cdot,t) + \Post(\cdot,t),
-	\]
-	written $M \xrightarrow{t} M'$.
-\end{definition}
-
-\begin{definition}[Firing Sequence]
-	A sequence $\sigma = t_1 t_2 \cdots t_k \in T^*$ is \emph{fireable}
-	from $M_0$ if there exist markings $M_1,\dots,M_k$ such that
-	$M_0\xrightarrow{t_1}M_1\cdots\xrightarrow{t_k}M_k$.  We write
-	$M_0 \xrightarrow{\sigma} M_k$.
-\end{definition}
-
-\begin{definition}[Semilinear Target Set]
-	A \emph{semilinear} set $S\subseteq \mathbb{N}^P$ is a finite union of
-	linear sets.  We assume $S$ is given by a finite description of its
-	linear components.  We view $S$ as the \emph{target} set of markings
-	we wish to reach.
-\end{definition}
+%\subsection{Preliminaries}
+%
+%
+%\begin{definition}[Petri Net]
+%	A \emph{Petri net} is a tuple
+%	\[
+%	N = (P,\,T,\,\Pre,\,\Post)
+%	\]
+%	where
+%	\begin{itemize}
+%		\item $P$ is a finite set of \emph{places},
+%		\item $T$ is a finite set of \emph{transitions},
+%		\item $\Pre: P\times T \to \mathbb{N}$ is the \emph{pre-incidence} function,
+%		\item $\Post: P\times T \to \mathbb{N}$ is the \emph{post-incidence} function.
+%	\end{itemize}
+%\end{definition}
+%
+%\begin{definition}[Marking]
+%	A \emph{marking} is a function $M: P \to \mathbb{N}$. We write $M(p)$
+%	for the number of tokens in place $p$.  The initial marking is
+%	denoted $M_0$.  A transition $t\in T$ is \emph{enabled} at marking
+%	$M$ if $\forall p\in P:\,M(p)\ge\Pre(p,t)$.  Firing $t$ yields the
+%	new marking
+%	\[
+%	M' = M - \Pre(\cdot,t) + \Post(\cdot,t),
+%	\]
+%	written $M \xrightarrow{t} M'$.
+%\end{definition}
+%
+%\begin{definition}[Firing Sequence]
+%	A sequence $\sigma = t_1 t_2 \cdots t_k \in T^*$ is \emph{fireable}
+%	from $M_0$ if there exist markings $M_1,\dots,M_k$ such that
+%	$M_0\xrightarrow{t_1}M_1\cdots\xrightarrow{t_k}M_k$.  We write
+%	$M_0 \xrightarrow{\sigma} M_k$.
+%\end{definition}
+%
+%\begin{definition}[Semilinear Target Set]
+%	A \emph{semilinear} set $S\subseteq \mathbb{N}^P$ is a finite union of
+%	linear sets.  We assume $S$ is given by a finite description of its
+%	linear components.  We view $S$ as the \emph{target} set of markings
+%	we wish to reach.
+%\end{definition}
 
 \subsection{The Bidirectional Pruning Algorithm}
 

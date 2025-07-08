@@ -18,7 +18,7 @@ Each thread is spawned any number of times (and at any point in time) by a \text
 %
 For example, in the previous three examples, there is a single request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
 % 
-We analyze serializability through the lens of such ({\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$}) pairs. For example, The programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also produce ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}). We later formulate this as part of our abstract network system framework. 
+We analyze serializability through the lens of such ({\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$}) pairs. For example, The programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also produce ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}). We later formulate this via our network system framework. 
 
 \subsection{Example 1}
 
@@ -237,12 +237,10 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 
 
 \noindent
-\begin{minipage}[t]{0.45\textwidth}
+\begin{minipage}[H]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
 		label={lst:BankSer}]
-	    // initialize accounts
-	    A := 100
-	    B := 50
+	    A := 100, B := 50
 	    
 	    request transfer: 
 	        // transfer 50$
@@ -256,16 +254,14 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 	        A := A + A
 	        // no yield
 	        B := B + B
-	        return A + B	      		        
+	        return A + B      
 			\end{lstlisting}
 \end{minipage}
 \hfill
-\begin{minipage}[t]{0.45\textwidth}
+\begin{minipage}[H]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable},
 		label={lst:BankNonSer}]
-	    // initialize accounts
-	    A := 100
-	    B := 50
+	    A := 100, B := 50
 			
 	    request transfer: 
 	        // transfer 50$
@@ -279,8 +275,8 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 	        A := A + A
 	        yield
 	        B := B + B
-	        return A + B	      		        
-		\end{lstlisting}
+	        return A + B
+      		\end{lstlisting}
 \end{minipage}
 	
 
@@ -346,12 +342,12 @@ The program has three types of requests:
 %	
 %		\item
 (ii)
-	{\color{ForestGreen}$\blacklozenge_\text{route\_from\_west}$}:
-	 this request represents a packet entering the network from the \textit{WEST} node (node 1); and 
+	{\color{ForestGreen}$\blacklozenge_\text{route\_west}$}:
+	 this request represents a packet entering the network from the \textit{WEST} node; and 
 %	
 %		\item
 (iii)
-{\color{ForestGreen}$\blacklozenge_\text{route\_from\_east}$}: this request represents a packet entering the network from the \textit{EAST} node (node 2).
+{\color{ForestGreen}$\blacklozenge_\text{route\_east}$}: this request represents a packet entering the network from the \textit{EAST} node.
 	%
 %\end{itemize}
 %
@@ -373,7 +369,7 @@ The program has three types of requests:
      else:
          B := 0 // orange policy
 		
- request route_from_west:
+ request route_west:
      current := 1 // initial node
      while (current == 2) or (current == 3): // still routing        
          if (current == 1): // west (switch 1)
@@ -390,7 +386,7 @@ The program has three types of requests:
          yield
      return current + current + visited_east
      
- request route_from_east: ... // dual case      
+ request route_east: ... // dual case      
 		\end{lstlisting}
 \end{minipage}
 \end{center}
@@ -398,16 +394,16 @@ The program has three types of requests:
 
 Each of the routing requests represents a single packet entering the network. The request includes a local \textit{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the chosen routing path. There is also a \textit{visited\_east} variable (or a \textit{visited\_west} variable, depending on the request in question).
 %
-The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_from\_west}$} requests is the sum \textit{(current+current+visited\_east)}, an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
+The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_west}$} requests is the sum \textit{(current+current+visited\_east)}, an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
 %
 The program is not serializable, as witnessed by an interleaving that can give rise to final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when updated the routing policy after a request has already been spawned based on the previous policy, which was updated before the request left the network.
 Legal, acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
-Potential routing cycles also occur in the dual case for {\color{ForestGreen}$\blacklozenge_\text{route\_from\_east}$} requests.
+Dually, routing cycles also occur in the case of {\color{ForestGreen}$\blacklozenge_\text{route\_east}$} interleavings.
 
 
 \subsection{Example 6}
 
-We add an additional example for network monitoring and \textit{snapshot isolation} in Appendix~\ref{appendix:snapshotIsolationExample}, and its relation to serializability.
+We add an additional example for network monitoring and \textit{snapshot isolation} in Appendix~\ref{appendix:snapshotIsolationExample}.%, and its relation to serializability.
 %\guy{suddenly I'm not so sure about this example. It is indeed sound but maybe a bit silly?}
 
 

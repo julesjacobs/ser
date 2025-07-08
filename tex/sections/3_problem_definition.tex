@@ -2,9 +2,10 @@
 
 \section{Problem Definition}
 \label{sec:problem-definition}
-\guy{Can someone check Sections 3-4-5? Especially the formulations}
-Our network system (NS) syntax is defined as follows:
+%\guy{Can someone check Sections 3-4-5? Especially the formulations}
 
+Our network system (NS) syntax is defined as described in the syntax of Fig.~\ref{fig:syntax}.
+%
 \newcommand{\grammartag}[1]{\qquad\qquad\emph{(#1)}}
 \begin{figure}[!htbp]
     \begin{align*}
@@ -28,7 +29,7 @@ Our network system (NS) syntax is defined as follows:
     \caption{Syntax of expressians and programs}
     \label{fig:syntax}
 \end{figure}
-    
+    %
 This NS setting is motivating by software-defined networking systems (SDN). Specifically, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header fields; global variables correspond to variables on programmable switches, as they are shared among all packets (threads) of the system. Throughout this section, we will refer to packets/threads/requests interchangeably. 
     
     
@@ -114,7 +115,7 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
     \label{fig:network-transitions}
 \end{figure}
 
-\guy{Nicolas/Jules can you take a look at the other definition that I masked in the latex below? Is the current one good enough?}
+%\guy{Nicolas/Jules can you take a look at the other definition that I masked in the latex below? Is the current one good enough?}
 
 %\begin{definition}[Interleaved executions \(\mathrm{Int}(\mathcal{N})\)]
 %    Let \(\mathcal{N} = (G, L, \mathit{Req}, \mathit{Res}, g_0, \delta, \mathit{req}, \mathit{resp})\).
