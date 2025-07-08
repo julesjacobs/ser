@@ -287,7 +287,7 @@ Each token corresponds to a single request packet, or (in the case of the global
 
 Regarding the aforementioned program, we automatically generate the following reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if satisfiable, indicates the program is not serializable):
 
-\guy{fix the "exists Marking M"}
+\guy{Nicolas could you fix the "exists Marking M"? How do you suggest we formulize?}
 
 \[
 \exists\,M.\; 
@@ -440,9 +440,9 @@ Furthermore, unlike the previous example, this semilinear encoding (of non seria
 \]
 
 
-We then revert this invariant to match our Network System, and project it to inputs/outputs of the system.
+We then revert this invariant to match our Network System, and project it to request/response pairs of the network system.
 %
-We get the following inductive invariants for each of the two global state:
+We get the following inductive invariants for each of the two (reachable) global states:
 
 \begin{proof}
 	
@@ -481,11 +481,11 @@ We get the following inductive invariants for each of the two global state:
 	(	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$})
 	=0,
 	\]
-	so (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) cannot be attained from the global state
+	indicating that  (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) cannot be attained from the global state
 	\textcolor{blue}{[L=0,X=0]}.
 	
 	\medskip\noindent
-	Case 2: Global state \textcolor{blue}{[L=1,X=1]}.
+	In the second case, for the global state \textcolor{blue}{[L=1,X=1]}.
 	The projected invariant is:
 	
 	
@@ -495,19 +495,20 @@ We get the following inductive invariants for each of the two global state:
 	\;\mapsto\;
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
-	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can occur in this state.
+	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state.
+	\guy{Jules is this part correct?}
 	
 	\medskip\noindent
 	\textbf{Conclusion.}
 	In all reachable states
-	it holds that there cannot be any request/response pairs of type
+	it holds that there cannot be any request/response pair of type
 	(	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
 	$).
 	%
 	Furthermore, this indicates that the only attainable request/response pairs are of the form 	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
-	$, which are in the language of of NFA for serial executions. Thus, this program is serializable.
+	$, which are included in the language of of NFA for serial executions. Thus, this program is serializable.
 	%
-	We further show that these invariants are \textit{inductive}: they encompass the system’s initial state and, once satisfied, remain true for all subsequent executions.
+	We further show (in Appendix~\ref{appendix:InductiveInvariantExample}) that these invariants are \textit{inductive}: they encompass the system’s initial state and, once satisfied, remain true for all subsequent executions.
 \end{proof}
 
 
@@ -525,9 +526,10 @@ We get the following inductive invariants for each of the two global state:
 
 \todo{check}
 
-We apply four optimizations to the base algorithm to control intermediate blow‐up.
+We apply four optimizations to the base algorithm to control intermediate blow‐up in the size of both the PN and the constructed semilinear set.
 
 \paragraph{(1) Bidirectional pruning.}  
+\guy{should we reformulate this like in Appendix C?}
 Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the “nonzero” places extracted from the Presburger constraints.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets
 \[
 T^{(0)} = T,\qquad
@@ -542,7 +544,7 @@ We repeat until \(T^{(k+1)}=T^{(k)}\).  In each iteration we record
 and
 \(\Delta_{\mathrm{bw}}^{(k)}=R_{\mathrm{bw}}^{(k-1)}\setminus R_{\mathrm{bw}}^{(k)}\).
 %
-This optimization allows to significant;y prune the Petri Net while still over-approximating all reachable markings (see the proof in Appendix~\ref{appendix:BidirectionalProof}).
+This optimization allows to significantly prune the Petri Net while still over-approximating all reachable markings (see the proof in Appendix~\ref{appendix:BidirectionalProof}).
 
 \paragraph{(2) Semilinear‐set pruning.}  
 Recall a semilinear set is \(S=\bigcup_{i=1}^m L_i\) with
@@ -555,7 +557,7 @@ P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\},
 dropping any ``redundant” period, and remove any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixpoint so no two components subsume one another.
 
 \paragraph{(3) Generating fewer constraints.}  
-Let $\mathrm{comp}(S)=\{L_1,\dots,L_m$ 
+Let $\mathrm{comp}(S)=\{L_1,\dots,L_m\}$ 
 be the multiset of linear components of the semilinear set 
 \(\displaystyle S=\bigcup_{i=1}^m L_i\), where each 
 \(\;L_i=b_i+\langle P_i\rangle\) with \(b_i\in\mathbb N^d\) and 
@@ -566,8 +568,9 @@ be the multiset of linear components of the semilinear set
 \bigcup\bigl\{\,L\in\mathcal C \;\bigm|\;\nexists\,L'\in\mathcal C\setminus\{L\}:\;L'\subsetneq L\bigr\},
 \]
 which removes any component strictly containing another.  
-
-Then we replace the naïve semilinear‐set operations (and their semilinear ``meaning'') by
+%
+\guy{Nicolas is it clear we mean that we fix their semilinear "meaning" of the regex operations? For example, + is union etc..}
+Then, we replace the naïve semilinear‐set operations by
 \[
 S\;+\;T
 \;=\;
@@ -585,7 +588,7 @@ L_i\cdot L'_j
 =\;(b_i+b'_j)\;+\;\langle\,P_i\cup P'_j\,\rangle.
 $
 Finally, for Kleene‐star and plus on the regex side one similarly applies
-\(\mathrm{new}(\cdot)\) to the collection of “folded” components instead of
+\(\mathrm{new}(\cdot)\) to the collection of ``folded” components instead of
 building all intermediate ones:
 \[
 S^*
@@ -596,14 +599,14 @@ S^+
 \]
 
 \paragraph{(4) Strategic Kleene elimination order.}  
-When converting an NFA \(\mathcal A=(Q,\Sigma,\delta,q_0,F)\) to a regex by repeated state‐elimination, then instead of choosing an arbitrary state $q\in Q'$, we pick the next state
+When converting an NFA \(\mathcal A=(Q,\Sigma,\delta,q_0,F)\) to a regex by repeated state‐elimination, then, instead of choosing an arbitrary state $q\in Q'$, we pick the next state
 \[
 q^* = 
 	\arg\min_{q\in Q'}\bigl(|\delta_{\mathrm{in}}(q)|+|\delta_{\mathrm{out}}(q)|\bigr)
 \]
 
 
-where \(Q'\subseteq Q\) are the remaining states remaining to be eliminated.  This heuristic keeps the intermediate regex small.
+where \(Q'\subseteq Q\) are the states remaining to be eliminated.  This heuristic keeps the intermediate regex small.
 
 
 %\newpage
