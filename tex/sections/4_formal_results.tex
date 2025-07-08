@@ -495,7 +495,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	\;\mapsto\;
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
-	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state.
+	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state via a non-serializable execution.
 	\guy{Jules is this part correct?}
 	
 	\medskip\noindent
@@ -529,8 +529,8 @@ We get the following inductive invariants for each of the two (reachable) global
 We apply four optimizations to the base algorithm to control intermediate blow‐up in the size of both the PN and the constructed semilinear set.
 
 \paragraph{(1) Bidirectional pruning.}  
-\guy{should we reformulate this like in Appendix C?}
-Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the “nonzero” places extracted from the Presburger constraints.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets
+\guy{should we reformulate this like in Appendix D?}
+Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the ``nonzero” places extracted from the Presburger constraints.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets
 \[
 T^{(0)} = T,\qquad
 \begin{aligned}

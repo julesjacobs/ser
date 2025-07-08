@@ -1,4 +1,4 @@
-
+\appendix
 
 \section{Motivating Example: Snapshot Isolation}
 \label{appendix:snapshotIsolationExample}
@@ -6,7 +6,7 @@
 
 
 The next program is motivated by system monitoring.
-The system has two nodes (represented by the global variables $N_1$ and $N_2$) which monitor ongoing traffic in the network, and are originally both active (as indicated by their initial values [$N_1=1,N_2=1$]).
+The system has two nodes (represented by the global variables $N_1$ and $N_2$) which monitor ongoing traffic in the network, and are originally both active, as indicated by their initial values [$N_1=1,N_2=1$].
 %
 The {\color{ForestGreen}$\blacklozenge_\text{main}$} request takes a ``snapshot'' of the system, i.e., locally records the current activation status of each of the two nodes.
 %
@@ -14,17 +14,17 @@ Subsequently, in the first request, and any future ones in which both nodes are 
 %
 The {\color{ForestGreen}$\blacklozenge_\text{main}$} request eventually returns the current sum of active nodes in the system.
 %
-In order for the system to emulate multiple iterations, our setting also includes two additional requests, {\color{ForestGreen}$\blacklozenge_\text{activate\_n1}$},{\color{ForestGreen}$\blacklozenge_\text{activate\_n2}$} which activate the nodes $N_1$ and $N_2$, respectively.
+In order for the system to emulate multiple iterations, our setting also includes two additional requests, {\color{ForestGreen}$\blacklozenge_\text{activate\_n1}$},{\color{ForestGreen}$\blacklozenge_\text{activate\_n2}$} which activate nodes $N_1$ and $N_2$, respectively.
 %
-We note that the program is non-serializable due to the yield operation that appears immediately after the recording (snapshot) of the node activity. One such example for a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests record two active monitor nodes and yield; Then, having each request turn off the complement node. As a result of each request operating based on its isolated ``snapshot'' of the initial global state, both monitor nodes can be turned off and we can attain a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for [$N_1+N_2=0+0=0$]).
+We note that the program is not serializable due to the yield operation that appears immediately after the recording (snapshot) of the node activity. One such example for a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests record two active monitor nodes and yield; Then, having each request turn off the complement node. As a result of each request operating based on its isolated ``snapshot'' of the initial global state, both monitor nodes can be turned off and we can attain a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for [$N_1+N_2=0+0=0$]).
 %
-We note that in any serializable execution, no two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests can record both monitors as active, and hence, they cannot both have an interleaving in which each separate monitor is deactivated (hence, a response of {\color{red}$\blacklozenge_0$} is unattainable in serializable executions).
+We note that in any serializable execution, no two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests can record both monitors as active, and hence, a response of {\color{red}$\blacklozenge_0$} is unattainable via serializable executions.
 
 
 
 
 \begin{minipage}[t]{1.0\textwidth}
-	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable, as it can return a sum of 0 active monitors)}]
+	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable)}]
 				// initialize both monitors to be active
 				N_1_ACTIVE := 1
 				N_2_ACTIVE := 1
