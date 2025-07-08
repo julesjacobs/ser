@@ -19,29 +19,52 @@ N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
 \]
 where \(P\) is a finite set of \emph{places}, \(T\) a finite set of \emph{transitions},
 \(\mathsf{pre},\mathsf{post}:T\to\mathbb N^P\) the input/output vectors, and
-\(M_0\in\mathbb N^P\) the initial marking.  A marking \(M\) is \emph{reachable} if
-\[
-M_0 \;\xrightarrow{\sigma}\; M
-\quad\text{for some}\;\sigma\in T^*.
-\]
-%
-A transition \(t\in T\) is \emph{enabled} at a marking \(M\in\mathbb N^P\) iff
+\(M_0\in\mathbb N^P\) the initial marking (initial distribution of tokens across the places).  
+
+\noindent We say that a transition \(t\in T\) is \emph{enabled} at a marking \(M\in\mathbb N^P\) iff
 \[
 M \;\ge\; \mathsf{pre}(t)
 \quad(\text{coordinate‐wise}).
 \]
-Firing \(t\) yields the new marking
+i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$
+When $t$ is enabled at $M$, firing $t$ produces a new marking $M'$ defined as
 \[
 M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t).
 \]
- which represents the consumption of inputs tokens (from the input states), and the production of new ones (to the output states).
+which represents the consumption of inputs tokens (from the input places), and the production of new ones (to the output places). In this case, we denote $M \;\xrightarrow{t}\; M'$ that $M'$ is reachable from $M$.
 %
-The \emph{reachability problem} asks, given $(N,M)$, whether $M$ is reachable from $M_0$.  Surprisingly, even in the
+By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in the range $0..(k-1)$.
+%%
+Finally, we denote $R(N)$ the set of the reachable markings defined as
+\[
+R(N) = \{M \mid \exists \sigma \in T^* .\ M_0 \;\xrightarrow{\sigma}\; M\}
+\]
+%
+The \emph{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M$ is reachable from $M_0$, the initial marking of $N$.  Surprisingly, even in the
 \emph{unbounded} setting (where places may hold arbitrarily many tokens) this problem is
 decidable~\cite{Ma81,Ko82,La92}, although with
-Ackermann-complete~\cite{CzWo22} complexity.
+Ackermann-complete~\cite{CzWo22,leroux_reachability_2022} complexity.
 %
 An example for a toy Petri Net, and both reachable and unreachable markings, appears in Appendix~\ref{appendix:toyPN}.
+
+In our work, we focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. We want to check if it is possible to reach a marking that satisfies a formula, say $F$, that is a combination of linear constraints between places. And so, a property is \textit{reachable} if there exists some $M$ in $R(N)$ such that $M \models F$, and \textit{unreachable} otherwise.
+
+\paragraph{Verdict proofs.} 
+
+If a formula $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ and marking $M$ such that: 
+\[
+M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F
+\] serves as a proof of reachability. One can verify the claim by simulating $\sigma$ from $M_0$ and checking that the resulting marking satisfies $F$.
+
+More interestingly, if $F$ is not reachable, the theory of Petri nets guarantees the existence of an inductive certificate $C$--a Presburger formula satisfying:
+\begin{enumerate}
+	\item $M_0 \models F$
+	\item For all transitions $M \xrightarrow{t} M'$, if $M \models C$4 then $M' \models C$,
+\item $C \Rightarrow \neg F$, i.e., all markings satisfying $C$ falsify $F$.
+\end{enumerate} 
+Such certificates act as formal proofs of unreachability~\cite{leroux_general_2009,leroux_general_2010}.
+
+
 
 \paragraph{Semilinear sets and Parik’s theorem.}
 A set \(S\subseteq\mathbb N^k\) is \emph{semilinear} iff
@@ -287,10 +310,7 @@ Each token corresponds to a single request packet, or (in the case of the global
 
 Regarding the aforementioned program, we automatically generate the following reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if satisfiable, indicates the program is not serializable):
 
-\guy{Nicolas could you fix the "exists Marking M"? How do you suggest we formulize?}
-
 \[
-\exists\,M.\; 
 P_1 = 0 \wedge 
 \textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 \wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
@@ -404,7 +424,7 @@ Due to space limitations, we relegate figures of the corresponding Network Syste
 Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExamplePN}) being able to reach the following marking:
 
 \[
-\exists\,M.\; \textcolor{blue}
+\textcolor{blue}
 P_1 = 0 \wedge 
 {P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 \wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
