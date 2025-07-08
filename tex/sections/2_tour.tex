@@ -85,7 +85,17 @@ In the first case, Listing~\ref{lst:FredSer} presents a serializable execution, 
 %
 However, in Listing~\ref{lst:FredNonSer},we add an additional yield (and a local variable ``y''), occurring in each of the requests, between the update of X and it's return.
 %
-This updates allows request of the same type to update X to the same value --- something that is impossible in any serial execution. 
+This updates allows request of the same type to update X to the same value --- something that is impossible in any serial execution, resulting to outputs such as
+$\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{1}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{3}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}}\}$ which cannot be attained in any serial execution.
+
+%
+%
+%
+%  incr/1
+%incr/3
+%incr/2
+%(decr/2)^2
+ %
 
 %\vspace{2em}
 %\newpage
