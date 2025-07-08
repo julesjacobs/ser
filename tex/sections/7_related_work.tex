@@ -15,7 +15,7 @@
 Serializability (also termed 
 \textit{atomicity}) was first formalized by Eswaran et al.~\cite{EsGrKoTr76} as 
 a 
-correctness condition for concurrent transaction execution. 
+correctness condition for concurrent transactional systems. 
 Their work also introduced what was later referred to as \textit{conflict 
 serializability}, a stricter variant that requires equivalence to a serial 
 schedule solely by reordering non-conflicting operations (e.g., two reads by 
@@ -39,7 +39,7 @@ also preserve the ordering of the transactions.
 %all executions of a program are strictly serializable, given that the 
 %transactions are live~\cite{KoWe21}.
 %
-Herlihy and Wing~\cite{HeWe87, HeWi90} defined \textit{Linearizability} as a 
+Herlihy and Wing~\cite{HeWe87, HeWi90} defined \textit{linearizability} as a 
 similar notion to that of serializability, but adapted from transactional 
 programs 
 to concurrent data structures. In this setting, a linearizable data structure 
@@ -70,7 +70,7 @@ and include Lamport’s \textit{causal
 consistency}~\cite{La78}, which was later generalized to shared 
 memory~\cite{AhNeBuKoHu95} 
 and implemented in systems like 
-COPS~\cite{LlFrKaAn11}, and inspiring extensive research on model checking and 
+COPS~\cite{LlFrKaAn11}, while motivating extensive research on model checking and 
 complexity analysis~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}. 
 
 
@@ -103,7 +103,7 @@ implies that serializability membership is in fact decidable.
 %
 In follow-up work, Bouajjani et al. prove that linearizability is decidable 
 also 
-in the unbounded case for specific abstract state types~\cite{BoEmEnHa18}, in 
+in the unbounded case for specific abstract data types~\cite{BoEmEnHa18}, in 
 which the authors rely on checking coverability in a Vector Addition System 
 with States (VASS), which was proven to be in \texttt{EXPSPACE}~\cite{Ra78}.
 %
@@ -114,33 +114,24 @@ al.~\cite{BoEmEnHa13}. While our setting differs from theirs in various aspects
 the serial specification directly from the program and provide a correctness 
 proof; our setting is a transactional distributed system while their setting pertains to a single concurrent object, etc.), the core connection makes our work an implementation of their approach 
 in spirit. However, despite the theoretical foundation, the implementation 
-itself is the key novelty—translating their algorithm into a practical, 
-scalable tool required significant advancements. The process was highly 
+itself is the key novelty --- translating their algorithm into a practical, 
+scalable tool required significant advancements which are highly
 non-trivial, demanding various optimizations such as automatic invariant 
 inference, automaton minimization, and additional techniques to handle 
-unbounded systems efficiently. To the best of our knowledge, ours is the first 
-tool capable of verifying serializability in unbounded domains.
-%
-While these contributions represent significant advances, to our knowledge, our 
-work is the first to:
-(i) Decide serializability universally --- \textit{considering all executions} 
-purely through program semantics and final states, independent of read/write 
-conflicts; 
-(ii) Support \textit{unbounded} transaction systems; and
-(iii) Provide a complete end-to-end implementation.
+unbounded systems efficiently. 
+
 
 
 
 \subsubsection{Model checking and runtime verification}
 
 In a series of papers, Wang and Stoller put forth runtime techniques for 
-detecting violations to serializability~\cite{WaSt06a} as well as fragments of 
-serializability such 
-as conflict serializability and view-serializability~\cite{WaSt06b}. They do so 
-by  checking whether a given execution can be recombined to generate 
-non-serializable executions.
+detecting serializability violations~\cite{WaSt06a} as well as conflict serializability and view-serializability~\cite{WaSt06b}. 
+%They do so 
+%by  checking whether a given execution can be recombined to generate 
+%non-serializable executions.
 %
-The expressive Temporal Logic of Actions (TLA)~\cite{La94} is used to encode a 
+The expressive TLA logic~\cite{La94} is used to encode a 
 formal specification that validates whether only serializable executions (or 
 conflict-serializable~\cite{CoOlPnTuZu07}) always occur. 
 While TLA can naturally encode ``real'' serializability (based on final-state 
@@ -176,7 +167,7 @@ refinement checking optimization, for a finite number of threads.
 %
 Recently, Golovin et al.~\cite{GoKoVa25} presented \texttt{RELINCHE}, a model 
 checker for bounded-linearizability, in which a predefined number of operations 
-can be invoked invoked.
+can be invoked.
 %
 Other automatic linearizability checking tools include the \texttt{CDSSpec} 
 specification checker under the C/C++ 11 memory model, and 
@@ -193,16 +184,17 @@ al.~\cite{EmEnHa15} to identify violations of \textit{observational refinement}
 	BoEmCoHa15}.
 %
 As far as we are aware, unlike our algorithm, none of these tools afford 
-complete coverage for the case of unbounded threads.
+complete coverage for the case of unbounded threads, nor afford a certificate for serializability.
 %
 Other model checking techniques (e.g.,~\cite{Fl04}) rely on specifying 
-\textit{linearization points} (a.k.a. commit points), i.e., points in which the 
-event occurs logically. We note 
-that identifying all such points can be quite challenging~\cite{VeYaYo09}.
+\textit{linearization points} (a.k.a. commit points) --- points in which the 
+event occurs logically, and are challenging to identify~\cite{VeYaYo09}.
+%We note 
+%that identifying all such points can be quite challenging~\cite{VeYaYo09}.
 %
 These include the work of Vechev et al.~\cite{VeYaYo09}, built upon 
-\texttt{SPIN}~\cite{Ho97}, and extending the authors' \texttt{PARGLIDER} 
-tool~\cite{VeYa08}.~\footnote{Note that Vechev et al. can also apply their 
+\texttt{SPIN}~\cite{Ho97}, and extending the \texttt{PARGLIDER} 
+tool~\cite{VeYa08}.~\footnote{Vechev et al. can also apply their 
 technique without linearization points, but solely on bounded executions.}
 
 
@@ -227,7 +219,7 @@ include~\cite{OhRiVeYaYo10, ZhPeHa15, AbJoTr16}.
 We note that both the model-checking techniques (e.g.,~\cite{CeRaZuChAl10}) and 
 the static analysis techniques which rely on linearization points are 
 inconclusive, as any failed proof can be due to incorrect annotation of the 
-linearization points, as previously observed~\cite{BoEmCoHa15}.
+linearization points~\cite{BoEmCoHa15}.
 %
 
 
@@ -300,20 +292,20 @@ e.g.~\cite{CoDoGr05, DeScWe11} and proof assistance techniques~\cite{EnKo24}.
 Although conflict serializability is a more conservative measure than 
 serializability, it is easier for database schedulers to enforce during 
 runtime, either by \textit{pessimistic} locking approaches~\cite{BeHaGo87}, or 
-\textit{optimistic} locking 
-approaches~\cite{KuRo81, BuMo06}.
+\textit{optimistic} approaches~\cite{KuRo81, BuMo06}.
 %
 Both approaches ensure acyclicity in the conflict graph --- a necessary and 
 sufficient condition for conflict serializability~\cite{SiMa10}. However, 
 because these approaches \textit{ignore program semantics}, these may 
 incorrectly reject executions that, although not conflict-serializable, are 
-still valid serializable executions, i.e., have the same result as a serial 
-execution. 
+still valid serializable executions.
+%i.e., have the same result as a serial 
+%execution. 
 %
-We note that the subject matter of this work is around the notion of (``real'') 
-serializability, which takes 
-into account the program semantics, and regards whether the final result of the 
-program can be attained by a serial execution.
+%We note that the subject matter of this work is around the notion of (``real'') 
+%serializability, which takes 
+%into account the program semantics, and regards whether the final result of the 
+%program can be attained by a serial execution.
 %
 
 \subsubsection{Theoretical results}
@@ -408,21 +400,19 @@ Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}.
 %Petri nets with just five unbounded places.
 %
 %Furthermore, our approach also builds on 
-as well as Petri Net reachability algorithms, 
-which determine whether a given marking is attainable. While the solution is 
+as well as Petri Net reachability algorithms. While the solution is 
 straightforward for bounded nets (through exhaustive enumeration), the solution 
 for the unbounded case is highly nontrivial, and was first solved by 
 Mayr~\cite{Ma81}, with subsequent improvements by Kosaraju~\cite{Ko82} and 
 Lambert~\cite{La92}. Recent work~\cite{CzWo22} has also established this 
-problem is \texttt{Ackermann}-complete, implying that, although decidable, it 
-is practically infeasible to solve on large nets in the worst case.
+problem is \texttt{Ackermann}-complete.
 %
 These theoretical advances in Petri Net reachability have given rise to a 
 plethora of practical tools, including \texttt{KReach}~\cite{DiLa20}, 
 \texttt{DICER}~\cite{XiZhLi21}, \texttt{MARCIE}~\cite{HeRoSc13}, and others. 
 %
 Specifically, our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a 
-state-of-the-art Petri Net reachability tool that combines SMT-solving with 
+state-of-the-art Petri Net model checker that combines SMT-solving with 
 structural invariants~\cite{AmBeDa21, AmDaHu22}. At a high level, SMPT 
 formulates reachability as satisfiability queries (dispatched to the 
 \texttt{Z3} 
@@ -436,14 +426,14 @@ reachability
 problems. 
 Still, our Petri Nets are encoded in the standard \texttt{.nnet} format, and 
 the property file is encoded in the standard \texttt{.XML} format --- in order 
-for our tool to be compatible with any off-the-shelf solvers.
+for our tool to be compatible with off-the-shelf solvers.
 }.
 %
 %We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary of additional decidability results pertaining to Petri Nets.
 %
-Finally, we believe that our various, nontrivial optimizations, and first and 
-foremost --- the automatic invariant inference, are interesting in their own, 
-allowing the speedy termination of queries that otherwise timed-out. 
+%Finally, we believe that our various, nontrivial optimizations, and first and 
+%foremost --- the automatic invariant inference, are interesting in their own, 
+%allowing the speedy termination of queries that otherwise timed-out. 
 
  
  
