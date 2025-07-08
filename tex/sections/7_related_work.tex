@@ -91,7 +91,7 @@ Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \em
 
 \subsubsection{Theoretical Results}
 The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is NP-complete~\cite{Pa79,BiEn19}. Likewise, membership for linearizability is NP-complete in general~\cite{GiKo97} --- a result that was later 
-extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion—is EXPSPACE when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (hence for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in EXPSPACE~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions and scaling it with automatic invariant inference, automaton minimization, and other optimizations. Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
+extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion—is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (hence for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions and scaling it with automatic invariant inference, automaton minimization, and other optimizations. Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
 %\todo{original}
 %\subsubsection{Theoretical Results}
@@ -142,7 +142,7 @@ extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} -
 
 Wang and Stoller propose runtime checks for serializability and conflict/view‐serializability by recombining executions~\cite{WaSt06a,WaSt06b}. 
 While TLA encodings can capture ``real'' serializability (based on final-state 
-equivalence), as well as conflict-serializability~\cite{CoOlPnTuZu07}, these are confined solely to bounded systems due to finite‐state tools like TLC and Apalache~\cite{YuMaLa99,KoKuTr19}. Heuristic and enumeration‐based model checkers include Line-up~\cite{BuDeMuTa10} (built upon CHESS~\cite{MuQaBaBaNaNe08}), LinTSO for TSO~\cite{BuGoMuYa12}, Violat (and its schema‐based predecessor)~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}, and RELINCHE for bounded linearizability~\cite{GoKoVa25}. Additional tools --- CDSSpec (with regard to the C/C++ 11 memory model) and Lincheck~\cite{KoDeSoTsAl23,OuDe17}, SAT‐based checks~\cite{BuAlMa07}, symbolic observational‐refinement testing~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
+equivalence), as well as conflict-serializability~\cite{CoOlPnTuZu07}, these are confined solely to bounded systems due to finite‐state tools like TLC and Apalache~\cite{YuMaLa99,KoKuTr19}. Heuristic and enumeration‐based model checkers include Line-up~\cite{BuDeMuTa10} (built upon CHESS~\cite{MuQaBaBaNaNe08}), LinTSO for TSO~\cite{BuGoMuYa12}, Violat (and its schema‐based predecessor)~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}, and RELINCHE for bounded linearizability~\cite{GoKoVa25}. Additional tools --- CDSSpec (with regard to the \texttt{C/C++ 11} memory model) and Lincheck~\cite{KoDeSoTsAl23,OuDe17}, SAT‐based checks~\cite{BuAlMa07}, symbolic observational‐refinement testing~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
 	BoEmCoHa15}.
 Furthermore, checkers such as SPIN/PARGLIDER rely on explicit linearization points~\cite{Fl04, VeYaYo09,Ho97,VeYa08}.
  The above methods rely on linearization points (which are hard to identify~\cite{VeYaYo09}), are incomplete or limited to finite threads. 
@@ -343,17 +343,20 @@ Some combine dynamic analysis with manual proofs, e.g., Shacham et al.~\cite{ShB
 
 \subsection{Deciding conflict serializability}
 
+%\todo{original:} 
+
 \subsubsection{Runtime enforcement}
 Although conflict serializability is a more conservative measure than 
 serializability, it is easier for database schedulers to enforce during 
 runtime, either by \textit{pessimistic} locking approaches~\cite{BeHaGo87}, or 
-\textit{optimistic} approaches~\cite{KuRo81, BuMo06}.
-%
-Both approaches ensure acyclicity in the conflict graph --- a necessary and 
-sufficient condition for conflict serializability~\cite{SiMa10}. However, 
-because these approaches \textit{ignore program semantics}, these may 
-incorrectly reject executions that, although not conflict-serializable, are 
-still valid serializable executions.
+\textit{optimistic} approaches~\cite{KuRo81, BuMo06}, both ensuring  acyclicity in the conflict graph --- a necessary and 
+sufficient condition for conflict serializability~\cite{SiMa10}. 
+However, by ignoring program semantics, they can reject executions that are serializable despite conflict cycles.
+
+%However, 
+%because these approaches \textit{ignore program semantics}, these may 
+%incorrectly reject executions that, although not conflict-serializable, are 
+%still valid serializable executions.
 %i.e., have the same result as a serial 
 %execution. 
 %
@@ -378,58 +381,74 @@ independent of the transaction count.
 %Nets), they provide a finite framework for analyzing infinite behaviors. This 
 %approach inspired our use of Petri Nets to capture Int(S).
 %
+
 \subsubsection{Approaches and techniques}
 
-Various works focus on checking conflict serializability, e.g., Farzan and 
-Mahusudan~\cite{FaMa08} present a monitoring-based decision procedure for 
-conflict serializability of a bounded number of operations, and Flanagan et 
-al.~\cite{FlFrYi08} present \texttt{Velodrome} --- a dynamic analyzer for 
-conflict 
-serializability. Additional dynamic approaches include~\cite{FlFr04, XuBoRa05, 
-WaSt06a, CoOlPnTuZu07, EmMaMa10, SiMaWaGu11a} and others.
-%
-%Other works~\cite{XuBoRa05} have also put forth techniques to automatically 
-%detect conflict-serializability violations.
-%
-Hatcliff et al.~\cite{HaRoDw04} demonstrate the use of the \texttt{Bogor} model 
-checker~\cite{RoDwHa03} and check atomicity w.r.t. Liptopn's reduction theory 
-of left/right movers~\cite{Li75} (which is reminiscent of 
-conflict-serializability).
-%
-Elmas et al.~\cite{ElQaSeSuTa10} also use the notion of movers and present an 
-(incomplete) technique to prove linearizability by iteratively rewriting an 
-input program.
-%
-%\guy{Mark can you please check out ElQaSeSuTa10}
-%
-Nagar and Jagannathan~\cite{KaJa18} presented an 
-automatic static analysis technique to find violations of conflict 
+Dynamic and monitoring‐based methods check conflict serializability, including Farzan and Mahusudan’s bounded monitoring~\cite{FaMa08}, Flanagan et al.’s Velodrome~\cite{FlFrYi08}, and other runtime analyzers~\cite{FlFr04,XuBoRa05,WaSt06a,CoOlPnTuZu07,EmMaMa10,SiMaWaGu11a}. Hatcliff et al. leverage Bogor with Lipton’s mover theory~\cite{HaRoDw04,Li75}, while Elmas et al. use mover‐based program rewriting~\cite{ElQaSeSuTa10}. On the static side, Nagar and Jagannathan propose a static analysis technique to find violations of conflict 
 serializability.
-%
-Sinha et al.~\cite{SiMaWaGu11b} present a sound and incomplete predictive 
-analysis technique for detecting violations of conflict serializability, 
-following the previous work of Sinha and Malik~\cite{SiMa10} which put forth a 
-runtime conflict serializability checker.
-%
-Von Praun and Gross~\cite{VoGr04} present an unsound static analysis technique 
-for identifying potential atomicity violations. Additional static analysis 
-techniques are based on type systems, e.g.~\cite{FlQa03, FlFrLiQa08}.
-%
+Sinha et al. developed an incomplete predictive analysis technique, building on Sinha and Malik’s runtime checker~\cite{SiMaWaGu11b,SiMa10}, and Von Praun and Gross offer an unsound static checker~\cite{VoGr04}. Type‐system approaches appear in~\cite{FlQa03,FlFrLiQa08}. 
 Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a 
 tool that checks whether a given program execution is conflict serializable, in 
 an eventually consistent data store. In a follow-up work~\cite{BrDiMuVe18} 
 further bridges these concepts by statically detecting 
 non-(conflict)-serializable behaviors in causally consistent databases.
+Conflict serializability has also been studied under weak memory models~\cite{EnFa16}.
+
 %
-%Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis 
-%techniques for verifying view-serializability on specific program sub-types.
+%\todo{original:}
 %
-%\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
-%	them?}
+%\subsubsection{Approaches and techniques}
 %
-We also note that conflict serializability has been studied in relation to weak 
-memory models~\cite{EnFa16}.
-%
+%Various works focus on checking conflict serializability, e.g., Farzan and 
+%Mahusudan~\cite{FaMa08} present a monitoring-based decision procedure for 
+%conflict serializability of a bounded number of operations, and Flanagan et 
+%al.~\cite{FlFrYi08} present \texttt{Velodrome} --- a dynamic analyzer for 
+%conflict 
+%serializability. Additional dynamic approaches include~\cite{FlFr04, XuBoRa05, 
+%WaSt06a, CoOlPnTuZu07, EmMaMa10, SiMaWaGu11a} and others.
+%%
+%%Other works~\cite{XuBoRa05} have also put forth techniques to automatically 
+%%detect conflict-serializability violations.
+%%
+%Hatcliff et al.~\cite{HaRoDw04} demonstrate the use of the \texttt{Bogor} model 
+%checker~\cite{RoDwHa03} and check atomicity w.r.t. Liptopn's reduction theory 
+%of left/right movers~\cite{Li75} (which is reminiscent of 
+%conflict-serializability).
+%%
+%Elmas et al.~\cite{ElQaSeSuTa10} also use the notion of movers and present an 
+%(incomplete) technique to prove linearizability by iteratively rewriting an 
+%input program.
+%%
+%%\guy{Mark can you please check out ElQaSeSuTa10}
+%%
+%Nagar and Jagannathan~\cite{KaJa18} presented an 
+%automatic static analysis technique to find violations of conflict 
+%serializability.
+%%
+%Sinha et al.~\cite{SiMaWaGu11b} present a sound and incomplete predictive 
+%analysis technique for detecting violations of conflict serializability, 
+%following the previous work of Sinha and Malik~\cite{SiMa10} which put forth a 
+%runtime conflict serializability checker.
+%%
+%Von Praun and Gross~\cite{VoGr04} present an unsound static analysis technique 
+%for identifying potential atomicity violations. Additional static analysis 
+%techniques are based on type systems, e.g.~\cite{FlQa03, FlFrLiQa08}.
+%%
+%Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a 
+%tool that checks whether a given program execution is conflict serializable, in 
+%an eventually consistent data store. In a follow-up work~\cite{BrDiMuVe18} 
+%further bridges these concepts by statically detecting 
+%non-(conflict)-serializable behaviors in causally consistent databases.
+%%
+%%Rinetzky et al.~\cite{RiBoRaSaYa} present a conservative static analysis 
+%%techniques for verifying view-serializability on specific program sub-types.
+%%
+%%\guy{Mark, please see my masked comment on RiBoRaSaYa. Do we need to mention 
+%%	them?}
+%%
+%We also note that conflict serializability has been studied in relation to weak 
+%memory models~\cite{EnFa16}.
+%%
 
 
 
