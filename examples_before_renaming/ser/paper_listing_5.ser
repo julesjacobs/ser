@@ -1,0 +1,20 @@
+request A { 
+	if (FLAG==0){
+		x:=0
+	}
+	else{
+		x:=1
+	};
+
+	if (?) {
+		yield 
+	}
+	else {
+		0
+	};
+	FLAG := 1;
+	x
+}
+
+
+
