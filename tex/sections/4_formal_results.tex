@@ -34,7 +34,7 @@ Firing \(t\) yields the new marking
 \[
 M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t).
 \]
-
+ which represents the consumption of inputs tokens (from the input states), and the production of new ones (to the output states).
 %
 The \emph{reachability problem} asks, given $(N,M)$, whether $M$ is reachable from $M_0$.  Surprisingly, even in the
 \emph{unbounded} setting (where places may hold arbitrarily many tokens) this problem is
@@ -81,11 +81,11 @@ Q = G
 \[
 \Sigma
 = \Bigl\{
-{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
-{\color{red}\blacklozenge_{\mathit{resp}}}
+{(\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
+{\color{red}\blacklozenge_{\mathit{resp}}})
 \;\Big|\;
-{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{Req},\;
-{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{Resp}
+{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\;
+{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}
 \Bigr\}
 \]
 \[
@@ -101,7 +101,7 @@ Q = G
 	\mathcal S \text{ at global state } q
 	\;\text{issues}\;
 	{\color{ForestGreen}\blacklozenge_{\mathit{req}}},\\[0.5ex]
-	\text{after completion of the request, it receives}\;
+	\text{after full completion of the request, it receives}\;
 	{\color{red}\blacklozenge_{\mathit{resp}}},\\[0.5ex]
 	\text{arriving at global state } q'
 \end{array}
@@ -130,7 +130,7 @@ Q = G
 	\[
 	P
 	=
-	P_G \;\cup\; P_{L} \;\cup\; P_{Req,Resp}
+	P_G \;\cup\; P_{L} \;\cup\; P_{REQ,RESP}
 	\]
 	
 	for 
@@ -141,11 +141,11 @@ Q = G
 	P_L 
 	= \{\,p_\ell \mid \ell\in L\}
 	\quad
-	P_{Req,Resp}=
+	P_{REQ,RESP}=
 	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
-	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{Req}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{Resp}\},
+	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
 	\]
-	with \(G\) the global states, \(L\) the in‐flight local states (request‐state + remaining program), and \(\mathit{Resp}\) the response labels.
+	with \(G\) the global states, \(L\) the in‐flight local states (request‐state + remaining program), and \(\mathit{RESP}\) the response labels.
 	
 	Transitions are partitioned as
 	\[
@@ -153,9 +153,9 @@ Q = G
 	\]
 	where
 	\[
-	T_{\mathit{req}} = \{\,t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}} \mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{Req}\},\quad
+	T_{\mathit{req}} = \{\,t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}} \mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ}\},\quad
 	T_{\delta} = \{\,t_{(\ell,g)\to(\ell',g')} \mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta_{\mathcal S}\},\quad
-	T_{\mathit{resp}} = \{\,t_{{\color{red}\blacklozenge_{\mathit{resp}}}} \mid {\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{Resp}\}.
+	T_{\mathit{resp}} = \{\,t_{{\color{red}\blacklozenge_{\mathit{resp}}}} \mid {\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\}.
 	\]
 	
 	Their pre/post vectors are:
@@ -165,7 +165,7 @@ Q = G
 		&= \mathbf0, &
 		\mathsf{post}\bigl(t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}}\bigr)
 		&= \mathbf1_{p_{\ell_r}}, 
-		&&\text{for each }{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{Req},\\
+		&&\text{for each }{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\\
 		\mathsf{pre}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
 		&= \mathbf1_{p_\ell} + \mathbf1_{p_g}, &
 		\mathsf{post}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
@@ -175,7 +175,7 @@ Q = G
 		&= \mathbf1_{p_\ell}, &
 		\mathsf{post}\bigl(t_{{\color{red}\blacklozenge_{\mathit{resp}}}}\bigr)
 		&= \mathbf1_{p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}}, 
-		&&\text{for each }{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{Resp}\ (\ell\text{ the matching local state).}
+		&&\text{for each }{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\ (\ell\text{ the matching local state).}
 	\end{alignedat}
 	\]
 	
@@ -192,9 +192,9 @@ Q = G
 	Define the projection of all reachable marking to the places representing completed request/response pairs:
 	\[
 	\pi \;:\;\mathbb N^P \;\longrightarrow\;\mathbb N^{P_R}
-	\quad\bigl(\pi(M)\bigr)(p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}})\;=\;M(p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}})\text{ for }p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}}\in P_{Req,Resp}.
+	\quad\bigl(\pi(M)\bigr)(p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}})\;=\;M(p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}})\text{ for }p_{{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}}\in P_{REQ,RESP}.
 	\]
-	Then the set of all  ${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$ pairs of the NS, attained by any interleaving, is:
+	Then the multiset of all  (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs of the NS, attained by any interleaving, is:
 	\[
 	\mathsf{Int}(\mathcal S)
 	\;=\;
@@ -203,7 +203,7 @@ Q = G
 	
 	\item \textbf{Non-serializable set.}  
 	Let
-	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., all ${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$ pairs that \textit{cannot} be attained via a serializable execution.
+	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., all (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs that \textit{cannot} be attained via a serializable execution.
 	
 	\item \textbf{Reachability encoding.}  
 	Ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that
@@ -226,7 +226,7 @@ Q = G
 
 \item \textbf{Validation.}  
 	\begin{itemize}
-	\item if \sat we validate the reachable trace and project to to the NS semantics to represent a valid interleaving that results into request/response pairs which cannot be attained in serial executions.
+	\item if \sat we validate the reachable trace and project it to the NS semantics to represent a valid interleaving that results into request/response pairs which cannot be attained in serial executions.
 	See example in subsec.~\ref{subsec:ns-not-serializable}.
 	
 	\item if \unsat:
@@ -257,7 +257,7 @@ Q = G
 
 \paragraph{Serializable NFA Extraction.}
 
-Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS presented in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen, serial executions can produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}):
+Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS presented in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen, serial executions can produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}), while maintaining the only reachable global state $[X=0]$:
 
 \begin{figure}[!htbp]
 	\centering
@@ -268,26 +268,26 @@ Continuing the running (non-serializable) example presented in Listing~\ref{lst:
 
 \paragraph{Petri Net Extraction.}
 
-Finally, the NS allows to generate the following Petri Net, encoding all possible interleavings of our program:
+Finally, the NS gives rise to to generate the following Petri Net, encoding all possible interleavings of our program:
 
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.7\textwidth]{plots/code_2_PN_with_annotation.png}
-	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample2NonSer} program. Note that there is no firing sequence that can reach the place representing a response of ``0'', i.e., the bottom right place.}
+	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample2NonSer} program. Note that there doesn't exist any valid firing sequence that can reach place $P_8$, representing a response of {\color{red}$\blacklozenge_0$}.}
 	\label{fig:code2ExamplePN}
 \end{figure}
 
-The places represent the $\delta$ transitions of our NS --- encoding either a ``step'' of our program, or spawning a request ($t_1$, which  corresponds to spawning request {\color{ForestGreen}$\blacklozenge_\text{main}$}), or returning a responds, e.g. transitions $t_6,t_7$ that corresponds to outputting responses {\color{red}$\blacklozenge_1$},{\color{red}$\blacklozenge_0$}.
+The places represent the $\delta$ transitions of our NS --- encoding either a ``step'' of our program, or spawning a request ($t_1$, which  corresponds to spawning request {\color{ForestGreen}$\blacklozenge_\text{main}$}), or returning a response, e.g. transitions $t_6,t_7$ that corresponds to outputting responses {\color{red}$\blacklozenge_1$},{\color{red}$\blacklozenge_0$}.
 %
 Some places (\textcolor{blue}{$P_2$},\textcolor{blue}{$P_3$}) corresponds to the global state, while others ($P_1,P_4,P_5,P_6$) corresponds to the local state of an in-flight request.
 %
-Each token corresponds to a single packet, or (in the case of the global-variable-encoding places), to the global state of the program.
+Each token corresponds to a single request packet, or (in the case of the global-variable-encoding places), to the global state of the program.
 
 \paragraph{Counterexample Extraction.}
 
-Regarding the aforementioned program, we automatically generate the following LTL reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if satisfiable, indicates the program is not serializable):
+Regarding the aforementioned program, we automatically generate the following reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if satisfiable, indicates the program is not serializable):
 
-\todo{fix the "exists Marking M"}
+\guy{fix the "exists Marking M"}
 
 \[
 \exists\,M.\; 
@@ -295,7 +295,7 @@ P_1 = 0 \wedge
 \textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 \wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
 \]
-This asserts the existence of a marking with no tokens on $P_1,P_4,P_5,P_6$, exactly zero tokens on $\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  In fact, the target marking
+This asserts the existence of a marking with no tokens on $P_1,P_4,P_5,P_6$,$\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  In fact, the target marking
 \[
 M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
 \]
@@ -388,7 +388,7 @@ is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing seque
 		&                                   {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}       \\
 		\bottomrule
 	\end{tabular}
-	\caption{Firing sequence reaching the target marking $M^*$. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens on place $P_i$. The initial marking has a single token in the place encoding the initialized values of the global variables.}
+	\caption{Firing sequence reaching the target marking $M^*$. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens on place $P_i$. The initial marking has a single token in place $P_3$ encoding the initial global state.}
 	\label{tab:PetriNetFiringCounterexample}
 \end{table}
 
@@ -397,11 +397,11 @@ is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing seque
 \subsection{Example: Serializable Program}
 \label{subsec:ns-serializable}
 
-Now, we observe again the adjusted program (as previously described in Listing~\ref{lst:MotivatingExample3Ser}):
+Now, we observe again the adjusted program with locks (as previously described in Listing~\ref{lst:MotivatingExample3Ser}).
+%
+Due to space limitations, we relegate figures of the corresponding Network System, Serailizability NFA, and Interleaving Petri Net to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
 
-We present the corresponding Network System, Serailizability NFA, and Interleaving Petri Net in Appendix~\ref{appendix:MoreNsExamples}.
-
-Non-serializability corresponds to the above Petri Net being able to reach the following marking:
+Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExamplePN}) being able to reach the following marking:
 
 \[
 \exists\,M.\; \textcolor{blue}
@@ -413,7 +413,7 @@ P_1 = 0 \wedge
 
 Note that this happened to be the exact same property as encoding non-serializability in the previous example, however, the Petri Net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, $X$ and $L$. 
 %
-However, this semilinear encoding (of non serializability) is \textit{unreachable}, as witness by the following inductive invariant:
+Furthermore, unlike the previous example, this semilinear encoding (of non serializability) is \textit{unreachable}, as witness by the following inductive invariant that we produce.
 
 
 \[
