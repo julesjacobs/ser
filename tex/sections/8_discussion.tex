@@ -1,8 +1,6 @@
 \section{Discussion}
 \label{sec:discussion}
 
-
-
 \subsection{Conclusion}
 
 To the best of our knowledge, ours is the first 
@@ -24,7 +22,7 @@ To conclude..
 \subsection{Future Work}
 Next..
 
-The second distinguishing feature relates to ongoing work. \texttt{SMPT} supports polyhedral reductions~\cite{AmBeDa21} that are structural reduction~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$, where $(N_1, m_1)$ is the Petri net we want to analyze, $(N_2, m_2)$ is a reduced version of this net (easier to model check), and $E$ is a Presburger formula that permits to reconstruct of the state space of $N_1$ from that of $N_2$. We plan to leverage this mechanism to trace back certificates obtained on the reduced net $N_2$ to the original net $N_1$, that would be the only kind of structural reduction for which such operation is possible.
+We plan to use polyhedral reductions~\cite{AmBeDa21} that are structural reduction~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$, where $(N_1, m_1)$ is the Petri net we want to analyze, $(N_2, m_2)$ is a reduced version of this net (easier to model check), and $E$ is a Presburger formula that permits to reconstruct of the state space of $N_1$ from that of $N_2$. We plan to leverage this mechanism to trace back certificates obtained on the reduced net $N_2$ to the original net $N_1$, that would be the only kind of structural reduction for which such operation is possible.
 
 \todo{Different notions of serializability}
 \begin{itemize}
