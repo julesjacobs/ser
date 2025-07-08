@@ -484,12 +484,16 @@ problem is \texttt{Ackermann}-complete.
 These theoretical advances in Petri Net reachability have given rise to a 
 plethora of practical tools, including \texttt{KReach}~\cite{DiLa20}, 
 \texttt{DICER}~\cite{XiZhLi21}, \texttt{MARCIE}~\cite{HeRoSc13}, and others. 
+%
+Specifically, our implementation leverages \texttt{SMPT} (\emph{Satisfiability Modulo Petri Net})~\cite{AmDa23}, a state-of-the-art model checker for reachability problems in Petri nets (for additional details on SMPT, see Appendix~\todo{bla}). However, we note that other PN model checkers can also be used.
 
-Specifically, our implementation leverages \texttt{SMPT} (\emph{Satisfiability Modulo Petri Net})~\cite{AmDa23}, a state-of-the-art model checker for reachability problems in Petri nets. \texttt{SMPT} is a portfolio of symbolic model checking techniques—including Bounded Model Checking (BMC)~\cite{BiCiClZh99}, state equation reasoning~\cite{Mu77}, $k$-induction~\cite{ShSiSt20}, Property Directed Reachability (PDR)~\cite{Br11,AmDaHu22}, and random state space exploration. It acts as a front-end to an SMT solver (\texttt{z3}~\cite{DeBj08} in our setting), while also incorporating domain-specific knowledge from Petri net theory, such as invariants and structural properties. \texttt{SMPT} has participated in the last five editions of the Model Checking Contest (MCC), an international competition for model checking tools. In its most recent participation, it achieved a bronze medal and a 100\% confidence level, meaning it never returned an incorrect verdict~\cite{mcc:2025}.
+
+\texttt{SMPT} is a portfolio of symbolic model checking techniques—including Bounded Model Checking (BMC)~\cite{BiCiClZh99}, state equation reasoning~\cite{Mu77}, $k$-induction~\cite{ShSiSt20}, Property Directed Reachability (PDR)~\cite{Br11,AmDaHu22}, and random state space exploration. It acts as a front-end to an SMT solver (\texttt{z3}~\cite{DeBj08} in our setting), while also incorporating domain-specific knowledge from Petri net theory, such as invariants and structural properties. \texttt{SMPT} has participated in the last five editions of the Model Checking Contest (MCC), an international competition for model checking tools. In its most recent participation, it achieved a bronze medal and a 100\% confidence level, meaning it never returned an incorrect verdict~\cite{mcc:2025}.
 
 \texttt{SMPT} distinguishes itself from other tools in two ways that are particularly relevant to our setting and motivated its adoption. First, to the best of our knowledge, it is the only model checker for Petri nets that provides a proof of its verdict, regardless of the underlying verification technique. This means it either produces a witness trace when the property is reachable, or—more interestingly—a certificate of non-reachability~\cite{AmDaHu22} when the property is not reachable.
+ 
 
-The second distinguishing feature relates to ongoing work. \texttt{SMPT} supports polyhedral reductions~\cite{AmBeDa21} that are structural reduction~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$, where $(N_1, m_1)$ is the Petri net we want to analyze, $(N_2, m_2)$ is a reduced version of this net (easier to model check), and $E$ is a Presburger formula that permits to reconstruct of the state space of $N_1$ from that of $N_2$. We plan to leverage this mechanism to trace back certificates obtained on the reduced net $N_2$ to the original net $N_1$, that would be the only kind of structural reduction for which such operation is possible.
+
 
 % Specifically, our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a 
 % state-of-the-art Petri Net model checker that combines SMT-solving with 
