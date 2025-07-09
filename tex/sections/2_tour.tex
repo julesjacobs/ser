@@ -129,7 +129,7 @@ However, given that the first request can also \textit{yield}, it is possible fo
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
-		label={lst:BasicSer}]
+		label={lst:BasicSer},numbers=none]
 	request A: 
 		x := FLAG
 		
@@ -145,7 +145,7 @@ However, given that the first request can also \textit{yield}, it is possible fo
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable},
-	label={lst:BasicNonSer}]
+	label={lst:BasicNonSer},numbers=none]
 			request A: 
 			    x := FLAG 
 			
@@ -188,7 +188,7 @@ $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\tex
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
-		label={lst:FredSer}]
+		label={lst:FredSer},numbers=none]
 			request incr: 
 			    while (X == 3):
 			        yield
@@ -209,7 +209,7 @@ $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\tex
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable},
-		label={lst:FredNonSer}]
+		label={lst:FredNonSer},numbers=none]
 			request incr:
 			    while (X == 3):
 			        yield
@@ -359,7 +359,7 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 \noindent
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
-		label={lst:BankSer}]
+		label={lst:BankSer},numbers=none]
 	    A := 100, B := 50
 	    
 	    request transfer: 
@@ -380,7 +380,7 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable},
-		label={lst:BankNonSer}]
+		label={lst:BankNonSer},numbers=none]
 	    A := 100, B := 50
 			
 	    request transfer: 
@@ -419,9 +419,9 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 %\newpage
 \subsection{Example 5}
 
-The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness in routing policies. motivates our routing‐policy programs in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adopt its updated routing policy as dictated by the updates.
+The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness in routing policies in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adjust its updated routing policy as dictated by the updates.
 %
-An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled \textit{WEST}) and node 2 (labeled \textit{EAST}), serving as ingress points from where traffic nondeterministically enters the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or an \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
+An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled WEST) and node 2 (labeled EAST), serving as ingress points from where traffic nondeterministically enters the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or an \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
 %
 %
 %// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
@@ -449,7 +449,7 @@ An instance of a simple network with two competing policies is shown in Fig.~\re
 %
 This SDN-controlled routing policy is realized in the pseudo code in Listing~\ref{lst:BgpNonSerializable}.
 %
-The program includes a single global variable $B$, indicating if the current routing policy is the  \textcolor{NavyBlue}{blue} policy ($[B=1]$) or the \textcolor{darkorange}{orange} policy ($[B=0]$).
+The program includes a single global variable $B$, indicating whether the current routing policy is \textcolor{NavyBlue}{blue} ($[B=1]$) or \textcolor{darkorange}{orange} ($[B=0]$).
 %
 The program has three types of requests:
 %\begin{itemize}
@@ -463,11 +463,11 @@ The program has three types of requests:
 %		\item
 (ii)
 	{\color{ForestGreen}$\blacklozenge_\text{route\_west}$}:
-	 this request represents a packet entering the network from the \textit{WEST} node; and 
+	 a request representing a packet entering the network from the \textit{WEST} node; and 
 %	
 %		\item
 (iii)
-{\color{ForestGreen}$\blacklozenge_\text{route\_east}$}: this request represents a packet entering the network from the \textit{EAST} node.
+{\color{ForestGreen}$\blacklozenge_\text{route\_east}$}: a request representing a packet entering the network from the EAST node.
 	%
 %\end{itemize}
 %
@@ -482,7 +482,7 @@ The program has three types of requests:
 
 \begin{center}
 \begin{minipage}[!htbp]{0.85\textwidth}
-	\begin{lstlisting}[caption={BGP routing (not serializable)},label={lst:BgpNonSerializable}]
+	\begin{lstlisting}[caption={BGP routing (not serializable)},label={lst:BgpNonSerializable},numbers=none]
  request policy_update:
      if (?): // nondeterministically 1 or 0
          B := 1  // blue policy 
@@ -516,8 +516,9 @@ Each of the routing requests represents a single packet entering the network. Th
 %
 The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_west}$} requests is the sum \textit{(current+current+visited\_east)}, an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
 %
-The program is not serializable, as witnessed by an interleaving that can give rise to final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when updated the routing policy after a request has already been spawned based on the previous policy, which was updated before the request left the network.
-Legal, acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
+The program is not serializable, as witnessed by an interleaving that can give rise to final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet ({\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when  a request has already been spawned based on the previous policy, subsequently yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting to a routing cycle.
+%
+More formally, this is conveyed by return values that represent these cycles and are attained only via non-serializable executions. For example, legal, acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
 Dually, routing cycles also occur in the case of {\color{ForestGreen}$\blacklozenge_\text{route\_east}$} interleavings.
 
 

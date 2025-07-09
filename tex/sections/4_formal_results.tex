@@ -602,14 +602,19 @@ Before any heavy symbolic reasoning takes place, we apply bidirectional pruning 
 
 
 \paragraph{(2) Semilinear‐set pruning.}  
-Recall a semilinear set is \(S=\bigcup_{i=1}^m L_i\) with
-
-\(\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p\,p\mid n_p\in\mathbb N\}\).  
+Recall a semilinear set is 
+$
+S=\bigcup_{i=1}^m L_i
+$ 
+with
+\[
+\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p\,p\mid n_p\in\mathbb N\}
+\].  
 %
 We replace each period‐basis \(P_i\) by
-%\[
-$P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\}$,
-%\]
+\[
+P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\}
+\],
 dropping any ``redundant” period, and remove any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixed point so no two components subsume one another.
 
 \medskip
