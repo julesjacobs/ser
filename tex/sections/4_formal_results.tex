@@ -468,12 +468,12 @@ As demonstrated by the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}
 
 Now, we observe again the adjusted program with locks (as previously described in Listing~\ref{lst:MotivatingExample3Ser}).
 %
-Due to space limitations, we relegate figures of the corresponding Network System, Serailizability NFA, and Interleaving Petri Net to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
+Due to space limitations, we relegate figures of the corresponding Network System (Fig.~\ref{fig:code3ExampleNS}), Serailizability NFA (Fig.~\ref{fig:code3ExampleNFA}), and Interleaving Petri Net (Fig.~\ref{fig:code3ExamplePN}) to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
 %
-Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExamplePN}) being able to reach a marking satisfying the same reachability formula. 
+Non-serializability corresponds to the Petri Net being able to reach a marking satisfying the same semilinear formula as in the previous example for non-serializability (note however, that his is not always the case). 
 %(but this time each place $P_i$ corresponds to the new PN). 
 %following formula:
-
+%
 %\[
 %\textcolor{blue}
 %P_1 = 0 \wedge 
@@ -482,9 +482,9 @@ Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExampleP
 %\]
 
 
-Note that this happened to be the exact same property as encoding non-serializability in the previous example, however, the Petri Net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, $X$ and $L$. 
+Furthermore, although the target set is the same as in the previous example, however, the Petri Net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, $X$ and $L$, and the initial global state corresponds to the place encoding the initial assignment \textcolor{blue}{[X=0, L=0]}, etc.
 %
-Furthermore, unlike the previous example, this semilinear encoding (of non-serializability) is \textit{unreachable}, as witness by the following inductive invariant.
+Furthermore, unlike the previous example, this semilinear target set of markings (encoding request/responses of non-serial executions) is \textit{unreachable}, as witness by the following inductive invariant.
 
 
 \[
@@ -566,8 +566,8 @@ We get the following inductive invariants for each of the two (reachable) global
 	\;\mapsto\;
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
-	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state via a non-serializable execution.
-%	\guy{Jules is this part correct?}
+	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state via a non-serializable execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the lock is acquired (\textcolor{blue}{[L=1]}) 
+	\guy{Mark/Jules is this part correct?}
 	
 	\medskip
 	\noindent\textbf{Conclusion.}
@@ -578,8 +578,8 @@ We get the following inductive invariants for each of the two (reachable) global
 	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
 	$,
 	all of which lie within the NFA’s language for serial executions.
-	Hence, the program is serializable. Moreover, as shown in Appendix~\ref{appendix:InductiveInvariantExample},
-	these invariants are inductive: they hold in the initial state and are preserved under every transition.
+	Hence, the program is serializable. Moreover, as proven in Appendix~\ref{appendix:InductiveInvariantExample},
+	these invariants are inductive: they hold in the initial state and are preserved under every transition of the NS.
 \end{proof}
 	
 %	\medskip\noindent
