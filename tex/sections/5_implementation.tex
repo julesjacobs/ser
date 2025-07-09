@@ -36,7 +36,8 @@ The pipeline of our approach is depicted in Fig.~\ref{fig:full_program_flow}, an
  
 
 \begin{enumerate}
-	\item \textbf{Input \& Parsing.} Our model receives one of two textual representation of the program in question: (i) a \texttt{ser} program with the syntax described in Sec.~\ref{sec:problem-definition} or (ii) a \texttt{JSON} file which directly encodes the transitions of our networking system (NS). In the case of the former, an additional step takes place, in which the input program is parsed (using the \texttt{parser.rs} module) to an expression tree and then translated to an equivalent networking system. The NS is represented as a struct in the \texttt{ns.rs} module. 
+	\item \textbf{Input \& Parsing.} 
+	Our model receives one of two textual representation of the program in question: (i) a \texttt{ser} program with the syntax described in Sec.~\ref{sec:problem-definition} or (ii) a \texttt{JSON} file which directly encodes the transitions of our networking system (NS). In the case of the former, an additional step takes place, in which the input program is parsed (using the \texttt{parser.rs} module) to an expression tree and then translated to an equivalent networking system. The NS is represented as a struct in the \texttt{ns.rs} module. 
 	
 	\item \textbf{Petri Net Conversion.} The NS is then translated into a Petri Net (see the \texttt{petri.rs} module) which represents the interleavings of the NS. Each place represents a local state or a global state, and each token represents a single in-flight request or a terminated response. The PN is encoded in the de-facto standard \texttt{.net} encoding, in order to be compatible with off-the-shelf PN model checkers. 
 	

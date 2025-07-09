@@ -16,6 +16,8 @@ All experiments ran on a Lenovo Notebook ThinkPad P16s, with 16 AMD cores and a 
 %We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
 %
 Our code, benchmarks, and experimental results are publicly available~\cite{ArtifactRepository}.
+%
+All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
  
 
 
@@ -152,9 +154,9 @@ We report the full results in Table~\ref{tab:stats-summary} and Table~\ref{tab:b
 
 \subsection{Optimization Analysis}
 
-Next of our four optimizations, and analyzed their effect on the overall runtime and space resources.
+%Next of our four optimizations, and analyzed their effect on the overall runtime and space resources.
 %
-All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
+%All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
 
 \subsubsection{Runtime Optimization}
 
@@ -182,7 +184,7 @@ affords a speedup of between $72.2\%-85.2\%$ over the same benchmarks without th
 	\begin{minipage}[htbp]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
-		\captionof{figure}{Cumulative  solved instances over time.}
+		\captionof{figure}{Cumulative  solved instances (T.O.  $150$ s).}
 		\label{fig:timeout_cumulative_solved_log}
 	\end{minipage}\hfill
 	\begin{minipage}[htbp]{0.48\textwidth}
