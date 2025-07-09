@@ -610,20 +610,22 @@ We get the following inductive invariants for each of the two (reachable) global
 
 %\todo{check}
 
-We apply four optimizations to the base algorithm to control intermediate blow‐up in the size of both the PN and the constructed semilinear set.
+We apply four optimizations to the base algorithm to control intermediate blow‐up in the size of both the PN and the constructed semilinear set. 
+%
+An extensive empirical evaluation of these optimizations appears later on in subsec.~\ref{subsec:optimization-results}.
 
 \paragraph{(1) Bidirectional pruning.}  
 %\guy{should we reformulate this like in Appendix D?}
-Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the ``nonzero” places extracted from the Presburger constraints.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets
+Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the ``nonzero” places extracted from the Presburger constraints on the target markings.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets, with forward and backward passes:
 \[
 T^{(0)} = T,\qquad
 \begin{aligned}
-	R_{\mathrm{fw}}^{(k)} &= \{\,t\in T^{(k)} \mid \exists\,M_0\xrightarrow{*}M\text{ in }N\text{ enabling }t\},\\
-	R_{\mathrm{bw}}^{(k)} &= \{\,t\in T^{(k)} \mid \exists\,M\xrightarrow{*}M'\text{ in }\overline N\text{ with }M'(p)>0\;(p\in\mathit{Tgt})\},\\
+	R_{\mathrm{fw}}^{(k)} &= \{\,t\in T^{(k)} \mid \exists\,M_0\xrightarrow{}^{*}M\text{ in }N\text{ enabling }t\},\\
+	R_{\mathrm{bw}}^{(k)} &= \{\,t\in T^{(k)} \mid \exists\,M\xrightarrow{}^{*}M'\text{ in }\overline N\text{ with }M'(p)>0\;(p\in\mathit{Tgt})\},\\
 	T^{(k+1)} &= R_{\mathrm{fw}}^{(k)} \;\cap\; R_{\mathrm{bw}}^{(k)}.
 \end{aligned}
 \]
-We repeat until \(T^{(k+1)}=T^{(k)}\).  In each iteration we record
+We repeat until convergence, i.e.,  \(T^{(k+1)}=T^{(k)}\).  In each iteration we record
 \(\Delta_{\mathrm{fw}}^{(k)}=R_{\mathrm{fw}}^{(k-1)}\setminus R_{\mathrm{fw}}^{(k)}\)
 and
 \(\Delta_{\mathrm{bw}}^{(k)}=R_{\mathrm{bw}}^{(k-1)}\setminus R_{\mathrm{bw}}^{(k)}\).
@@ -636,7 +638,7 @@ We depict this in Fig.~\ref{fig:bidirectional_pruning}, and give a formal proof 
 
 \medskip
 \noindent\textit{\textbf{Intuition.}}
-Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
+Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify over-approximations on transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
 
 
 \paragraph{(2) Semilinear‐set pruning.}  
@@ -657,7 +659,7 @@ dropping any ``redundant” period, and remove any \(L_j\subseteq L_i\) for \(i\
 
 \medskip
 \noindent\textit{\textbf{Intuition.}}
-When manipulating Presburger sets or their semilinear representations, it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents exponential blow‐up of case distinctions during solver invocations.
+When manipulating Presburger sets or their semilinear representations, it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents unnecessary size blow‐ups during solver invocations.
 
 
 \paragraph{(3) Generating fewer constraints.}  
@@ -705,7 +707,7 @@ S^+
 \medskip
 \noindent\textit{\textbf{Intuition.}}
 %
-During set‐construction--- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description, trading off completeness of intermediate case‐enumeration for concise final representations.  In benchmarks with large state‐spaces, it can reduce the number of intermediate branches by orders of magnitude.
+During set‐construction --- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description, trading off completeness of intermediate case‐enumeration for concise final representations.  In benchmarks with large state‐spaces, it can reduce the number of intermediate branches by orders of magnitude.
 
 \paragraph{(4) Strategic Kleene elimination order.}  
 When converting an NFA \(\mathcal A=(Q,\Sigma,\delta,q_0,F)\) to a regex by repeated state‐elimination, then, instead of choosing an arbitrary state $q\in Q'$, we pick the next state
@@ -715,7 +717,7 @@ q^* =
 \]
 
 
-where \(Q'\subseteq Q\) are the states remaining to be eliminated, keeping the intermediate regex small.
+where \(Q'\subseteq Q\) are the states remaining to be eliminated. Thus, keeping the intermediate regex small.
 
 \medskip
 \noindent\textit{\textbf{Intuition.}}
@@ -764,7 +766,7 @@ overblown expressions resulting in naive translations, especially with regard to
 		\label{fig:step:e}
 	\end{subfigure}
 	
-	\caption{A Petri Net after four iterations of bidirectional pruning: two forward passes and two backward passes. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
+	\caption{A Petri Net after three rounds of bidirectional pruning: two forward passes and one backward pass. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
 	\label{fig:bidirectional_pruning}
 \end{figure}
 
