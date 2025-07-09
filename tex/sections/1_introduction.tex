@@ -94,7 +94,7 @@ These toy examples demonstrate that reasoning about serializability can be compl
 Unfortunately, serializability is impossible to enforce during runtime, and hence real world systems either (i) defer to other consistency guarantees, such as the stricter notion of \textit{conflict serializability} which pertains to the read/write accesses instead of reasoning about the (harder) program semantics (for additional concurrency notions see sub-sec.~\ref{subsec:related:notions-of-serializability}). Alternatively, the PL community has conducted ample research on static analysis of concurrent programs, including the analysis of serializability and its variants. However, these works suffer from various setbacks. First, they typically search for \textit{violations} of serializability, or alternatively, try to prove it while assuming strong assumptions, such as bounding the number of threads or having prior knowledge on linearization points.
 Furthermore, many of these tools are tailored for specific concurrent data structures, and infeasible for an arbitrary program in a general setting.
 %
-There has also been extensive theoretical work, most notably, we mention the seminal work of Bouajjani et al.~\cite{BoEmEnHa13} which prove that serializability is decidable for the unbounded case (they refer to the general property as $k$-bounded linearizability).
+There has also been extensive theoretical work, most notably, we mention the seminal work of Bouajjani et al.~\cite{BoEmEnHa13} which prove that serializability is decidable for the unbounded case (as a case of bounded-barrier linearizability).
 
 
 In this work, be begin bridging these gaps, and present the first end-to-end tool to verify serializability in general programs with an arbitrary number of threads. 
@@ -111,9 +111,9 @@ we also formalize serializability through the lens of \textit{networking systems
 Based on our theoretical NS framework, we extensively evaluated our approach on dozens of programs with a wide range of features --- including loop constructs, branching, locks, nondeterminism and more. Notably, our benchmarks also include SDN-motivated programs, such as stateful firewalls, BGP routing, an online shopping system, etc.
   
 
-Building upon the previous theoretical work of deciding serializability, as well as the state-of-the-are in PN reachability model checkers, we see this work as an important step in practical reasoning about concurrent programs in general, and serializability in particular.
+Building upon the previous theoretical work of deciding serializability, as well as the state-of-the-art in PN model checkers, we see this work as an important step in practical reasoning about concurrent programs in general, and serializability in particular.
 In addition to detecting serializability violations among unbounded programs, our tool is the first to formally prove that such programs are positively serializable, and to afford a formal certificate thereof, and to experiment on benchmarks from the timely domain of SDN.
-Our tool, benchmarks and raw experimental results are publicly available as part of an (anonymous) artifact~\cite{ArtifactRepository}, which we will make permanently available online with final version of this paper.
+Our tool, benchmarks, and experiments are available as an anonymous artifact~\cite{ArtifactRepository} and will be permanently hosted with the paper’s final version.
 
 The rest of the paper is organized as follows. In Sec.~\ref{sec:tour} we present a tour of various examples motivating the complexity of deciding serializability. In Sec.~\ref{sec:problem-definition} we formally define our problem, and present our abstract  network system setting. We formalize our decision procedure and our various optimizations, as well as demonstrate them in Sec.~\ref{sec:formal-results}.. Next, we present our implementation (Sec.~\ref{sec:implementation}) and extensive evaluation (Sec.~\ref{sec:evaluation}). 
 Related work is covered in Sec.~\ref{sec:related-work}, and we conclude in Sec.~\ref{sec:discussion}.

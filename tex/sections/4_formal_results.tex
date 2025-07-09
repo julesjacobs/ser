@@ -33,9 +33,9 @@ M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t).
 \]
 which represents the consumption of inputs tokens (from the input places), and the production of new ones (to the output places). In this case, we denote $M \;\xrightarrow{t}\; M'$ that $M'$ is reachable from $M$.
 %
-By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in the range $0..(k-1)$.
+By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in  $0..(k-1)$.
 %%
-Finally, we denote $R(N)$ the set of the reachable markings defined as
+Finally, $R(N)$ denotes the set of the reachable markings:
 \[
 R(N) = \{M \mid \exists \sigma \in T^* .\ M_0 \;\xrightarrow{\sigma}\; M\}
 \]

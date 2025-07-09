@@ -3,31 +3,53 @@
 
 \subsection{Conclusion}
 
-To the best of our knowledge, ours is the first 
-tool capable of verifying serializability in unbounded domains.
+While these works are significant, they typically cannot prove serializability on a general unbounded setting, or alternatively, ignore the program semantics and focus on read/write accesses (as is the case for conflict serializability).
 %
-While these contributions represent significant advances, to our knowledge, our 
-work is the first to:
-(i) Decide serializability universally --- \textit{considering all executions} 
-purely through program semantics and final states, independent of read/write 
-conflicts; 
-(ii) Support \textit{unbounded} transaction systems; and
-(iii) Provide a complete end-to-end implementation.
+To the best of our knowledge, ours is the first end-to-end
+tool capable of verifying serializability in unbounded domains, and, by harnessing recent advancements in PN theory, is also the first  capable of providing a serializability proof.
+%
+We formalize serializability through the lens of our abstract network system framework, based on which we extensively evaluated our tool, including on SDN-inspired benchmarks. 
+%
+Finally, we formulated the underlying theory for a suite of optimizations and implemented them, further boosting our approach’s scalability.
 
-\todo{Limitations?}
-Examples we cannot solve, future work that would help
-To conclude..
-
+%
 
 \subsection{Future Work}
-Next..
 
-We plan to use polyhedral reductions~\cite{AmBeDa21} that are structural reduction~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$, where $(N_1, m_1)$ is the Petri net we want to analyze, $(N_2, m_2)$ is a reduced version of this net (easier to model check), and $E$ is a Presburger formula that permits to reconstruct of the state space of $N_1$ from that of $N_2$. We plan to leverage this mechanism to trace back certificates obtained on the reduced net $N_2$ to the original net $N_1$, that would be the only kind of structural reduction for which such operation is possible.
+\paragraph{Scalability.}
 
-\todo{Different notions of serializability}
-\begin{itemize}
-    \item \todo{Current notion: clients independently submit a request and get a response, and later they all get together and see if what they got was serializable}
-    \item \todo{Stronger: clients are not independent, or sequentially execute some parts. General: we have some happens-before on the requests/responses}
-    \item \todo{Weaker: the clients cannot communicate with each other afterwards to determine whether what they got was serializable, or they can only communicate in a limited way}
-    \item \todo{Infinite / unbounded executions}
-\end{itemize}
+As can be seen in our evaluation, there are still examples based on which our approach times-out.
+To improve scalability, we plan on harnessing additional aspects of Petri Net theory even further.
+%
+Specifically, we plan to use \textit{polyhedral reductions}~\cite{AmBeDa21} that are structural reduction~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$, where $(N_1, m_1)$ is the analyzed PN;  $(N_2, m_2)$ is a reduced version of it that is easier to model check; and $E$ is a Presburger formula that allows reconstruction of $N_1$'s state space from that of $N_2$. We plan to leverage this mechanism to trace back certificates obtained on the reduced net $N_2$ to the original net $N_1$.
+%
+\guy{Nicolas are you sure about the next sentence? Do you have an explanation or a "negative proof"?}
+%
+Furthermore, we note that polyhedral reductions are the only type of structural reduction for which such a conversion is possible.
+%
+As such, we are currently in the process of developing both the theory and the implementation of this extension.
+We believe these reduction will allow our method to scale even further.
+
+%\todo{Limitations?}
+%Examples we cannot solve, future work that would help
+%To conclude..
+
+
+\paragraph{Extending to diverse communication models.}
+
+Our current framework assumes that clients act independently --- each submits a request, receives a response, and only afterward collaborates to verify in a centralized manner that the combined outcomes are serializable. However, in a stronger model, clients may communicate during execution or enforce partial ordering on their interactions. More generally, this can be formalized via Lamport’s happens‐before relation over request/response pairs~\cite{La78}. 
+%
+In contrast, a weaker model disallows communication --- in which case clients either cannot communicate after receiving responses or may only share limited summaries. Jointly deciding serializability in this setting will require decentralized certification techniques or streaming proofs that respect tight communication constraints. 
+%
+By extending our theory and tool along these two axes, we aim to cover a broad spectrum of practical distributed‐system guarantees, that are more complex and match real-world scenarios.
+
+%
+%
+%
+%\todo{Different notions of serializability}
+%\begin{itemize}
+%    \item \todo{Current notion: clients independently submit a request and get a response, and later they all get together and see if what they got was serializable}
+%    \item \todo{Stronger: clients are not independent, or sequentially execute some parts. General: we have some happens-before on the requests/responses}
+%    \item \todo{Weaker: the clients cannot communicate with each other afterwards to determine whether what they got was serializable, or they can only communicate in a limited way}
+%    \item \todo{Infinite / unbounded executions}
+%\end{itemize}
