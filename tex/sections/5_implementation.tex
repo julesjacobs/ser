@@ -3,14 +3,14 @@
 \section{Implementation}
 \label{sec:implementation}
 
-We implemented our approach in a publicly available end-to-end tool~\cite{ArtifactRepository}. Our tool consists in over $20{,}000$ LoC written in \texttt{Rust}.
+We implemented our approach in a publicly available end-to-end tool~\cite{ArtifactRepository}, consisting over $20{,}000$ LoC written in \texttt{Rust}.
 %
-We next elaborate on the architecture of our tool and the various optimizations we added to allow it to run efficiently.
+%We next elaborate on the architecture of our tool and the various optimizations we added to allow it to run efficiently.
 %
 For the underlying Petri Net model checker we use SMPT~\cite{AmDa23} (see Appendix~\ref{appendix:smpt}) which supports \textit{unbounded} reachability queries, and which uses z3 as an underlying SMT solver~\cite{DeBj08}. 
 %and which we extended to support our setting (for example, we needed to extend the solver to support proof generation). 
 %
-We note that other off-the-shelf solvers can be used as well.
+%We note that other off-the-shelf solvers can be used as well.
 
 %The implementation..
 
