@@ -17,9 +17,9 @@ A \emph{Petri net} is a tuple
 \[
 N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
 \]
-where \(P\) is a finite set of \emph{places}, \(T\) a finite set of \emph{transitions},
-\(\mathsf{pre},\mathsf{post}:T\to\mathbb N^P\) the input/output vectors, and
-\(M_0\in\mathbb N^P\) the initial marking (initial distribution of tokens across the places). Note that throughout this work, we use the terms \textit{state} and \textit{marking} interchangeably.
+where \(P\) is a finite set of \emph{places}, \(T\) is a finite set of \emph{transitions},
+\(\mathsf{pre},\mathsf{post}:T\to\mathbb N^P\) are the input/output vectors, and
+\(M_0\in\mathbb N^P\) is the initial marking, i.e., the original distribution of tokens across the places. Note that throughout this work, we use the terms \textit{state} and \textit{marking} interchangeably.
 
 \noindent We say that a transition \(t\in T\) is \emph{enabled} at a marking \(M\in\mathbb N^P\) iff
 \[
@@ -31,23 +31,24 @@ When $t$ is enabled at $M$, firing $t$ produces a new marking $M'$ defined as
 \[
 M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t).
 \]
-which represents the consumption of inputs tokens (from the input places), and the production of new ones (to the output places). In this case, we denote $M \xrightarrow{t} M'$ that $M'$ is reachable from $M$.
+which represents the consumption of inputs tokens (from the input places), and the production of new ones (to the output places). In this case, we denote by $M \xrightarrow{t} M'$ that $M'$ is reachable from $M$.
 %
-By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in  $0..(k-1)$.
+By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some sequence of markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in  $0..(k-1)$, and we denote this as $M_0 \; \xrightarrow{}^* M$.
 %%
-Finally, $R(N)$ denotes the set of the reachable markings:
+Finally, $R(N)$ denotes the (possibly, infinite) set of the reachable markings:
 \[
-R(N) = \{M \mid \exists \sigma \in T^* .\ M_0 \;\xrightarrow{\sigma}\; M\}
+R(N) = \{M \mid \exists \sigma \in T^* .\ M_0 \;\xrightarrow{\sigma}\!^*\; M\}
 \]
 %
 The \emph{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M$ is reachable from $M_0$, the initial marking of $N$.  Surprisingly, even in the
 \emph{unbounded} setting (where places may hold arbitrarily many tokens) this problem is
 decidable~\cite{Ma81,Ko82,La92}, although with
-Ackermann-complete~\cite{CzWo22,leroux_reachability_2022} complexity.
+Ackermann-complete complexity~\cite{CzWo22,Le22}.
 %
 An example for a toy Petri Net, and both reachable and unreachable markings, appears in Appendix~\ref{appendix:toyPN}.
 %
-In our work, we focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. We want to check if it is possible to reach a marking that satisfies a formula, say $F$, that is a combination of linear constraints between places. Such property is said \textit{reachable} (or \sat\ by analogy with SAT solving) if there exists some $M$ in $R(N)$ such that $M \models F$, and \textit{unreachable} otherwise (or \unsat). 
+%We focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. 
+Specifically, we check whether it is possible to reach a marking that satisfies a formula $F$, that is a combination of linear constraints among the PN places. Such a property is said to be \textit{reachable} (or \sat\ by analogy with SAT solving) if there exists some $M$ in $R(N)$ such that $M \models F$, and \textit{unreachable} (\unsat) otherwise. 
 
 \paragraph{Verdict proofs.} 
 
@@ -57,7 +58,7 @@ If a property $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ 
 %\] 
 serves as a proof of reachability. One can verify the claim by simulating $\sigma$ from $M_0$ and checking that the resulting marking satisfies $F$.
 %
-More interestingly, if $F$ is not reachable, the theory of Petri nets guarantees the existence of an inductive certificate $C$, expressed as a Presburger formula, that implies $F$~\cite{leroux_general_2009,leroux_general_2010}. Such certificate satisfies the following constraints:
+More interestingly, if $F$ is not reachable, the theory of Petri nets guarantees the existence of an inductive certificate $C$, expressed as a Presburger formula, that implies $F$~\cite{Le09}. Such certificate satisfies the following constraints:
 (i) $M_0 \models F$;
 (ii) for all transitions $M \xrightarrow{t} M'$, if $M \models C$ then $M' \models C$; and
 (iii) $C \Rightarrow \neg F$, i.e., all markings satisfying $C$ falsify $F$.
@@ -85,7 +86,7 @@ finite description of its Parikh Image.
 
 \paragraph{Deciding serializability in unbounded systems.}
 
-Finally, we build upon the theoretical findings of Bouajjani et al.~\cite{BoEmEnHa13} which prove the decidability of serializability in the unbounded case (originally referred to as a type of \textit{k-bounded-barrier linearizability}): $	\mathrm{Int}(\mathcal{N}) \;=\; \mathrm{Ser}(\mathcal{N})$.
+Finally, we build upon the theoretical findings of Bouajjani et al.~\cite{BoEmEnHa13} which prove the decidability of serializability in the unbounded case (originally referred to as a type of \textit{k-bounded-barrier linearizability}): $	\mathrm{Int}(\mathcal{N}) \;=\; \mathrm{Ser}(\mathcal{N})$, and their theory of reducing the problem of deciding serializability to the domain of PN (equivalently, VAS(S)) reachability.
 
 
 
