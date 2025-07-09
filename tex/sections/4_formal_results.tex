@@ -304,7 +304,7 @@ Q = G
 %\end{proposition}
 
 
-\subsection{Example: Non Serializable Program}
+\subsection{Example: Non-Serializable Program}
 \label{subsec:ns-not-serializable}
 
 \paragraph{Serializable NFA Extraction.}
@@ -331,11 +331,16 @@ Intuitively, this corresponds to the Listing~\ref{lst:MotivatingExample2NonSer} 
 
 Finally, the NS gives rise to the PN in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings.
 %
-The places represent the $\delta$ transitions of our NS --- encoding either a ``step'' of our program, or spawning a request ($t_1$, which  corresponds to spawning request {\color{ForestGreen}$\blacklozenge_\text{main}$}), or returning a response, e.g. transitions $t_6,t_7$ that corresponds to outputting responses {\color{red}$\blacklozenge_1$},{\color{red}$\blacklozenge_0$}.
+The places represent either the global state
+Some places (e.g., places \textcolor{blue}{$P_2$} and \textcolor{blue}{$P_3$} corresponds to the global states \textcolor{blue}{[X=1]} and \textcolor{blue}{[X=0]}), while others ($P_1,P_4,P_5,P_6$) corresponds to the local state of an in-flight request, i.e., combinations of ``remaining'' programs  assignments to local variables of in-flight requests.
 %
-Some places (\textcolor{blue}{$P_2$},\textcolor{blue}{$P_3$}) corresponds to the global state, while others ($P_1,P_4,P_5,P_6$) corresponds to the local state of an in-flight request.
+Furthermore, some requests correspond to responses, e.g., places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} corresponds to {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$}.
 %
-Each token corresponds to a single request packet, or (in the case of the global-variable-encoding places), to the global state of the program.
+Each token corresponds to a single request packet, or (in the case of the global-variable-encoding places), to the current global state of the program.
+%
+Finally, transitions represent the network system's $\delta$ step --- encoding either a ``step'' of our program, or spawning a request ($t_1$, which  corresponds to spawning request {\color{ForestGreen}$\blacklozenge_\text{main}$}), or returning a response (e.g. transitions $t_6,t_7$).
+%
+
 
 \begin{figure}[!htbp]
 	\centering
@@ -479,7 +484,7 @@ Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExampleP
 
 Note that this happened to be the exact same property as encoding non-serializability in the previous example, however, the Petri Net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, $X$ and $L$. 
 %
-Furthermore, unlike the previous example, this semilinear encoding (of non serializability) is \textit{unreachable}, as witness by the following inductive invariant.
+Furthermore, unlike the previous example, this semilinear encoding (of non-serializability) is \textit{unreachable}, as witness by the following inductive invariant.
 
 
 \[
