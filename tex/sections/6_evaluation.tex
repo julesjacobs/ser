@@ -15,49 +15,10 @@ All experiments ran on a Lenovo Notebook ThinkPad P16s, with 16 AMD cores and a 
 %
 %We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
 %
-For the underlying Petri Net model checker we use SMPT~\cite{AmDa23} which supports \textit{unbounded} reachability queries, and which we extended to support our setting (for example, we needed to extend the solver to support proof generation). 
-%
-We note that other off-the-shelf solvers can be used as well.
-%
-All our code, benchmarks, and raw experimental results will be made publicly available with the final version of this paper.
+Our code, benchmarks, and experimental results are publicly available~\cite{ArtifactRepository}.
  
 
 
-\subsection{Benchmark Overview} 
-\label{subsec:benchmarks}
-
-As there are no standard benchmarks for evaluating serializability, we hand-coded dozens of programs in our abstract network-system language. These benchmarks span a wide range of complexity --- covering branching, looping constructs, arithmetic operations, non-deterministic choices, and multi-request workflows that manipulate both shared (global) variables and per-request (local) state. 
-%
-We include both serializable and non-serializable instances, and summarize the benchmarks' features and categorizations in Table~\ref{tab:benchmarks-all}. 
-%
-In particular, our most sophisticated examples are drawn from realistic networking and system-protocol scenarios, including stateful firewalls, BGP routing, network monitoring, and more --- highlighting the serializability challenges inherent in real-world distributed programs.
-
-%As there are no official benchmarks for evaluating serializability, we hand-coded dozes of programs in our abstract network-system language.
-%%
-%The benchmarks vary in the complexity, and have multiple features: branching, loops, arithmetic, non-determinism, and multiple requests and responses, operating on both shared (global) variables and per-request (local) variables.
-%%
-%The benchmarks include both serializable and non-serializable instances, as we summarize in Table.~\ref{tab:benchmarks-all}, based on a category and feature-wise breakdown.
-%%
-%Especially, we wish to note the final category of complex examples as motivated by real-world systems and networking programs.
-%%
-%These include a stateful firewall, BGP routing, network monitoring and additional examples.
-%
-%\begin{itemize}
-%		
-%	\item \todo{update benchmark overview and category names}
-%	\item \textbf{Core expressions \& multi request workflows}: Benchmarks testing arithmetic, boolean, and simple control expression.
-%	\item \textbf{Fred (mixed arithmetic)}: Mixed control and arithmetic transformations (Fred series).
-%	\item \textbf{Stop (circular-increment) series}: Circular increment loops and variants.
-%	\item \textbf{Concurrency \& locking loops}: Concurrent looping patterns with locking and tricky interactions.
-%	\item \textbf{Non-deterministic choice \& randomness}: Random choice and non-deterministic branching benchmarks.
-%	\item \textbf{Networking \& system protocols}: Networking protocols and system-level monitoring.
-%	\item \textbf{JSON state-machine examples}: Example JSON-encoded state machine workflows.
-%\end{itemize}
-%
-%
-%
-%The benchmarks differ in their complexity and in the various features pertaining to them --- branching, loops, randomness, multiple requests, etc. 
-%
 
 \subsection{Runtime Results}
 We ran our tool on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non serializable. 
@@ -282,7 +243,7 @@ Specifically, we compare both the average and the maximal (i) number of componen
 %
 As can be seen, the redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, as well as the average number of components to be $223$ more compact, when compared to the baseline.
 %
-To ensure a fair comparison, we only measured benchmarks that completed under every configuration, deliberately omitting any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth—and the resulting timeouts are especially pervasive among our state-machine benchmarks due to loops in their network systems --- rendering even simple programs in this category become unanalyzable for serializability without these optimizations.
+To ensure a fair comparison, we only measured benchmarks that completed under every configuration, deliberately omitting any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth, and the resulting timeouts, are especially pervasive among our state-machine benchmarks due to loops in their NS --- rendering even simple programs to become infeasible without optimizations.
 
 %In fact, for both these optimizations are even more effective as, in order to conduct a fair comparison, we analyzed only benchmarks that terminated in all combinations, an hence we do not include cases in which these two optimizations rendered the original semilinear set intractable, due to having over $2^{30}$ components (!), hence timing-out and being excluded from the analysis.
 %%

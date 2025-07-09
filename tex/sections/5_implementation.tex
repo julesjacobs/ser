@@ -6,6 +6,11 @@
 We implemented our approach in a publicly available end-to-end tool~\cite{ArtifactRepository}. Our tool consists in over $20{,}000$ LoC written in \texttt{Rust}.
 %
 We next elaborate on the architecture of our tool and the various optimizations we added to allow it to run efficiently.
+%
+For the underlying Petri Net model checker we use SMPT~\cite{AmDa23} (see Appendix~\ref{appendix:smpt}) which supports \textit{unbounded} reachability queries, and which uses z3 as an underlying SMT solver~\cite{DeBj08}. 
+%and which we extended to support our setting (for example, we needed to extend the solver to support proof generation). 
+%
+We note that other off-the-shelf solvers can be used as well.
 
 %The implementation..
 
@@ -73,75 +78,66 @@ The pipeline of our approach is depicted in Fig.~\ref{fig:full_program_flow}, an
 \end{figure}
 
 
-\subsection{Optimizations}
+%\subsection{Optimizations}
 
-\paragraph{Bidirectional Pruning of the Petri Net}
-Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
-%
-We depict this in Fig.~\ref{fig:bidirectional_pruning}, and give a formal proof of correctness in Appendix~\ref{appendix:BidirectionalProof}.
+%\paragraph{Bidirectional Pruning of the Petri Net}
+%Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
+%%
+%We depict this in Fig.~\ref{fig:bidirectional_pruning}, and give a formal proof of correctness in Appendix~\ref{appendix:BidirectionalProof}.
 
-\paragraph{Redundant‐Constraint Elimination}
-When manipulating Presburger sets or their semilinear representations, it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents exponential blow‐up of case distinctions during solver invocations.
+%\paragraph{Redundant‐Constraint Elimination}
+%When manipulating Presburger sets or their semilinear representations, it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents exponential blow‐up of case distinctions during solver invocations.
 %
 %Every time you build or star a semilinear set, you prune out any “period” vectors that are rendered useless by earlier steps:. nce you’ve accumulated a bunch of LinearSet components, you try to merge any that mathematically subsume one another:
 
-\paragraph{Generating Fewer Constraints}
-During set‐construction--- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description, trading off completeness of intermediate case‐enumeration for concise final representations.  In benchmarks with large state‐spaces, it can reduce the number of intermediate branches by orders of magnitude.
+%\paragraph{Generating Fewer Constraints}
+%During set‐construction--- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description, trading off completeness of intermediate case‐enumeration for concise final representations.  In benchmarks with large state‐spaces, it can reduce the number of intermediate branches by orders of magnitude.
 
 %in both the Regex and SemilinearSet Kleene-algebra instances. Concretely, instead of always building the full new structure and pruning it later, operations like union (plus) and concatenation (times) do a quick check for trivial cases and drop “zero” or “one” elements on the spo
 
-\paragraph{Executing Kleene Elimination in a Strategic Order:}
-When converting an NFA to a single regex, we pick the next state to eliminate by heuristically choosing the  state with the fewest incoming and outgoing edges.
-This optimization allows circumventing 
-overblown expressions resulting in naive translations, especially with regard to  Kleene closures (the “\(\mathsf{*}\)” operator).  Instead, we analyze the structure of sub-expressions under the various operators --- estimating their branching factor, and reorder them so that simpler, low‐branching components are expanded first.  This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  
+%\paragraph{Executing Kleene Elimination in a Strategic Order:}
+%When converting an NFA to a single regex, we pick the next state to eliminate by heuristically choosing the  state with the fewest incoming and outgoing edges.
+%This optimization allows circumventing 
+%overblown expressions resulting in naive translations, especially with regard to  Kleene closures (the “\(\mathsf{*}\)” operator).  Instead, we analyze the structure of sub-expressions under the various operators --- estimating their branching factor, and reorder them so that simpler, low‐branching components are expanded first.  This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  
 
 
 
 
-\begin{figure}[!htbp]
-	\centering
-	
-	% Top row: (a), (b)
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_a_updated.pdf}
-		\caption{Step 0: initial petri net, before pruning.}
-		\label{fig:step:a}
-	\end{subfigure}\hfill
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_b_updated.pdf}
-		\caption{Step 1: first forward pass.}
-		\label{fig:step:b}
-	\end{subfigure}
-	
-	\vspace{1em}
-	
-	% Bottom row: (c), (d), and (e) matching (d)’s height
-	\begin{subfigure}[b]{0.30\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_c_updated.pdf}
-		\caption{Step 3: first backward pass.}
-		\label{fig:step:c}
-	\end{subfigure}\hfill
-	\begin{subfigure}[b]{0.23\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_d_updated_2.pdf}
-		\caption{Step 4: second forward pass.}
-		\label{fig:step:d}
-	\end{subfigure}\hfill
-	% <-- three-arg form: [vpos][total height][inner vpos]
-	\begin{subfigure}[b][\subfigheight][b]{0.23\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_e_updated_2.pdf}
-		\caption{Step 6: final petri net.}
-		\label{fig:step:e}
-	\end{subfigure}
-	
-	\caption{A Petri Net after four iterations of bidirectional pruning: two forward passes and two backward passes. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
-	\label{fig:bidirectional_pruning}
-\end{figure}
+\subsection{Benchmark Overview} 
+\label{subsec:benchmarks}
 
+As there are no standard benchmarks for evaluating serializability, we hand-coded dozens of programs in our abstract network-system language. These benchmarks span a wide range of complexity --- covering branching, looping constructs, arithmetic operations, non-deterministic choices, and multi-request workflows that manipulate both shared (global) variables and per-request (local) state. 
+%
+We include both serializable and non-serializable instances, and summarize the benchmarks' features and categorizations in Table~\ref{tab:benchmarks-all}. 
+%
+In particular, our most sophisticated examples are drawn from realistic networking and system-protocol scenarios, including stateful firewalls, BGP routing, network monitoring, and more --- highlighting the serializability challenges inherent in real-world distributed programs.
+
+%As there are no official benchmarks for evaluating serializability, we hand-coded dozes of programs in our abstract network-system language.
+%%
+%The benchmarks vary in the complexity, and have multiple features: branching, loops, arithmetic, non-determinism, and multiple requests and responses, operating on both shared (global) variables and per-request (local) variables.
+%%
+%The benchmarks include both serializable and non-serializable instances, as we summarize in Table.~\ref{tab:benchmarks-all}, based on a category and feature-wise breakdown.
+%%
+%Especially, we wish to note the final category of complex examples as motivated by real-world systems and networking programs.
+%%
+%These include a stateful firewall, BGP routing, network monitoring and additional examples.
+%
+%\begin{itemize}
+%		
+%	\item \todo{update benchmark overview and category names}
+%	\item \textbf{Core expressions \& multi request workflows}: Benchmarks testing arithmetic, boolean, and simple control expression.
+%	\item \textbf{Fred (mixed arithmetic)}: Mixed control and arithmetic transformations (Fred series).
+%	\item \textbf{Stop (circular-increment) series}: Circular increment loops and variants.
+%	\item \textbf{Concurrency \& locking loops}: Concurrent looping patterns with locking and tricky interactions.
+%	\item \textbf{Non-deterministic choice \& randomness}: Random choice and non-deterministic branching benchmarks.
+%	\item \textbf{Networking \& system protocols}: Networking protocols and system-level monitoring.
+%	\item \textbf{JSON state-machine examples}: Example JSON-encoded state machine workflows.
+%\end{itemize}
+%
+%
+%
+%The benchmarks differ in their complexity and in the various features pertaining to them --- branching, loops, randomness, multiple requests, etc. 
+%
 
 
 

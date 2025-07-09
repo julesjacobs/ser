@@ -325,11 +325,11 @@ P_1 = 0 \wedge
 \textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 \wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
 \]
-This asserts the existence of a marking with no tokens on $P_1,P_4,P_5,P_6$,$\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  In fact, the target marking
+This asserts the existence of a marking with no tokens on $P_1,P_4,P_5,P_6$,$\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  In fact, the target marking is reachable (see Table~\ref{tab:PetriNetFiringCounterexample}):
 \[
 M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
 \]
-is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing sequence that leads to $M^*$.
+%is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing sequence that leads to $M^*$.
 
 
 
@@ -443,7 +443,7 @@ P_1 = 0 \wedge
 
 Note that this happened to be the exact same property as encoding non-serializability in the previous example, however, the Petri Net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, $X$ and $L$. 
 %
-Furthermore, unlike the previous example, this semilinear encoding (of non serializability) is \textit{unreachable}, as witness by the following inductive invariant that we produce.
+Furthermore, unlike the previous example, this semilinear encoding (of non serializability) is \textit{unreachable}, as witness by the following inductive invariant.
 
 
 \[
@@ -470,7 +470,7 @@ Furthermore, unlike the previous example, this semilinear encoding (of non seria
 \]
 
 
-We then revert this invariant to match our Network System, and project it to request/response pairs of the network system.
+We then revert and project it on request/response pairs of the network system.
 %
 We get the following inductive invariants for each of the two (reachable) global states:
 
@@ -574,17 +574,32 @@ We repeat until \(T^{(k+1)}=T^{(k)}\).  In each iteration we record
 and
 \(\Delta_{\mathrm{bw}}^{(k)}=R_{\mathrm{bw}}^{(k-1)}\setminus R_{\mathrm{bw}}^{(k)}\).
 %
-This optimization allows to significantly prune the Petri Net while still over-approximating all reachable markings (see the proof in Appendix~\ref{appendix:BidirectionalProof}).
+This optimization allows to significantly prune the Petri Net while still over-approximating all reachable markings.
+%
+We depict this in Fig.~\ref{fig:bidirectional_pruning}, and give a formal proof of correctness in Appendix~\ref{appendix:BidirectionalProof}.
+% (see the proof in Appendix~\ref{appendix:BidirectionalProof}).
+%
+
+\medskip
+\noindent\textit{\textbf{Intuition.}}
+Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
+
 
 \paragraph{(2) Semilinear‐set pruning.}  
 Recall a semilinear set is \(S=\bigcup_{i=1}^m L_i\) with
+
 \(\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p\,p\mid n_p\in\mathbb N\}\).  
 %
 We replace each period‐basis \(P_i\) by
-\[
-P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\},
-\]
+%\[
+$P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\}$,
+%\]
 dropping any ``redundant” period, and remove any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixed point so no two components subsume one another.
+
+\medskip
+\noindent\textit{\textbf{Intuition.}}
+When manipulating Presburger sets or their semilinear representations, it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents exponential blow‐up of case distinctions during solver invocations.
+
 
 \paragraph{(3) Generating fewer constraints.}  
 Let $\mathrm{comp}(S)=\{L_1,\dots,L_m\}$ 
@@ -628,6 +643,11 @@ S^+
 =S\cdot S^*.
 \]
 
+\medskip
+\noindent\textit{\textbf{Intuition.}}
+%
+During set‐construction--- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description, trading off completeness of intermediate case‐enumeration for concise final representations.  In benchmarks with large state‐spaces, it can reduce the number of intermediate branches by orders of magnitude.
+
 \paragraph{(4) Strategic Kleene elimination order.}  
 When converting an NFA \(\mathcal A=(Q,\Sigma,\delta,q_0,F)\) to a regex by repeated state‐elimination, then, instead of choosing an arbitrary state $q\in Q'$, we pick the next state
 \[
@@ -638,5 +658,55 @@ q^* =
 
 where \(Q'\subseteq Q\) are the states remaining to be eliminated, keeping the intermediate regex small.
 
+\medskip
+\noindent\textit{\textbf{Intuition.}}
+When converting an NFA to a single regex, we pick the next state to eliminate by heuristically choosing the  state with the fewest incoming and outgoing edges.
+This optimization allows circumventing 
+overblown expressions resulting in naive translations, especially with regard to  Kleene closures (the “\(\mathsf{*}\)” operator).  Instead, we analyze the structure of sub-expressions under the various operators --- estimating their branching factor, and reorder them so that simpler, low‐branching components are expanded first.  
+%This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  
+
+\begin{figure}[!htbp]
+	\centering
+	
+	% Top row: (a), (b)
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_a_updated.pdf}
+		\caption{Step 0: initial petri net, before pruning.}
+		\label{fig:step:a}
+	\end{subfigure}\hfill
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_b_updated.pdf}
+		\caption{Step 1: first forward pass.}
+		\label{fig:step:b}
+	\end{subfigure}
+	
+	\vspace{1em}
+	
+	% Bottom row: (c), (d), and (e) matching (d)’s height
+	\begin{subfigure}[b]{0.30\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_c_updated.pdf}
+		\caption{Step 3: first backward pass.}
+		\label{fig:step:c}
+	\end{subfigure}\hfill
+	\begin{subfigure}[b]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_d_updated_2.pdf}
+		\caption{Step 4: second forward pass.}
+		\label{fig:step:d}
+	\end{subfigure}\hfill
+	% <-- three-arg form: [vpos][total height][inner vpos]
+	\begin{subfigure}[b][\subfigheight][b]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_e_updated_2.pdf}
+		\caption{Step 6: final petri net.}
+		\label{fig:step:e}
+	\end{subfigure}
+	
+	\caption{A Petri Net after four iterations of bidirectional pruning: two forward passes and two backward passes. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
+	\label{fig:bidirectional_pruning}
+\end{figure}
 
 %\newpage
