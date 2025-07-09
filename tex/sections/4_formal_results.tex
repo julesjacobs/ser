@@ -325,11 +325,11 @@ P_1 = 0 \wedge
 \textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 \wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
 \]
-This asserts the existence of a marking with no tokens on $P_1,P_4,P_5,P_6$,$\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  In fact, the target marking is reachable (see Table~\ref{tab:PetriNetFiringCounterexample}):
+This asserts the existence of a marking with no tokens on $P_1,P_4,P_5,P_6$,$\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  In fact, the target marking is reachable (Table~\ref{tab:PetriNetFiringCounterexample}):
 \[
 M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
 \]
-%is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing sequence that leads to $M^*$.
+is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing sequence that leads to $M^*$.
 
 
 
@@ -528,18 +528,31 @@ We get the following inductive invariants for each of the two (reachable) global
 	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state via a non-serializable execution.
 	\guy{Jules is this part correct?}
 	
-	\medskip\noindent
-	\textbf{Conclusion.}
-	In all reachable states
-	it holds that there cannot be any request/response pair of type
-	(	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
-	$).
-	%
-	Furthermore, this indicates that the only attainable request/response pairs are of the form 	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
-	$, which are included in the language of of NFA for serial executions. Thus, this program is serializable.
-	%
-	We further show (in Appendix~\ref{appendix:InductiveInvariantExample}) that these invariants are \textit{inductive}: they encompass the system’s initial state and, once satisfied, remain true for all subsequent executions.
+	\medskip
+	\noindent\textbf{Conclusion.}
+	In every reachable state, no request/response pair of the form
+	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$})
+	$
+	can occur. Consequently, the only possible pairs are
+	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
+	$,
+	all of which lie within the NFA’s language for serial executions.
+	Hence, the program is serializable. Moreover, as shown in Appendix~\ref{appendix:InductiveInvariantExample},
+	these invariants are inductive: they hold in the initial state and are preserved under every transition.
 \end{proof}
+	
+%	\medskip\noindent
+%	\textbf{Conclusion.}
+%	In all reachable states
+%	it holds that there cannot be any request/response pair of type
+%	(	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
+%	$).
+%	%
+%	Furthermore, this indicates that the only attainable request/response pairs are of the form 	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
+%	$, which are included in the language of of NFA for serial executions. Thus, this program is serializable.
+%	%
+%	We further show (in Appendix~\ref{appendix:InductiveInvariantExample}) that these invariants are \textit{inductive}: they encompass the system’s initial state and, once satisfied, remain true for all subsequent executions.
+
 
 
 
