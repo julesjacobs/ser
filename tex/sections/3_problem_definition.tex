@@ -4,31 +4,66 @@
 \label{sec:problem-definition}
 %\guy{Can someone check Sections 3-4-5? Especially the formulations}
 
-Our network system (NS) syntax is defined as described in the syntax of Fig.~\ref{fig:syntax}.
+Our network system (NS) syntax is defined as described in the following syntax: 
+%of Fig.~\ref{fig:syntax}.
+
+\[
+\begin{aligned}
+	\mathbf{Expression}\quad e ::={}&{} \\
+	&0 \mid 1 \mid 2 \mid \dots 
+	&&\grammartag{Numeric constants}\\
+	&\nondet
+	&&\grammartag{Nondeterministic value: 0 or 1}\\
+	&x := e
+	&&\grammartag{Write to local variable field}\\
+	&x
+	&&\grammartag{Read from local variable field}\\
+	&X := e
+	&&\grammartag{Write to global variable}\\
+	&X
+	&&\grammartag{Read from global variable}\\
+	&e_1 == e_2
+	&&\grammartag{Equality test}\\
+	&e_1 ; e_2
+	&&\grammartag{Sequencing}\\
+	&\ifkw(e_1)\{e_2\}\elsekw\{e_3\}
+	&&\grammartag{Conditional}\\
+	&\whilekw(e_1)\{e_2\}
+	&&\grammartag{While loop}\\
+	&\yieldkw
+	&&\grammartag{Yields to scheduler}\\[1em]
+	\mathbf{Program}\quad p ::={}&{} \\
+	&\requestkw\ name_1\{e_1\}
+	&&\grammartag{Set of request handlers}\\
+	&\quad\vdots\\
+	&\requestkw\ name_n\{e_n\}
+\end{aligned}
+\]
+
 %
-\newcommand{\grammartag}[1]{\qquad\qquad\emph{(#1)}}
-\begin{figure}[!htbp]
-    \begin{align*}
-    \mathbf{Expression}\quad e ::= &&& \\
-       | & \quad 0 \mid 1 \mid 2 \mid \ldots                                && \grammartag{Numeric constants} \\
-       | & \quad \nondet                                 && \grammartag{Nondeterministic value: 0 or 1}\\
-       | & \quad x := e                            && \grammartag{Write to local variable field} \\
-       | & \quad x                                 && \grammartag{Read from local variable field} \\
-       | & \quad X := e                            && \grammartag{Write to global  variable} \\
-       | & \quad X                                 && \grammartag{Read from global  variable} \\
-       | & \quad e_1 == e_2                        && \grammartag{Equality test} \\
-       | & \quad e_1 ; e_2                         && \grammartag{Sequencing} \\
-       | & \quad \ifkw(e_1)\{\ e_2\ \}\elsekw\{\ e_3\ \} && \grammartag{Conditional} \\
-       | & \quad \whilekw(e_1)\{\ e_2\ \}              && \grammartag{While loop} \\
-       | & \quad \yieldkw                      && \grammartag{Yields to scheduler}\\[1em]
-    \mathbf{Program}\quad p ::=
-        & \quad \requestkw\ name_1\ \{\ e_1\ \}&&\grammartag{Set of request handlers}\\[-0.5em]
-        & \quad \qquad \vdots &&\\
-        & \quad \requestkw\ name_n\ \{\ e_n\ \}\ 
-    \end{align*}
-    \caption{Syntax of expressians and programs}
-    \label{fig:syntax}
-\end{figure}
+%
+%\begin{figure}[!htbp]
+%    \begin{align*}
+%    \mathbf{Expression}\quad e ::= &&& \\
+%       | & \quad 0 \mid 1 \mid 2 \mid \ldots                                && \grammartag{Numeric constants} \\
+%       | & \quad \nondet                                 && \grammartag{Nondeterministic value: 0 or 1}\\
+%       | & \quad x := e                            && \grammartag{Write to local variable field} \\
+%       | & \quad x                                 && \grammartag{Read from local variable field} \\
+%       | & \quad X := e                            && \grammartag{Write to global  variable} \\
+%       | & \quad X                                 && \grammartag{Read from global  variable} \\
+%       | & \quad e_1 == e_2                        && \grammartag{Equality test} \\
+%       | & \quad e_1 ; e_2                         && \grammartag{Sequencing} \\
+%       | & \quad \ifkw(e_1)\{\ e_2\ \}\elsekw\{\ e_3\ \} && \grammartag{Conditional} \\
+%       | & \quad \whilekw(e_1)\{\ e_2\ \}              && \grammartag{While loop} \\
+%       | & \quad \yieldkw                      && \grammartag{Yields to scheduler}\\[1em]
+%    \mathbf{Program}\quad p ::=
+%        & \quad \requestkw\ name_1\ \{\ e_1\ \}&&\grammartag{Set of request handlers}\\[-0.5em]
+%        & \quad \qquad \vdots &&\\
+%        & \quad \requestkw\ name_n\ \{\ e_n\ \}\ 
+%    \end{align*}
+%    \caption{Syntax of expressians and programs}
+%    \label{fig:syntax}
+%\end{figure}
     %
 This NS setting is motivating by software-defined networking systems (SDN). Specifically, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header fields; global variables correspond to variables on programmable switches, as they are shared among all packets (threads) of the system. Throughout this section, we will refer to packets/threads/requests interchangeably. 
     
@@ -44,6 +79,9 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \item $\mathit{resp} \subseteq L \times \mathit{Res}$ is a response transition relation, which describes which packets turn into which responses
 \item $\delta \subseteq (G \times L) \times (G \times L)$ is a transition relation for thread processing, which describes an atomic step of processing that may change the (shared) global state and the (private) thread local state.
 \end{itemize}
+
+
+
 
 \begin{figure}[H]
     \centering
