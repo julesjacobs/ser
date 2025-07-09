@@ -318,7 +318,8 @@ Each token corresponds to a single request packet, or (in the case of the global
 
 \paragraph{Counterexample Extraction.}
 
-Regarding the aforementioned program, we automatically generate the following reachability query for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if reachable, indicates the program is not serializable):
+Regarding the aforementioned program, we automatically generate the following reachability query~\footnote{If not the equality constraints, the problem would have been considered a \textit{coverability} query which is easier~\cite{Ra78}.} for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if reachable, indicates the program is not serializable):
+ 
 
 \[
 P_1 = 0 \wedge 
@@ -431,14 +432,16 @@ Now, we observe again the adjusted program with locks (as previously described i
 %
 Due to space limitations, we relegate figures of the corresponding Network System, Serailizability NFA, and Interleaving Petri Net to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
 %
-Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExamplePN}) being able to reach a marking satisfying the following formula:
+Non-serializability corresponds to the Petri Net (in Fig.~\ref{fig:code3ExamplePN}) being able to reach a marking satisfying the same reachability formula. 
+%(but this time each place $P_i$ corresponds to the new PN). 
+%following formula:
 
-\[
-\textcolor{blue}
-P_1 = 0 \wedge 
-{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
-\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
-\]
+%\[
+%\textcolor{blue}
+%P_1 = 0 \wedge 
+%{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
+%\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
+%\]
 
 
 Note that this happened to be the exact same property as encoding non-serializability in the previous example, however, the Petri Net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, $X$ and $L$. 
@@ -526,7 +529,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
 	which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state via a non-serializable execution.
-	\guy{Jules is this part correct?}
+%	\guy{Jules is this part correct?}
 	
 	\medskip
 	\noindent\textbf{Conclusion.}
