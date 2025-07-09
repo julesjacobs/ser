@@ -252,10 +252,10 @@ Q = G
 
 \item \textbf{Validation.}  
 	\begin{itemize}
-	\item if \sat we validate the reachable trace and project it to the NS semantics to represent a valid interleaving that results into request/response pairs which cannot be attained in serial executions.
+	\item \sat: we validate the reachable trace and project it to the NS semantics to represent a valid interleaving that results into request/response pairs which cannot be attained in serial executions.
 	See example in subsec.~\ref{subsec:ns-not-serializable}.
 	
-	\item if \unsat:
+	\item \unsat:
 	we generate an inductive invariant over the interleaving PN, proving that the semilinear set cannot be attained via an interleaving.
 	See example in subsec.~\ref{subsec:ns-serializable}.
 \end{itemize}
@@ -283,7 +283,7 @@ Q = G
 
 \paragraph{Serializable NFA Extraction.}
 
-Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS presented in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen, serial executions can produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}), while maintaining the only reachable global state $[X=0]$:
+Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS presented in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen, serial executions can produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}), while maintaining the only reachable global state $[X=0]$.
 
 \begin{wrapfigure}{r}{0.5\textwidth}  % “r” = right, width = 0.5\textwidth
 	\centering
@@ -627,7 +627,7 @@ be the multiset of linear components of the semilinear set
 \]
 which removes any component strictly containing another.  
 %
-\guy{Nicolas is it clear we mean that we fix their semilinear "meaning" of the regex operations? For example, + is union etc..}
+\guy{Nicolas is it clear we mean that we fix their semilinear "meaning" of the regex operations? For example, + is union etc..}\nicolas{Ok for me}
 Then, we replace the naive semilinear‐set operations by
 \[
 S\;+\;T
