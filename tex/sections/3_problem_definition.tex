@@ -4,7 +4,7 @@
 \label{sec:problem-definition}
 %\guy{Can someone check Sections 3-4-5? Especially the formulations}
 
-Our network system (NS) syntax is defined as described in the following syntax: 
+Our network system (NS) syntax is defined as follows: 
 %of Fig.~\ref{fig:syntax}.
 
 \[
@@ -15,9 +15,9 @@ Our network system (NS) syntax is defined as described in the following syntax:
 	&\nondet
 	&&\grammartag{Nondeterministic value: 0 or 1}\\
 	&x := e
-	&&\grammartag{Write to local variable field}\\
+	&&\grammartag{Write to local variable}\\
 	&x
-	&&\grammartag{Read from local variable field}\\
+	&&\grammartag{Read from local variable}\\
 	&X := e
 	&&\grammartag{Write to global variable}\\
 	&X
@@ -65,18 +65,18 @@ Our network system (NS) syntax is defined as described in the following syntax:
 %    \label{fig:syntax}
 %\end{figure}
     %
-This NS setting is motivating by software-defined networking systems (SDN). Specifically, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header fields; global variables correspond to variables on programmable switches, as they are shared among all packets (threads) of the system. Throughout this section, we will refer to packets/threads/requests interchangeably. 
+This NS setting is motivating by software-defined networking systems. Specifically, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header fields; global variables correspond to variables on programmable switches, as they are shared among all packets (threads) of the system, visiting the switch. Throughout this section, we will refer to packets/threads/requests interchangeably. 
     
-    
+   
 A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
-\item $G$ is a set of global states representing global state
-\item $L$ is a set of local states representing thread contents
+\item $G$ is a set of global states (each is one possible assignment of global variables simultaneously) 
+\item $L$ is a set of local states representing request/thread contents (local variable values and ``remaining program'' to execute)
 \item $\mathit{REQ}$ is a set of request events (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 \item $\mathit{RESP}$ is a set of response events (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
 \item $\mathit{req} \subseteq \mathit{Req} \times L$ is a request transition relation, which describes which requests spawns which thread (packet)
-\item $\mathit{resp} \subseteq L \times \mathit{Res}$ is a response transition relation, which describes which packets turn into which responses
+\item $\mathit{resp} \subseteq L \times \mathit{Res}$ is a response transition relation, which describes which thread turn into which responses
 \item $\delta \subseteq (G \times L) \times (G \times L)$ is a transition relation for thread processing, which describes an atomic step of processing that may change the (shared) global state and the (private) thread local state.
 \end{itemize}
 
@@ -97,7 +97,7 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
     g \in G \text{ is the current global state,}
     \\
     \quad
-    \mathcal{P} \in \text{Multiset}(L \times \mathit{REQ}) \text{ is a multiset of in-flight requests/threads,}
+    \mathcal{P} \in \text{Multiset}(L \times \mathit{REQ}) \text{ is a multiset of in-flight requests (threads),}
     \\
     \quad
     M \in \text{Multiset}(\mathit{REQ} \times \mathit{RESP}) \text{ is a multiset of request/response pairs already completed.}
@@ -141,8 +141,8 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
     \\[1em]
     \textbf{Interleaved run: } \text{the } \mathcal{P}_i \text{ can have more than one request, and } \mathcal{P}_n = \varnothing \\
     \textbf{Serial run: } \text{ each } \mathcal{P}_i \text{ has at most one request, and } \mathcal{P}_n = \varnothing\\
-    \text{Int}(\mathcal{N}) = \{ M \in \text{Multiset}(\mathit{Req} \times \mathit{Res}) \mid \exists \text{ interleaved run } (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow^*\; (g_n,\,\varnothing,\,M) \}\\
-    \text{Ser}(\mathcal{N}) = \{ M \in \text{Multiset}(\mathit{Req} \times \mathit{Res}) \mid \exists \text{ serial run } (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow^*\; (g_n,\,\varnothing,\,M) \}\\
+    \text{Int}(\mathcal{N}) = \{ M \in \text{Multiset}(\mathit{REQ} \times \mathit{RESP}) \mid \exists \text{ interleaved run } (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow^*\; (g_n,\,\varnothing,\,M) \}\\
+    \text{Ser}(\mathcal{N}) = \{ M \in \text{Multiset}(\mathit{REQ} \times \mathit{RESP}) \mid \exists \text{ serial run } (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow^*\; (g_n,\,\varnothing,\,M) \}\\
     \end{array}
     \]
 
@@ -222,7 +222,25 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 
 Recall the code snippet from the simple, non-serializable example presented in Listing~\ref{lst:MotivatingExample2NonSer}. We can represent its NS with the following mapping:
 
+\begin{itemize}
+\item 
+The set $G$ is defined as $G=\{[[X=0],[X=1]\}$
 
+\item 
+The initial global $g_0$ state is defined as $g_0 = [X=0]$.
+
+\item 
+We define $L$ as all pairs of local states (assignments such as $[y=0],[y=1]$) and ``remaining'' programs.
+
+\item 
+The set of requests is $REQ = \{{\color{ForestGreen}\blacklozenge_\text{main}}\}$
+
+\item 
+The set of responses is $RESP = \{{\color{red}\blacklozenge_0},{\color{red}\blacklozenge_1}\}$
+
+\end{itemize}
+
+We define the three mappings $req$, $resp$, and $\delta$ as follows:
 %\begin{minipage}[t]{0.3\textwidth}
 %	\begin{lstlisting}[caption={Without yield or lock (serializable)}]
 %	request main: 
