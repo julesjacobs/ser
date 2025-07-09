@@ -31,7 +31,7 @@ When $t$ is enabled at $M$, firing $t$ produces a new marking $M'$ defined as
 \[
 M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t).
 \]
-which represents the consumption of inputs tokens (from the input places), and the production of new ones (to the output places). In this case, we denote $M \;\xrightarrow{t}\; M'$ that $M'$ is reachable from $M$.
+which represents the consumption of inputs tokens (from the input places), and the production of new ones (to the output places). In this case, we denote $M \xrightarrow{t} M'$ that $M'$ is reachable from $M$.
 %
 By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in  $0..(k-1)$.
 %%
@@ -47,7 +47,7 @@ Ackermann-complete~\cite{CzWo22,leroux_reachability_2022} complexity.
 %
 An example for a toy Petri Net, and both reachable and unreachable markings, appears in Appendix~\ref{appendix:toyPN}.
 %
-In our work, we focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. We want to check if it is possible to reach a marking that satisfies a formula, say $F$, that is a combination of linear constraints between places. Such property is said \textit{reachable} (or \sat by analogy with SAT solving) if there exists some $M$ in $R(N)$ such that $M \models F$, and \textit{unreachable} otherwise (\unsat). 
+In our work, we focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. We want to check if it is possible to reach a marking that satisfies a formula, say $F$, that is a combination of linear constraints between places. Such property is said \textit{reachable} (or \sat\ by analogy with SAT solving) if there exists some $M$ in $R(N)$ such that $M \models F$, and \textit{unreachable} otherwise (or \unsat). 
 
 \paragraph{Verdict proofs.} 
 
