@@ -30,13 +30,13 @@ In Listing~\ref{lst:BasicSer} an in-flight request assigns to x the value of FLA
 %
 Note that the presence of the \textit{else} branch renders the program serializable, as intuitively, the returned value of x does not depend on the assignment of FLAG.
 %
-However, this changes in  Listing~\ref{lst:BasicNonSer}. In which case there is no ``else'' branch and x is always assigned the value of FLAG.
-
+However, this changes in  Listing~\ref{lst:BasicNonSer}.
+%
 %
 \begin{wrapfigure}{r}{0.62\textwidth}
-%	\vspace{-1\intextsep} % tighten top
+	\vspace{-0.5\intextsep} % tighten top
 	\centering
-	\begin{minipage}[t]{0.29\textwidth}
+	\begin{minipage}[t]{0.25\textwidth}
 		\begin{lstlisting}[caption={Serializable},label={lst:BasicSer},numbers=none]
 request A: 
     x := FLAG
@@ -50,7 +50,7 @@ request A:
     return x
 		\end{lstlisting}
 	\end{minipage}\hspace{1.2em}% <-- small gap here
-	\begin{minipage}[t]{0.29\textwidth}
+	\begin{minipage}[t]{0.25\textwidth}
 		\begin{lstlisting}[caption={Not serializable},label={lst:BasicNonSer},numbers=none]
 request A: 
     x := FLAG 
@@ -64,10 +64,16 @@ request A:
     return x
 		\end{lstlisting}
 	\end{minipage}
-	\vspace{-1\intextsep} % tighten bottom
+	\vspace{-0.9\intextsep} % tighten bottom
 \end{wrapfigure}
-It is straightforward to see that this update makes the program non-serializable. Any serial execution will afford the first request {\color{ForestGreen}$\blacklozenge_\text{A}$} the matching returned response {\color{red}$\blacklozenge_0$} (as $[x:=FLAG]$, which is initially 0). As the first request also assigns $[FLAG:=1]$ before exiting, any subsequent execution will assign $[x:=1]$ and hence return the response {\color{red}$\blacklozenge_1$}. 
 %
+%
+In which case there is no ``else'' branch and x is always assigned the value of FLAG.
+%
+It is straightforward to see that this update makes the program non-serializable. Any serial execution will match the first request {\color{ForestGreen}$\blacklozenge_\text{A}$} the response {\color{red}$\blacklozenge_0$} (as $[x:=FLAG]$, which is initially 0). As the first request also assigns $[FLAG:=1]$ before exiting, any subsequent execution will assign $[x:=1]$ and hence return {\color{red}$\blacklozenge_1$}. 
+%
+
+\noindent
 Differently put, for any serial execution with i requests --- we have exactly one (first) request/response pair {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$}, and $(i-1)$ pairs of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_1$}.
 %
 However, given that the first request can also \textit{yield}, it is possible for another request to concurrently run the program after the first request yields and before it returns. This, in turn, will allow two requests to have $[x=0]$, and hence, for example, we can attain \textit{multiple} {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} pairs. Thus, Listing~\ref{lst:BasicNonSer} is not serializable.
@@ -229,7 +235,7 @@ However, given at least $i=5$ interleaving of in-flight {\color{ForestGreen}$\bl
 
 % Second row
 \noindent
-\begin{minipage}[t]{0.45\textwidth}
+\begin{minipage}[!htb]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
 		label={lst:ComplexWhileSer}]
 		    request flip: 
@@ -248,7 +254,7 @@ However, given at least $i=5$ interleaving of in-flight {\color{ForestGreen}$\bl
 				\end{lstlisting}
 \end{minipage}%
 \hfill
-\begin{minipage}[t]{0.45\textwidth}
+\begin{minipage}[!htb]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable},
 		label={lst:ComplexWhileNonSer}]
 		    request flip: 
