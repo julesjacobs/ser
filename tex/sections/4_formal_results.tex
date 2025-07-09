@@ -81,7 +81,7 @@ For $b_i, p_{i,j}\in \mathbb N^k $ being k-dimensional vectors of non-negative v
 %
 Semilinear sets coincide exactly with the sets definable in \textit{Presburger arithmetic}~\cite{Pr29}.
 %
-By Parikh's theorem~\cite{Parikh66}, the Parikh Image of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
+By Parikh's theorem~\cite{Parikh66}, the \textit{Parikh Image} of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
 finite description of its Parikh Image.
 
 \paragraph{Deciding serializability in unbounded systems.}
@@ -92,7 +92,7 @@ Finally, we build upon the theoretical findings of Bouajjani et al.~\cite{BoEmEn
 
 \subsection{The Algorithm (without Optimizations)}
 
-Let \(\mathcal S\) be the parsed Network System, with set of global states \(G\).  
+Let \(\mathcal S\) be the parsed Network System, with  the set \(G\) of global states .  
 
 \begin{enumerate}
 	\item  \textbf{Serializability automaton.}  
@@ -125,19 +125,34 @@ Q = G
 } q'\bigr)
 \;\Longleftrightarrow\;
 \begin{array}{l}
-	\mathcal S \text{ at global state } q
-	\;\text{issues}\;
+	\mathcal S \text{ is in global state } q
+	\;\text{and issues a request}\;
 	{\color{ForestGreen}\blacklozenge_{\mathit{req}}},\\[0.5ex]
-	\text{after full completion of the request, it receives}\;
+	\text{then upon completion it receives response}\;
 	{\color{red}\blacklozenge_{\mathit{resp}}},\\[0.5ex]
-	\text{arriving at global state } q'
+	\text{and transitions to global state at global state } q'
 \end{array}
 \]
+%
+%
+%
+%
+%
+%
+%\begin{array}{l}
+%	\mathcal S \text{ at global state } q
+%	\;\text{issues}\;
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}},\\[0.5ex]
+%	\text{after full completion of the request, it receives}\;
+%	{\color{red}\blacklozenge_{\mathit{resp}}},\\[0.5ex]
+%	\text{arriving at global state } q'
+%\end{array}
+%\]
 
 	
 	(i.e.\ each transition is a request/response pair).  Its language
 	\(L(\mathcal A_{\mathrm{ser}})\subseteq\Sigma^*\) is exactly the set of serial
-	request/response traces, and we define the semilinear set of serial executions
+	request/response traces, and we define the semilinear set of serial executions (each such execution giving rise to a multiset of request/response pairs)
 	\[
 	\mathsf{Ser}(\mathcal S)
 	\;=\;
@@ -172,7 +187,7 @@ Q = G
 	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
 	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
 	\]
-	with \(G\) the global states, \(L\) the in‐flight local states (request‐state + remaining program), and \(\mathit{RESP}\) the response labels.
+	with \(G\) being the global states, \(L\) being the in‐flight local states (request‐state + remaining program), and \(\mathit{RESP}\) denoting the response labels.
 	
 	Transitions are partitioned as
 	\[
@@ -181,7 +196,7 @@ Q = G
 	where
 	\[
 	T_{\mathit{req}} = \{\,t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}} \mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ}\},\quad
-	T_{\delta} = \{\,t_{(\ell,g)\to(\ell',g')} \mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta_{\mathcal S}\},\quad
+	T_{\delta} = \{\,t_{(\ell,g)\to(\ell',g')} \mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta\},\quad
 	T_{\mathit{resp}} = \{\,t_{{\color{red}\blacklozenge_{\mathit{resp}}}} \mid {\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\}.
 	\]
 	
@@ -197,7 +212,7 @@ Q = G
 		&= \mathbf1_{p_\ell} + \mathbf1_{p_g}, &
 		\mathsf{post}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
 		&= \mathbf1_{p_{\ell'}} + \mathbf1_{p_{g'}}, 
-		&&\text{for each }(\ell,g)\!\to\!(\ell',g')\in\delta_{\mathcal S},\\
+		&&\text{for each }(\ell,g)\!\to\!(\ell',g')\in\delta,\\
 		\mathsf{pre}\bigl(t_{{\color{red}\blacklozenge_{\mathit{resp}}}}\bigr)
 		&= \mathbf1_{p_\ell}, &
 		\mathsf{post}\bigl(t_{{\color{red}\blacklozenge_{\mathit{resp}}}}\bigr)
@@ -206,13 +221,13 @@ Q = G
 	\end{alignedat}
 	\]
 	
-	Finally, the initial marking is
+	The initial marking is a single token on the place representing the initial global state:
 	\[
 	M_0(p_{g_0}) = 1,
 	\quad
 	M_0(p) = 0 \text{ for all }p\neq p_{g_0},
 	\]
-	where \(g_0\) is the initial global state of \(\mathcal S\).  
+	where \(g_0\) is the initial global state of the network system \(\mathcal S\).  
 	
 	
 	
@@ -225,7 +240,7 @@ Q = G
 	\[
 	\mathsf{Int}(\mathcal S)
 	\;=\;
-	\bigl\{\;\pi(M)\;\bigm|\;M_0 \xrightarrow{*} M\text{ in }N_{\mathrm{int}}(\mathcal S)\bigr\}.
+	\bigl\{\;\pi(M)\;\bigm|\;M_0 \xrightarrow{}^{*} M\text{ in }N_{\mathrm{int}}(\mathcal S)\bigr\}.
 	\]
 	
 	\item \textbf{Non-serializable set.}  
@@ -235,16 +250,16 @@ Q = G
 	\item \textbf{Reachability encoding.}  
 	Ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that
 	\[
-	M_0 \xrightarrow{*} M
+	M_0 \xrightarrow{}^{*} M
 	\quad\wedge\quad
 	\pi(M)\in \mathsf{NonSer}(\mathcal S).
 	\]
 	
 	\item \textbf{Decision.}  
 	\begin{itemize}
-		\item \sat: yields a counterexample interleaving \(M\) with
+		\item [\sat]: yields a counterexample interleaving \(M\) with
 		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\).
-		\item \unsat: yields an inductive (unbounded) invariant of
+		\item [\unsat]: yields an inductive invariant of
 		\(N_{\mathrm{int}}\), which back-translates to a proof of
 		serializability for \(\mathcal S\).
 	\end{itemize}
@@ -252,14 +267,24 @@ Q = G
 
 
 \item \textbf{Validation.}  
+
 	\begin{itemize}
-	\item \sat: we validate the reachable trace and project it to the NS semantics to represent a valid interleaving that results into request/response pairs which cannot be attained in serial executions.
-	See example in subsec.~\ref{subsec:ns-not-serializable}.
+		
+		\item[\sat] In the satisfiable case, we validate a reachable trace and embed it into the NS semantics, yielding a valid interleaving that produces request/response pairs unattainable under any serial execution.
+		See the example in subsec.~\ref{subsec:ns-not-serializable}.
+		
+		\item[\unsat] In the unsatisfiable case, we synthesize an inductive invariant over the interleaving PN, thereby proving that the corresponding semilinear set cannot be realized by any interleaving.
+		See the example in subsec.~\ref{subsec:ns-serializable}.
+		
+		
+%	\item \sat: we validate the reachable trace and project it to the NS semantics to represent a valid interleaving that results into request/response pairs which cannot be attained in serial executions.
+%	See example in subsec.~\ref{subsec:ns-not-serializable}.
 	
-	\item \unsat:
-	we generate an inductive invariant over the interleaving PN, proving that the semilinear set cannot be attained via an interleaving.
-	See example in subsec.~\ref{subsec:ns-serializable}.
+%	\item \unsat:
+%	we generate an inductive invariant over the interleaving PN, proving that the semilinear set cannot be attained via an interleaving.
+%	See example in subsec.~\ref{subsec:ns-serializable}.
 \end{itemize}
+
 \end{enumerate}
 
 
