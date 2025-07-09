@@ -309,7 +309,9 @@ Q = G
 
 \paragraph{Serializable NFA Extraction.}
 
-Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS presented in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen, serial executions can produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}), while maintaining the only reachable global state $[X=0]$.
+Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS presented in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen in Fig.~\ref{fig:code2ExampleNFA}, serial executions can produce only request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, when a request enters and exits the system, is $[X=0]$.
+%
+Intuitively, this corresponds to the Listing~\ref{lst:MotivatingExample2NonSer} program updating [X:=1] as an intermediate assignments before yielding.
 
 \begin{wrapfigure}{r}{0.5\textwidth}  % “r” = right, width = 0.5\textwidth
 	\centering
@@ -338,13 +340,13 @@ Each token corresponds to a single request packet, or (in the case of the global
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.7\textwidth]{plots/code_2_PN_with_annotation.png}
-	\caption{Petri Net for interleaving executions of Listing~\ref{lst:MotivatingExample2NonSer} program. Note that there doesn't exist any valid firing sequence that can reach place $P_8$, representing a response of {\color{red}$\blacklozenge_0$}.}
+	\caption{The PN encoding interleaving executions of the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
 	\label{fig:code2ExamplePN}
 \end{figure}
 
 \paragraph{Counterexample Extraction.}
 
-Regarding the aforementioned program, we automatically generate the following reachability query~\footnote{If not the equality constraints, the problem would have been considered a \textit{coverability} query which is easier~\cite{Ra78}.} for the Petri net of Figure~\ref{fig:code1ExamplePN} (which, if reachable, indicates the program is not serializable):
+Regarding the aforementioned program, we automatically generate the following reachability query~\footnote{If not the equality constraints, the problem would have been considered a \textit{coverability} query which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN} we encode a target semilinear set with the following constraints on the token distribution:
  
 
 \[
@@ -352,15 +354,20 @@ P_1 = 0 \wedge
 \textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 \wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
 \]
-This asserts the existence of a marking with no tokens on $P_1,P_4,P_5,P_6$,$\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  In fact, the target marking is reachable (Table~\ref{tab:PetriNetFiringCounterexample}):
+
+This set encodes all reachable markings with no tokens on $P_1,P_4,P_5,P_6$,$\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  
+%
+This target semilinear set of markings is, in fact non-empty. For example, it includes the following reachable marking:
+
 \[
 M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
 \]
-is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing sequence that leads to $M^*$.
 
-
-
-
+Table~\ref{tab:PetriNetFiringCounterexample} lists a valid firing sequence that leads to $M^*$ from the initial state.
+%
+As the target set encodes request/response pairs unattainable in serial executions, and as the PN encodes all possible interleavings, this firing sequence also corresponds as a counterexample demonstrating the program is non-serializable. 
+%
+As demonstrated by the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ presented in Sec.~\ref{sec:introduction}.
 
 \begin{table}[!htbp]
 	\centering
@@ -445,7 +452,7 @@ is reachable.  Table~\ref{tab:PetriNetFiringCounterexample} lists a firing seque
 		&                                   {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}       \\
 		\bottomrule
 	\end{tabular}
-	\caption{Firing sequence reaching the target marking $M^*$. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens on place $P_i$. The initial marking has a single token in place $P_3$ encoding the initial global state.}
+	\caption{The firing sequence reaching  marking $M^*$ which is in our target semilinear set. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens on place $P_i$. The initial marking has a single token in place $P_3$ encoding the initial global state.}
 	\label{tab:PetriNetFiringCounterexample}
 \end{table}
 
