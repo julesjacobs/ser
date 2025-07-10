@@ -24,7 +24,7 @@ Our code, benchmarks, and experimental results are publicly available~\cite{Arti
 
 \subsection{Runtime Results}
 We ran our tool on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
-For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores, with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
+For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
 %
 Within the time limit, our tool solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see Table~\ref{tab:benchmarks-all}).
 %
@@ -179,18 +179,18 @@ We ran all benchmarks with each of the following six optimization combinations:
 (v) with strategic Kleene elimination (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
 and finally, (vi) with all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
 %
-The results of the aggregated overall runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log}, and show that over $19\%$ more benchmarks are solved when using all optimizations, compared to running without any optimizations.
+The results of the aggregated overall runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log} and show that over $19\%$ more benchmarks are solved when using all optimizations compared to running without any optimizations.
 %
 Not surprisingly, the best configuration is the one with all optimizations on. 
 %
-We also note that the best single-optimization configurations with regard to runtime are [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}] and [\texttt{\textbf{\text{-}\text{B}\text{-}\text{-}}}], solving over $74\%$ and $72\%$ of the benchmarks respectively. 
+We also note that the best single-optimization configurations with regard to runtime are [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}] and [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}], solving over $74\%$ and $72\%$ of the benchmarks respectively. 
 %
 We also note that the two remaining optimizations, [\texttt{\textbf{\text{R}\text{-}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not significantly) than without the optimizations when counting overall timeouts.
 %
 However, when comparing the combinations, it seems that there are instances in which each of these optimizations still \textit{strictly} improves runtime.
 %
 For example, there are instances such as \texttt{a3.ser} and \texttt{a7.ser}, in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{R}\text{-}\text{-}\text{-}}}])
-affords a speedup of between $72.2\%-85.2\%$ over the same benchmarks without this optimization.
+affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks without this optimization.
 
 
 
@@ -249,7 +249,7 @@ With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction
 
 Finally, our last experiment batch analyzed the size reduction among the semilinear sets.
 %
-Towards this end, we ran all our benchmarks with all optimizations, to serve as a baseline. 
+Towards this end, we ran all our benchmarks with all optimizations to serve as a baseline. 
 %
 Then, we analyzed the effect of the three semilinear-related optimizations, i.e., all but the bidirectional pruning. For each of these three optimizations, we ran the benchmarks with all optimizations \textit{except} the one checked.
 %
@@ -259,7 +259,7 @@ Specifically, we compare both the average and the maximal (i) number of componen
 %
 The redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, as well as the average number of components to be $223$ times more compact, when compared to the baseline.
 %
-To ensure a fair comparison, we only measured benchmarks that were completed under every configuration, deliberately excluding any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth, and the resulting timeouts, are especially pervasive among our state-machine benchmarks due to loops in their NS --- rendering even simple programs to become infeasible without optimizations.
+To ensure a fair comparison, we only measured benchmarks that were completed under every configuration, deliberately excluding any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth and the resulting timeouts are especially pervasive among our state-machine benchmarks due to loops in their NS, rendering even simple programs infeasible without optimizations.
 
 %In fact, for both these optimizations are even more effective as, in order to conduct a fair comparison, we analyzed only benchmarks that terminated in all combinations, an hence we do not include cases in which these two optimizations rendered the original semilinear set intractable, due to having over $2^{30}$ components (!), hence timing-out and being excluded from the analysis.
 %%

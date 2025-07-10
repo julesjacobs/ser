@@ -75,8 +75,8 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \item $\mathit{REQ}$ is a set of request events (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 \item $\mathit{RESP}$ is a set of response events (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
-\item $\mathit{req} \subseteq \mathit{Req} \times L$ is a request transition relation, which describes which request spawns which thread (packet)
-\item $\mathit{resp} \subseteq L \times \mathit{Res}$ is a response transition relation, which describes which thread turns into which responses
+\item $\mathit{req} \subseteq \mathit{REQ} \times L$ is a request transition relation, which describes which request spawns which thread (packet)
+\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ is a response transition relation, which describes which thread turns into which responses
 \item $\delta \subseteq (G \times L) \times (G \times L)$ is a transition relation for thread processing, which describes an atomic step of processing that may change the (shared) global state and the (private) thread-local state.
 \end{itemize}
 
@@ -224,13 +224,13 @@ Recall the code snippet from the simple, non-serializable example presented in L
 
 \begin{itemize}
 \item 
-The set $G$ is defined as $G=\{[[X=0],[X=1]\}$
+The set $G$ is defined as $G=\{[X=0], [X=1]\}$
 
 \item 
 The initial global $g_0$ state is defined as $g_0 = [X=0]$.
 
 \item 
-We define $L$ as all pairs of local states (assignments such as $[y=0],[y=1]$) and ``remaining'' programs.
+We define $L$ as all pairs of local states (assignments such as $[y=0], [y=1]$) and ``remaining'' programs.
 
 \item 
 The set of requests is $REQ = \{{\color{ForestGreen}\blacklozenge_\text{main}}\}$

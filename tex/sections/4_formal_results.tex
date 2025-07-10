@@ -29,11 +29,11 @@ M \;\ge\; \mathsf{pre}(t)
 i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
 When $t$ is enabled at $M$, firing $t$ produces a new marking $M'$ defined as
 \[
-M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t).
+M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t),
 \]
-Which represents the consumption of input tokens (from the input places), and the production of new ones (to the output places). In this case, we denote by $M \xrightarrow{t} M'$ that $M'$ is reachable from $M$.
+which represents the consumption of input tokens (from the input places), and the production of new ones (to the output places). In this case, we denote by $M \xrightarrow{t} M'$ that $M'$ is reachable from $M$.
 %
-By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some sequence of markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in  $0..(k-1)$, and we denote this as $M_0 \; \xrightarrow{}^* M$.
+By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some sequence of markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in $0..(k-1)$, and we denote this as $M \; \xrightarrow{\sigma} M'$.
 %%
 Finally, $R(N)$ denotes the (possibly, infinite) set of the reachable markings:
 \[
@@ -77,7 +77,7 @@ S \;=\; \bigcup_{i=1}^m \Bigl\{\mathbf b_i + \sum_{j=1}^{r_i} n_j\,\mathbf p_{i,
 \;\Big|\; n_j\in\mathbb N\Bigr\}.
 \]
 
-For $b_i, p_{i,j}\in \mathbb N^k $ being k-dimensional vectors of non-negative values.
+for $b_i, p_{i,j}\in \mathbb N^k$ being k-dimensional vectors of non-negative values.
 %
 Semilinear sets coincide exactly with the sets definable in \textit{Presburger arithmetic}~\cite{Pr29}.
 %
@@ -90,7 +90,7 @@ Finally, we build upon the theoretical findings of Bouajjani et al.~\cite{BoEmEn
 
 
 
-\subsection{The Algorithm (without Optimizations)}
+\subsection{The Algorithm (Without Optimizations)}
 
 Let \(\mathcal S\) be the parsed Network System, with the set \(G\) of global states.  
 
@@ -566,7 +566,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	\;\mapsto\;
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
-	Which is unsatisfiable.  Hence, no completed‐request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state via a non-serializable execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the lock is acquired (\textcolor{blue}{[L=1]}) 
+	which is unsatisfiable. Hence, no completed request pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state via a non-serializable execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the lock is acquired (\textcolor{blue}{[L=1]}) 
 	\guy{Mark/Jules is this part correct?}
 	
 	\medskip
@@ -673,7 +673,7 @@ be the multiset of linear components of the semilinear set
 \;=\;
 \bigcup\bigl\{\,L\in\mathcal C \;\bigm|\;\nexists\,L'\in\mathcal C\setminus\{L\}:\;L'\subsetneq L\bigr\},
 \]
-Which removes any component strictly containing another.  
+which removes any component strictly containing another.  
 %
 \guy{Nicolas is it clear we mean that we fix their semilinear "meaning" of the regex operations? For example, + is union etc..}
 Then, we replace the naive semilinear‐set operations by
@@ -717,7 +717,7 @@ q^* =
 \]
 
 
-Where \(Q'\subseteq Q\) are the states remaining to be eliminated. Thus, keeping the intermediate regex small.
+where \(Q'\subseteq Q\) are the states remaining to be eliminated. Thus, keeping the intermediate regex small.
 
 \medskip
 \noindent\textit{\textbf{Intuition.}}

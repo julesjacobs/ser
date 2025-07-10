@@ -3,12 +3,12 @@
 
 \subsection{Conclusion}
 
-While these works are significant, they typically cannot prove serializability on a general unbounded setting, or alternatively, ignore the program semantics and focus on read/write accesses (as is the case for conflict serializability).
+While these works are significant, they typically cannot prove serializability in a general unbounded setting, or alternatively, ignore the program semantics and focus on read/write accesses (as is the case for conflict serializability).
 %
 To the best of our knowledge, ours is the first end-to-end
 tool capable of verifying serializability in unbounded domains, and, by harnessing recent advancements in PN theory, is also the first capable of providing a serializability proof.
 %
-Furthermore, we formalize serializability through the lens of our abstract network system framework, based on which we extensively evaluated our tool, including on SDN-inspired benchmarks. 
+Furthermore, we formalize serializability through the lens of our abstract network system framework, on which we extensively evaluated our tool, including on SDN-inspired benchmarks. 
 %
 Finally, we formulated the underlying theory for a suite of optimizations and implemented them, further boosting performance.
 
@@ -18,10 +18,10 @@ Finally, we formulated the underlying theory for a suite of optimizations and im
 
 \paragraph{Scalability.}
 
-As can be seen in our evaluation, there are still examples based on which our approach times out.
+As can be seen in our evaluation, there are still examples for which our approach times out.
 To improve scalability, we plan on harnessing additional aspects of Petri Net theory even further.
 %
-Specifically, we plan to use \textit{polyhedral reductions}~\cite{AmBeDa21} that are structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$, where $(N_1, m_1)$ is the analyzed PN;  $(N_2, m_2)$ is a reduced version of it that is easier to model-check; and $E$ is a Presburger formula that allows reconstruction of $N_1$'s state space from that of $N_2$. We plan to leverage this mechanism to trace back certificates obtained on the reduced net $N_2$ to the original net $N_1$.
+Specifically, we plan to use \textit{polyhedral reductions}~\cite{AmBeDa21} that are structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$, where $(N_1, m_1)$ is the analyzed PN; $(N_2, m_2)$ is a reduced version of it that is easier to model-check; and $E$ is a Presburger formula that allows reconstruction of $N_1$'s state space from that of $N_2$. We plan to leverage this mechanism to trace back certificates obtained on the reduced net $N_2$ to the original net $N_1$.
 %
 %\guy{Nicolas are you sure about the next sentence? Do you have an explanation or a "negative proof"?}
 %

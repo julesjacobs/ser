@@ -6,7 +6,7 @@
 
 Next, we will walk through a series of examples, in varying levels of complexity. Each example will demonstrate different aspects of serializable vs non-serializable programs.
 %
-The first examples are relatively basic, while the last examples have higher complexity and are motivated by real-word programs, e.g., BGP routing policy updates.
+The first examples are relatively basic, while the last examples have higher complexity and are motivated by real-world programs, e.g., BGP routing policy updates.
 %
 Each thread is spawned any number of times (and at any point in time) by a \textit{request} from the user, marked {\color{ForestGreen}$\blacklozenge_\text{req}$}. The request executes, and eventually return a \textit{response}  {\color{red}$\blacklozenge_\text{resp}$}.
 %
@@ -28,7 +28,7 @@ We start with a basic example, describing a single request {\color{ForestGreen}$
 %
 In Listing~\ref{lst:BasicSer} an in-flight request assigns to x the value of FLAG (hence, initially, [$x:=0$]). Then, the request non-deterministically chooses whether to yield or to flip the value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned as the response to request {\color{ForestGreen}$\blacklozenge_\text{A}$}. 
 %
-Note that the presence of the \textit{else} branch renders the program serializable, as intuitively, for every value of x that can change due to an interleaving and updates via the ``if'' branch, there is a serial execution in which an ``else'' branch is chosen and thus his program is serializable.
+Note that the presence of the \textit{else} branch renders the program serializable, as intuitively, for every value of x that can change due to an interleaving and updates via the ``if'' branch, there is a serial execution in which an ``else'' branch is chosen and thus this program is serializable.
 %
 However, this changes in  Listing~\ref{lst:BasicNonSer}.
 %
@@ -162,9 +162,9 @@ However, given that the first request can also \textit{yield}, it is possible fo
 \subsection{Example 2}
 
 %\subsubsection{Example 2}
-The following program pairs have a single global variable ``X'', and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments X by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements X by 1. Both programs have loops that guarantee that X will always be between 0 to 3, otherwise the while loop will yield an infinitum. Both requests return the value of X after updating it.
+The following program pairs have a single global variable ``X'', and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments X by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements X by 1. Both programs have loops that guarantee that X will always be between 0 to 3, otherwise the while loop will yield ad infinitum. Both requests return the value of X after updating it.
 %
-In the first case, Listing~\ref{lst:FredSer} presents a serializable program, due to the absence of any yield between the increment/decrement of X, and its return. Equivalently, in each of the requests, the update of X and the returned value can be thought of as \textit{a single atomic execution}.
+In the first case, Listing~\ref{lst:FredSer} presents a serializable program, due to the absence of any yield between the increment/decrement of X and its return. Equivalently, in each of the requests, the update of X and the returned value can be thought of as \textit{a single atomic execution}.
 %
 However, in Listing~\ref{lst:FredNonSer}, we add an additional yield (and a local variable ``y''), occurring in each of the requests, between the update of X and its return.
 %
@@ -246,7 +246,7 @@ To show that the program is not serializable, we need only show that an interlea
 %
 %However, some interleavings can allow the program to output a response {\color{red}$\blacklozenge_1$}. 
 %
-Specifically, given at least $i=5$ interleaving of in-flight {\color{ForestGreen}$\blacklozenge_\text{flip}$} requests, it is possible for a {\color{ForestGreen}$\blacklozenge_\text{main}$} request to terminate and bypass all while loops, something that cannot occur in serializable executions.
+Specifically, given at least $i=5$ interleavings of in-flight {\color{ForestGreen}$\blacklozenge_\text{flip}$} requests, it is possible for a {\color{ForestGreen}$\blacklozenge_\text{main}$} request to terminate and bypass all while loops, something that cannot occur in serializable executions.
 %
 %Here is some text that will flow around the code listing. You can introduce the snippet and then let the text wrap naturally alongside it.
 
@@ -342,7 +342,7 @@ $,
 %\]
 regardless of how these requests interleave.  Although the individual balances of \(A\) and \(B\) depend on the chosen serial order, the combined sum always reflects exactly one application of the interest rate.
 %
-However, non‐serializable interleavings can violate this invariant.  For instance, if a {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request deducts \$50 from \(A\) (yielding \([50,50]\)) and then yields, then an {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request may double both balances to \([100,100]\) before the transfer resumes --- resulting in \([100,150]\) and a missing \$50.  By contrast, any correct serial ordering of these two operations yields \(A + B = (100+50)\times2 = 300\), with final states \([150,150]\) or \([100,200]\) depending on which request runs first.
+However, non-serializable interleavings can violate this invariant.  For instance, if a {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request deducts \$50 from \(A\) (yielding \([50,50]\)) and then yields, then an {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request may double both balances to \([100,100]\) before the transfer resumes --- resulting in \([100,150]\) and a missing \$50.  By contrast, any correct serial ordering of these two operations yields \(A + B = (100+50)\times2 = 300\), with final states \([150,150]\) or \([100,200]\) depending on which request runs first.
 %
 %
 % original
@@ -419,7 +419,7 @@ Listing~\ref{lst:BankSer} depicts a serializable version of this banking system 
 %\newpage
 \subsection{Example 5}
 
-The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness in routing policies in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adjust its updated routing policy as dictated by the updates.
+The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness in routing policies in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adjust its routing policy as dictated by the updates.
 %
 An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled WEST) and node 2 (labeled EAST), serving as ingress points from where traffic nondeterministically enters the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or an \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
 %

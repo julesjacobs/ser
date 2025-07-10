@@ -30,8 +30,8 @@
 In recent years, concurrent programs have become highly prevalent in various transactional systems, allowing an arbitrary number of threads to run in parallel.
 Despite the various advantages afforded by concurrent systems, they are especially hard to reason about, due to their complex temporal nature.
 %
-As such, there have been various correctness criterion put forth, with each such criteria affording a different guarantee to the user.
-One such popular criteria is \textit{serializability} which, intuitively, asks whether \textit{interleaving threads always produce an equivalent output to running them serially, one after the other}. Differently put, serializability asks whether interleaving threads could output results that are otherwise unattainable in a serial execution.
+As such, there have been various correctness criteria put forth, with each such criterion affording a different guarantee to the user.
+One such popular criterion is \textit{serializability} which, intuitively, asks whether \textit{interleaving threads always produce an equivalent output to running them serially, one after the other}. Differently put, serializability asks whether interleaving threads could output results that are otherwise unattainable in a serial execution.
 %
 Although this question is trivially decidable for a bounded number of threads by enumerating all possible interleavings --- it is highly nontrivial for the \textit{unbounded} case. For example, observe the short snippets of code in Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and ~\ref{lst:MotivatingExample3Ser}. For readability, ``requests'' can be thought of as threads; global and local variables are respectively depicted in upper-case and lower-case characters.
 %
@@ -97,7 +97,7 @@ Furthermore, many of these tools are tailored for specific concurrent data struc
 There has also been extensive theoretical work, most notably, we mention the seminal work of Bouajjani et al.~\cite{BoEmEnHa13} which proves that serializability is decidable for the unbounded case (as a case of bounded-barrier linearizability).
 
 
-In this work, we begin bridging these gaps, and present the first end-to-end tool to verify whether an arbitrary transactional program is provably serializable.  
+In this work, we begin bridging these gaps, and present the first end-to-end tool to verify whether an arbitrary transactional program is provably serializable.
 As far as we are aware, this is the first decision procedure to not only identify serializability violations, but also (i) \textit{prove} that an arbitrary program is serializable; (ii) provide an \textit{inductive proof certificate} for serializability; and (iii) demonstrate this problem on complex programs form the realm of \textit{software defined networks} (SDN).
 %
 Towards this end, our decision procedure builds upon the theoretical work of Bouajjani et al.~\cite{BoEmEnHa13} which presented a reduction from serializability to Petri Net (PN) reachability.  However, as Petri Net reachability is Ackermann-complete~\cite{CzWo22}, a naive translation does not suffice, rendering such a tool highly nontrivial even for basic programs. To circumvent this, we developed multiple optimizations in order to scale to complex programs. 
@@ -111,7 +111,7 @@ we also formalize serializability through the lens of \textit{networking systems
 Based on our theoretical NS framework, we extensively evaluated our approach on dozens of programs with a wide range of features --- including loop constructs, branching, locks, nondeterminism, and more. Notably, our benchmarks also include SDN-motivated programs, such as stateful firewalls, BGP routing, and an online shopping system.
 
 
-Building upon the previous theoretical work of deciding serializability, as well as the state-of-the-art in PN model checking, we see this work as an important step in practical reasoning about concurrent programs in general, and about serializability in particular.
+Building upon the previous theoretical work on deciding serializability, as well as the state-of-the-art in PN model checking, we see this work as an important step in practical reasoning about concurrent programs in general, and about serializability in particular.
 In addition to detecting serializability violations among unbounded programs, our tool is the first to formally prove that such general, unbounded programs are positively serializable, and to afford a formal certificate thereof, as well as to experiment on benchmarks from the timely domain of SDN.
 Our tool, benchmarks, and experiments are available as an anonymous artifact~\cite{ArtifactRepository} and will be permanently hosted with the paper’s final version.
 

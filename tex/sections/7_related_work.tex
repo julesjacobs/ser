@@ -14,7 +14,7 @@
 \subsection{Notions of serializability.}
 \label{subsec:related:notions-of-serializability}
 
-Serializability (or \emph{atomicity}) was formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for transactional systems, introducing \emph{conflict serializability},  a stricter variant that requires equivalence to a serial 
+Serializability (or \emph{atomicity}) was formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for transactional systems, introducing \emph{conflict serializability}, a stricter variant that requires equivalence to a serial 
 schedule solely by reordering non-conflicting operations (e.g., two reads by 
 different threads). \emph{Strict serializability} (SSR) further enforces real-time ordering of transactions~\cite{Pa79}. Herlihy and Wing~\cite{HeWe87,HeWi90} adapted these ideas to define \emph{linearizability} for concurrent data structures --- this can also be viewed as a case of SSR in 
 which each transaction consists of a single action, operating on a single 
@@ -153,7 +153,7 @@ are confined solely to bounded systems due to finite‐state tools like TLC and 
 Golovin et al.~\cite{GoKoVa25} recently introduced \texttt{RELINCHE}, a model checker for bounded linearizability that limits the number of invocable operations.
 Additional tools include CDSSpec (with regard to the \texttt{C/C++ 11} memory model), Lincheck~\cite{KoDeSoTsAl23,OuDe17}, SAT‐based methods~\cite{BuAlMa07}. Others have put forth symbolic observational‐refinement testing~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
 	BoEmCoHa15}.
-Furthermore, checkers such as SPIN/PARGLIDER rely on explicit linearization points~\cite{Fl04, VeYaYo09,Ho97,VeYa08}, which are hard to identify~\cite{VeYaYo09}.
+Furthermore, checkers such as SPIN/PARGLIDER rely on explicit linearization points~\cite{Fl04,VeYaYo09,Ho97,VeYa08}, which are hard to identify~\cite{VeYaYo09}.
 %
 Furthermore, the remaining aforementioned methods are incomplete, limited to finite threads, or assume prior knowledge.
  %
@@ -273,10 +273,10 @@ However, annotation‐based checkers and analyses are inconclusive, since failur
 
 Tasiran~\cite{Ta08} proved serializability of the \texttt{Bartok STM}, and Colvin et al.~\cite{CoGrLuMo06} showed list‐set linearizability via I/O automata. 
 %
-Other methods demonstrate that in some cases, proofs can be simplified for specific data structures to which certain properties hold~\cite{BoEmEnMu17, FeEnMoRiSh18}.
+Other methods demonstrate that in some cases, proofs can be simplified for specific data structures to which certain properties hold~\cite{BoEmEnMu17,FeEnMoRiSh18}.
 %
 Additional verification attempts of linearizability have been presented both 
-with (e.g.~\cite{CoGrLuMo06}) and without (e.g.~\cite{DoGrLuMo04}) the use of 
+with (e.g.,~\cite{CoGrLuMo06}) and without (e.g.,~\cite{DoGrLuMo04}) the use of 
 proof assistants.
 %
 Wing and Gong~\cite{WiGo93} established linearizability for unbounded FIFO and priority queues, and Chakraborty et al.~\cite{ChHeSeVa15} developed a queue‐checking technique. Cerný et al.’s CoLT checks singly‐linked heap objects, however, this method is complete only for bounded threads~\cite{CeRaZuChAl10}. Bouajjani et al.~\cite{BoEnWa17} present a recursive priority‐queue violation detector, akin to their stack and queue methods~\cite{BoEmEnHa18}.
@@ -319,7 +319,7 @@ Wing and Gong~\cite{WiGo93} established linearizability for unbounded FIFO and p
 
 \subsubsection{Additional approaches}
 
-Some combine dynamic analysis with manual proofs, e.g., Shacham et al.~\cite{ShBrAiSaVeYa11}. Test‐generation methods include Wing and Gong~\cite{WiGo93}, Pacheco and Griswold~\cite{PrGr12,PrGr13}, Emmi and Enea~\cite{EmEn17}, and Lowe’s random‐history framework~\cite{Lo17}.  Theorem‐prover‐based methods include~\cite{CoDoGr05,DeScWe11}, while additional methods include~\cite{BoEmEnMu17, FeEnMoRiSh18, EnKo24}.
+Some combine dynamic analysis with manual proofs, e.g., Shacham et al.~\cite{ShBrAiSaVeYa11}. Test‐generation methods include Wing and Gong~\cite{WiGo93}, Pacheco and Griswold~\cite{PrGr12,PrGr13}, Emmi and Enea~\cite{EmEn17}, and Lowe’s random‐history framework~\cite{Lo17}.  Theorem‐prover‐based methods include~\cite{CoDoGr05,DeScWe11}, while additional methods include~\cite{BoEmEnMu17,FeEnMoRiSh18,EnKo24}.
 
 %
 %\todo{original}
@@ -399,7 +399,7 @@ Dynamic and monitoring‐based methods for checking conflict serializability, in
 Nagar and Jagannathan~\cite{KaJa18} presented an 
 automatic static analysis technique to find violations of conflict 
 serializability.
-Sinha et al. developed an incomplete predictive analysis technique, building on Sinha and Malik’s runtime checker~\cite{SiMaWaGu11b,SiMa10}, and Von Praun and Gross offer an unsound static checker~\cite{VoGr04}. Type‐system approaches appear in~\cite{FlQa03,FlFrLiQa08}. 
+Sinha et al. developed an incomplete predictive analysis technique, building on Sinha and Malik’s runtime checker~\cite{SiMaWaGu11b,SiMa10}, and Von Praun and Gross offer an unsound static checker~\cite{VoGr04}. Type-system approaches appear in~\cite{FlQa03,FlFrLiQa08}. 
 Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a 
 tool that checks whether a given program execution is conflict serializable, in 
 an eventually consistent data store. A follow-up work~\cite{BrDiMuVe18} 
@@ -497,7 +497,7 @@ These theoretical advances in Petri Net reachability have given rise to a
 plethora of practical tools, including \texttt{KReach}~\cite{DiLa20}, 
 \texttt{DICER}~\cite{XiZhLi21}, \texttt{MARCIE}~\cite{HeRoSc13}, and others. 
 %
-Our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a state-of-the-art model checker that combines SMT-solving with structural invariants~\cite{AmBeDa21, AmDaHu22} (for additional details, see Appendix~\ref{appendix:smpt}). However,
+Our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a state-of-the-art model checker that combines SMT-solving with structural invariants~\cite{AmBeDa21,AmDaHu22} (for additional details, see Appendix~\ref{appendix:smpt}). However,
 other PN model checkers can be used as well.
 
 
