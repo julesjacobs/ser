@@ -172,21 +172,47 @@ Q = G
 	\[
 	P
 	=
-	P_G \;\cup\; P_{L} \;\cup\; P_{REQ,RESP}
+	P_G \;\cup\; P_{REQ,L} \;\cup\; P_{REQ,RESP}
 	\]
 	
 	for 
+	
 	\[
-	P_G 
-	= \{\,p_g \mid g\in G\}
-	\quad 
-	P_L 
-	= \{\,p_\ell \mid \ell\in L\}
-	\quad
-	P_{REQ,RESP}=
-	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
-	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
+	\begin{aligned}
+		P_G &= \{\,p_g \mid g\in G\},\;\,
+		P_{REQ,L} = \{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/\ell}
+		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,\ell\in L\},\\
+		P_{REQ,RESP} &= \{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}
+		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,
+		{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\}.
+	\end{aligned}
 	\]
+	
+%	\[
+%	P_G 
+%	= \{\,p_g \mid g\in G\}
+%	\quad 
+%%	P_L 
+%%	= \{\,p_\ell \mid \ell\in L\}
+%%	\quad
+%	P_{REQ,L} =
+%	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/\ell} \mid
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, \ell\in L\},%\\
+%	\quad
+%	P_{REQ,RESP}=
+%	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
+%	\]
+%	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
+%	\]
+	
+%	\[
+%	P_{REQ,RESP}=
+%	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
+%	\]
+	
 	with \(G\) being the global states, \(L\) being the in‐flight local states (request‐state + remaining program), and \(\mathit{RESP}\) denoting the response labels.
 	
 	Transitions are partitioned as

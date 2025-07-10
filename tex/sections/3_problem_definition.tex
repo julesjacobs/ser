@@ -604,6 +604,105 @@ Next, we present in Fig.~\ref{fig:code2ExampleNS} the explicit network system th
 	\label{fig:code2ExampleNS}
 \end{figure}
 
+
+%\newpage
+%
+%\begin{figure}[!htbp]
+%	\centering
+%	% left: the figure
+%	\begin{minipage}[t]{0.45\textwidth}
+%		\vspace{0pt}% align this minipage at the top
+%		\centering
+%		\includegraphics[width=\linewidth]{plots/code_2_NS.png}
+%		\caption*{(a) Network system for the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
+%	\end{minipage}
+%	\hfill
+%	% right: the three definitions
+%	\begin{minipage}[t]{0.53\textwidth}
+%		\vspace{0pt}% align this minipage at the top
+%		% req
+%		\[
+%		req \;\coloneq\;
+%		\Bigl\{\,
+%		\bigl[
+%		\underbrace{
+%			\tikz[baseline=(n.base)]
+%			\node[diamond,aspect=2,fill=ForestGreen!20,inner sep=4pt] (n) {main};
+%		}_{\mathrlap{\text{“main” request}}}
+%		\;\rightarrow\;
+%		\bigl(
+%		\tikz[baseline=(y.base)]
+%		\node[rectangle,fill=brightyellow,inner sep=2pt,rounded corners=1pt] (y) {\large y=0};
+%		,\;
+%		\begin{minipage}{0.45\linewidth}
+%			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%				X := 1 
+%				yield 
+%				y := X + 1
+%				X := 0
+%				return y
+%			\end{lstlisting}
+%		\end{minipage}
+%		\bigr)
+%		\bigr]
+%		\Bigr\}
+%		\]
+%		% resp
+%		\[
+%		resp \;\coloneq\;
+%		\Bigl\{\,
+%		\bigl[
+%		\bigl(\,
+%		\tikz[baseline=(y2.base)]
+%		\node[rectangle,fill=brightyellow,inner sep=2pt,rounded corners=1pt] (y2) {\large y=0};
+%		,\;
+%		\begin{minipage}{0.3\linewidth}
+%			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%				// end
+%			\end{lstlisting}
+%		\end{minipage}
+%		\bigr)
+%		\;\rightarrow\;
+%		\tikz[baseline=(d.base)]
+%		\node[diamond,aspect=2,fill=RedViolet!20,inner sep=4pt] (d) {0};
+%		\bigr]
+%		,\;\ldots
+%		\Bigr\}
+%		\]
+%		% delta
+%		\[
+%		\delta \;\coloneq\;
+%		\Bigl\{\,
+%		\bigl[
+%		\bigl(
+%		\tikz[baseline=(x0.base)]
+%		\node[rectangle,fill=lightchacki,inner sep=2pt,rounded corners=1pt] (x0) {\large X=0};
+%		,\;
+%		\tikz[baseline=(y3.base)]
+%		\node[rectangle,fill=brightyellow,inner sep=2pt,rounded corners=1pt] (y3) {\large y=0}
+%		\bigr)
+%		\;\rightarrow\;
+%		\bigl(
+%		\tikz[baseline=(x1.base)]
+%		\node[rectangle,fill=lightchacki,inner sep=2pt,rounded corners=1pt] (x1) {\large X=1};
+%		,\;
+%		\tikz[baseline=(y4.base)]
+%		\node[rectangle,fill=brightyellow,inner sep=2pt,rounded corners=1pt] (y4) {\large y=0}
+%		\bigr)
+%		\bigr]
+%		,\;\ldots
+%		\Bigr\}
+%		\]
+%	\end{minipage}
+%	
+%	\caption{%
+%		(a) The network system. \quad
+%		(b) The three components of the transition‐relation encoding:
+%		$req$, $resp$, and~$\delta$.}
+%	\label{fig:combined-NS-and-defs}
+%\end{figure}
+
+
 %
 %%
 %The NS allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen, serial executions can produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}):
