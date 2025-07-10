@@ -97,8 +97,9 @@ Furthermore, many of these tools are tailored for specific concurrent data struc
 There has also been extensive theoretical work, most notably, we mention the seminal work of Bouajjani et al.~\cite{BoEmEnHa13} which proves that serializability is decidable for the unbounded case (as a case of bounded-barrier linearizability).
 
 
-In this work, we begin bridging these gaps, and present the first end-to-end tool to verify whether an arbitrary transactional program is provably serializable.
-As far as we are aware, this is the first decision procedure to not only identify serializability violations, but also (i) \textit{prove} that an arbitrary program is serializable; (ii) provide an \textit{inductive proof certificate} for serializability; and (iii) demonstrate this problem on complex programs form the realm of \textit{software defined networks} (SDN).
+In this work, we begin bridging these gaps, and present an end-to-end tool to verify whether an arbitrary transactional program is provably serializable.
+To the best of our knowledge, this is the first \emph{implemented} decision procedure to not only identify serializability violations, but also (i) \textit{prove} that an arbitrary program is serializable for unbounded executions; (ii) provide an \textit{inductive proof certificate} for serializability; and (iii) demonstrate this problem on complex programs from the realm of \textit{software defined networks} (SDN).
+While the theoretical decidability has been established~\cite{BoEmEnHa13}, no prior implementation exists that can automatically generate correctness proofs for unbounded concurrent systems.
 %
 Towards this end, our decision procedure builds upon the theoretical work of Bouajjani et al.~\cite{BoEmEnHa13} which presented a reduction from serializability to Petri Net (PN) reachability.  However, as Petri Net reachability is Ackermann-complete~\cite{CzWo22}, a naive translation does not suffice, rendering such a tool highly nontrivial even for basic programs. To circumvent this, we developed multiple optimizations in order to scale to complex programs. 
 Our optimizations include Petri Net pruning, semilinear set compression, and additional manipulations with Presburger formulas.
@@ -107,12 +108,13 @@ As we later demonstrate, these optimizations \textit{significantly} curtail the 
 Furthermore, motivated by the timely task of SDN, 
 %we formalize our decision procedure with regard to our proposed framework of \textit{network systems} (NS), which capture a wide range of programs of interest
 %Furthermore, 
-we also formalize serializability through the lens of \textit{networking systems} (NS) --- abstract multi-thread programs in which users send \textit{requests} (corresponding to threads, or packets) and, after manipulating local and shared global variables, return \textit{responses}.
+we also formalize serializability through the lens of \textit{networking systems} (NS) --- abstract concurrent programs in which users send \textit{requests} and, after manipulating local and shared global variables, return \textit{responses}.
 Based on our theoretical NS framework, we extensively evaluated our approach on dozens of programs with a wide range of features --- including loop constructs, branching, locks, nondeterminism, and more. Notably, our benchmarks also include SDN-motivated programs, such as stateful firewalls, BGP routing, and an online shopping system.
 
 
 Building upon the previous theoretical work on deciding serializability, as well as the state-of-the-art in PN model checking, we see this work as an important step in practical reasoning about concurrent programs in general, and about serializability in particular.
-In addition to detecting serializability violations among unbounded programs, our tool is the first to formally prove that such general, unbounded programs are positively serializable, and to afford a formal certificate thereof, as well as to experiment on benchmarks from the timely domain of SDN.
+In addition to detecting serializability violations among unbounded programs, our tool formally proves that such general, unbounded programs are positively serializable when possible, and affords a formal certificate thereof, as well as experiments on benchmarks from the timely domain of SDN.
+We note that while our approach is sound (never incorrectly claims serializability), the underlying SMPT Petri Net tool may time out on complex instances, limiting completeness in practice (which is unavoidable for any Petri Net tool, given the Ackermann-completeness of the problem).
 Our tool, benchmarks, and experiments are available as an anonymous artifact~\cite{ArtifactRepository} and will be permanently hosted with the paper’s final version.
 
 The rest of the paper is organized as follows. In Sec.~\ref{sec:tour} we present a tour of various examples motivating the complexity of deciding serializability. In Sec.~\ref{sec:problem-definition} we formally define our framework, and present our abstract  network system setting. We formalize our decision procedure and our various optimizations, as well as demonstrate them in Sec.~\ref{sec:formal-results}. Next, we present our implementation (Sec.~\ref{sec:implementation}) and extensive evaluation (Sec.~\ref{sec:evaluation}). 
