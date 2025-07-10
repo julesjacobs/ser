@@ -14,11 +14,12 @@
 \subsection{Notions of serializability.}
 \label{subsec:related:notions-of-serializability}
 
-Serializability (or \emph{atomicity}) was formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for transactional systems, introducing \emph{conflict serializability}, which only reorders non-conflicting operations (e.g., two reads by 
+Serializability (or \emph{atomicity}) was formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for transactional systems, introducing \emph{conflict serializability},  a stricter variant that requires equivalence to a serial 
+schedule solely by reordering non-conflicting operations (e.g., two reads by 
 different threads). \emph{Strict serializability} (SSR) further enforces real-time ordering of transactions~\cite{Pa79}. Herlihy and Wing~\cite{HeWe87,HeWi90} adapted these ideas to define \emph{linearizability} for concurrent data structures --- this can also be viewed as a case of SSR in 
 which each transaction consists of a single action, operating on a single 
 concurrent object~\cite{WaSt06a}.
-Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \emph{predicate-wise serializability}~\cite{RaMeBrKoSi93}. Weaker models like \emph{causal consistency}~\cite{La78,AhNeBuKoHu95}, realized in systems such as COPS~\cite{LlFrKaAn11}, have inspired extensive model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
+Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \emph{predicate-wise serializability}~\cite{RaMeBrKoSi93}. Weaker models like \emph{causal consistency}~\cite{La78,AhNeBuKoHu95}, realized in systems such as COPS~\cite{LlFrKaAn11}, have inspired extensive model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20} as well.
 
 %\todo{original}
 %
@@ -91,7 +92,7 @@ Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \em
 
 \subsubsection{Theoretical Results}
 The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is NP-complete~\cite{Pa79,BiEn19}. Likewise, membership for linearizability is NP-complete in general~\cite{GiKo97} --- a result that was later 
-extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion—is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (hence for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions and scaling it with automatic invariant inference, automaton minimization, and other optimizations. 
+extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion—is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations. 
 %Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
 %\todo{original}
@@ -143,12 +144,14 @@ extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} -
 
 Wang and Stoller propose runtime checks for serializability and conflict/view‐serializability by recombining executions~\cite{WaSt06a,WaSt06b}. 
 While TLA encodings can capture ``real'' serializability (based on final-state 
-equivalence), as well as conflict-serializability~\cite{CoOlPnTuZu07}, these are confined solely to bounded systems due to finite‐state tools like TLC and Apalache~\cite{YuMaLa99,KoKuTr19}. Heuristic and enumeration‐based model checkers include Line-up~\cite{BuDeMuTa10} (built upon CHESS~\cite{MuQaBaBaNaNe08}), LinTSO for TSO~\cite{BuGoMuYa12}, Violat (and its schema‐based predecessor)~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}, and RELINCHE for bounded linearizability~\cite{GoKoVa25}. Additional tools --- CDSSpec (with regard to the \texttt{C/C++ 11} memory model) and Lincheck~\cite{KoDeSoTsAl23,OuDe17}, SAT‐based checks~\cite{BuAlMa07}, symbolic observational‐refinement testing~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
+equivalence), as well as conflict-serializability~\cite{CoOlPnTuZu07}, these are confined solely to bounded systems due to finite‐state tools like TLC and Apalache~\cite{YuMaLa99,KoKuTr19}. Heuristic and enumeration‐based model checkers include Line-up~\cite{BuDeMuTa10} (built upon CHESS~\cite{MuQaBaBaNaNe08}), LinTSO for TSO~\cite{BuGoMuYa12}, Violat (and its schema‐based predecessor)~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}, and RELINCHE for bounded linearizability~\cite{GoKoVa25}. Additional tools include CDSSpec (with regard to the \texttt{C/C++ 11} memory model), Lincheck~\cite{KoDeSoTsAl23,OuDe17}, SAT‐based methods~\cite{BuAlMa07}. Others have put forth symbolic observational‐refinement testing~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
 	BoEmCoHa15}.
-Furthermore, checkers such as SPIN/PARGLIDER rely on explicit linearization points~\cite{Fl04, VeYaYo09,Ho97,VeYa08}.
- The above methods rely on linearization points (which are hard to identify~\cite{VeYaYo09}), are incomplete or limited to finite threads. 
+Furthermore, checkers such as SPIN/PARGLIDER rely on explicit linearization points~\cite{Fl04, VeYaYo09,Ho97,VeYa08}, which are hard to identify~\cite{VeYaYo09}.
+%
+Furthermore, the remaining aforementioned methods are incomplete, limited to finite threads, or assume prior knowledge.
  %
- Unlike these, our algorithm affords complete coverage for unbounded threads and produces serializability certificates.
+Unlike these, our method affords complete coverage for unbounded threads and is also the only one to produce serializability certificates.
+\guy{The above point is a bit tricky because SMPT is not complete..}
 
 
 
@@ -263,7 +266,7 @@ However, annotation‐based checkers and analyses are inconclusive, since failur
 
 Tasiran~\cite{Ta08} proved serializability of the \texttt{Bartok STM}, and Colvin et al.~\cite{CoGrLuMo06} showed list‐set linearizability via I/O automata. 
 %
-Other methods demonstrate that in some cases, proofs can be simplified for specific data structure to which certain properties hold~\cite{BoEmEnMu17, FeEnMoRiSh18}.
+Other methods demonstrate that in some cases, proofs can be simplified for specific data structures to which certain properties hold~\cite{BoEmEnMu17, FeEnMoRiSh18}.
 %
 Additional verification attempts of linearizability have been presented both 
 with (e.g.~\cite{CoGrLuMo06}) and without (e.g.~\cite{DoGrLuMo04}) the use of 
@@ -459,7 +462,7 @@ Conflict serializability has also been studied under weak memory models~\cite{En
 \label{sec:related:petri}
 
 In addition, our work builds on both theoretical and practical advances in 
-Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}. 
+Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}, and specifically Petri Net model checking.
 %The undecidability we prove 
 %for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, 
 %HaThesis76} showing the undecidability of reachability set equivalence for 
@@ -475,9 +478,8 @@ Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}.
 %Petri nets with just five unbounded places.
 %
 %Furthermore, our approach also builds on 
-as well as Petri Net reachability algorithms. While the solution is 
-straightforward for bounded nets (through exhaustive enumeration), the solution 
-for the unbounded case is highly nontrivial, and was first solved by 
+While the solution is 
+straightforward for bounded nets (through exhaustive enumeration), the unbounded case is highly nontrivial and was first solved by 
 Mayr~\cite{Ma81}, with subsequent improvements by Kosaraju~\cite{Ko82} and 
 Lambert~\cite{La92}. Recent work~\cite{CzWo22} has also established this 
 problem is \texttt{Ackermann}-complete.
@@ -487,7 +489,7 @@ plethora of practical tools, including \texttt{KReach}~\cite{DiLa20},
 \texttt{DICER}~\cite{XiZhLi21}, \texttt{MARCIE}~\cite{HeRoSc13}, and others. 
 %
 Our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a state-of-the-art model checker for reachability problems in Petri nets (for additional details, see Appendix~\ref{appendix:smpt}). However,
- other PN model checkers can also be used as well.
+ other PN model checkers can be used as well.
 
 
 
