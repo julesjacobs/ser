@@ -657,7 +657,7 @@ We apply four optimizations to the base algorithm to control intermediate blow�
 An extensive empirical evaluation of these optimizations appears later on in subsec.~\ref{subsec:optimization-results}.
 
 \paragraph{(1) Bidirectional pruning.}  
-\guy{should we reformulate this like in Appendix D?}
+\guy{should we reformulate this like in Appendix C?}
 Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the ``nonzero” places extracted from the Presburger constraints on the target markings.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets, with forward and backward passes:
 \[
 T^{(0)} = T,\qquad
