@@ -65,7 +65,7 @@ Our network system (NS) syntax is defined as follows:
 %    \label{fig:syntax}
 %\end{figure}
     %
-This NS setting is motivating by software-defined networking systems. Specifically, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header fields; global variables correspond to variables on programmable switches, as they are shared among all packets (threads) of the system, visiting the switch. Throughout this section, we will refer to packets/threads/requests interchangeably. 
+This NS setting is motivated by software-defined networking systems. Specifically, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header field; global variables correspond to variables on programmable switches, as they are shared among all packets (threads) of the system, visiting the switch. Throughout this section, we will refer to packets/threads/requests interchangeably. 
     
    
 A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
@@ -75,9 +75,9 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \item $\mathit{REQ}$ is a set of request events (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 \item $\mathit{RESP}$ is a set of response events (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
-\item $\mathit{req} \subseteq \mathit{Req} \times L$ is a request transition relation, which describes which requests spawns which thread (packet)
-\item $\mathit{resp} \subseteq L \times \mathit{Res}$ is a response transition relation, which describes which thread turn into which responses
-\item $\delta \subseteq (G \times L) \times (G \times L)$ is a transition relation for thread processing, which describes an atomic step of processing that may change the (shared) global state and the (private) thread local state.
+\item $\mathit{req} \subseteq \mathit{Req} \times L$ is a request transition relation, which describes which request spawns which thread (packet)
+\item $\mathit{resp} \subseteq L \times \mathit{Res}$ is a response transition relation, which describes which thread turns into which responses
+\item $\delta \subseteq (G \times L) \times (G \times L)$ is a transition relation for thread processing, which describes an atomic step of processing that may change the (shared) global state and the (private) thread-local state.
 \end{itemize}
 
 
@@ -148,7 +148,7 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 
     \caption{State-transition rules for executions of
     \(\mathcal{N} = (G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})\).
-    A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P},M)\) by either (1) introducing a new request, (2) processing a request step via \(\delta\), or (3) consuming a request to produce its response.  When no more steps are possible, the result set \(M\) is the final multiset of request--response pairs that arose during the run.
+    A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, M)\) by either (1) introducing a new request, (2) processing a request step via \(\delta\), or (3) consuming a request to produce its response.  When no more steps are possible, the result set \(M\) is the final multiset of request/response pairs that arose during the run.
     Runs are called \emph{serial} if there is at most one packet in flight at any time, whereas \emph{interleaved} runs may have multiple packets in flight at once.}
     \label{fig:network-transitions}
 \end{figure}
