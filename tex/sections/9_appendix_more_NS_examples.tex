@@ -5,19 +5,22 @@
 \label{appendix:MoreNsExamples}
 
 
-\subsection{Motivating Examples --- Explanation}
+%\subsection{Motivating Examples --- Explanation}
+%
+%
+%Observe the simple program depicted in Listing~\ref{lst:MotivatingExample1Ser}. Each  {\color{ForestGreen}$\blacklozenge_\text{main}$} gives rise to a fresh in-flight request. The variable ``X'' is global, and shared among all in-flight requests, while the variable ``y'' is a local variable, per each request. 
+%%
+%As there are no yields, it is straightforward to see that the program is trivially serializable, with every request {\color{ForestGreen}$\blacklozenge_\text{main}$}: (i) assigning 1 to the global variable X; (ii) assigning y the value of X, i.e., always 1; (iii) assigning X the value 0; and (iv) returning the response y ({\color{red}$\blacklozenge_1$}). This results to every request/response pair to be of the form {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}.
+%%
+%The program is slightly altered (in Listing~\ref{lst:MotivatingExample2NonSer}), by adding a yield operation between the aforementioned steps (i) and (ii). Now, by running two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests that interleave, it is possible to attain a {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} request/response pair, which is unattainable in any serial execution of Listing~\ref{lst:MotivatingExample2NonSer} --- as any such serial execution is equivalent to Listing~\ref{lst:MotivatingExample1Ser}, which always responds {\color{red}$\blacklozenge_1$} to any request {\color{ForestGreen}$\blacklozenge_\text{main}$}.
+%%
+%The program is altered once again in in Listing~\ref{lst:MotivatingExample3Ser}, by adding a fresh global variable ``L'', indicating whether the critical section is locked ($L=1$) or not ($L=0$).
+%By adding a global lock variable, even if an interleaving occurs after yielding, the lock will allow only the first request to terminate, and will then release the lock for the next request. Hence, despite having yields, we attain serializable executions, and only {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} request/response pairs are produced, similar to the original program in Listing~\ref{lst:MotivatingExample1Ser}.
+%%
+%This simple example demonstrates the motivation for automatic serializability checking, as even small, toy programs can be surprisingly difficult to reason about when assessing their serializable behavior.
+%
 
 
-Observe the simple program depicted in Listing~\ref{lst:MotivatingExample1Ser}. Each  {\color{ForestGreen}$\blacklozenge_\text{main}$} gives rise to a fresh in-flight request. The variable ``X'' is global, and shared among all in-flight requests, while the variable ``y'' is a local variable, per each request. 
-%
-As there are no yields, it is straightforward to see that the program is trivially serializable, with every request {\color{ForestGreen}$\blacklozenge_\text{main}$}: (i) assigning 1 to the global variable X; (ii) assigning y the value of X, i.e., always 1; (iii) assigning X the value 0; and (iv) returning the response y ({\color{red}$\blacklozenge_1$}). This results to every request/response pair to be of the form {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}.
-%
-The program is slightly altered (in Listing~\ref{lst:MotivatingExample2NonSer}), by adding a yield operation between the aforementioned steps (i) and (ii). Now, by running two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests that interleave, it is possible to attain a {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} request/response pair, which is unattainable in any serial execution of Listing~\ref{lst:MotivatingExample2NonSer} --- as any such serial execution is equivalent to Listing~\ref{lst:MotivatingExample1Ser}, which always responds {\color{red}$\blacklozenge_1$} to any request {\color{ForestGreen}$\blacklozenge_\text{main}$}.
-%
-The program is altered once again in in Listing~\ref{lst:MotivatingExample3Ser}, by adding a fresh global variable ``L'', indicating whether the critical section is locked ($L=1$) or not ($L=0$).
-By adding a global lock variable, even if an interleaving occurs after yielding, the lock will allow only the first request to terminate, and will then release the lock for the next request. Hence, despite having yields, we attain serializable executions, and only {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} request/response pairs are produced, similar to the original program in Listing~\ref{lst:MotivatingExample1Ser}.
-%
-This simple example demonstrates the motivation for automatic serializability checking, as even small, toy programs can be surprisingly difficult to reason about when assessing their serializable behavior.
 
 
 
@@ -25,7 +28,7 @@ This simple example demonstrates the motivation for automatic serializability ch
 \label{appendix:subsec::Ex1A:NS}
 
 
-For our first motivating example, presented in Listing~\ref{lst:MotivatingExample1Ser}, we have the following NS:
+For our first motivating example, presented in Listing~\ref{lst:MotivatingExample1Ser}, we have the we present the Networking System in Fig.~\ref{fig:code1ExampleNS}, the Serialized NFA in Fig.~\ref{fig:code1ExampleNFA}, and the Interleaving Petri Net in Fig.~\ref{fig:code1ExamplePN}.
 
 
 %\begin{minipage}[t]{0.3\textwidth}
@@ -50,7 +53,7 @@ For our first motivating example, presented in Listing~\ref{lst:MotivatingExampl
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.35\textwidth]{plots/code_1_NFA.png}
-	\caption{NFA for serialized executions of the program in Listing~\ref{lst:MotivatingExample1Ser}.}
+	\caption{NFA for serial executions of the program in Listing~\ref{lst:MotivatingExample1Ser}.}
 	\label{fig:code1ExampleNFA}
 \end{figure}
 
@@ -74,7 +77,8 @@ For details, see the main text (Sec.~\ref{sec:problem-definition}).
 \subsection{Motivating Examples \#3}
 \label{appendix:subsec:Ex1C:NS}
 
-For our third motivating example, presented in Listing~\ref{lst:MotivatingExample3Ser}, we have the following NS:
+
+For our third motivating example, presented in Listing~\ref{lst:MotivatingExample3Ser}, we have the we present the Networking System in Fig.~\ref{fig:code3ExampleNS}, the Serialized NFA in Fig.~\ref{fig:code3ExampleNFA}, and the Interleaving Petri Net in Fig.~\ref{fig:code3ExamplePN}
 
 %\begin{minipage}[t]{0.3\textwidth}
 %	\begin{lstlisting}[caption={With yield and lock (serializable)}]
@@ -108,13 +112,13 @@ For our third motivating example, presented in Listing~\ref{lst:MotivatingExampl
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.4\textwidth]{plots/code_3_NFA.png}
-	\caption{NFA for serialized executions of the program in Listing~\ref{lst:MotivatingExample3Ser}.}
+	\caption{NFA for serial executions of the program in Listing~\ref{lst:MotivatingExample3Ser}.}
 	\label{fig:code3ExampleNFA}
 \end{figure}
 
 
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.8\textwidth]{plots/code_3_PN_with_annotation.png}
 	\caption{Petri Net for interleaving executions of the program in Listing~\ref{lst:MotivatingExample3Ser}.}
