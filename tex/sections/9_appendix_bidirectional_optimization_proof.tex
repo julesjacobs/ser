@@ -52,6 +52,8 @@
 Let $N=(P,T,\Pre,\Post)$, initial marking $M_0$, and target set
 $S\subseteq\mathbb{N}^P$ be fixed.
 
+By convention, we assume that $P$ and $T$ are disjoint.
+ 
 \begin{definition}[Forward Over-Approximation]
 	Define the operator $\mathcal{F}:\mathcal{P}(P\cup T)\to\mathcal{P}(P\cup T)$ by
 	\[
@@ -104,12 +106,12 @@ $S\subseteq\mathbb{N}^P$ be fixed.
 
 \subsection{Invariant and Correctness}
 
-Intuitively, $P'$ contains exactly those places that
+Intuitively, $P'$ contains an over-approximation on the places that
 \emph{may} occur in some firing sequence from $M_0$ to a marking in $S$.
 
 \begin{definition}[Witnessable Place]
-	A place $p\in P$ is \emph{witnessable} if there exists a firing
-	sequence $\sigma\in T^*$ and markings $M$ and $M'$ such that
+	A place $p\in P$ is \emph{witnessable} if there exist firing
+	sequences $\sigma_1,\sigma_2\in T^*$ and markings $M$ and $M'$ such that
 	\[
 	M_0 \xrightarrow{\sigma_1} M
 	\quad\text{and}\quad
@@ -163,7 +165,7 @@ Intuitively, $P'$ contains exactly those places that
 \end{proof}
 
 \noindent
-Therefore the bidirectional pruning converges in polynomial time, and preserves exactly the
+Therefore the bidirectional pruning converges in polynomial time, and preserves an over-approximation of the
 places and transitions that \emph{may} appear in some execution from
 $M_0$ into $S$.
 
