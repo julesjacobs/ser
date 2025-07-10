@@ -23,30 +23,43 @@ Our code, benchmarks, and experimental results are publicly available~\cite{Arti
 
 
 \subsection{Runtime Results}
-We ran our tool on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non serializable. 
-For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample validation (if not serializable). These experiments ran in parallel, with $16$ cores, with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds. As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
-and 19/20 non serializable benchmarks. 
+We ran our tool on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
+For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores, with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
 %
-The \textit{median} total runtime was $2{,}080$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+Within the time limit, our tool solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see Table~\ref{tab:benchmarks-all}).
+%
+% As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
+%and 19/20 non serializable benchmarks. 
+%
+The \textit{median} total runtime was $2{,}080$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when focusing on solely serializable (non-serializable) benchmarks, as reported in Table~\ref{tab:stats-summary}.
 %
 The \textit{average} total runtime was $52{,}857.55$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing on solely serializable (non-serializable) benchmarks.
 %
-We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
+We also observe a clear runtime split based on serializability. For serializable benchmarks, certificate validation takes much longer than proof generation. In non-serializable cases, the opposite holds: counterexample generation dominates the runtime. This makes sense, since generating a counterexample only requires a polynomial-time simulation of the network to confirm its feasibility.
 %
-We report the full results in Table~\ref{tab:stats-summary} and Table~\ref{tab:benchmarks-all}.
+%We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
+%
+%We report the full results in Table~\ref{tab:stats-summary} and Table~\ref{tab:benchmarks-all}.
 %, and elaborate on the per-benchmark results in Table~\ref{tab:benchmarks-all}.
-
-
-
 
 
 \begin{table}[H]
 	\centering
 	% Load the tabular from the external file:
-	\input{tables/average_and_mean_values_of_big_table.tex}
-\caption{Average and median runtime. Values are rounded to the nearest integer, to reduce clutter.}
-\label{tab:stats-summary}
+	\input{tables/average_and_mean_values_of_big_table_simplified.tex}
+	\caption{Average and median runtime. Values are rounded to the nearest integer, to reduce clutter. The \textit{total} column also includes the time for validation.}
+	\label{tab:stats-summary}
 \end{table}
+
+
+
+%\begin{table}[H]
+%	\centering
+%	% Load the tabular from the external file:
+%	\input{tables/average_and_mean_values_of_big_table.tex}
+%\caption{Average and median runtime. Values are rounded to the nearest integer, to reduce clutter.}
+%\label{tab:stats-summary}
+%\end{table}
 
 
 
@@ -162,9 +175,9 @@ We report the full results in Table~\ref{tab:stats-summary} and Table~\ref{tab:b
 \subsubsection{Runtime Optimization}
 
 We ran all benchmarks with each of the following six optimization combinations: 
-(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidrectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
-(v) with strategic Kleene elimination(marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
-and finally, with (vi) all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
+(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidirectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
+(v) with strategic Kleene elimination (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
+and finally, (vi) with all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
 %
 The results of the aggregated overall runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log}, and show that over $19\%$ more benchmarks are solved when using all optimizations, compared to running without any optimizations.
 %
@@ -172,9 +185,9 @@ Not surprisingly, the best configuration is the one with all optimizations on.
 %
 We also note that the best single-optimization configurations with regard to runtime are [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}] and [\texttt{\textbf{\text{-}\text{B}\text{-}\text{-}}}], solving over $74\%$ and $72\%$ of the benchmarks respectively. 
 %
-We also note that the two remaining optimizations, [\texttt{\textbf{\text{R}\text{-}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not by much) than without the optimizations when counting overall timeouts.
+We also note that the two remaining optimizations, [\texttt{\textbf{\text{R}\text{-}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not significantly) than without the optimizations when counting overall timeouts.
 %
-However, when comparing the combinations it seems that there an instances in which each of these optimizations \textit{strictly} improves runtime.
+However, when comparing the combinations, it seems that there are instances in which each of these optimizations still \textit{strictly} improves runtime.
 %
 For example, there are instances such as \texttt{a3.ser} and \texttt{a7.ser}, in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{R}\text{-}\text{-}\text{-}}}])
 affords a speedup of between $72.2\%-85.2\%$ over the same benchmarks without this optimization.
@@ -191,7 +204,7 @@ affords a speedup of between $72.2\%-85.2\%$ over the same benchmarks without th
 	\begin{minipage}[htbp]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
-		\captionof{figure}{Petri net size reduction via  pruning.}
+		\captionof{figure}{Petri net size reduction via pruning.}
 			%(timeout 150 seconds)
 			%.}
 		\label{fig:petri_size_reduction}
@@ -202,11 +215,11 @@ affords a speedup of between $72.2\%-85.2\%$ over the same benchmarks without th
 
 \subsubsection{Space Optimization}
 
-In addition to time complexity, out optimizations also allow reducing the space complexity of the two main components --- the Petri Net and the semilinear set.
+In addition to time complexity, our optimizations also reduce the space complexity of the two main components --- the Petri Net and the semilinear set.
 
 \paragraph{Petri Net size reduction.}
 
-With all optimizations enabled, we evaluated (see Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions before and after pruning. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterwards. It was even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ after. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a different pruned net per each disjunct in our reachability query. 
+With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a different pruned net per each disjunct of our reachability query. 
 %These results are summarized in Fig.~\ref{fig:petri_size_reduction}.
 
 %When running our tool with all optimizations on, we analyzed the effect of our bidirectional pruning, This was done be counting the average number of places and transitions before and after pruning, on all benchmarks.
@@ -234,7 +247,7 @@ With all optimizations enabled, we evaluated (see Fig.~\ref{fig:petri_size_reduc
 
 \paragraph{Semilinear set size reduction.}
 
-Finally, our last experiment batch analyzed the size reduction among the semilinear seta.
+Finally, our last experiment batch analyzed the size reduction among the semilinear sets.
 %
 Towards this end, we ran all our benchmarks with all optimizations, to serve as a baseline. 
 %
@@ -244,9 +257,9 @@ Then, we analyzed the effect of the three semilinear-related optimizations, i.e.
 %
 Specifically, we compare both the average and the maximal (i) number of components; and (ii) period vectors per each component, as summarized in Table~\ref{tab:semilinear-size-reduction}.
 %
-As can be seen, the redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, as well as the average number of components to be $223$ more compact, when compared to the baseline.
+The redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, as well as the average number of components to be $223$ times more compact, when compared to the baseline.
 %
-To ensure a fair comparison, we only measured benchmarks that completed under every configuration, deliberately omitting any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth, and the resulting timeouts, are especially pervasive among our state-machine benchmarks due to loops in their NS --- rendering even simple programs to become infeasible without optimizations.
+To ensure a fair comparison, we only measured benchmarks that were completed under every configuration, deliberately excluding any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth, and the resulting timeouts, are especially pervasive among our state-machine benchmarks due to loops in their NS --- rendering even simple programs to become infeasible without optimizations.
 
 %In fact, for both these optimizations are even more effective as, in order to conduct a fair comparison, we analyzed only benchmarks that terminated in all combinations, an hence we do not include cases in which these two optimizations rendered the original semilinear set intractable, due to having over $2^{30}$ components (!), hence timing-out and being excluded from the analysis.
 %%
