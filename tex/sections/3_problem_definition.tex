@@ -263,331 +263,333 @@ We define the three mappings $req$, $resp$, and $\delta$ as follows:
 %\end{minipage}
 
 
-\[
-req \coloneq 
-\Bigg\{
-\Bigg[
-\begin{array}{c c c}
-	% ---- the 'main' diamond unchanged
-	\begin{tikzpicture}[baseline=(textnode.base)]
-		\node[
-		draw=black,
-		fill=ForestGreen!20,
-		text=black,
-		diamond,
-		aspect=2,
-		inner sep=4pt
-		] (textnode) {main};
-	\end{tikzpicture}
-	&
-	\!\!\rightarrow\!\! 
-	&
-	\bigg(
-	\begin{tabular}{c c}
-		% ---- now a brighter yellow, dashed border
-		\begin{tikzpicture}[baseline=(ybox.base)]
-			\node[
-			draw=black,           % black border
-			%dashed,               % dashed border style
-			line width=0.8pt,     % dash thickness
-			%dash pattern=on 3pt off 2pt, % custom dash pattern
-			fill=brightyellow,    % extra-bright yellow fill
-			text=black,           % black text
-			rectangle,            % shape
-			rounded corners=1pt,  % slight rounding
-			inner sep=2pt         % padding
-			] (ybox) {\large y=0};
-		\end{tikzpicture}
-		,\quad
-		&
-		\begin{minipage}{0.14\linewidth}
-			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-X := 1 
-yield 
-y := X + 1
-X := 0
-return y
-			\end{lstlisting}
-		\end{minipage}
-	\end{tabular}
-	\bigg)
-\end{array}
-\Bigg]
-\Bigg\}
-\]
 
 
-
-
-
-\[
-resp \coloneq
-\Bigg \{
-\Bigg [ 
-\begin{array}{c c c}
-\bigg(
-\begin{tabular}{c c}
-		\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=brightyellow,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large y=0};
-\end{tikzpicture} ,\quad & 
-\begin{minipage}{0.11\linewidth}
-		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-// end
-			\end{lstlisting}
-	\end{minipage}
-\end{tabular}
-\bigg)
-&
-\rightarrow
-&
-\text{
-\begin{tikzpicture}[baseline=(textnode.base)]
-		\node[
-		draw=black,                      % ← outline color
-		fill=RedViolet!20,            % ← light green fill
-		text=black,
-		diamond,
-		aspect=2,
-		inner sep=4pt
-		] (textnode) {0};
-	\end{tikzpicture}
-} 
-\end{array}
-\Bigg ]
-,
+%\[
+%req \coloneq 
+%\Bigg\{
+%\Bigg[
+%\begin{array}{c c c}
+%	% ---- the 'main' diamond unchanged
+%	\begin{tikzpicture}[baseline=(textnode.base)]
+%		\node[
+%		draw=black,
+%		fill=ForestGreen!20,
+%		text=black,
+%		diamond,
+%		aspect=2,
+%		inner sep=4pt
+%		] (textnode) {main};
+%	\end{tikzpicture}
+%	&
+%	\!\!\rightarrow\!\! 
+%	&
+%	\bigg(
+%	\begin{tabular}{c c}
+%		% ---- now a brighter yellow, dashed border
+%		\begin{tikzpicture}[baseline=(ybox.base)]
+%			\node[
+%			draw=black,           % black border
+%			%dashed,               % dashed border style
+%			line width=0.8pt,     % dash thickness
+%			%dash pattern=on 3pt off 2pt, % custom dash pattern
+%			fill=brightyellow,    % extra-bright yellow fill
+%			text=black,           % black text
+%			rectangle,            % shape
+%			rounded corners=1pt,  % slight rounding
+%			inner sep=2pt         % padding
+%			] (ybox) {\large y=0};
+%		\end{tikzpicture}
+%		,\quad
+%		&
+%		\begin{minipage}{0.14\linewidth}
+%			\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%X := 1 
+%yield 
+%y := X + 1
+%X := 0
+%return y
+%			\end{lstlisting}
+%		\end{minipage}
+%	\end{tabular}
+%	\bigg)
+%\end{array}
+%\Bigg]
+%\Bigg\}
+%\]
+%
+%
+%
+%
+%
+%\[
+%resp \coloneq
+%\Bigg \{
+%\Bigg [ 
+%\begin{array}{c c c}
+%\bigg(
+%\begin{tabular}{c c}
+%		\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=brightyellow,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large y=0};
+%\end{tikzpicture} ,\quad & 
+%\begin{minipage}{0.11\linewidth}
+%		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%// end
+%			\end{lstlisting}
+%	\end{minipage}
+%\end{tabular}
+%\bigg)
+%&
+%\rightarrow
+%&
+%\text{
+%\begin{tikzpicture}[baseline=(textnode.base)]
+%		\node[
+%		draw=black,                      % ← outline color
+%		fill=RedViolet!20,            % ← light green fill
+%		text=black,
+%		diamond,
+%		aspect=2,
+%		inner sep=4pt
+%		] (textnode) {0};
+%	\end{tikzpicture}
+%} 
+%\end{array}
+%\Bigg ]
+%,
+%%\quad
+%\Bigg [ 
+%\begin{array}{c c c}
+%\bigg(
+%\begin{tabular}{c c}
+%		\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=brightyellow,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large y=1};
+%\end{tikzpicture} ,\quad & 
+%\begin{minipage}{0.11\linewidth}
+%		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%// end
+%			\end{lstlisting}
+%	\end{minipage}
+%\end{tabular}
+%\bigg)
+%&
+%\rightarrow
+%&
+%\text{
+%\begin{tikzpicture}[baseline=(textnode.base), scale=0.7]
+%		\node[
+%		draw=black,                      % ← outline color
+%		fill=RedViolet!20,            % ← light green fill
+%		text=black,
+%		diamond,
+%		aspect=2,
+%		inner sep=4pt
+%		] (textnode) {1};
+%	\end{tikzpicture}
+%} 
+%\end{array}
+%\Bigg ] 
+%\Bigg \} 
+%\]
+%
+%
+%
+%
+%
+%\[
+%\begin{array}{l}
+%\delta := 
+%\Bigg\{ 
+%\Bigg[
+%\Bigg(
+%\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=lightchacki,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large X=0};
+%\end{tikzpicture} ,\quad
+%\bigg(
+%\begin{tabular}{c c}
+%		\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=brightyellow,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large y=0};
+%\end{tikzpicture} ,\quad & 
+%\begin{minipage}{0.14\linewidth}
+%		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%X := 1
+%yield
+%y := X + 1
+%X := 0
+%return y
+%			\end{lstlisting}
+%	\end{minipage}
+%\end{tabular}
+%\bigg)
+%\Bigg)
+%\rightarrow
+%\Bigg(
+%\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=lightchacki,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large X=1};
+%\end{tikzpicture} ,\quad
+%\bigg(
+%\begin{tabular}{c c}
+%		\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=brightyellow,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large y=0};
+%\end{tikzpicture} ,\quad & 
+%\begin{minipage}{0.14\linewidth}
+%		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%y := X + 1
+%X := 0
+%return y
+%			\end{lstlisting}
+%	\end{minipage}
+%\end{tabular}
+%\bigg)
+%\Bigg)
+%\Bigg]
+%\bigcup\ \ldots, \\[1em]
 %\quad
-\Bigg [ 
-\begin{array}{c c c}
-\bigg(
-\begin{tabular}{c c}
-		\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=brightyellow,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large y=1};
-\end{tikzpicture} ,\quad & 
-\begin{minipage}{0.11\linewidth}
-		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-// end
-			\end{lstlisting}
-	\end{minipage}
-\end{tabular}
-\bigg)
-&
-\rightarrow
-&
-\text{
-\begin{tikzpicture}[baseline=(textnode.base), scale=0.7]
-		\node[
-		draw=black,                      % ← outline color
-		fill=RedViolet!20,            % ← light green fill
-		text=black,
-		diamond,
-		aspect=2,
-		inner sep=4pt
-		] (textnode) {1};
-	\end{tikzpicture}
-} 
-\end{array}
-\Bigg ] 
-\Bigg \} 
-\]
-
-
-
-
-
-\[
-\begin{array}{l}
-\delta := 
-\Bigg\{ 
-\Bigg[
-\Bigg(
-\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=lightchacki,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large X=0};
-\end{tikzpicture} ,\quad
-\bigg(
-\begin{tabular}{c c}
-		\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=brightyellow,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large y=0};
-\end{tikzpicture} ,\quad & 
-\begin{minipage}{0.14\linewidth}
-		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-X := 1
-yield
-y := X + 1
-X := 0
-return y
-			\end{lstlisting}
-	\end{minipage}
-\end{tabular}
-\bigg)
-\Bigg)
-\rightarrow
-\Bigg(
-\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=lightchacki,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large X=1};
-\end{tikzpicture} ,\quad
-\bigg(
-\begin{tabular}{c c}
-		\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=brightyellow,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large y=0};
-\end{tikzpicture} ,\quad & 
-\begin{minipage}{0.14\linewidth}
-		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-y := X + 1
-X := 0
-return y
-			\end{lstlisting}
-	\end{minipage}
-\end{tabular}
-\bigg)
-\Bigg)
-\Bigg]
-\bigcup\ \ldots, \\[1em]
-\quad
-\ldots
-\bigcup\ 
-\Bigg[
-\Bigg(
-\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=lightchacki,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large X=1};
-\end{tikzpicture}  ,\quad
-\bigg(
-\begin{tabular}{c c}
-		\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=brightyellow,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large y=0};
-\end{tikzpicture} ,\quad & 
-\begin{minipage}{0.14\linewidth}
-		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-y := X + 1
-X := 0
-return y
-			\end{lstlisting}
-	\end{minipage}
-\end{tabular}
-\bigg)
-\Bigg)
-\rightarrow
-\Bigg(
-\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=lightchacki,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large X=0};
-\end{tikzpicture} ,\quad
-\bigg(
-\begin{tabular}{c c}
-		\begin{tikzpicture}[baseline=(ybox.base)]
-	\node[
-	draw=black,           % black border
-	%dashed,               % dashed border style
-	line width=0.8pt,     % dash thickness
-	%dash pattern=on 3pt off 2pt, % custom dash pattern
-	fill=brightyellow,    % extra-bright yellow fill
-	text=black,           % black text
-	rectangle,            % shape
-	rounded corners=1pt,  % slight rounding
-	inner sep=2pt         % padding
-	] (ybox) {\large y=1};
-\end{tikzpicture} ,\quad & 
-\begin{minipage}{0.11\linewidth}
-		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
-// end
-			\end{lstlisting}
-	\end{minipage}
-\end{tabular}
-\bigg)
-\Bigg)
-\Bigg]
-\bigcup\ \ldots
-\Bigg\}
-\end{array}
-\]
+%\ldots
+%\bigcup\ 
+%\Bigg[
+%\Bigg(
+%\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=lightchacki,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large X=1};
+%\end{tikzpicture}  ,\quad
+%\bigg(
+%\begin{tabular}{c c}
+%		\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=brightyellow,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large y=0};
+%\end{tikzpicture} ,\quad & 
+%\begin{minipage}{0.14\linewidth}
+%		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%y := X + 1
+%X := 0
+%return y
+%			\end{lstlisting}
+%	\end{minipage}
+%\end{tabular}
+%\bigg)
+%\Bigg)
+%\rightarrow
+%\Bigg(
+%\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=lightchacki,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large X=0};
+%\end{tikzpicture} ,\quad
+%\bigg(
+%\begin{tabular}{c c}
+%		\begin{tikzpicture}[baseline=(ybox.base)]
+%	\node[
+%	draw=black,           % black border
+%	%dashed,               % dashed border style
+%	line width=0.8pt,     % dash thickness
+%	%dash pattern=on 3pt off 2pt, % custom dash pattern
+%	fill=brightyellow,    % extra-bright yellow fill
+%	text=black,           % black text
+%	rectangle,            % shape
+%	rounded corners=1pt,  % slight rounding
+%	inner sep=2pt         % padding
+%	] (ybox) {\large y=1};
+%\end{tikzpicture} ,\quad & 
+%\begin{minipage}{0.11\linewidth}
+%		\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+%// end
+%			\end{lstlisting}
+%	\end{minipage}
+%\end{tabular}
+%\bigg)
+%\Bigg)
+%\Bigg]
+%\bigcup\ \ldots
+%\Bigg\}
+%\end{array}
+%\]
 
 %\todo{emphasize that there are states we didn't add}
 
@@ -597,15 +599,326 @@ Next, we present in Fig.~\ref{fig:code2ExampleNS} the explicit network system th
 
 
 
-\begin{figure}[!htbp]
-	\centering
-	\includegraphics[width=1.1\textwidth]{plots/code_2_NS.png}
-	\caption{Network system for the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
-	\label{fig:code2ExampleNS}
-\end{figure}
+%\begin{figure}[!htbp]
+%	\centering
+%	\includegraphics[width=1.1\textwidth]{plots/code_2_NS.png}
+%	\caption{Network system for the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
+%	\label{fig:code2ExampleNS}
+%\end{figure}
 
 
 %\newpage
+
+\begin{figure}[!htbp]
+	\centering
+	%–––– Network system diagram ––––
+	\includegraphics[width=\textwidth]{plots/code_2_NS.png}\\[1ex]
+	
+	%–––– req definition ––––
+	\[
+	req \coloneq
+	\Bigl\{
+	\bigl[
+	\begin{array}{c c c}
+		\begin{tikzpicture}[baseline=(textnode.base)]
+			\node[
+			draw=black,
+			fill=ForestGreen!20,
+			text=black,
+			diamond,
+			aspect=2,
+			inner sep=2pt,
+			scale=0.7
+			] (textnode) {main};
+		\end{tikzpicture}
+		&\!\!\rightarrow\!\!&
+		\bigl(
+		\begin{tabular}{c c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\large y=0};
+			\end{tikzpicture}
+			,\quad
+			&
+			\begin{minipage}{0.20\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+X := 1 
+yield 
+y := X + 1
+X := 0
+return y
+				\end{lstlisting}
+			\end{minipage}
+		\end{tabular}
+		\bigr)
+	\end{array}
+	\bigr]
+	\Bigr\}
+	\]
+	
+	%–––– resp definition ––––
+	\[
+	resp \coloneq
+	\Bigl\{
+	\bigl[
+	\begin{array}{c c c}
+		\bigl(
+		\begin{tabular}{c c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\large y=0};
+			\end{tikzpicture}
+			,\quad
+			&
+			\begin{minipage}{0.11\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+// end
+				\end{lstlisting}
+			\end{minipage}
+		\end{tabular}
+		\bigr)
+		&\!\!\rightarrow\!\!&
+		\begin{tikzpicture}[baseline=(textnode.base),scale=0.7]
+			\node[
+			draw=black,
+			fill=RedViolet!20,
+			text=black,
+			diamond,
+			aspect=2,
+			inner sep=2pt
+			] (textnode) {0};
+		\end{tikzpicture}
+	\end{array}
+	\bigr]
+	,\;
+	\bigl[
+	\begin{array}{c c c}
+		\bigl(
+		\begin{tabular}{c c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\large y=1};
+			\end{tikzpicture}
+			,\quad
+			&
+			\begin{minipage}{0.11\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+// end
+				\end{lstlisting}
+			\end{minipage}
+		\end{tabular}
+		\bigr)
+		&\!\!\rightarrow\!\!&
+		\begin{tikzpicture}[baseline=(textnode.base),scale=0.7]
+			\node[
+			draw=black,
+			fill=RedViolet!20,
+			text=black,
+			diamond,
+			aspect=2,
+			inner sep=2pt
+			] (textnode) {1};
+		\end{tikzpicture}
+	\end{array}
+	\bigr]
+	\Bigr\}
+	\]
+	
+	%–––– δ definition ––––
+	\[
+	\begin{array}{l}
+		\delta := 
+		\Bigg\{ 
+		\Bigg[
+		\Bigg(
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=lightchacki,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\large X=0};
+		\end{tikzpicture}
+		,\quad
+		\bigg(
+		\begin{tabular}{c c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\large y=0};
+			\end{tikzpicture}
+			,\quad &
+			\begin{minipage}{0.14\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+X := 1
+yield
+y := X + 1
+X := 0
+return y
+				\end{lstlisting}
+			\end{minipage}
+		\end{tabular}
+		\bigg)
+		\Bigg)
+		\;\rightarrow\;
+		\Bigg(
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=lightchacki,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\large X=1};
+		\end{tikzpicture}
+		,\quad
+		\bigg(
+		\begin{tabular}{c c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\large y=0};
+			\end{tikzpicture}
+			,\quad &
+			\begin{minipage}{0.14\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+y := X + 1
+X := 0
+return y
+				\end{lstlisting}
+			\end{minipage}
+		\end{tabular}
+		\bigg)
+		\Bigg)
+		\Bigg]
+		\bigcup\ \ldots, \\[1em]
+		\quad
+		\ldots
+		\bigcup\ 
+		\Bigg[
+		\Bigg(
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=lightchacki,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\large X=1};
+		\end{tikzpicture}
+		,\quad
+		\bigg(
+		\begin{tabular}{c c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\large y=0};
+			\end{tikzpicture}
+			,\quad &
+			\begin{minipage}{0.14\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+y := X + 1
+X := 0
+return y
+				\end{lstlisting}
+			\end{minipage}
+		\end{tabular}
+		\bigg)
+		\Bigg)
+		\;\rightarrow\;
+		\Bigg(
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=lightchacki,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\large X=0};
+		\end{tikzpicture}
+		,\quad
+		\bigg(
+		\begin{tabular}{c c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\large y=1};
+			\end{tikzpicture}
+			,\quad &
+			\begin{minipage}{0.11\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none]
+// end
+				\end{lstlisting}
+			\end{minipage}
+		\end{tabular}
+		\bigg)
+		\Bigg)
+		\Bigg]
+		\bigcup\ \ldots
+		\Bigg\}
+	\end{array}
+	\]
+	\caption{Network system and transition function for the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
+\label{fig:code2ExampleNS}
+\end{figure}
+
+
+
+
 %
 %\begin{figure}[!htbp]
 %	\centering
