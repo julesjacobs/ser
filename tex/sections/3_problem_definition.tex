@@ -65,7 +65,7 @@ Our network system (NS) syntax is defined as follows:
 %    \label{fig:syntax}
 %\end{figure}
     %
-This NS setting is motivated by software-defined networking systems. Specifically, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header field; global variables correspond to variables on programmable switches, as they are shared among all packets (threads) of the system, visiting the switch. Throughout this section, we will refer to packets/threads/requests interchangeably. 
+This NS setting is motivated by software-defined networking systems. Specifically, spawning a request corresponds to sending a packet in the networking domain, with each local variable mapped to a unique packet header field; global variables correspond to variables on programmable switches, as they are shared among all requests of the system visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit, which corresponds to a thread in traditional concurrent programming or a packet in networking contexts. 
     
    
 A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
@@ -79,6 +79,12 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \item $\mathit{resp} \subseteq L \times \mathit{RESP}$ is a response transition relation, which describes which thread turns into which responses
 \item $\delta \subseteq (G \times L) \times (G \times L)$ is a transition relation for thread processing, which describes an atomic step of processing that may change the (shared) global state and the (private) thread-local state.
 \end{itemize}
+
+\begin{definition}[Request and Response]
+A \emph{request} $r \in \mathit{REQ}$ represents the initiation of a concurrent computation unit (thread). Each request has an associated handler expression from the program syntax that defines its behavior.
+A \emph{response} $s \in \mathit{RESP}$ represents the completion value returned by a request after its execution terminates.
+The pair $(r, s) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single thread execution.
+\end{definition}
 
 
 
