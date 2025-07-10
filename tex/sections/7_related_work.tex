@@ -93,7 +93,7 @@ Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \em
 \subsubsection{Theoretical Results}
 The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is NP-complete~\cite{Pa79}, a result that was later extended~\cite{BiEn19} to 
 other consistency models. Likewise, membership for linearizability is NP-complete in general~\cite{GiKo97} --- a result that was later 
-extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations. 
+extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the linearizability criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations. 
 %Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
 %\todo{original}
@@ -395,12 +395,14 @@ independent of the transaction count.
 
 \subsubsection{Approaches and techniques}
 
-Dynamic and monitoring‐based methods check conflict serializability, including Farzan and Mahusudan’s bounded monitoring~\cite{FaMa08}, Flanagan et al.’s Velodrome~\cite{FlFrYi08}, and other runtime analyzers~\cite{FlFr04,XuBoRa05,WaSt06a,CoOlPnTuZu07,EmMaMa10,SiMaWaGu11a}. Hatcliff et al. leverage Bogor with Lipton’s mover theory~\cite{HaRoDw04,Li75}, while Elmas et al. use mover‐based program rewriting~\cite{ElQaSeSuTa10}. On the static side, Nagar and Jagannathan propose a static analysis technique to find violations of conflict 
+Dynamic and monitoring‐based methods for checking conflict serializability, include Farzan and Mahusudan’s bounded monitoring~\cite{FaMa08}, Flanagan et al.’s Velodrome~\cite{FlFrYi08}, and other dynamic approaches include~\cite{FlFr04,XuBoRa05,WaSt06a,CoOlPnTuZu07,EmMaMa10,SiMaWaGu11a}. Hatcliff et al. leverage Bogor with Lipton’s mover theory~\cite{HaRoDw04,Li75}, while Elmas et al. use mover‐based program rewriting~\cite{ElQaSeSuTa10}. 
+Nagar and Jagannathan~\cite{KaJa18} presented an 
+automatic static analysis technique to find violations of conflict 
 serializability.
 Sinha et al. developed an incomplete predictive analysis technique, building on Sinha and Malik’s runtime checker~\cite{SiMaWaGu11b,SiMa10}, and Von Praun and Gross offer an unsound static checker~\cite{VoGr04}. Type‐system approaches appear in~\cite{FlQa03,FlFrLiQa08}. 
 Brutschy et al.~\cite{BrDiMuVe17} present a dynamic analysis algorithm and a 
 tool that checks whether a given program execution is conflict serializable, in 
-an eventually consistent data store. In a follow-up work~\cite{BrDiMuVe18} 
+an eventually consistent data store. A follow-up work~\cite{BrDiMuVe18} 
 further bridges these concepts by statically detecting 
 non-(conflict)-serializable behaviors in causally consistent databases.
 Conflict serializability has also been studied under weak memory models~\cite{EnFa16}.
