@@ -13,9 +13,9 @@ Key contributions include: (1) formalizing serializability for network systems, 
 \subsection{Limitations}
 
 While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
-First, the underlying Petri net reachability problem has Ackermann complexity, causing our tool to time out on some complex benchmarks despite optimizations.
+First, the underlying Petri Net reachability problem has Ackermann complexity, causing our tool to time out on some complex benchmarks despite optimizations.
 Second, our current implementation relies on SMPT, which may fail to find proofs even when they exist, limiting completeness.
-Third, our network system model assumes a simple request-response pattern without modeling more complex interaction patterns like streaming, callbacks, or partial responses.
+Third, our network system model assumes a simple request/response pattern without modeling more complex interaction patterns like streaming, callbacks, or partial responses.
 Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
 These limitations suggest important directions for future research.
 
@@ -23,8 +23,8 @@ These limitations suggest important directions for future research.
 
 \paragraph{Scalability.}
 
-Our evaluation shows that some benchmarks still time out.
-To improve scalability, we plan to use \textit{polyhedral reductions}~\cite{AmBeDa21} --- structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ is a formula enabling reconstruction of $N_1$'s state space from $N_2$'s. This would let us verify the reduced net and lift proofs back to the original.
+%Our evaluation shows that some benchmarks still time out.
+To improve scalability, we plan to use \textit{polyhedral reductions}~\cite{AmBeDa21} --- structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler PN and $E$ is a formula enabling reconstruction of $N_1$'s state space from $N_2$'s. This would let us verify the reduced net and lift proofs back to the original.
 %
 %\guy{Nicolas are you sure about the next sentence? Do you have an explanation or a "negative proof"?}
 %

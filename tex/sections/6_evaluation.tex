@@ -43,7 +43,7 @@ We also observe a clear runtime split based on serializability. For serializable
 %, and elaborate on the per-benchmark results in Table~\ref{tab:benchmarks-all}.
 
 
-\begin{table}[H]
+\begin{table}[!htbp]
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/average_and_mean_values_of_big_table_simplified.tex}
@@ -219,7 +219,8 @@ In addition to time complexity, our optimizations also reduce the space complexi
 
 \paragraph{Petri Net size reduction.}
 
-With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a different pruned net per each disjunct of our reachability query. 
+With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per disjunct. 
+%of our reachability query. 
 %These results are summarized in Fig.~\ref{fig:petri_size_reduction}.
 
 %When running our tool with all optimizations on, we analyzed the effect of our bidirectional pruning, This was done be counting the average number of places and transitions before and after pruning, on all benchmarks.
@@ -268,7 +269,7 @@ To ensure a fair comparison, we only measured benchmarks that were completed und
 %\todo{understand why this is related to loops in the NS}
 
 
-\begin{table}[htbp]
+\begin{table}[!htbp]
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/semilinear_size_reduction.tex}

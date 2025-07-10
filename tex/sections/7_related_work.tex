@@ -19,7 +19,7 @@ schedule solely by reordering non-conflicting operations (e.g., two reads by
 different threads). \emph{Strict serializability} (SSR) further enforces real-time ordering of transactions~\cite{Pa79}. Herlihy and Wing~\cite{HeWe87,HeWi90} adapted these ideas to define \emph{linearizability} for concurrent data structures --- this can also be viewed as a case of SSR in 
 which each transaction consists of a single action, operating on a single 
 concurrent object~\cite{WaSt06a}.
-Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \emph{predicate-wise serializability}~\cite{RaMeBrKoSi93}. Weaker models like \emph{causal consistency}~\cite{La78,AhNeBuKoHu95}, realized in systems such as COPS~\cite{LlFrKaAn11}, have inspired extensive model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20} as well.
+Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \emph{predicate-wise serializability}~\cite{RaMeBrKoSi93}. Weaker models like \emph{causal consistency}~\cite{La78,AhNeBuKoHu95}, realized in systems such as COPS~\cite{LlFrKaAn11}, inspiring extensive model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
 
 %\todo{original}
 %
@@ -158,7 +158,7 @@ Furthermore, checkers such as SPIN/PARGLIDER rely on explicit linearization poin
 Furthermore, the remaining aforementioned methods are incomplete, limited to finite threads, or assume prior knowledge.
  %
 Unlike these, our method affords complete coverage for unbounded threads and is also the only one to produce serializability certificates.
-\guy{The above point is a bit tricky because SMPT is not complete..}
+%\guy{The above point is a bit tricky because SMPT is not complete..}
 
 
 
@@ -241,7 +241,7 @@ Unlike these, our method affords complete coverage for unbounded threads and is 
 
 \subsubsection{Static analysis}
 
-Static techniques can prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded~\cite{BeLeMaRaSa08,Va09,Va10} systems, but typically depend on heuristics or annotations of linearization points as well. Lian and Feng~\cite{LiFe13} offer a logic that handles non‐fixed points. Additional techniques that rely on linearization points include~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}. 
+Static techniques prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded~\cite{BeLeMaRaSa08,Va09,Va10} systems, but typically depend on heuristics or annotations of linearization points as well. Lian and Feng~\cite{LiFe13} offer a logic that handles non‐fixed points. Additional techniques that rely on linearization points include~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}. 
 However, annotation‐based checkers and analyses are inconclusive, since failures may reflect incorrect annotation rather than true violations~\cite{BoEmCoHa15}.
 
 
@@ -497,8 +497,9 @@ These theoretical advances in Petri Net reachability have given rise to a
 plethora of practical tools, including \texttt{KReach}~\cite{DiLa20}, 
 \texttt{DICER}~\cite{XiZhLi21}, \texttt{MARCIE}~\cite{HeRoSc13}, and others. 
 %
-Our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a state-of-the-art model checker that combines SMT-solving with structural invariants~\cite{AmBeDa21,AmDaHu22} (for additional details, see Appendix~\ref{appendix:smpt}). However,
-other PN model checkers can be used as well.
+Our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a state-of-the-art model checker that combines SMT-solving with structural invariants~\cite{AmBeDa21,AmDaHu22} (see Appendix~\ref{appendix:smpt}). 
+%However,
+%other PN model checkers can be used as well.
 
 
 
