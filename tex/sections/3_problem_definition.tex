@@ -65,10 +65,10 @@ Our network system (NS) syntax is defined as follows:
 %    \label{fig:syntax}
 %\end{figure}
     %
-This NS setting is motivated by software-defined networking systems. Specifically, spawning a request corresponds to sending a packet in the networking domain, with each local variable mapped to a unique packet header field; global variables correspond to variables on programmable switches, as they are shared among all requests of the system visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit, which corresponds to a thread in traditional concurrent programming or a packet in networking contexts. 
+This NS setting is motivated by software-defined networking systems. In the networking domain, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header field; global variables correspond to variables on programmable switches, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
     
    
-A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
+A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
 \item $G$ is a set of global states (assignments to all global variables)
 \item $L$ is a set of local states (local variable values and remaining program to execute)
@@ -81,9 +81,9 @@ A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \end{itemize}
 
 \begin{definition}[Request and Response]
-A \emph{request} $r \in \mathit{REQ}$ represents the initiation of a concurrent computation unit (thread). Each request has an associated handler expression from the program syntax that defines its behavior.
-A \emph{response} $s \in \mathit{RESP}$ represents the completion value returned by a request after its execution terminates.
-The pair $(r, s) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single thread execution.
+A \emph{request} $r \in \mathit{REQ}$ represents the initiation of a concurrent computation unit. Each request has an associated handler expression from the program syntax that defines its behavior.
+A \emph{response} $s \in \mathit{RESP}$ represents the value returned by a request after its execution terminates.
+The pair $(r, s) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single request execution.
 \end{definition}
 
 
@@ -155,7 +155,7 @@ The pair $(r, s) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete in
     \caption{State-transition rules for executions of
     \(\mathcal{N} = (G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})\).
     A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, M)\) by either (1) introducing a new request, (2) processing a request step via \(\delta\), or (3) consuming a request to produce its response.  When no more steps are possible, the result set \(M\) is the final multiset of request/response pairs that arose during the run.
-    Runs are called \emph{serial} if there is at most one packet in flight at any time, whereas \emph{interleaved} runs may have multiple packets in flight at once.}
+    Runs are called \emph{serial} if there is at most one request in flight at any time, whereas \emph{interleaved} runs may have multiple requests in flight at once.}
     \label{fig:network-transitions}
 \end{figure}
 
@@ -593,14 +593,14 @@ return y
 
 We note that we depicted only part of the states that are \textit{reachable}, in our finite-state setting.
 %
-Next, we present in Fig.~\ref{fig:code2ExampleNS} the explicit Network System that depicts the program, which serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
+Next, we present in Fig.~\ref{fig:code2ExampleNS} the explicit network system that depicts the program, which serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
 
 
 
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=1.1\textwidth]{plots/code_2_NS.png}
-	\caption{Network System for the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
+	\caption{Network system for the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
 	\label{fig:code2ExampleNS}
 \end{figure}
 
@@ -746,7 +746,7 @@ Next, we present in Fig.~\ref{fig:code2ExampleNS} the explicit Network System th
 %
 %Now, we observe again the adjusted program (as previously described in Listing~\ref{lst:MotivatingExample3Ser}):
 %
-%We present the corresponding Network System, Serailizability NFA, and Interleaving Petri Net in Appendix~\ref{appendix:MoreNsExamples}.
+%We present the corresponding network system, Serailizability NFA, and Interleaving Petri Net in Appendix~\ref{appendix:MoreNsExamples}.
 %
 %Non-serializability corresponds to the above Petri Net being able to reach the following marking:
 %
@@ -787,7 +787,7 @@ Next, we present in Fig.~\ref{fig:code2ExampleNS} the explicit Network System th
 %\]
 %
 %
-%We then revert this invariant to match our Network System, and project it to inputs/outputs of the system.
+%We then revert this invariant to match our network system, and project it to inputs/outputs of the system.
 %%
 %We get the following inductive invariants for each of the two global state:
 %

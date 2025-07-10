@@ -344,7 +344,7 @@ The places represent either the global state
 %
 Furthermore, some requests correspond to responses, e.g., places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} corresponds to {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$}.
 %
-Each token corresponds to a single request packet, or (in the case of the global-variable-encoding places), to the current global state of the program.
+Each token corresponds to a single request, or (in the case of the global-variable-encoding places), to the current global state of the program.
 %
 Finally, transitions represent the network system's $\delta$ step --- encoding either a ``step'' of our program, or spawning a request ($t_1$, which  corresponds to spawning request {\color{ForestGreen}$\blacklozenge_\text{main}$}), or returning a response (e.g. transitions $t_6,t_7$).
 %
@@ -397,7 +397,7 @@ As demonstrated by the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}
 		& \textbf{Local} 
 		& \textbf{Responses} 
 		& \textbf{Global state} 
-		& \textbf{In-flight packets} 
+		& \textbf{In-flight requests} 
 		& \textbf{Responses} \\
 		\midrule
 		0 & --                                  
@@ -476,7 +476,7 @@ As demonstrated by the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}
 
 Now, we observe again the adjusted program with locks (as previously described in Listing~\ref{lst:MotivatingExample3Ser}).
 %
-Due to space limitations, we relegate figures of the corresponding Network System (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and Interleaving Petri Net (Fig.~\ref{fig:code3ExamplePN}) to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
+Due to space limitations, we relegate figures of the corresponding network system (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and Interleaving Petri Net (Fig.~\ref{fig:code3ExamplePN}) to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
 %
 Non-serializability corresponds to the Petri Net being able to reach a marking satisfying the same semilinear formula as in the previous example for non-serializability (note however, that this is not always the case). 
 %(but this time each place $P_i$ corresponds to the new PN). 
