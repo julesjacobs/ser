@@ -93,7 +93,7 @@ Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \em
 \subsubsection{Theoretical Results}
 The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is NP-complete~\cite{Pa79}, a result that was later extended~\cite{BiEn19} to 
 other consistency models. Likewise, membership for linearizability is NP-complete in general~\cite{GiKo97} --- a result that was later 
-extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion—is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations. 
+extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations. 
 %Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
 %\todo{original}
@@ -361,7 +361,7 @@ Although conflict serializability is a more conservative measure than
 serializability, it is easier for database schedulers to enforce during 
 runtime, either by \textit{pessimistic} locking approaches~\cite{BeHaGo87}, or 
 \textit{optimistic} approaches~\cite{KuRo81, BuMo06}, both ensuring  acyclicity in the conflict graph --- a necessary and 
-sufficient condition for conflict serializability~\cite{SiMa10}. 
+sufficient condition for conflict serializability. 
 However, by ignoring program semantics, they can reject executions that are serializable despite conflict cycles.
 
 %However, 
@@ -383,7 +383,7 @@ correctness problem for conflict serializability is decidable (and in
 \texttt{PSPACE}) 
 for bounded transaction systems. Bouajjani et al.~\cite{BoEmEnHa13} later 
 proved that decidability also holds in the unbounded case (and 
-\texttt{EXPTIME}-complete). Their key insight reveals that while the conflict 
+\texttt{EXPSPACE}-complete). Their key insight reveals that while the conflict 
 graph 
 becomes infinite, cycle detection, and thus conflict serializability, is 
 independent of the transaction count. 
@@ -469,7 +469,7 @@ Conflict serializability has also been studied under weak memory models~\cite{En
 \label{sec:related:petri}
 
 In addition, our work builds on both theoretical and practical advances in 
-Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}, and specifically Petri Net model checking.
+Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}, and specifically, Petri Net model checking.
 %The undecidability we prove 
 %for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, 
 %HaThesis76} showing the undecidability of reachability set equivalence for 
@@ -495,8 +495,8 @@ These theoretical advances in Petri Net reachability have given rise to a
 plethora of practical tools, including \texttt{KReach}~\cite{DiLa20}, 
 \texttt{DICER}~\cite{XiZhLi21}, \texttt{MARCIE}~\cite{HeRoSc13}, and others. 
 %
-Our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a state-of-the-art model checker for reachability problems in Petri nets (for additional details, see Appendix~\ref{appendix:smpt}). However,
- other PN model checkers can be used as well.
+Our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a state-of-the-art model checker that combines SMT-solving with structural invariants~\cite{AmBeDa21, AmDaHu22} (for additional details, see Appendix~\ref{appendix:smpt}). However,
+other PN model checkers can be used as well.
 
 
 
