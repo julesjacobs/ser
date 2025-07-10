@@ -3,14 +3,10 @@
 
 \subsection{Conclusion}
 
-While these works are significant, they typically cannot prove serializability in a general unbounded setting, or alternatively, ignore the program semantics and focus on read/write accesses (as is the case for conflict serializability).
+We presented the first implemented tool that verifies serializability for unbounded concurrent systems and generates proof certificates.
+Our approach bridges theory and practice by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
 %
-To the best of our knowledge, ours is the first end-to-end
-tool capable of verifying serializability in unbounded domains, and, by harnessing recent advancements in PN theory, is also the first capable of providing a serializability proof.
-%
-Furthermore, we formalize serializability through the lens of our abstract network system framework, on which we extensively evaluated our tool, including on SDN-inspired benchmarks. 
-%
-Finally, we formulated the underlying theory for a suite of optimizations and implemented them, further boosting performance.
+Key contributions include: (1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude, and (4) demonstrating feasibility on SDN-inspired benchmarks.
 
 %
 
@@ -27,18 +23,14 @@ These limitations suggest important directions for future research.
 
 \paragraph{Scalability.}
 
-As can be seen in our evaluation, there are still examples for which our approach times out.
-To improve scalability, we plan on harnessing additional aspects of Petri Net theory even further.
-%
-Specifically, we plan to use \textit{polyhedral reductions}~\cite{AmBeDa21} that are structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$, where $(N_1, m_1)$ is the analyzed PN; $(N_2, m_2)$ is a reduced version of it that is easier to model-check; and $E$ is a Presburger formula that allows reconstruction of $N_1$'s state space from that of $N_2$. We plan to leverage this mechanism to trace back certificates obtained on the reduced net $N_2$ to the original net $N_1$.
+Our evaluation shows that some benchmarks still time out.
+To improve scalability, we plan to use \textit{polyhedral reductions}~\cite{AmBeDa21} --- structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ is a formula enabling reconstruction of $N_1$'s state space from $N_2$'s. This would let us verify the reduced net and lift proofs back to the original.
 %
 %\guy{Nicolas are you sure about the next sentence? Do you have an explanation or a "negative proof"?}
 %
 %Furthermore, we note that polyhedral reductions are the only type of structural reduction for which such a conversion is possible.
 %
-We are currently in the process of developing both the theory and the implementation of this extension,
-%, which will allow further scalability.
-which we hope will allow further scalability.
+We are developing both theory and implementation for this extension.
 
 %\todo{Limitations?}
 %Examples we cannot solve, future work that would help
