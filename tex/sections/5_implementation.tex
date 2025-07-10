@@ -3,11 +3,12 @@
 \section{Implementation}
 \label{sec:implementation}
 
-We implemented our approach in a publicly available end-to-end tool~\cite{ArtifactRepository}, consisting of over $20{,}000$ LoC written in \texttt{Rust}.
+We implemented our approach in a publicly available end-to-end tool~\cite{ArtifactRepository}, consisting of over $18{,}000$ LoC written mostly in \texttt{Rust} (see Table.~\ref{tab:loc_summary2}).
 %
 %We next elaborate on the architecture of our tool and the various optimizations we added to allow it to run efficiently.
 %
-For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23} (see Appendix~\ref{appendix:smpt}) which supports \textit{unbounded} reachability queries, and which uses Z3 as an underlying SMT solver~\cite{DeBj08}. 
+For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23} which supports \textit{unbounded} reachability queries (see Appendix~\ref{appendix:smpt}).
+%, and which uses Z3 as an underlying SMT solver~\cite{DeBj08}. 
 %and which we extended to support our setting (for example, we needed to extend the solver to support proof generation). 
 %
 %We note that other off-the-shelf solvers can be used as well.
@@ -24,8 +25,79 @@ For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23} (see Appen
 
 \subsection{Code Architecture}
 
-\label{subsec:codeArchitecture}
+%\begin{tabular}{|l|r|}
+%	\hline
+%	\textbf{Module} & \textbf{LoC} \\
+%	\hline
+%	Input \& Parsing                             & 1723  \\
+%	\hline
+%	Model Construction                           & 5561  \\
+%	\hline
+%	Petri-Net Conversion                         & 843   \\
+%	\hline
+%	Reachability Checking                        & 2628  \\
+%	\hline
+%	Proof Checking                               & 3240  \\
+%	\hline
+%	Utilities                                       & 2160  \\
+%	\hline
+%	Testing \& Evaluation               & 2118  \\
+%	\hline
+%	\textbf{Total}                               & \textbf{18273} \\
+%	\hline
+%\end{tabular}
 
+
+%
+%\begin{table}[ht]
+%	\centering
+%	\label{tab:loc_summary}
+%	\begin{tabular}{@{} l S[table-format=5.0] @{}}
+%		\toprule
+%		\textbf{Module}                & {\textbf{LoC}} \\
+%		\midrule
+%		Input \& Parsing               &  1723          \\
+%		Model Construction             &  5561          \\
+%		Petri–Net Conversion           &   843          \\
+%		Reachability Checking          &  2628          \\
+%		Proof Checking                 &  3240          \\
+%		Utilities                      &  2160          \\
+%		Testing \& Evaluation          &  2118          \\
+%		\midrule
+%		\textbf{Total}                 & \textbf{18273}          \\
+%		\bottomrule
+%	\end{tabular}
+%	\caption{Lines of Code by Module}
+%\end{table}
+%
+
+% Then, where you want the table wrapped to the right:
+%
+% this table summarizes the values without whitespaces/comments and without the code for SMPT (or the wrapper) or the carfo and toml files
+%
+\begin{wraptable}[12]{r}{0.32\textwidth}
+	\centering
+	\begin{tabular}{@{} l S[table-format=5.0] @{}}
+		\toprule
+		\textbf{Module}                & {\textbf{LoC}} \\
+		\midrule
+		Input \& Parsing               &  1723          \\
+		Model Construction             &  5561          \\
+		Petri–Net Conversion           &   843          \\
+		Reachability Checking          &  2628          \\
+		Proof Checking                 &  3240          \\
+		Utilities                      &  2160          \\
+		Testing \& Evaluation          &  2118          \\
+		\midrule
+		\textbf{Total}                 & \textbf{18273} \\
+		\bottomrule
+	\end{tabular}
+	\caption{Lines of Code (LoC)}
+	\label{tab:loc_summary2}
+\end{wraptable}
+%
+%\noindent
+%
 Our tool implements an end-to-end serializability checker for arbitrary input programs. If the program is serializable, we return a proof thereof; otherwise, if it is not serializable, a counterexample is given to the user for an interleaving that can result in request/response pairs that are unattainable in any serial execution.
 %
 Our workflow translates the decidability problem to an equivalent Petri Net reachability question (for unbounded nets), in which (i) the Petri Net represents all possible interleavings of the problem; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all request/response pairs that cannot be attained in any serial execution.
