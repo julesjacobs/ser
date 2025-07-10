@@ -19,7 +19,7 @@ N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
 \]
 where \(P\) is a finite set of \emph{places}, \(T\) is a finite set of \emph{transitions},
 \(\mathsf{pre},\mathsf{post}:T\to\mathbb N^P\) are the input/output vectors, and
-\(M_0\in\mathbb N^P\) is the initial marking, i.e., the original distribution of tokens across the places. Note that throughout this work, we use the terms \textit{state} and \textit{marking} interchangeably.
+\(M_0\in\mathbb N^P\) is the initial marking (token distribution). We use the terms \textit{state} and \textit{marking} interchangeably.
 
 \noindent We say that a transition \(t\in T\) is \emph{enabled} at a marking \(M\in\mathbb N^P\) iff
 \[
@@ -31,11 +31,11 @@ When $t$ is enabled at $M$, firing $t$ produces a new marking $M'$ defined as
 \[
 M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t),
 \]
-which represents the consumption of input tokens (from the input places), and the production of new ones (to the output places). In this case, we denote by $M \xrightarrow{t} M'$ that $M'$ is reachable from $M$.
+which consumes input tokens and produces output tokens. We write $M \xrightarrow{t} M'$ when firing $t$ transforms $M$ to $M'$.
 %
-By extension, we say that a marking \(M'\) is \emph{reachable} from a marking $M$ by firing a sequence $\sigma = t_1 .. t_k \in T^*$ if there exists some sequence of markings $M_0, .., M_k$ such that $M= M_0$, $M'= M_k$ and $M_i \; \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$ in $0..(k-1)$, and we denote this as $M \; \xrightarrow{\sigma} M'$.
+A marking \(M'\) is \emph{reachable} from $M$ via sequence $\sigma = t_1 \ldots t_k$ if there exist markings $M_0, \ldots, M_k$ where $M = M_0$, $M' = M_k$, and $M_i \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$. We write $M \xrightarrow{\sigma} M'$.
 %%
-Finally, $R(N)$ denotes the (possibly, infinite) set of the reachable markings:
+The set $R(N)$ contains all reachable markings:
 \[
 R(N) = \{M \mid \exists \sigma \in T^* .\ M_0 \;\xrightarrow{\sigma}\!^*\; M\}
 \]
@@ -286,6 +286,12 @@ Q = G
 \end{itemize}
 
 \end{enumerate}
+
+Since the serial executions form a regular language (step 1), their Parikh image is effectively semilinear by Parikh's theorem, with size exponential in the NFA.
+The interleaving Petri net (step 2) has $O(|G| + |L| + |\mathit{REQ}| \times |\mathit{RESP}|)$ places and $O(|\mathit{REQ}| + |\delta| + |\mathit{RESP}|)$ transitions.
+The reachability query (step 3) asks whether the Petri net can reach the complement of a semilinear set, which is decidable but Ackermann-complete~\cite{CzWo22}.
+Without optimizations, even simple examples can generate Petri nets with hundreds of places and exponentially-sized semilinear constraints, making the approach impractical.
+Our optimizations (Section~\ref{sec:optimizations}) dramatically reduce both the Petri net size and the semilinear set complexity.
 
 
 %\guy{should we add/prove the following?}
@@ -631,8 +637,14 @@ and
 \(\Delta_{\mathrm{bw}}^{(k)}=R_{\mathrm{bw}}^{(k-1)}\setminus R_{\mathrm{bw}}^{(k)}\).
 %
 This optimization allows to significantly prune the Petri Net while still over-approximating all reachable markings.
+\label{thm:bidirectional-pruning}
+Let $N = (P, T, \mathsf{pre}, \mathsf{post}, M_0)$ be a Petri net and $\mathit{Tgt} \subseteq P$ be target places. 
+Let $T^*$ be the fixed point of the bidirectional pruning algorithm and $N' = (P, T^*, \mathsf{pre}|_{T^*}, \mathsf{post}|_{T^*}, M_0)$ be the pruned net.
+Then for any marking $M$ with $M(p) > 0$ for some $p \in \mathit{Tgt}$:
+$M$ is reachable in $N$ if and only if $M$ is reachable in $N'$.
+\end{theorem}
 %
-We depict this in Fig.~\ref{fig:bidirectional_pruning}, and give a formal proof of correctness in Appendix~\ref{appendix:BidirectionalProof}.
+We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{thm:bidirectional-pruning} in Appendix~\ref{appendix:BidirectionalProof}.
 % (see the proof in Appendix~\ref{appendix:BidirectionalProof}).
 %
 
