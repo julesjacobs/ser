@@ -91,7 +91,8 @@ Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \em
 \subsection{Deciding serializability and linearizability}
 
 \subsubsection{Theoretical Results}
-The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is NP-complete~\cite{Pa79,BiEn19}. Likewise, membership for linearizability is NP-complete in general~\cite{GiKo97} --- a result that was later 
+The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is NP-complete~\cite{Pa79}, a result that was later extended~\cite{BiEn19} to 
+other consistency models. Likewise, membership for linearizability is NP-complete in general~\cite{GiKo97} --- a result that was later 
 extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion—is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations. 
 %Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
@@ -143,8 +144,14 @@ extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} -
 \subsubsection{Model checking and runtime verification}
 
 Wang and Stoller propose runtime checks for serializability and conflict/view‐serializability by recombining executions~\cite{WaSt06a,WaSt06b}. 
-While TLA encodings can capture ``real'' serializability (based on final-state 
-equivalence), as well as conflict-serializability~\cite{CoOlPnTuZu07}, these are confined solely to bounded systems due to finite‐state tools like TLC and Apalache~\cite{YuMaLa99,KoKuTr19}. Heuristic and enumeration‐based model checkers include Line-up~\cite{BuDeMuTa10} (built upon CHESS~\cite{MuQaBaBaNaNe08}), LinTSO for TSO~\cite{BuGoMuYa12}, Violat (and its schema‐based predecessor)~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}, and RELINCHE for bounded linearizability~\cite{GoKoVa25}. Additional tools include CDSSpec (with regard to the \texttt{C/C++ 11} memory model), Lincheck~\cite{KoDeSoTsAl23,OuDe17}, SAT‐based methods~\cite{BuAlMa07}. Others have put forth symbolic observational‐refinement testing~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
+TLA logic~\cite{La94} provides a formal specification to ensure only serializable (or conflict-serializable~\cite{CoOlPnTuZu07}) executions occur. While it can naturally express ``real” serializability via final‐state equivalence, existing TLA-based methods~\cite{SoVaVi20, Ho24} 
+%are confined to bounded transaction systems, as TLA-based model checkers like \texttt{TLC} and \texttt{Apalache} ~\cite{YuMaLa99, KoKuTr19} cannot handle unbounded transaction counts.
+%While TLA encodings can capture ``real'' serializability (based on final-state 
+%equivalence), as well as conflict-serializability~\cite{CoOlPnTuZu07}, 
+are confined solely to bounded systems due to finite‐state tools like TLC and Apalache~\cite{YuMaLa99,KoKuTr19}. Heuristic and enumeration‐based model checkers include Line-up~\cite{BuDeMuTa10} (built upon CHESS~\cite{MuQaBaBaNaNe08}), LinTSO for TSO~\cite{BuGoMuYa12}, Violat (and its schema‐based predecessor)~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}. 
+%and RELINCHE for bounded linearizability~\cite{GoKoVa25}. 
+Golovin et al.~\cite{GoKoVa25} recently introduced \texttt{RELINCHE}, a model checker for bounded linearizability that limits the number of invocable operations.
+Additional tools include CDSSpec (with regard to the \texttt{C/C++ 11} memory model), Lincheck~\cite{KoDeSoTsAl23,OuDe17}, SAT‐based methods~\cite{BuAlMa07}. Others have put forth symbolic observational‐refinement testing~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
 	BoEmCoHa15}.
 Furthermore, checkers such as SPIN/PARGLIDER rely on explicit linearization points~\cite{Fl04, VeYaYo09,Ho97,VeYa08}, which are hard to identify~\cite{VeYaYo09}.
 %
@@ -234,8 +241,8 @@ Unlike these, our method affords complete coverage for unbounded threads and is 
 
 \subsubsection{Static analysis}
 
-Static techniques can prove linearizability for bounded~\cite{AmRiReSaYa07,BeLeMaRaSa08,MaLeSaRaBe08} and unbounded~\cite{BeLeMaRaSa08,Va09,Va10} systems, but typically depend on heuristic or manual annotations of linearization points. Lian and Feng~\cite{LiFe13} offer a logic that handles non‐fixed points. Additional techniques that rely on linearization points include~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}. 
-However, annotation‐based checkers and analyses are inconclusive, since failures may reflect mis‐annotation rather than true violations~\cite{BoEmCoHa15}.
+Static techniques can prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded~\cite{BeLeMaRaSa08,Va09,Va10} systems, but typically depend on heuristics or annotations of linearization points as well. Lian and Feng~\cite{LiFe13} offer a logic that handles non‐fixed points. Additional techniques that rely on linearization points include~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}. 
+However, annotation‐based checkers and analyses are inconclusive, since failures may reflect incorrect annotation rather than true violations~\cite{BoEmCoHa15}.
 
 
 %\todo{original:}
@@ -312,7 +319,7 @@ Wing and Gong~\cite{WiGo93} established linearizability for unbounded FIFO and p
 
 \subsubsection{Additional approaches}
 
-Some combine dynamic analysis with manual proofs, e.g., Shacham et al.~\cite{ShBrAiSaVeYa11}. Test‐generation methods include Wing and Gong~\cite{WiGo93}, Pacheco and Griswold~\cite{PrGr12,PrGr13}, Emmi et al.~\cite{EmEn17}, and Lowe’s random‐history framework~\cite{Lo17}. Simplification and proof‐assistance techniques appear in \cite{BoEmEnMu17,FeEnMoRiSh18,EnKo24}, while theorem‐prover‐based methods are in \cite{CoDoGr05,DeScWe11}.
+Some combine dynamic analysis with manual proofs, e.g., Shacham et al.~\cite{ShBrAiSaVeYa11}. Test‐generation methods include Wing and Gong~\cite{WiGo93}, Pacheco and Griswold~\cite{PrGr12,PrGr13}, Emmi and Enea~\cite{EmEn17}, and Lowe’s random‐history framework~\cite{Lo17}.  Theorem‐prover‐based methods include~\cite{CoDoGr05,DeScWe11}, while additional methods include~\cite{BoEmEnMu17, FeEnMoRiSh18, EnKo24}.
 
 %
 %\todo{original}
