@@ -14,6 +14,15 @@ Finally, we formulated the underlying theory for a suite of optimizations and im
 
 %
 
+\subsection{Limitations}
+
+While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
+First, the underlying Petri net reachability problem has Ackermann complexity, causing our tool to time out on some complex benchmarks despite optimizations.
+Second, our current implementation relies on SMPT, which may fail to find proofs even when they exist, limiting completeness.
+Third, our network system model assumes a simple request-response pattern without modeling more complex interaction patterns like streaming, callbacks, or partial responses.
+Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
+These limitations suggest important directions for future research.
+
 \subsection{Future Work}
 
 \paragraph{Scalability.}
