@@ -1,4 +1,4 @@
-\appendix
+%\appendix
 
 \section{Motivating Example: Snapshot Isolation}
 \label{appendix:snapshotIsolationExample}
@@ -17,7 +17,7 @@ The {\color{ForestGreen}$\blacklozenge_\text{main}$} request eventually returns 
 %
 In order for the system to emulate multiple iterations, our setting also includes two additional requests, {\color{ForestGreen}$\blacklozenge_\text{activate\_n1}$},{\color{ForestGreen}$\blacklozenge_\text{activate\_n2}$} which activate nodes $N_1$ and $N_2$, respectively.
 %
-We note that the program is not serializable due to the yield operation that appears immediately after the recorded snapshot of the node activation status. One such example for a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests each record two active monitor nodes and yield; Then, having each request turn off the complement node. As a result of each request operating based on its isolated snapshot of the global state, both monitor nodes can be turned off and we can attain a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for [$N_1+N_2=0+0=0$]).
+We note that the program is not serializable due to the yield operation that appears immediately after the recorded snapshot of the node activation status. One such example of a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests each record two active monitor nodes and yield; Then, having each request turn off the complement node. As a result of each request operating based on its isolated snapshot of the global state, both monitor nodes can be turned off and we can attain a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for [$N_1+N_2=0+0=0$]).
 %
 We note that in any serializable execution, no two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests can record both monitors as active, and hence, a response of {\color{red}$\blacklozenge_0$} is unattainable via serializable executions.
 
