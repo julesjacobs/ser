@@ -70,14 +70,14 @@ This NS setting is motivated by software-defined networking systems. Specificall
    
 A Network System $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
-\item $G$ is a set of global states (each is one possible assignment of global variables simultaneously) 
-\item $L$ is a set of local states representing request/thread contents (local variable values and ``remaining program'' to execute)
-\item $\mathit{REQ}$ is a set of request events (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
-\item $\mathit{RESP}$ is a set of response events (each marked {\color{red}$\blacklozenge_\text{resp}$})
+\item $G$ is a set of global states (assignments to all global variables)
+\item $L$ is a set of local states (local variable values and remaining program to execute)
+\item $\mathit{REQ}$ is a set of request types (marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
+\item $\mathit{RESP}$ is a set of response types (marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
-\item $\mathit{req} \subseteq \mathit{REQ} \times L$ is a request transition relation, which describes which request spawns which thread (packet)
-\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ is a response transition relation, which describes which thread turns into which responses
-\item $\delta \subseteq (G \times L) \times (G \times L)$ is a transition relation for thread processing, which describes an atomic step of processing that may change the (shared) global state and the (private) thread-local state.
+\item $\mathit{req} \subseteq \mathit{REQ} \times L$ maps each request type to its initial local state
+\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps final local states to response types
+\item $\delta \subseteq (G \times L) \times (G \times L)$ defines atomic execution steps that update both global and local state
 \end{itemize}
 
 \begin{definition}[Request and Response]
@@ -158,6 +158,10 @@ The pair $(r, s) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete in
     Runs are called \emph{serial} if there is at most one packet in flight at any time, whereas \emph{interleaved} runs may have multiple packets in flight at once.}
     \label{fig:network-transitions}
 \end{figure}
+
+\begin{definition}[Serializability]
+A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}) = \text{Ser}(\mathcal{N})$, meaning every multiset of request/response pairs achievable through interleaved execution can also be achieved through some serial execution.
+\end{definition}
 
 %\guy{Nicolas/Jules can you take a look at the other definition that I masked in the latex below? Is the current one good enough?}
 
