@@ -137,11 +137,11 @@ The disjuncts are solved on the fly, until reaching \sat, in which case, we have
 %	input size and performance metrics (number of places, transitions, constraint complexity, timings) 
 are recorded. 
 %The logger outputs 
-Structured \texttt{CSV} and \texttt{JSON} logs are generated along with
+We generate \texttt{CSV} and \texttt{JSON} logs along with
 % analysis. 
 	%
 %	We also assemble 
-an \texttt{HTML} report embedding the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs.
+an \texttt{HTML} report embedding the original net, symbolic constraints, reachability results, proofs, etc.
 %	\item \textbf{Debug Report Generation.} Finally, a human-readable \texttt{HTML} report is assembled: it embeds the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs. This interactive report allows users to drill down into each transition firing, constraint check, and proof obligation.
 	
 %	\item \textbf{Output Delivery.} The crate exposes a simple CLI and library API. Users obtain either a Boolean reachability verdict (with optional certificate), raw log files, or a full HTML debug report, depending on invocation flags.
