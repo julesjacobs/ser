@@ -4,9 +4,9 @@
 \section{Tour of Examples}
 \label{sec:tour}
 
-Next, we will walk through a series of examples, in varying level of complexity. Each example will demonstrate different aspects of serializable vs non-serializable programs.
+Next, we will walk through a series of examples, in varying levels of complexity. Each example will demonstrate different aspects of serializable vs non-serializable programs.
 %
-The first examples are relatively basic, while the last examples have higher complexity and are motivated by real word problems, e.g., BGP routing policy updates.
+The first examples are relatively basic, while the last examples have higher complexity and are motivated by real-word programs, e.g., BGP routing policy updates.
 %
 Each thread is spawned any number of times (and at any point in time) by a \textit{request} from the user, marked {\color{ForestGreen}$\blacklozenge_\text{req}$}. The request executes, and eventually return a \textit{response}  {\color{red}$\blacklozenge_\text{resp}$}.
 %
@@ -16,7 +16,7 @@ We analyze serializability through the lens of such ({\color{ForestGreen}$\black
 %
 We depict global variables with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
 %
-Unless explicitly state otherwise, all global and local variables are initialized to 0.
+Unless explicitly stated otherwise, all global and local variables are initialized to 0.
 %
 The ``\textit{?}'' symbol depicts a nondeterministic choice between ``0'' and ``1''. All other constructs (\textit{while}, \textit{yield}, and \textit{if}) have their standard interpretation.
 
@@ -26,7 +26,7 @@ The ``\textit{?}'' symbol depicts a nondeterministic choice between ``0'' and ``
 
 We start with a basic example, describing a single request {\color{ForestGreen}$\blacklozenge_\text{A}$}, a single local variable (``x'') per each request; and a single global variable (``FLAG'') shared among all in-flight requests. 
 %
-In Listing~\ref{lst:BasicSer} an in-flight request assigns to x the value of FLAG (hence, initially, [$x:=0$]). Then, the request non-deterministically chooses whether to yield, or to flip the value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned as the response to request {\color{ForestGreen}$\blacklozenge_\text{A}$}. 
+In Listing~\ref{lst:BasicSer} an in-flight request assigns to x the value of FLAG (hence, initially, [$x:=0$]). Then, the request non-deterministically chooses whether to yield or to flip the value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned as the response to request {\color{ForestGreen}$\blacklozenge_\text{A}$}. 
 %
 Note that the presence of the \textit{else} branch renders the program serializable, as intuitively, for every value of x that can change due to an interleaving and updates via the ``if'' branch, there is a serial execution in which an ``else'' branch is chosen and thus his program is serializable.
 %
@@ -68,9 +68,9 @@ However, this changes in  Listing~\ref{lst:BasicNonSer}.
 %\end{wrapfigure}
 %
 %
-In which case there is no ``else'' branch --- an update which makes the program non-serializable.
+In which case there is no ``else'' branch --- an update that makes the program non-serializable.
 %
-Now, any serial execution will have \textit{at most one} pair of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} (this is in fact the first request, returning the original zero-initializaed value of FLAG).
+Now, any serial execution will have \textit{at most one} pair of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} (this is in fact the first request, returning the original zero-initialized value of FLAG).
 %
 As the first request also assigns $[FLAG:=1]$ before exiting, any subsequent request in a serial will assign $[x:=1]$ and hence return only responses of {\color{red}$\blacklozenge_1$}. 
 %, and $(i-1)$ pairs of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_1$}.
@@ -162,13 +162,13 @@ However, given that the first request can also \textit{yield}, it is possible fo
 \subsection{Example 2}
 
 %\subsubsection{Example 2}
-The following program pairs have a single global variable ``X'', and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments X by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements X by 1. Both programs have loops which guarantee that X will always be between 0 to 3, otherwise the while loop will yield an infinitum. Both requests return the value of X after updating it.
+The following program pairs have a single global variable ``X'', and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments X by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements X by 1. Both programs have loops that guarantee that X will always be between 0 to 3, otherwise the while loop will yield an infinitum. Both requests return the value of X after updating it.
 %
 In the first case, Listing~\ref{lst:FredSer} presents a serializable program, due to the absence of any yield between the increment/decrement of X, and its return. Equivalently, in each of the requests, the update of X and the returned value can be thought of as \textit{a single atomic execution}.
 %
-However, in Listing~\ref{lst:FredNonSer},we add an additional yield (and a local variable ``y''), occurring in each of the requests, between the update of X and it's return.
+However, in Listing~\ref{lst:FredNonSer}, we add an additional yield (and a local variable ``y''), occurring in each of the requests, between the update of X and its return.
 %
-This change allows request of the same type to update X to the same value ---  resulting to outputs such as
+This change allows requests of the same type to update X to the same value ---  resulting in outputs such as
 $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{1}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{3}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}}\}$ which cannot be attained in any serial execution.
 
 %
@@ -233,16 +233,16 @@ $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\tex
 %\todo{continue}	
 %example - 6
 
-The next example (see Listing~\ref{lst:ComplexWhileNonSer}) covers a setting in which there is a single global variable (X) and a single local variable (i) per each in-flight request. The {\color{ForestGreen}$\blacklozenge_\text{flip}$} requests flips the bit of  X (initialized to 0); the {\color{ForestGreen}$\blacklozenge_\text{main}$} request attempts to decrement i five times.
+The next example (see Listing~\ref{lst:ComplexWhileNonSer}) covers a setting in which there is a single global variable (X) and a single local variable (i) per each in-flight request. The {\color{ForestGreen}$\blacklozenge_\text{flip}$} request flips the bit of  X (initialized to 0); the {\color{ForestGreen}$\blacklozenge_\text{main}$} request attempts to decrement i five times.
 %
 %It is straightforward to observe that the program in Listing~\ref{lst:ComplexWhileSer} is trivially serializable, as there are no yields.
 %
-Is is straightforward to observe that any serial execution does not output any instance of the single response {\color{red}$\blacklozenge_1$}, 
-as any serial execution will have a single request in-flight, with the value of X being either 0 or 1. Thus, exactly one of the while loops will run indefinitely, and prohibiting any {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} pairs.
+It is straightforward to observe that any serial execution does not output any instance of the single response {\color{red}$\blacklozenge_1$}, 
+as any serial execution will have a single request in-flight, with the value of X being either 0 or 1. Thus, exactly one of the while loops will run indefinitely, prohibiting any {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} pairs.
 %
 %Specifically, in any serial execution of requests, the local i variable is either 0 or 1, and hence --- serial execution do no produce any request/response pairs.
 %
-To show that the program is not serializable, we need only show that an interleaving can result to a non-empty set of outputs. 
+To show that the program is not serializable, we need only show that an interleaving can result in a non-empty set of outputs. 
 %
 %However, some interleavings can allow the program to output a response {\color{red}$\blacklozenge_1$}. 
 %
@@ -325,7 +325,7 @@ request main:
 %\subsubsection{Example 4: Banking System}
 
 
-We illustrate a simple banking system inspired by Chandy and Lamport’s distributed snapshot algorithm~\cite{ChLa85}.  The system manages a client’s funds across multiple accounts; for exposition we use two accounts, \(A\) and \(B\), but the same pattern extends to any number of accounts.  Likewise, each request {\color{ForestGreen}$\blacklozenge_\text{interest}$} applies an arbitrary rate \(t\%\) to every account—we set \(t=100\%\) for simplicity.
+We illustrate a simple banking system inspired by Chandy and Lamport’s distributed snapshot algorithm~\cite{ChLa85}.  The system manages a client’s funds across multiple accounts; for exposition, we use two accounts, \(A\) and \(B\), but the same pattern extends to any number of accounts.  Likewise, each request {\color{ForestGreen}$\blacklozenge_\text{interest}$} applies an arbitrary rate \(t\%\) to every account—we set \(t=100\%\) for simplicity.
 %
 Each {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request moves \$50 from \(A\) to \(B\), and each {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request increases every balance by \(t\%\).  Both request operations return the combined total \(A + B\).
 %
@@ -352,7 +352,7 @@ However, non‐serializable interleavings can violate this invariant.  For insta
 %%
 %Both requests return the final sum of the client funds in both the accounts.  
 %%
-Listing~\ref{lst:BankSer} depicts a serializable version of this banking system (without any yields), while Listing~\ref{lst:BankNonSer} includes yields in each of the requests, between the adjustment of accounts $A$ and $B$ (we note that this also represents real world systems in which the account can be sharded and partitioned across different nodes).
+Listing~\ref{lst:BankSer} depicts a serializable version of this banking system (without any yields), while Listing~\ref{lst:BankNonSer} includes yields in each of the requests, between the adjustment of accounts $A$ and $B$ (we note that this also represents real-world systems in which the account can be sharded and partitioned across different nodes).
 %
 
 
@@ -447,7 +447,7 @@ An instance of a simple network with two competing policies is shown in Fig.~\re
 %	\label{fig:BgpRoutingPolicies}
 %\end{figure}
 %
-This SDN-controlled routing policy is realized in the pseudo code in Listing~\ref{lst:BgpNonSerializable}.
+This SDN-controlled routing policy is realized in the pseudo-code in Listing~\ref{lst:BgpNonSerializable}.
 %
 The program includes a single global variable $B$, indicating whether the current routing policy is \textcolor{NavyBlue}{blue} ($[B=1]$) or \textcolor{darkorange}{orange} ($[B=0]$).
 %
@@ -516,7 +516,7 @@ Each of the routing requests represents a single packet entering the network. Th
 %
 The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_west}$} requests is the sum \textit{(current+current+visited\_east)}, an identifier encoding all possible \textit{(current\_switch, visited\_east)} pairs.
 %
-The program is not serializable, as witnessed by an interleaving that can give rise to final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet ({\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when  a request has already been spawned based on the previous policy, subsequently yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting to a routing cycle.
+The program is not serializable, as witnessed by an interleaving that can give rise to a final return value of \textit{(current+current+visited\_east)=1} (due to \textit{current=0} and \textit{visited\_east=1}). This represents a routing cycle in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet ({\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when a request has already been spawned based on the previous policy, subsequently yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting in a routing cycle.
 %
 More formally, this is conveyed by return values that represent these cycles and are attained only via non-serializable executions. For example, legal, acyclic routes of this request have either a return value of 0 (in the case of [\textit{current=0}, \textit{visited\_east=0}]) or 7 (in the case of [\textit{current=3}, \textit{visited\_east=1}]).
 Dually, routing cycles also occur in the case of {\color{ForestGreen}$\blacklozenge_\text{route\_east}$} interleavings.
