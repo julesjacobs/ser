@@ -602,7 +602,7 @@ We get the following inductive invariants for each of the two (reachable) global
 
 %\subsection{Time/Space Complexity}
 
-%\todo{consult with Jules}
+\guy{Should we add something about time/space complexity?}
 
 
 \subsection{Optimizations}
@@ -615,7 +615,7 @@ We apply four optimizations to the base algorithm to control intermediate blow�
 An extensive empirical evaluation of these optimizations appears later on in subsec.~\ref{subsec:optimization-results}.
 
 \paragraph{(1) Bidirectional pruning.}  
-%\guy{should we reformulate this like in Appendix D?}
+\guy{should we reformulate this like in Appendix D?}
 Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the ``nonzero” places extracted from the Presburger constraints on the target markings.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets, with forward and backward passes:
 \[
 T^{(0)} = T,\qquad
@@ -675,7 +675,7 @@ be the multiset of linear components of the semilinear set
 \]
 Which removes any component strictly containing another.  
 %
-%\guy{Nicolas is it clear we mean that we fix their semilinear "meaning" of the regex operations? For example, + is union etc..}\nicolas{Ok for me}
+\guy{Nicolas is it clear we mean that we fix their semilinear "meaning" of the regex operations? For example, + is union etc..}
 Then, we replace the naive semilinear‐set operations by
 \[
 S\;+\;T
