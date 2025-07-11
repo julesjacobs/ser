@@ -65,7 +65,7 @@ Each incoming request processes its request handler's body until it returns a va
 
 %
 The first program (Listing~\ref{lst:MotivatingExample1Ser}) is clearly serializable because there are no yields, and hence, no interleavings: each \texttt{main} request returns 1.
-In the second program (Listing~\ref{lst:MotivatingExample2NonSer}), the yield allows interleavings and is \emph{not} serializable. Consider two concurrent requests to \texttt{main}:
+In the second program (Listing~\ref{lst:MotivatingExample2NonSer}), the yield allows interleavings and is \emph{not} serializable; consider two concurrent requests to \texttt{main}:
 \begin{enumerate}
 \item Request A executes \texttt{X := 1} then yields to Request B
 \item Request B executes \texttt{X := 1}, yields to itself, reads \texttt{X} (getting 1), sets \texttt{X := 0}, and returns 1
