@@ -8,7 +8,7 @@ However, \citet{BoEmEnHa13} have shown (as a special case of bounded-barrier lin
 % 
 We illustrate the problem by example:
 
-% examples in Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and ~\ref{lst:MotivatingExample3Ser}, written in our modeling language called Ser.
+% examples in Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and ~\ref{lst:MotivatingExample3Ser}, written in our modeling language called \toolname.
 
 \noindent
 \begin{minipage}[t]{0.55\textwidth}
@@ -57,9 +57,9 @@ We illustrate the problem by example:
 	\end{lstlisting}
 \end{minipage}
 
-These examples are written in our modeling language called Ser.
-A Ser program has a set of named \textbf{request handlers} (one handler \texttt{main} in the examples) that are arbitrarily invoked concurrently by the external environment.
-Each incoming request processes its request handler's body until it returns a value as its \textbf{response}. Concurrency is managed by the \textbf{yield} statement, which pauses the current request and gives other requests a chance to run. Ser programs have uppercase \textbf{global shared variables} (\texttt{X} in the examples) and lowercase \textbf{request-local variables} (\texttt{y} in the examples).
+These examples are written in our modeling language called \toolname.
+A \toolname{} program has a set of named \textbf{request handlers} (one handler \texttt{main} in the examples) that are arbitrarily invoked concurrently by the external environment.
+Each incoming request processes its request handler's body until it returns a value as its \textbf{response}. Concurrency is managed by the \textbf{yield} statement, which pauses the current request and gives other requests a chance to run. \toolname{} programs have uppercase \textbf{global shared variables} (\texttt{X} in the examples) and lowercase \textbf{request-local variables} (\texttt{y} in the examples).
 
 
 
@@ -77,10 +77,10 @@ Of course, having yields does not guarantee that an execution is necessarily not
 These examples demonstrate that reasoning about serializability can be complex even for very simple programs with few requests running concurrently.
 \vspace{-.5em}
 \paragraph{Problem Definition.}
-Formally, we define the \textbf{observable execution} of a Ser program as a multiset of (request, response) pairs. The \textbf{observable behavior} of a Ser program is the set of all possible observable executions that can occur such that the requests are executed concurrently to obtain their paired responses.
-A program is \textbf{serializable} if every observable behavior is achievable serially (without interleavings). That is, a Ser program is serializable if its semantics does not change when all yield statements are removed.
+Formally, we define the \textbf{observable execution} of a \toolname{} program as a multiset of (request, response) pairs. The \textbf{observable behavior} of a \toolname{} program is the set of all possible observable executions that can occur such that the requests are executed concurrently to obtain their paired responses.
+A program is \textbf{serializable} if every observable behavior is achievable serially (without interleavings). That is, a \toolname{} program is serializable if its semantics does not change when all yield statements are removed.
 %
-\emph{The goal of this paper is to design and develop the Ser language and decision procedure for this problem.} In particular, Ser can prove serializability \textbf{automatically} without requiring any manual proof by the user.
+\emph{The goal of this paper is to design and develop the \toolname{} language and decision procedure for this problem.} In particular, \toolname{} can prove serializability \textbf{automatically} without requiring any manual proof by the user.
 \vspace{-.5em}
 \paragraph{Challenges.}
 To our knowledge, no prior implementation exists that can automatically generate proof certificates for this class of concurrent systems.
@@ -88,7 +88,7 @@ Why not?
 Our decision procedure builds on Bouajjani et al.'s reduction from serializability to Petri net reachability~\cite{BoEmEnHa13}. However, since Petri net reachability is Ackermann-complete~\cite{CzWo22}, a naive implementation would fail on all but the simplest programs. 
 \vspace{-.5em}
 \paragraph{Our Approach.}
-To address this, we first introduce the abstraction of \textit{network systems} (NS) --- abstract concurrent programs where users send \textit{requests} that manipulate local and shared state before returning \textit{responses}. Ser programs are compiled into NS, on which our decision procedure operates via reduction to Petri net and semilinear set analysis.
+To address this, we first introduce the abstraction of \textit{network systems} (NS) --- abstract concurrent programs where users send \textit{requests} that manipulate local and shared state before returning \textit{responses}. \toolname{} programs are compiled into NS, on which our decision procedure operates via reduction to Petri net and semilinear set analysis.
 
 As a backend solver, we use SMPT~\cite{AmDa23}, which is a state-of-the-art tool for Petri net reachability.
 We note that while our approach is sound (never incorrectly claims serializability), the underlying SMPT Petri Net tool may time out on complex instances, limiting completeness in practice (which is unavoidable for any Petri Net tool, given the Ackermann-completeness of the problem).
@@ -106,8 +106,8 @@ After a tour of examples in \Cref{sec:tour}, we present the following contributi
 \begin{itemize}
     \item \Cref{sec:problem-definition} introduces the notion of a Network System (NS), a concurrent program abstraction that captures the essence of concurrent systems.
     \item \Cref{sec:formal-results} presents decidability results (a theorem on serializability; two on equivalence), presents the core decision procedure with proof certificates, and presents techniques for semilinear set reductions and Petri-net reductions.
-    \item \Cref{sec:implementation} presents the implementation of the Ser toolchain.
-    \item \Cref{sec:evaluation} presents case studies on modeling in Ser examples from domains such as SDNs and databases, and presents our extensive evaluation of the toolchain.
+    \item \Cref{sec:implementation} presents the implementation of the \toolname{} toolchain.
+    \item \Cref{sec:evaluation} presents case studies on modeling in \toolname{} examples from domains such as SDNs and databases, and presents our extensive evaluation of the toolchain.
 \end{itemize}
 
 
