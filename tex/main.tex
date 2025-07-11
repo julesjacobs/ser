@@ -24,6 +24,7 @@
 \usepackage{wrapfig}             % for wrapfigure
 \usepackage[export]{adjustbox}   % for trim/clip keys on includegraphics
 \usepackage[T1]{fontenc}
+\usepackage{tcolorbox}           % for colored boxes
 \newcommand{\cmark}{\checkmark}
 %\definecolor{brightbrown}{RGB}{245,237,205}%{205,133,63}
 %\colorlet{darksand}{Tan!50!black}
@@ -153,11 +154,11 @@
 \begin{document}
 
 \begin{abstract}
-	We study the problem of deciding \textit{serializability}, i.e., whether every interleaving of concurrent threads is equivalent to some serial execution. While prior work has shown decidability via reductions to Petri‐net reachability, the resulting theoretical procedures have remained impractical for real‐world tools. We present the first end‐to‐end decision procedure and toolchain that not only detects serializability violations, but also produces inductive proof certificates of both satisfiability and unsatisfiability. Towards this end, we also put forth a theoretical framework for abstract network systems, and demonstrate how it captures various concurrent programs of interest. 
-%	approach builds on the theoretical framework of Bouajjani et al. 
-	We demonstrate that by translating network system programs into Petri nets, and then applying various optimizations, such as Petri net pruning, semilinear‐set compression, and Presburger‐formula manipulation, we significantly curtail the model checking search space. 
-	Alongside establishing the theoretical foundations of these optimizations, we show how they can be applied in practice to scale serializability checking to real-world SDN scenarios --- ranging from stateful firewalls and BGP routers to an online shopping backend.
-	Our results demonstrate that, despite the theoretical hardness of the problem, our solver scales to realistic programs, automatically proving serializability or producing counterexamples. To our knowledge, this is the first tool capable of certifying serializability for arbitrary programs with an unbounded number of threads. All code, benchmarks, and proof certificates are publicly available as an artifact accompanying this work.
+	We introduce the Ser modeling language and toolchain for automatically verifying or disproving serializability of concurrent programs, i.e., whether every concurrent execution of the program is equivalent to some serial execution. Ser programs are suitably restricted to make this problem decidable, while still allowing for an unbounded number of concurrent threads of execution, each potentially running for an unbounded number of steps.
+	Prior work has shown theoretical decidability of this problem via reductions to Petri-net reachability, but Ser is the first to provide an end-to-end decision procedure and toolchain that proves serializability (generating a proof certificate) or non-serializability (generating a counterexample trace).
+	We demonstrate this on various example models of SDN scenarios, stateful firewalls, BGP routers, online shopping backends, and more.
+	Our verifier operates by translating network system programs into Petri nets, but this is not enough: we introduce various techniques, such as Petri net pruning, semilinear-set compression, and Presburger-formula manipulation.
+	Our solver is thus able to automatically prove serializability or prove non-serializability for interesting examples, despite the theoretical hardness of the problem.
 \end{abstract}
 
 %\begin{abstract}
