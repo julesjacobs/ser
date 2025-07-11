@@ -797,7 +797,10 @@ as above. In the general case, the Kleene star $S^\ast$ is given as a semilinear
     \sum_{i \in I} b_i
     + \sum_{p \in \bigcup_{i \in I} P_i} n_p p \mid n_p \in \mathbb N \right\}.
 \]
-As the index set $I$ runs over all subsets of $\{1,...,m\}$, this has $2^m$ many components. However, in a typical case, we may not need that many. We implement the following special-case optimizations:
+As the index set $I$ runs over all subsets of $\{1,...,m\}$, this has $2^m$
+many components! This can be intractably many, especially when there are nested
+Kleene stars. However, in a typical case, we may not need that many. We
+implement the following special-case optimizations:
 \begin{itemize}
   \item If any component $L_i$ of $S$ has no period vectors, $L_i = \{b_i\}$, then we can pull it out separately, computing the Kleene star of the rest and then adding $b_i$ as a period vector to every linear component of the result.
 
