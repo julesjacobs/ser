@@ -197,7 +197,7 @@ We note that we depicted only part of the states that are \textit{reachable}, in
 \begin{figure}[!htbp]
 	\centering
 	%–––– Network system diagram ––––
-	\includegraphics[width=\textwidth]{plots/code_2_NS.png}\\[1ex]
+	% \includegraphics[width=\textwidth]{plots/code_2_NS.png}\\[1ex]
 
 	\begin{tikzpicture}[
 		node distance=1.5cm and 2.5cm,
@@ -233,7 +233,7 @@ We note that we depicted only part of the states that are \textit{reachable}, in
 			rectangle,
 			rounded corners=1pt,
 			inner sep=2pt
-			] (ybox) {\large \texttt{y=0}};
+			] (ybox) {\texttt{y=0}};
 		\end{tikzpicture}\\[-0.05cm]
 		\begin{minipage}{2cm}
 			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
@@ -257,7 +257,7 @@ return y
 			rectangle,
 			rounded corners=1pt,
 			inner sep=2pt
-			] (ybox) {\large \texttt{y=0}};
+			] (ybox) {\texttt{y=0}};
 		\end{tikzpicture}\\[-0.05cm]
 		\begin{minipage}{1.5cm}
 			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
@@ -279,7 +279,7 @@ return y
 			rectangle,
 			rounded corners=1pt,
 			inner sep=2pt
-			] (ybox) {\large \texttt{y=0}};
+			] (ybox) {\texttt{y=0}};
 		\end{tikzpicture}\\[-0.05cm]
 		\begin{minipage}{0.8cm}
 			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
@@ -299,7 +299,7 @@ return y
 			rectangle,
 			rounded corners=1pt,
 			inner sep=2pt
-			] (ybox) {\large \texttt{y=1}};
+			] (ybox) {\texttt{y=1}};
 		\end{tikzpicture}\\[-0.05cm]
 		\begin{minipage}{0.8cm}
 			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
@@ -336,11 +336,11 @@ return y
 	  \draw[->] (main) -- (state1);
 	  
 	  % Transition labels for state1 to state2
-	  \draw[->] (state1) -- node[above] {\scriptsize $\texttt{X=0} \to \texttt{X=1}$} node[below] {\scriptsize $\texttt{X=1} \to \texttt{X=1}$} (state2);
+	  \draw[->] (state1) -- node[above] {\begin{tikzpicture}[baseline=(a.base)]\node[draw=black,line width=0.8pt,fill=lightchacki,rectangle,rounded corners=1pt,inner sep=2pt] (a) {\texttt{X=0}};\end{tikzpicture} $\to$ \begin{tikzpicture}[baseline=(b.base)]\node[draw=black,line width=0.8pt,fill=lightchacki,rectangle,rounded corners=1pt,inner sep=2pt] (b) {\texttt{X=1}};\end{tikzpicture}} node[below] {\begin{tikzpicture}[baseline=(c.base)]\node[draw=black,line width=0.8pt,fill=lightchacki,rectangle,rounded corners=1pt,inner sep=2pt] (c) {\texttt{X=1}};\end{tikzpicture} $\to$ \begin{tikzpicture}[baseline=(d.base)]\node[draw=black,line width=0.8pt,fill=lightchacki,rectangle,rounded corners=1pt,inner sep=2pt] (d) {\texttt{X=1}};\end{tikzpicture}} (state2);
 	  
 	  % From state2 to final states
-	  \draw[->] ([yshift=4pt]state2.east) to[out=50,in=180] node[above, sloped] {\scriptsize $\texttt{X=0} \to \texttt{X=0}$} (state3.west);
-	  \draw[->] ([yshift=-16pt]state2.east) to[out=-50,in=180] node[below, sloped] {\scriptsize $\texttt{X=1} \to \texttt{X=0}$} (state4.west);
+	  \draw[->] ([yshift=4pt]state2.east) to[out=50,in=180] node[above, sloped] {\begin{tikzpicture}[baseline=(a.base)]\node[draw=black,line width=0.8pt,fill=lightchacki,rectangle,rounded corners=1pt,inner sep=2pt] (a) {\texttt{X=0}};\end{tikzpicture} $\to$ \begin{tikzpicture}[baseline=(b.base)]\node[draw=black,line width=0.8pt,fill=lightchacki,rectangle,rounded corners=1pt,inner sep=2pt] (b) {\texttt{X=0}};\end{tikzpicture}} (state3.west);
+	  \draw[->] ([yshift=-16pt]state2.east) to[out=-50,in=180] node[below, sloped] {\begin{tikzpicture}[baseline=(a.base)]\node[draw=black,line width=0.8pt,fill=lightchacki,rectangle,rounded corners=1pt,inner sep=2pt] (a) {\texttt{X=1}};\end{tikzpicture} $\to$ \begin{tikzpicture}[baseline=(b.base)]\node[draw=black,line width=0.8pt,fill=lightchacki,rectangle,rounded corners=1pt,inner sep=2pt] (b) {\texttt{X=0}};\end{tikzpicture}} (state4.west);
 	  
 	  % To responses
 	  \draw[->] (state3) -- (resp0);
@@ -377,7 +377,7 @@ return y
 				rectangle,
 				rounded corners=1pt,
 				inner sep=2pt
-				] (ybox) {\large \texttt{y=0}};
+				] (ybox) {\texttt{y=0}};
 			\end{tikzpicture}
 			,\quad
 			&
@@ -414,7 +414,7 @@ return y
 				rectangle,
 				rounded corners=1pt,
 				inner sep=2pt
-				] (ybox) {\large \texttt{y=0}};
+				] (ybox) {\texttt{y=0}};
 			\end{tikzpicture}
 			,\quad
 			&
@@ -452,7 +452,7 @@ return y
 				rectangle,
 				rounded corners=1pt,
 				inner sep=2pt
-				] (ybox) {\large \texttt{y=1}};
+				] (ybox) {\texttt{y=1}};
 			\end{tikzpicture}
 			,\quad
 			&
@@ -495,7 +495,7 @@ return y
 			rectangle,
 			rounded corners=1pt,
 			inner sep=2pt
-			] (ybox) {\large \texttt{X=0}};
+			] (ybox) {\texttt{X=0}};
 		\end{tikzpicture}
 		,\quad
 		\bigg(
@@ -509,7 +509,7 @@ return y
 				rectangle,
 				rounded corners=1pt,
 				inner sep=2pt
-				] (ybox) {\large \texttt{y=0}};
+				] (ybox) {\texttt{y=0}};
 			\end{tikzpicture}
 			,\quad &
 			\begin{minipage}{0.14\linewidth}
@@ -535,7 +535,7 @@ return y
 			rectangle,
 			rounded corners=1pt,
 			inner sep=2pt
-			] (ybox) {\large \texttt{X=1}};
+			] (ybox) {\texttt{X=1}};
 		\end{tikzpicture}
 		,\quad
 		\bigg(
@@ -549,7 +549,7 @@ return y
 				rectangle,
 				rounded corners=1pt,
 				inner sep=2pt
-				] (ybox) {\large \texttt{y=0}};
+				] (ybox) {\texttt{y=0}};
 			\end{tikzpicture}
 			,\quad &
 			\begin{minipage}{0.14\linewidth}
@@ -578,7 +578,7 @@ return y
 			rectangle,
 			rounded corners=1pt,
 			inner sep=2pt
-			] (ybox) {\large \texttt{X=1}};
+			] (ybox) {\texttt{X=1}};
 		\end{tikzpicture}
 		,\quad
 		\bigg(
@@ -592,7 +592,7 @@ return y
 				rectangle,
 				rounded corners=1pt,
 				inner sep=2pt
-				] (ybox) {\large \texttt{y=0}};
+				] (ybox) {\texttt{y=0}};
 			\end{tikzpicture}
 			,\quad &
 			\begin{minipage}{0.14\linewidth}
@@ -616,7 +616,7 @@ return y
 			rectangle,
 			rounded corners=1pt,
 			inner sep=2pt
-			] (ybox) {\large \texttt{X=0}};
+			] (ybox) {\texttt{X=0}};
 		\end{tikzpicture}
 		,\quad
 		\bigg(
@@ -630,7 +630,7 @@ return y
 				rectangle,
 				rounded corners=1pt,
 				inner sep=2pt
-				] (ybox) {\large \texttt{y=1}};
+				] (ybox) {\texttt{y=1}};
 			\end{tikzpicture}
 			,\quad &
 			\begin{minipage}{0.11\linewidth}
