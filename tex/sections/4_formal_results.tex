@@ -756,7 +756,7 @@ We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{t
 \paragraph{(2) Semilinear set pruning.}  
 Recall that a semilinear set is $S=\bigcup_{i=1}^m L_i$, with
 \[
-\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p p\mid n_p\in\mathbb N\}.
+\displaystyle L_i=\Big\{\,b_i+\sum_{p\in P_i}n_p p \;\Big\vert\; n_p\in\mathbb N\Big\}.
 \]
 When manipulating semilinear sets, we may end up with redundant representations:
 redundant period vectors $p \in P_i$ or even whole redundant components $L_i$.
@@ -767,7 +767,6 @@ We prune semilinear sets while building them to remove such redundancies.
     nonnegative linear combination of $P_i \setminus \{p\}$.
   \item Whenever $L_i \subseteq L_j$ for $i \neq j$, we remove the redundant $L_i$.
 \end{itemize}
-
 Keeping semilinear sets small reduces prevents unecessary blow-ups in the size of the formulas that get passed to solvers, which is important to keep solver invocations tractable.
 
 % it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents unnecessary size blow‐ups during solver invocations.
@@ -787,15 +786,12 @@ semilinear set $S^\ast$ has an exponentially larger representation than $S$
 itself.  Therefore, we implement optimizations specifically to reduce the size
 of $S^\ast$ when possible.
 
-Let $S$ be the semilinear set $\bigcup_{i=1}^m L_i$, with
+Let $S$ be the semilinear set $\bigcup_{i=1}^m L_i$, as above.
+In the general case, the Kleene star $S^\ast$ is given as a semilinear set by
 \[
-  L_i=\left\{\,b_i+\sum_{p\in P_i}n_p p \mid n_p\in\mathbb N \right\},
-\]
-as above. In the general case, the Kleene star $S^\ast$ is given as a semilinear set by
-\[
-  \bigcup_{I \subseteq \{1,...,m\}} \left\{
+  \bigcup_{I \subseteq \{1,...,m\}} \Big\{
     \sum_{i \in I} b_i
-    + \sum_{p \in \bigcup_{i \in I} P_i} n_p p \mid n_p \in \mathbb N \right\}.
+    + \sum_{p \in \bigcup_{i \in I} P_i} n_p p \;\Big\vert\; n_p \in \mathbb N \Big\}.
 \]
 As the index set $I$ runs over all subsets of $\{1,...,m\}$, this has $2^m$
 many components! This can be intractably many, especially when there are nested
