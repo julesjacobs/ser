@@ -234,16 +234,16 @@ $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\tex
 %\todo{continue}	
 %example - 6
 
-The next example (see Listing~\ref{lst:ComplexWhileNonSer}) covers a setting in which there is a single global variable (X) and a single local variable (i) per each in-flight request. The {\color{ForestGreen}$\blacklozenge_\text{flip}$} request flips the bit of  X (initialized to 0); the {\color{ForestGreen}$\blacklozenge_\text{main}$} request attempts to decrement i five times.
+The next example (see Listing~\ref{lst:ComplexWhileNonSer}) has a global variable $X$ and a local variable $i$ per each in-flight request. The {\color{ForestGreen}$\blacklozenge_\text{flip}$} request flips $X$ (initialized to 0); the {\color{ForestGreen}$\blacklozenge_\text{main}$} request attempts to decrement $i$ five times.
 %
 %It is straightforward to observe that the program in Listing~\ref{lst:ComplexWhileSer} is trivially serializable, as there are no yields.
 %
-It is straightforward to observe that any serial execution does not output any instance of the single response {\color{red}$\blacklozenge_1$}, 
-as any serial execution will have a single request in-flight, with the value of X being either 0 or 1. Thus, exactly one of the while loops will run indefinitely, prohibiting any {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} pairs.
+Any serial execution does not output any instance of the single response {\color{red}$\blacklozenge_1$}, 
+as any serial execution will have a single request in-flight, with $X$ either 0 or 1. Thus, exactly one of the while loops will run indefinitely, prohibiting any {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} pairs.
 %
 %Specifically, in any serial execution of requests, the local i variable is either 0 or 1, and hence --- serial execution do no produce any request/response pairs.
 %
-To show that the program is not serializable, we need only show that an interleaving can result in a non-empty set of outputs. 
+To show that the program is not serializable, we show that an interleaving \emph{can} result in a non-empty set of outputs. 
 %
 %However, some interleavings can allow the program to output a response {\color{red}$\blacklozenge_1$}. 
 %
@@ -326,11 +326,11 @@ request main:
 %\subsubsection{Example 4: Banking System}
 
 
-We illustrate a simple banking system inspired by Chandy and Lamport’s distributed snapshot algorithm~\cite{ChLa85}.  The system manages a client’s funds across multiple accounts; for exposition, we use two accounts, \(A\) and \(B\), but the same pattern extends to any number of accounts.  Likewise, each request {\color{ForestGreen}$\blacklozenge_\text{interest}$} applies an arbitrary rate \(t\%\) to every account—we set \(t=100\%\) for simplicity.
+We illustrate a simple banking system inspired by Chandy and Lamport’s distributed snapshot algorithm~\cite{ChLa85}.  The system manages a client’s funds across multiple accounts; we use two accounts, \(A\) and \(B\), but the same pattern extends to any number of accounts.  Each request {\color{ForestGreen}$\blacklozenge_\text{interest}$} applies an arbitrary rate \(t\%\) to every account—we set \(t=100\%\) for simplicity.
 %
-Each {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request moves \$50 from \(A\) to \(B\), and each {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request increases every balance by \(t\%\).  Both request operations return the combined total \(A + B\).
+Each {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request moves \$50 from \(A\) to \(B\), and each {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request increases every balance by \(t\%\).  Both requests return the combined total \(A + B\).
 %
-In every serializable execution with a single {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request, and any number of {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} requests, the total balance satisfies the invariant:
+In every serial execution with one {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request, and any number of {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} requests, the total balance satisfies the invariant
 $
 (A_{\text{after}} + B_{\text{after}})
 = (1 + t\%) \,\bigl(A_{\text{before}} + B_{\text{before}}\bigr)
@@ -341,9 +341,9 @@ $,
 %(A_{\text{after}} + B_{\text{after}})
 %= (1 + t\%) \,\bigl(A_{\text{before}} + B_{\text{before}}\bigr),
 %\]
-regardless of how these requests interleave.  Although the individual balances of \(A\) and \(B\) depend on the chosen serial order, the combined sum always reflects exactly one application of the interest rate.
+.  Although the individual balances of \(A\) and \(B\) depend on the chosen serial order, the combined sum always reflects exactly one application of the interest rate.
 %
-However, non-serializable interleavings can violate this invariant.  For instance, if a {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request deducts \$50 from \(A\) (yielding \([50,50]\)) and then yields, then an {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request may double both balances to \([100,100]\) before the transfer resumes --- resulting in \([100,150]\) and a missing \$50.  By contrast, any correct serial ordering of these two operations yields \(A + B = (100+50)\times2 = 300\), with final states \([150,150]\) or \([100,200]\) depending on which request runs first.
+However, non-serial interleavings can violate this invariant.  For instance, if a {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request deducts \$50 from \(A\) (yielding \([50,50]\)) and then yields, then an {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request may double both balances to \([100,100]\) before the transfer resumes --- resulting in \([100,150]\) and a missing \$50.  By contrast, any correct serial ordering of these two operations yields \(A + B = (100+50)\times2 = 300\), with final states \([150,150]\) or \([100,200]\) depending on which request runs first.
 %
 %
 % original
@@ -353,7 +353,7 @@ However, non-serializable interleavings can violate this invariant.  For instanc
 %%
 %Both requests return the final sum of the client funds in both the accounts.  
 %%
-Listing~\ref{lst:BankSer} depicts a serializable version of this banking system (without any \texttt{yield}), while Listing~\ref{lst:BankNonSer} includes yields in each of the requests, between the adjustment of accounts $A$ and $B$ (we note that this also represents real-world systems in which the account can be sharded and partitioned across different nodes).
+Listing~\ref{lst:BankSer} has a serial version of this banking system (without \texttt{yield}), and Listing~\ref{lst:BankNonSer} includes yields between the adjustment of accounts $A$ and $B$ (we note that this also represents real-world systems in which the account can be sharded and partitioned across different nodes).
 %
 
 
