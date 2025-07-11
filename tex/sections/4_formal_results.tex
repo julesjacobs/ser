@@ -176,17 +176,31 @@ Q = G
 	\]
 	
 	for 
-	
 	\[
 	\begin{aligned}
-		P_G &= \{\,p_g \mid g\in G\},\;\,
-		P_{REQ,L} = \{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/\ell}
-		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,\ell\in L\},\\
-		P_{REQ,RESP} &= \{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}
+		P_G
+		&= \{\,p_g \mid g\in G\},\quad
+		P_{REQ,L}
+		= \bigl\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/\ell}
+		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,\ell\in L\bigr\},\\[1ex]
+		P_{REQ,RESP}
+		&= \bigl\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}
 		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,
-		{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\}.
+		{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\bigr\}.
 	\end{aligned}
 	\]
+	
+	
+%	\[
+%	\begin{aligned}
+%		P_G &= \{\,p_g \mid g\in G\},\;\,
+%		P_{REQ,L} = \{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/\ell}
+%		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,\ell\in L\},\\
+%		P_{REQ,RESP} &= \{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}
+%		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,
+%		{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\}.
+%	\end{aligned}
+%	\]
 	
 %	\[
 %	P_G 
@@ -217,33 +231,45 @@ Q = G
 	
 	Transitions are partitioned as
 	\[
-	T = T_{\mathit{req}} \;\cup\; T_{\delta}\;\cup\;T_{\mathit{resp}},
+	T = T_{\mathit{req}} \;\cup\; T_{\delta}\;\cup\;T_{\mathit{resp}}
 	\]
 	where
-	\[
-	T_{\mathit{req}} = \{\,t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}} \mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ}\},\quad
-	T_{\delta} = \{\,t_{(\ell,g)\to(\ell',g')} \mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta\},\quad
-	T_{\mathit{resp}} = \{\,t_{{\color{red}\blacklozenge_{\mathit{resp}}}} \mid {\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\}.
-	\]
+%	\[
+%	T_{\mathit{req}} = \{\,t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)} \mid {(\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req}\},\quad
+%	T_{\delta} = \{\,t_{(\ell,g)\to(\ell',g')} \mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta\},\quad
+%	T_{\mathit{resp}} = \{\,t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})} \mid (\ell,{\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}\}.
+%	\]
+	
+	\begin{align*}
+		T_{\mathit{req}}
+		&= \{\,t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)} \mid {(\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req}\},\\[1ex]
+		T_{\delta}
+		&= \bigl\{\,t_{(\ell,g)\to(\ell',g')} 
+		\mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta\bigr\},\quad
+		T_{\mathit{resp}}
+		= \{\,t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})} \mid (\ell,{\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}\}.
+	\end{align*}
 	
 	Their pre/post vectors are:
 	\[
 	\begin{alignedat}{3}
-		\mathsf{pre}\bigl(t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}}\bigr)
+		\mathsf{pre}\bigl(t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}\bigr)
 		&= \mathbf0, &
-		\mathsf{post}\bigl(t_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}}\bigr)
-		&= \mathbf1_{p_{\ell_r}}, 
-		&&\text{for each }{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\\
+		\mathsf{post}\bigl(t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}\bigr)
+		&= \mathbf1_{p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell}}, 
+		&&\text{for each }({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req},\\
 		\mathsf{pre}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
-		&= \mathbf1_{p_\ell} + \mathbf1_{p_g}, &
+		&= \mathbf1_{p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell}} + \mathbf1_{p_g}, &
 		\mathsf{post}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
-		&= \mathbf1_{p_{\ell'}} + \mathbf1_{p_{g'}}, 
+		&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell')}} + \mathbf1_{p_{g'}}, 
 		&&\text{for each }(\ell,g)\!\to\!(\ell',g')\in\delta,\\
-		\mathsf{pre}\bigl(t_{{\color{red}\blacklozenge_{\mathit{resp}}}}\bigr)
-		&= \mathbf1_{p_\ell}, &
-		\mathsf{post}\bigl(t_{{\color{red}\blacklozenge_{\mathit{resp}}}}\bigr)
+		\mathsf{pre}\bigl(t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})}\bigr)
+		&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}}, &
+		\mathsf{post}\bigl(t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})}\bigr)
 		&= \mathbf1_{p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}}, 
-		&&\text{for each }{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\ (\ell\text{ the matching local state).}
+		&&\text{for each }{(\ell,\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}
+		%\ %(\ell\text{ the matching local state).
+%		}
 	\end{alignedat}
 	\]
 	
