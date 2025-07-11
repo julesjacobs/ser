@@ -687,7 +687,7 @@ We apply four optimizations to the base algorithm to control intermediate blowâ€
 %
 An extensive empirical evaluation of these optimizations appears later on in subsec.~\ref{subsec:optimization-results}.
 
-\paragraph{(1) Bidirectional pruning.}  
+\paragraph{(1) Bidirectional Petri net pruning.}  
 This optimization concerns the very last step of the algorithm: solving the Petri net reachability problem.
 For a given Petri net reachability problem, it may be that only some of the places and transitions are relevant.
 So before any heavy symbolic reasoning takes place, we identify places that are necessarily always empty on any potential path from the start state to an end state, and remove them from the Petri net.
@@ -738,7 +738,7 @@ non-backwards-relevant places and transitions, to a fixed point.
 \begin{theorem}[Bidirectional Pruning Soundness]
 \label{thm:bidirectional-pruning}
   Let $N = (P, T, \mathsf{pre}, \mathsf{post}, M_0)$ be a Petri net and $S$ a target set of markings.
-
+  %
   Let $P^\ast, T^\ast$ be the fixed point of the bidirectional pruning algorithm and $N' = (P^*, T^*, \Pre|_{P^*,T^*}, \mathsf{post}|_{T^*}, M_0)$ be the pruned net.
 
   Then $S$ is reachable from $N$ iff it is reachable from $N'$.
