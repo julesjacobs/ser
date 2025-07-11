@@ -2,7 +2,8 @@
 
 \section{Implementation}
 \label{sec:implementation}
-\begin{wraptable}[12]{r}{0.32\textwidth}
+\begin{wraptable}[10]{r}{0.32\textwidth}
+%	\vspace{-2.0em} 
 	\centering
 	\begin{tabular}{@{} l S[table-format=5.0] @{}}
 		\toprule
@@ -23,11 +24,11 @@
 	\label{tab:loc_summary2}
 \end{wraptable}
 
-We implemented our approach in a publicly available end-to-end tool~\cite{ArtifactRepository}, consisting of over $18{,}200$ LoC written mostly in \texttt{Rust} (see Table.~\ref{tab:loc_summary2}).
+We implemented our approach in a publicly available tool~\cite{ArtifactRepository}, consisting of over $18{,}200$ LoC written mostly in \texttt{Rust} (see Table~\ref{tab:loc_summary2}).
 %
 %We next elaborate on the architecture of our tool and the various optimizations we added to allow it to run efficiently.
 %
-For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23} which supports \textit{unbounded} reachability queries (see Appendix~\ref{appendix:smpt}).
+%For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23} which supports \textit{unbounded} reachability queries (see Appendix~\ref{appendix:smpt}).
 %, and which uses Z3 as an underlying SMT solver~\cite{DeBj08}. 
 %and which we extended to support our setting (for example, we needed to extend the solver to support proof generation). 
 %
