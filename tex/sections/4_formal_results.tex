@@ -805,8 +805,8 @@ implement the following special-case optimizations:
     $L_i = \{ \sum_{p \in P_i} n_p p \mid n_p \in \mathbb N\}$,
     we can pull it out separately, compute the Kleene star of the rest and add each $p \in P_i$ as a \textit{period} vector to every linear component of the result.
 \end{itemize}
-These optimizations  reduce the number of components generated from a Kleene star by
-half.
+These optimizations reduce the number of components generated from a Kleene star by
+half for every component on which they apply (i.e., a reduction exponential in the number of such components).
 
 % Let $\mathrm{comp}(S)=\{L_1,\dots,L_m\}$ 
 % be the multiset of linear components of the semilinear set 
