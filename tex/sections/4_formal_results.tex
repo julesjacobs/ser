@@ -376,7 +376,35 @@ Intuitively, this corresponds to the Listing~\ref{lst:MotivatingExample2NonSer} 
 
 \begin{wrapfigure}{r}{0.50\textwidth}  % “r” = right, width = 0.5\textwidth
 	\centering
-	\includegraphics[width=0.48\textwidth,trim=0 0 0 0,clip]{plots/code_2_NFA_v3.pdf}
+	% \includegraphics[width=0.48\textwidth,trim=0 0 0 0,clip]{plots/code_2_NFA_v3.pdf}
+
+	\begin{tikzpicture}[
+		->,>=stealth,
+		thick,
+		node distance=2.5cm,
+		state/.style={
+			draw=black,
+			line width=0.8pt,
+			fill=lightchacki,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt,
+			font=\small
+		},
+		every node/.style={font=\small}
+	]
+		% States using the same notation as section 3
+		\node[state] (X1) {\texttt{X=1}};
+		\node[state, right of=X1] (X0) {\texttt{X=0}};
+		
+		% Initial state arrow
+		\draw[->] ([yshift=-0.4cm]X0.south) -- (X0.south);
+		
+		% Transitions with proper colored notation from the paper
+		\draw[->] (X1) -- node[above] {${\color{ForestGreen}\blacklozenge_{\mathrm{main}}}/{\color{red}\blacklozenge_1}$} (X0);
+		\draw[->] (X0) edge[loop right] node[right] {${\color{ForestGreen}\blacklozenge_{\mathrm{main}}}/{\color{red}\blacklozenge_1}$} (X0);
+	\end{tikzpicture}
+
 	\caption{Serial NFA of Listing~\ref{lst:MotivatingExample2NonSer}.}
 	\label{fig:code2ExampleNFA}
 \end{wrapfigure}
