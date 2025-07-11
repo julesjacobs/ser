@@ -15,7 +15,7 @@ All experiments ran on a Lenovo Notebook ThinkPad P16s, with 16 AMD cores and 58
 %
 %We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
 %
-Our code, benchmarks, and experimental results are publicly available~\cite{ArtifactRepository}.
+Our code, benchmarks, and full experimental results are publicly available~\cite{ArtifactRepository}.
 %
 %All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
  
@@ -35,7 +35,7 @@ The \textit{median} total runtime was $2{,}080$ ms across all benchmarks, and $2
 %
 The \textit{average} total runtime was $52{,}857.55$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing on solely serializable (non-serializable) benchmarks.
 %
-We also observe a clear runtime split based on serializability. For serializable benchmarks, certificate validation takes much longer than proof generation. In non-serializable cases, the opposite holds: counterexample generation dominates the runtime. This makes sense, since generating a counterexample only requires a polynomial-time simulation of the network to confirm its feasibility.
+We also observe a clear runtime split based on serializability. For serializable benchmarks, certificate validation takes much longer than proof generation. In non-serializable cases, the opposite holds: counterexample generation dominates the runtime. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network to confirm its feasibility.
 %
 %We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
 %
@@ -160,7 +160,7 @@ We also observe a clear runtime split based on serializability. For serializable
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/big_table_summary.tex}
-	\caption{Overview of benchmarks with combined categories and updated serializability markings.}
+	\caption{Overview of all benchmarks based on serializability, features, and results.}
 \label{tab:benchmarks-all}
 \end{table}
 
@@ -179,7 +179,7 @@ We ran all benchmarks with each of the following six optimization combinations:
 (v) with strategic Kleene elimination (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
 and finally, (vi) with all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
 %
-The results of the aggregated overall runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log} and show that over $19\%$ more benchmarks are solved when using all optimizations compared to running without any optimizations.
+The results of the aggregated runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log} and show that over $19\%$ more benchmarks are solved when using all optimizations compared to running without any optimization.
 %
 Not surprisingly, the best configuration is the one with all optimizations on. 
 %
@@ -219,7 +219,7 @@ In addition to time complexity, our optimizations also reduce the space complexi
 
 \paragraph{Petri Net size reduction.}
 
-With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per disjunct. 
+With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct. 
 %of our reachability query. 
 %These results are summarized in Fig.~\ref{fig:petri_size_reduction}.
 

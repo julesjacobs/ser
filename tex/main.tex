@@ -101,7 +101,7 @@
 
 % ----- Main paper -----
 
-\title{When One Message Tells the Whole Story:\\ Deciding Serializability in Networking Systems}
+\title{When One Message Tells the Whole Story:\\ Deciding Serializability in Network Systems}
 \author{Author Name}
 \affiliation{
   \institution{Institution Name}
@@ -153,7 +153,7 @@
 \begin{document}
 
 \begin{abstract}
-	We study the problem of deciding \textit{serializability}, i.e., whether every interleaving of concurrent threads is equivalent to some serial execution. While prior work has shown decidability via reductions to Petri‐net reachability, the resulting theoretical procedures have remained impractical for real‐world tools. We present the first end‐to‐end decision procedure and toolchain that not only detects serializability violations, but also produces inductive proof certificates of both satisfiability and unsatisfiability. Towards this end, we also put forth a theoretical framework for abstract networking systems, and demonstrate how it captures various concurrent programs of interest. 
+	We study the problem of deciding \textit{serializability}, i.e., whether every interleaving of concurrent threads is equivalent to some serial execution. While prior work has shown decidability via reductions to Petri‐net reachability, the resulting theoretical procedures have remained impractical for real‐world tools. We present the first end‐to‐end decision procedure and toolchain that not only detects serializability violations, but also produces inductive proof certificates of both satisfiability and unsatisfiability. Towards this end, we also put forth a theoretical framework for abstract network systems, and demonstrate how it captures various concurrent programs of interest. 
 %	approach builds on the theoretical framework of Bouajjani et al. 
 	We demonstrate that by translating network system programs into Petri nets, and then applying various optimizations, such as Petri net pruning, semilinear‐set compression, and Presburger‐formula manipulation, we significantly curtail the model checking search space. 
 	Alongside establishing the theoretical foundations of these optimizations, we show how they can be applied in practice to scale serializability checking to real-world SDN scenarios --- ranging from stateful firewalls and BGP routers to an online shopping backend.
