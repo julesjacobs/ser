@@ -133,12 +133,10 @@ However, given that the first request can also \textit{yield}, it is possible fo
 		label={lst:BasicSer},numbers=none]
 	request A: 
 		x := FLAG
-		
 		if (?):
 			yield
 		else:
 			x := 1 - x
-		
 		FLAG := 1
 		return x
 	\end{lstlisting}
@@ -149,11 +147,9 @@ However, given that the first request can also \textit{yield}, it is possible fo
 	label={lst:BasicNonSer},numbers=none]
 			request A: 
 			    x := FLAG 
-			
 			    if (?): 
 			        yield
 			    // no else
-			
 			
 			    FLAG := 1 
 			    return x
