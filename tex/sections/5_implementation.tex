@@ -2,8 +2,8 @@
 
 \section{Implementation}
 \label{sec:implementation}
-\begin{wraptable}[10]{r}{0.32\textwidth}
-	\vspace{-2.5em} 
+\begin{wraptable}[8]{r}{0.32\textwidth}
+	\vspace{-4.0em} 
 	\centering
 	\begin{tabular}{@{} l S[table-format=5.0] @{}}
 		\toprule
@@ -122,7 +122,7 @@ We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly
 %
 Our workflow translates the decidability problem to an equivalent Petri Net reachability question (for unbounded nets), in which (i) the Petri Net represents all possible interleavings of the problem; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all request/response pairs that cannot be attained in any serial execution.
 %
-As Petri Net reachability is Ackermann-complete~\cite{CzWo22}, we added various optimizations to expedite the search process, both at the Petri Net level and the property-encoding level.
+As Petri Net reachability is Ackermann-complete~\cite{CzWo22}, we added various optimizations to expedite the search process, both at the PN level and the property-encoding level.
 %
 The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and includes:
  

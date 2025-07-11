@@ -85,7 +85,7 @@ A program is \textbf{serializable} if every observable behavior is achievable se
 \paragraph{Challenges.}
 To our knowledge, no prior implementation exists that can automatically generate proof certificates for this class of concurrent systems.
 Why not?
-Our decision procedure builds on Bouajjani et al.'s reduction from serializability to Petri net reachability~\cite{BoEmEnHa13}. However, since Petri net reachability is Ackermann-complete~\cite{CzWo22}, a naive implementation would fail on all but the simplest programs. 
+Our decision procedure builds on Bouajjani et al.'s reduction from serializability to Petri Net (PN) reachability~\cite{BoEmEnHa13}. However, since Petri net reachability is Ackermann-complete~\cite{CzWo22}, a naive implementation would fail on all but the simplest programs. 
 \vspace{-.5em}
 \paragraph{Our Approach.}
 To address this, we first introduce the abstraction of \textit{network systems} (NS) --- abstract concurrent programs where users send \textit{requests} that manipulate local and shared state before returning \textit{responses}. \toolname{} programs are compiled into NS, on which our decision procedure operates via reduction to Petri net and semilinear set analysis.
