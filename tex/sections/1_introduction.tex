@@ -80,7 +80,7 @@ These examples demonstrate that reasoning about serializability can be complex e
 Formally, we define the \textbf{observable execution} of a Ser program as a multiset of (request, response) pairs. The \textbf{observable behavior} of a Ser program is the set of all possible observable executions that can occur such that the requests are executed concurrently to obtain their paired responses.
 A program is \textbf{serializable} if every observable behavior is achievable serially (without interleavings). That is, a Ser program is serializable if its semantics does not change when all yield statements are removed.
 %
-\emph{The goal of this paper is to design and develop the Ser language and decision procedure for this problem.}
+\emph{The goal of this paper is to design and develop the Ser language and decision procedure for this problem.} In particular, Ser can prove serializability \textbf{automatically} without requiring any manual proof by the user.
 
 \paragraph{Challenges.}
 To our knowledge, no prior implementation exists that can automatically generate proof certificates for this class of concurrent systems.
