@@ -688,123 +688,201 @@ We apply four optimizations to the base algorithm to control intermediate blow�
 An extensive empirical evaluation of these optimizations appears later on in subsec.~\ref{subsec:optimization-results}.
 
 \paragraph{(1) Bidirectional pruning.}  
-\guy{should we reformulate this like in Appendix C?}
-Let \(N=(P,T,\mathsf{pre},\mathsf{post},M_0)\) and let \(\mathit{Tgt}\subseteq P\) be the ``nonzero” places extracted from the Presburger constraints on the target markings.  Define the flip of \(N\), \(\overline N\), by swapping \(\mathsf{pre}\) and \(\mathsf{post}\).  We compute a decreasing sequence of transition‐sets, with forward and backward passes:
-\[
-T^{(0)} = T,\qquad
-\begin{aligned}
-	R_{\mathrm{fw}}^{(k)} &= \{\,t\in T^{(k)} \mid \exists\,M_0\xrightarrow{}^{*}M\text{ in }N\text{ enabling }t\},\\
-	R_{\mathrm{bw}}^{(k)} &= \{\,t\in T^{(k)} \mid \exists\,M\xrightarrow{}^{*}M'\text{ in }\overline N\text{ with }M'(p)>0\;(p\in\mathit{Tgt})\},\\
-	T^{(k+1)} &= R_{\mathrm{fw}}^{(k)} \;\cap\; R_{\mathrm{bw}}^{(k)}.
-\end{aligned}
-\]
-We repeat until convergence, i.e.,  \(T^{(k+1)}=T^{(k)}\).  In each iteration we record
-\(\Delta_{\mathrm{fw}}^{(k)}=R_{\mathrm{fw}}^{(k-1)}\setminus R_{\mathrm{fw}}^{(k)}\)
-and
-\(\Delta_{\mathrm{bw}}^{(k)}=R_{\mathrm{bw}}^{(k-1)}\setminus R_{\mathrm{bw}}^{(k)}\).
-%
-This optimization allows to significantly prune the Petri Net while still over-approximating all reachable markings.
+This optimization concerns the very last step of the algorithm: solving the Petri net reachability problem.
+For a given Petri net reachability problem, it may be that only some of the places and transitions are relevant.
+So before any heavy symbolic reasoning takes place, we identify places that are necessarily always empty on any potential path from the start state to an end state, and remove them from the Petri net.
+
+Formally, let $N=(P,T,\Pre,\Post,M_0)$ be a Petri net, and $S\subseteq\mathbb{N}^P$ a target set. By convention, we assume that $P$ and $T$ are disjoint.
+
+\begin{definition}[Forward Over-Approximation]
+	Define the operator $\mathcal{F}:\mathcal{P}(P\cup T)\to\mathcal{P}(P\cup T)$ by
+	\[
+	X \mapsto X
+	~\cup~
+	\{\,t\in T \mid \forall p\in P:\; \Pre(p,t)>0 \implies p\in X\}
+	~\cup~
+	\{\,p\in P \mid \exists t\in X\cap T,\ \Post(p,t)>0\}.
+	\]
+	Starting from $X_0 = \{\,p\mid M_0(p)>0\}$, iterate
+	$X_{i+1} = \mathcal{F}(X_i)$ until a least fixed-point
+        $X^*=\bigcup_i X_i$ is reached.  Call $X^*\cap P$ (resp. $X^* \cap T$) the set of
+        \emph{forward-reachable} places (resp. transitions).
+\end{definition}
+
+\begin{definition}[Backward Over-Approximation]
+	Let
+	\[
+	Y_0 = \{\,p\in P \mid \exists M\in S:\;M(p)\neq0\}
+	\]
+	be the places unconstrained to zero by the target.  Define
+	$\mathcal{B}:\mathcal{P}(P\cup T)\to\mathcal{P}(P\cup T)$ by
+	\[
+	Y \mapsto Y
+	~\cup~
+	\{\,t\in T \mid \forall p\in P:\; \Post(p,t)>0 \implies p\in Y\}
+	~\cup~
+	\{\,p\in P \mid \exists t\in Y\cap T,\ \Pre(p,t)>0\}.
+	\]
+	Iterate $Y_{i+1} = \mathcal{B}(Y_i)$ until a least fixed-point
+        $Y^*=\bigcup_i Y_i$ is reached.  Call $Y^*\cap P$ (resp. $Y^* \cap T$) the set of
+        \emph{backward-relevant} places (resp. transitions).
+\end{definition}
+
+In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; symmetrically, in the backward pass, we traverse backward from any place that can influence a target constraint, and identify an over-approximation of the places and transitions which may fire along a transition sequence ending at an end state.
+In bidirectional pruning, we iteratively remove non-forwards-reachable and
+non-backwards-relevant places and transitions, to a fixed point.
+% This pruning can be quite effective: in the best
+% case, we can discover that the target set is not reachable without needing to
+% invoke the solver.
 
 \begin{theorem}[Bidirectional Pruning Soundness]
 \label{thm:bidirectional-pruning}
-Let $N = (P, T, \mathsf{pre}, \mathsf{post}, M_0)$ be a Petri net and $\mathit{Tgt} \subseteq P$ be target places. 
-Let $T^*$ be the fixed point of the bidirectional pruning algorithm and $N' = (P, T^*, \mathsf{pre}|_{T^*}, \mathsf{post}|_{T^*}, M_0)$ be the pruned net.
-Then for any marking $M$ with $M(p) > 0$ for some $p \in \mathit{Tgt}$:
-$M$ is reachable in $N$ if and only if $M$ is reachable in $N'$.
+  Let $N = (P, T, \mathsf{pre}, \mathsf{post}, M_0)$ be a Petri net and $S$ a target set of markings.
+
+  Let $P^\ast, T^\ast$ be the fixed point of the bidirectional pruning algorithm and $N' = (P^*, T^*, \Pre|_{P^*,T^*}, \mathsf{post}|_{T^*}, M_0)$ be the pruned net.
+
+  Then $S$ is reachable from $N$ iff it is reachable from $N'$.
 \end{theorem}
 %
 We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{thm:bidirectional-pruning} in Appendix~\ref{appendix:BidirectionalProof}.
 % (see the proof in Appendix~\ref{appendix:BidirectionalProof}).
 %
 
-\medskip
-\noindent\textit{\textbf{Intuition.}}
-Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify over-approximations on transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
+% \medskip
+% \noindent\textit{\textbf{Intuition.}}
+% Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify over-approximations on transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
 
 
-\paragraph{(2) Semilinear‐set pruning.}  
-Recall a semilinear set is 
-$
-S=\bigcup_{i=1}^m L_i
-$ 
-with
+\paragraph{(2) Semilinear set pruning.}  
+Recall that a semilinear set is $S=\bigcup_{i=1}^m L_i$, with
 \[
-\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p\,p\mid n_p\in\mathbb N\}
-\].  
-%
-We replace each period‐basis \(P_i\) by
-\[
-P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\}
-\],
-Dropping any ``redundant” periods, and removing any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixed point so no two components subsume one another.
-
-\medskip
-\noindent\textit{\textbf{Intuition.}}
-When manipulating Presburger sets or their semilinear representations, it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents unnecessary size blow‐ups during solver invocations.
-
-
-\paragraph{(3) Generating fewer constraints.}  
-Let $\mathrm{comp}(S)=\{L_1,\dots,L_m\}$ 
-be the multiset of linear components of the semilinear set 
-\(\displaystyle S=\bigcup_{i=1}^m L_i\), where each 
-\(\;L_i=b_i+\langle P_i\rangle\) with \(b_i\in\mathbb N^d\) and 
-\(P_i\subseteq\mathbb N^d\).  Define the pruning operator
-\[
-\mathrm{new}(\mathcal C)
-\;=\;
-\bigcup\bigl\{\,L\in\mathcal C \;\bigm|\;\nexists\,L'\in\mathcal C\setminus\{L\}:\;L'\subsetneq L\bigr\},
+\displaystyle L_i=\{\,b_i+\sum_{p\in P_i}n_p p\mid n_p\in\mathbb N\}.
 \]
-which removes any component strictly containing another.  
-%
-\guy{Nicolas is it clear we mean that we fix their semilinear "meaning" of the regex operations? For example, + is union etc..}
-Then, we replace the naive semilinear‐set operations by
-\[
-S\;+\;T
-\;=\;
-\mathrm{new}\bigl(\mathrm{comp}(S)\,\cup\,\mathrm{comp}(T)\bigr),
-\]
-\[
-S\;\cdot\;T
-\;=\;
-\mathrm{new}\Bigl(\{\,L_i\cdot L'_j \mid L_i\in\mathrm{comp}(S),\;L'_j\in\mathrm{comp}(T)\}\Bigr),
-\]
-where for
-\(\;L_i=b_i+\langle P_i\rangle,\;L'_j=b'_j+\langle P'_j\rangle\) we set
-$
-L_i\cdot L'_j
-=\;(b_i+b'_j)\;+\;\langle\,P_i\cup P'_j\,\rangle.
-$
-Finally, for Kleene‐star and plus on the regex side one similarly applies
-\(\mathrm{new}(\cdot)\) to the collection of ``folded” components instead of
-building all intermediate ones:
-\[
-S^*
-=\mathrm{new}\Bigl(\bigcup_{k\ge0}\bigl(\mathrm{comp}(S)\bigr)^k\Bigr),
-\qquad
-S^+
-=S\cdot S^*.
-\]
+When manipulating semilinear sets, we may end up with redundant representations:
+redundant period vectors $p \in P_i$ or even whole redundant components $L_i$.
 
-\medskip
-\noindent\textit{\textbf{Intuition.}}
-%
-During set construction --- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description.  In benchmarks with large state spaces, it can reduce the number of intermediate branches by orders of magnitude.
+We prune semilinear sets while building them to remove such redundancies.
+\begin{itemize}
+  \item For each $P_i$, we greedily remove any $p \in P_i$ which is already a
+    nonnegative linear combination of $P_i \setminus \{p\}$.
+  \item Whenever $L_i \subseteq L_j$ for $i \neq j$, we remove the redundant $L_i$.
+\end{itemize}
+
+Keeping semilinear sets small reduces prevents unecessary blow-ups in the size of the formulas that get passed to solvers, which is important to keep solver invocations tractable.
+
+% it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents unnecessary size blow‐ups during solver invocations.
+
+% %
+% We replace each period‐basis \(P_i\) by
+% \[
+% P_i \;:=\;\{\,p\in P_i \mid p\notin\mathsf{Span}(P_i\setminus\{p\})\}
+% \],
+% Dropping any ``redundant'' periods, and removing any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixed point so no two components subsume one another.
+
+\paragraph{(3) Generating fewer constraints.}
+When computing the Parikh image of a regular expression as a semilinear set,
+most regex operations can be implemented without exponential blow-up.
+However, Kleene star is a notable exception: in the general case, the
+semilinear set $S^\ast$ has an exponentially larger representation than $S$
+itself.  Therefore, we implement optimizations specifically to reduce the size
+of $S^\ast$ when possible.
+
+Let $S$ be the semilinear set $\bigcup_{i=1}^m L_i$, with
+\[
+  L_i=\left\{\,b_i+\sum_{p\in P_i}n_p p \mid n_p\in\mathbb N \right\},
+\]
+as above. In the general case, the Kleene star $S^\ast$ is given as a semilinear set by
+\[
+  \bigcup_{I \subseteq \{1,...,m\}} \left\{
+    \sum_{i \in I} b_i
+    + \sum_{p \in \bigcup_{i \in I} P_i} n_p p \mid n_p \in \mathbb N \right\}.
+\]
+As the index set $I$ runs over all subsets of $\{1,...,m\}$, this has $2^m$ many components. However, in a typical case, we may not need that many. We implement the following special-case optimizations:
+\begin{itemize}
+  \item If any component $L_i$ of $S$ has no period vectors, $L_i = \{b_i\}$, then we can pull it out separately, computing the Kleene star of the rest and then adding $b_i$ as a period vector to every linear component of the result.
+
+  \item Likewise, if any component $L_i$ of $S$ has a zero \emph{base} vector,
+    $L_i = \{ \sum_{p \in P_i} n_p p \mid n_p \in \mathbb N\}$,
+    we can pull it out separately, computing the Kleene star of the rest and adding each $p \in P_i$ as a period vector to every linear component of the result.
+\end{itemize}
+Each reduces the number of components generated from a Kleene star by
+half, whenever it applies.
+
+% Let $\mathrm{comp}(S)=\{L_1,\dots,L_m\}$ 
+% be the multiset of linear components of the semilinear set 
+% \(\displaystyle S=\bigcup_{i=1}^m L_i\), where each 
+% \(\;L_i=b_i+\langle P_i\rangle\) with \(b_i\in\mathbb N^d\) and 
+% \(P_i\subseteq\mathbb N^d\).  Define the pruning operator
+% \[
+% \mathrm{new}(\mathcal C)
+% \;=\;
+% \bigcup\bigl\{\,L\in\mathcal C \;\bigm|\;\nexists\,L'\in\mathcal C\setminus\{L\}:\;L'\subsetneq L\bigr\},
+% \]
+% which removes any component strictly containing another.  
+% %
+% \guy{Nicolas is it clear we mean that we fix their semilinear "meaning" of the regex operations? For example, + is union etc..}
+% Then, we replace the naive semilinear‐set operations by
+% \[
+% S\;+\;T
+% \;=\;
+% \mathrm{new}\bigl(\mathrm{comp}(S)\,\cup\,\mathrm{comp}(T)\bigr),
+% \]
+% \[
+% S\;\cdot\;T
+% \;=\;
+% \mathrm{new}\Bigl(\{\,L_i\cdot L'_j \mid L_i\in\mathrm{comp}(S),\;L'_j\in\mathrm{comp}(T)\}\Bigr),
+% \]
+% where for
+% \(\;L_i=b_i+\langle P_i\rangle,\;L'_j=b'_j+\langle P'_j\rangle\) we set
+% $
+% L_i\cdot L'_j
+% =\;(b_i+b'_j)\;+\;\langle\,P_i\cup P'_j\,\rangle.
+% $
+% Finally, for Kleene‐star and plus on the regex side one similarly applies
+% \(\mathrm{new}(\cdot)\) to the collection of ``folded” components instead of
+% building all intermediate ones:
+% \[
+% S^*
+% =\mathrm{new}\Bigl(\bigcup_{k\ge0}\bigl(\mathrm{comp}(S)\bigr)^k\Bigr),
+% \qquad
+% S^+
+% =S\cdot S^*.
+% \]
+
+% \medskip
+% \noindent\textit{\textbf{Intuition.}}
+% %
+% During set construction --- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description.  In benchmarks with large state spaces, it can reduce the number of intermediate branches by orders of magnitude.
 
 \paragraph{(4) Strategic Kleene elimination order.}  
-When converting an NFA \(\mathcal A=(Q,\Sigma,\delta,q_0,F)\) to a regex by repeated state‐elimination, then, instead of choosing an arbitrary state $q\in Q'$, we pick the next state
+The size of the generated semilinear set is not only impacted by how the
+semilinear set operations are implemented, but also by what specific regular
+expression is given as input: a single regular language may be represented by a
+number of equivalent regexes, each of different complexity.
+%
+In particular, as Kleene star can cause a large blow-up in semilinear set size,
+we are especially sensitive to the \emph{star height} of the generated regex.
+
+We use Kleene's algorithm to convert an NFA $\mathcal A=(Q,\Sigma,\delta,q_0,F)$ to a regex, which works by repeated state-elimination, choosing one state at a time.
+Naively, when eliminating states in an arbitrary order, Kleene's algorithm
+generates regexes with a much greater star height than necessary---a problem
+when converting to semilinear sets.
+
+Therefore, we heuristically optimize the state elimination order to end up with a smaller regex. Formally, we pick the next state
 \[
 q^* = 
 	\arg\min_{q\in Q'}\bigl(|\delta_{\mathrm{in}}(q)|+|\delta_{\mathrm{out}}(q)|\bigr)
 \]
+where \(Q'\subseteq Q\) are the states remaining to be eliminated, choosing to
+eliminate states with a smaller total degree first.
+%
+This empirically keeps the resulting regexes small.
 
-
-where \(Q'\subseteq Q\) are the states remaining to be eliminated. Thus, keeping the intermediate regex small.
-
-\medskip
-\noindent\textit{\textbf{Intuition.}}
-When converting an NFA to a single regex, we pick the next state to eliminate by heuristically choosing the  state with the fewest incoming and outgoing edges.
-This optimization allows for circumventing 
-overblown expressions resulting in naive translations, especially with regard to  Kleene closures (the “\(\mathsf{*}\)” operator).  Instead, we analyze the structure of sub-expressions under the various operators --- estimating their branching factor, and reordering them so that simpler, low‐branching components are expanded first.  
+% \medskip
+% \noindent\textit{\textbf{Intuition.}}
+% When converting an NFA to a single regex, we pick the next state to eliminate by heuristically choosing the  state with the fewest incoming and outgoing edges.
+% This optimization allows for circumventing 
+% overblown expressions resulting in naive translations, especially with regard to  Kleene closures (the “\(\mathsf{*}\)” operator).  Instead, we analyze the structure of sub-expressions under the various operators --- estimating their branching factor, and reordering them so that simpler, low‐branching components are expanded first.  
 %This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  
 
 \begin{figure}[!htbp]
@@ -847,7 +925,7 @@ overblown expressions resulting in naive translations, especially with regard to
 		\label{fig:step:e}
 	\end{subfigure}
 	
-	\caption{A Petri Net after three rounds of bidirectional pruning: two forward passes and one backward pass. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
+	\caption{A Petri net after three rounds of bidirectional pruning: two forward passes and one backward pass. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
 	\label{fig:bidirectional_pruning}
 \end{figure}
 
