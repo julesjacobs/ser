@@ -193,26 +193,6 @@ For example, there are instances such as \texttt{a3.ser} and \texttt{a7.ser}, in
 affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks without this optimization.
 
 
-
-\begin{center}
-	\begin{minipage}[htbp]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
-		\captionof{figure}{Cumulative  solved instances (T.O.  $150$ sec).}
-		\label{fig:timeout_cumulative_solved_log}
-	\end{minipage}\hfill
-	\begin{minipage}[htbp]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
-		\captionof{figure}{Petri net size reduction via pruning.}
-			%(timeout 150 seconds)
-			%.}
-		\label{fig:petri_size_reduction}
-	\end{minipage}
-\end{center}
-
-
-
 \subsubsection{Space Optimization}
 
 In addition to time complexity, our optimizations also reduce the space complexity of the two main components --- the Petri Net and the semilinear set.
@@ -267,6 +247,24 @@ To ensure a fair comparison, we only measured benchmarks that were completed und
 %This occurs pervasively in our state-machine benchmarks which have loops in their network systems --- and hence even simple programs of this category cannot be analyzed with respect to serializability.
 
 %\todo{understand why this is related to loops in the NS}
+
+
+\begin{center}
+	\begin{minipage}[htbp]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
+		\captionof{figure}{Cumulative solved instances (T.O. $500$ sec).}
+		\label{fig:timeout_cumulative_solved_log}
+	\end{minipage}\hfill
+	\begin{minipage}[htbp]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
+		\captionof{figure}{Petri net size reduction via pruning.}
+			%(timeout 150 seconds)
+			%.}
+		\label{fig:petri_size_reduction}
+	\end{minipage}
+\end{center}
 
 
 \begin{table}[!htbp]
