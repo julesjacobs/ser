@@ -23,10 +23,10 @@ Our code, benchmarks, and full experimental results are publicly available~\cite
 
 
 \subsection{Runtime Results}
-We ran our tool on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
+We ran \toolname{} on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
 For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
 %
-Within the time limit, our tool solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see Table~\ref{tab:benchmarks-all}).
+Within the time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see Table~\ref{tab:benchmarks-all}).
 %
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 

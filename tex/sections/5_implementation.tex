@@ -24,7 +24,7 @@
 	\label{tab:loc_summary2}
 \end{wraptable}
 
-We implemented our approach in a publicly available tool~\cite{ArtifactRepository}, consisting of over $18{,}200$ LoC written mostly in \texttt{Rust} (see Table~\ref{tab:loc_summary2}).
+We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly available tool consisting of over $18{,}200$ LoC written mostly in \texttt{Rust} (see Table~\ref{tab:loc_summary2}).
 %
 %We next elaborate on the architecture of our tool and the various optimizations we added to allow it to run efficiently.
 %
@@ -118,13 +118,13 @@ We implemented our approach in a publicly available tool~\cite{ArtifactRepositor
 %
 %\noindent
 %
-Our tool implements an end-to-end serializability checker for arbitrary input programs. If the program is serializable, we return a proof thereof; otherwise, if it is not serializable, a counterexample is given to the user for an interleaving that can result in request/response pairs that are unattainable in any serial execution.
+\toolname{} implements an end-to-end serializability checker for arbitrary input programs. If the program is serializable, we return a proof thereof; otherwise, if it is not serializable, a counterexample is given to the user for an interleaving that can result in request/response pairs that are unattainable in any serial execution.
 %
 Our workflow translates the decidability problem to an equivalent Petri Net reachability question (for unbounded nets), in which (i) the Petri Net represents all possible interleavings of the problem; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all request/response pairs that cannot be attained in any serial execution.
 %
 As Petri Net reachability is Ackermann-complete~\cite{CzWo22}, we added various optimizations to expedite the search process, both at the Petri Net level and the property-encoding level.
 %
-The pipeline of our approach is depicted in Fig.~\ref{fig:full_program_flow}, and includes:
+The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and includes:
  
 
 \begin{enumerate}
