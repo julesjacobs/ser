@@ -65,7 +65,7 @@ Our \toolname{} syntax is defined as follows:
 %    \label{fig:syntax}
 %\end{figure}
     %
-This NS setting is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
+This is formalized as part of our network system (NS) setting, which is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
     
    
 A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
@@ -240,7 +240,7 @@ We note that we depicted only part of the states that are \textit{reachable}, in
 			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
 X := 1
 yield
-y := X + 1
+y := X
 X := 0
 return y
 			\end{lstlisting}
@@ -262,7 +262,7 @@ return y
 		\end{tikzpicture}\\[-2.5pt]
 		\begin{minipage}{1.5cm}
 			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-y := X + 1
+y := X
 X := 0
 return y
 			\end{lstlisting}
@@ -390,7 +390,7 @@ return y
 				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
 X := 1 
 yield 
-y := X + 1
+y := X
 X := 0
 return y
 				\end{lstlisting}
@@ -506,7 +506,7 @@ return y
 				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
 X := 1
 yield
-y := X + 1
+y := X
 X := 0
 return y
 				\end{lstlisting}
@@ -541,7 +541,7 @@ return y
 			\\
 			\begin{minipage}{0.14\linewidth}
 				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-y := X + 1
+y := X
 X := 0
 return y
 				\end{lstlisting}
@@ -578,7 +578,7 @@ return y
 			\\
 			\begin{minipage}{0.14\linewidth}
 				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-y := X + 1
+y := X
 X := 0
 return y
 				\end{lstlisting}
