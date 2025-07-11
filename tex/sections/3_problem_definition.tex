@@ -65,15 +65,15 @@ Our network system (NS) syntax is defined as follows:
 %    \label{fig:syntax}
 %\end{figure}
     %
-This NS setting is motivated by software-defined networking systems. In the networking domain, spawning a request corresponds to sending a packet, with each local variable mapped to a unique packet header field; global variables correspond to variables on programmable switches, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
+This NS setting is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
     
    
 A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
 \item $G$ is a set of global states (assignments to all global variables)
 \item $L$ is a set of local states (local variable values and remaining program to execute)
-\item $\mathit{REQ}$ is a set of request types (marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
-\item $\mathit{RESP}$ is a set of response types (marked {\color{red}$\blacklozenge_\text{resp}$})
+\item $\mathit{REQ}$ is a set of request types (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
+\item $\mathit{RESP}$ is a set of response types (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
 \item $\mathit{req} \subseteq \mathit{REQ} \times L$ maps each request type to its initial local state
 \item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps final local states to response types
@@ -81,9 +81,9 @@ A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \end{itemize}
 
 \begin{definition}[Request and Response]
-A \emph{request} $r \in \mathit{REQ}$ represents the initiation of a concurrent computation unit. Each request has an associated handler expression from the program syntax that defines its behavior.
-A \emph{response} $s \in \mathit{RESP}$ represents the value returned by a request after its execution terminates.
-The pair $(r, s) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single request execution.
+A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{r}} \in \mathit{REQ}$ represents the initiation of a concurrent computation unit. Each request has an associated handler expression from the program syntax that defines its behavior.
+A \emph{response} ${\color{red}\blacklozenge_\text{s}} \in \mathit{RESP}$ represents the value returned by a request after its execution terminates.
+The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozenge_\text{s}}) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single request execution.
 \end{definition}
 
 
@@ -160,7 +160,7 @@ The pair $(r, s) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete in
 \end{figure}
 
 \begin{definition}[Serializability]
-A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}) = \text{Ser}(\mathcal{N})$, meaning every multiset of request/response pairs achievable through interleaved execution can also be achieved through some serial execution.
+A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}) = \text{Ser}(\mathcal{N})$, meaning every multiset of request/response pairs attainable through an interleaved execution can also be achieved through some serial execution.
 \end{definition}
 
 %\guy{Nicolas/Jules can you take a look at the other definition that I masked in the latex below? Is the current one good enough?}
@@ -237,7 +237,7 @@ Recall the code snippet from the simple, non-serializable example presented in L
 The set $G$ is defined as $G=\{[X=0], [X=1]\}$
 
 \item 
-The initial global $g_0$ state is defined as $g_0 = [X=0]$.
+The initial global state is defined as $g_0 = [X=0]$.
 
 \item 
 We define $L$ as all pairs of local states (assignments such as $[y=0], [y=1]$) and ``remaining'' programs.
@@ -250,7 +250,7 @@ The set of responses is $RESP = \{{\color{red}\blacklozenge_0},{\color{red}\blac
 
 \end{itemize}
 
-We define the three mappings $req$, $resp$, and $\delta$ as follows:
+
 %\begin{minipage}[t]{0.3\textwidth}
 %	\begin{lstlisting}[caption={Without yield or lock (serializable)}]
 %	request main: 
@@ -592,10 +592,15 @@ We define the three mappings $req$, $resp$, and $\delta$ as follows:
 %\]
 
 %\todo{emphasize that there are states we didn't add}
-
+We define the three mappings $req$, $resp$, and $\delta$ in Fig.~\ref{fig:code2ExampleNS}.
+The figure also includes the explicit network system that
+serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
+%
+% depicts the program in Fig.~\ref{fig:code2ExampleNS}.
+% as follows:
 We note that we depicted only part of the states that are \textit{reachable}, in our finite-state setting.
 %
-Next, we present in Fig.~\ref{fig:code2ExampleNS} the explicit network system that depicts the program, which serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
+%Next, we present in Fig.~\ref{fig:code2ExampleNS} , which serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
 
 
 
@@ -912,7 +917,7 @@ return y
 		\Bigg\}
 	\end{array}
 	\]
-	\caption{Network system and transition function for the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
+	\caption{Network system and transition functions for the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
 \label{fig:code2ExampleNS}
 \end{figure}
 
