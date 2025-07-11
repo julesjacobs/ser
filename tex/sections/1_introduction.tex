@@ -96,7 +96,7 @@ We note that while our approach is sound (never incorrectly claims serializabili
 We developed several techniques to make the approach practical, including Petri Net pruning, semilinear set compression, and additional manipulations with Presburger formulas.
 These optimizations reduce the search space by orders of magnitude, enabling us to successfully verify the serializability of non-trivial programs.
 
-We evaluated our approach on programs with features such as loops, branching, locks, and nondeterminism. Our benchmarks include SDN-inspired examples like stateful firewalls, BGP routing, and online shopping systems.
+We evaluated our approach on programs with features such as loops, branching, locks, and nondeterminism. Our benchmarks include SDN-inspired examples such as stateful firewalls, BGP routing, and online shopping systems.
 
 To our knowledge, this leads to the first \emph{implemented} decision procedure that: (i) automatically \textit{proves} serializability for unbounded executions; (ii) generates \textit{proof certificates}; and (iii) handles non-trivial programs.
 
@@ -105,9 +105,9 @@ To our knowledge, this leads to the first \emph{implemented} decision procedure 
 After a tour of examples in \Cref{sec:tour}, we present the following contributions:
 \begin{itemize}
     \item \Cref{sec:problem-definition} introduces the notion of a Network System (NS), a concurrent program abstraction that captures the essence of concurrent systems.
-    \item \Cref{sec:formal-results} gives decidability results (a theorem on serializability; two on equivalence), presents the core decision procedure with proof certificates, and gives techniques for semilinear sets and Petri-net reductions.
+    \item \Cref{sec:formal-results} presents decidability results (a theorem on serializability; two on equivalence), presents the core decision procedure with proof certificates, and presents techniques for semilinear set reductions and Petri-net reductions.
     \item \Cref{sec:implementation} presents the implementation of the Ser toolchain.
-    \item \Cref{sec:evaluation} presents case studies on modeling in Ser examples from domains such as SDNs and databases, and presents our evaluation of the toolchain.
+    \item \Cref{sec:evaluation} presents case studies on modeling in Ser examples from domains such as SDNs and databases, and presents our extensive evaluation of the toolchain.
 \end{itemize}
 
 
