@@ -12,7 +12,7 @@
 
 \subsection{Background}
 
-\paragraph{Petri nets.}
+\paragraph{Petri Nets.}
 A \emph{Petri net} is a tuple
 \[
 N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
@@ -58,7 +58,7 @@ If a property $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ 
 %\] 
 serves as a proof of reachability. One can verify the claim by simulating $\sigma$ from $M_0$ and checking that the resulting marking satisfies $F$.
 %
-If $F$ is unreachable, there exists an inductive certificate $C$ (a Presburger formula) satisfying~\cite{Le09}:
+If $F$ is unreachable, there exists~\cite{Le09} an inductive certificate $C$ (a Presburger formula) satisfying:
 (i) $M_0 \models C$ (initial state satisfies $C$);
 (ii) if $M \models C$ and $M \xrightarrow{t} M'$, then $M' \models C$ (inductiveness); and
 (iii) $C \Rightarrow \neg F$ (certificate implies property is false).
@@ -86,11 +86,11 @@ finite description of its Parikh Image.
 
 \paragraph{Deciding serializability in unbounded systems.}
 
-We build on Bouajjani et al.~\cite{BoEmEnHa13}, who proved that serializability is decidable for unbounded systems by reducing it to Petri net reachability. They showed this as a special case of \textit{k-bounded-barrier linearizability}.
+We build on Bouajjani et al.~\cite{BoEmEnHa13}, who proved that serializability is decidable for unbounded systems by reducing it to Petri net reachability. They showed this as a special case of \textit{bounded-barrier linearizability}.
 
 
 
-\subsection{The Algorithm (Without Optimizations)}
+\subsection{The Algorithm (without Optimizations)}
 
 Given a network system \(\mathcal S\) with global states \(G\), our algorithm proceeds as follows:  
 
@@ -130,7 +130,7 @@ Q = G
 	{\color{ForestGreen}\blacklozenge_{\mathit{req}}},\\[0.5ex]
 	\text{then upon completion it receives response}\;
 	{\color{red}\blacklozenge_{\mathit{resp}}},\\[0.5ex]
-	\text{and transitions to global state at global state } q'
+	\text{and transitions to global state } q'
 \end{array}
 \]
 %
@@ -152,7 +152,7 @@ Q = G
 	
 	(i.e.\ each transition is a request/response pair).  Its language
 	\(L(\mathcal A_{\mathrm{ser}})\subseteq\Sigma^*\) is exactly the set of serial
-	request/response traces, and we define the semilinear set of serial executions (each such execution giving rise to a multiset of request/response pairs)
+	request/response traces, and we define the semilinear set of serial executions, each such execution giving rise to a multiset of request/response pairs:
 	\[
 	\mathsf{Ser}(\mathcal S)
 	\;=\;
@@ -247,13 +247,13 @@ Q = G
 	\end{alignedat}
 	\]
 	
-	The initial marking is a single token on the place representing the initial global state:
+	The initial marking is a single token on the place representing the initial global state $g_0$ of the NS:
 	\[
 	M_0(p_{g_0}) = 1,
 	\quad
 	M_0(p) = 0 \text{ for all }p\neq p_{g_0},
 	\]
-	where \(g_0\) is the initial global state of the network system \(\mathcal S\).  
+%	where \(g_0\) is the initial global state of the network system \(\mathcal S\).  
 	
 	
 	
@@ -296,10 +296,10 @@ Q = G
 
 	\begin{itemize}
 		
-		\item[\sat] In the satisfiable case, we validate a reachable trace and embed it into the NS semantics, yielding a valid interleaving that produces request/response pairs unattainable under any serial execution.
+		\item[\sat]: We validate a reachable trace and embed it into the NS semantics, yielding a valid interleaving that produces request/response pairs unattainable under any serial execution.
 		See the example in subsec.~\ref{subsec:ns-not-serializable}.
 		
-		\item[\unsat] In the unsatisfiable case, we synthesize an inductive invariant over the interleaving PN, thereby proving that the corresponding semilinear set cannot be realized by any interleaving.
+		\item[\unsat]: We synthesize an inductive invariant over the interleaving PN, thereby proving that the corresponding semilinear set cannot be realized by any interleaving.
 		See the example in subsec.~\ref{subsec:ns-serializable}.
 		
 		
@@ -315,7 +315,7 @@ Q = G
 
 \paragraph{Complexity Analysis.}
 The core algorithm reduces serializability checking to Petri net reachability with semilinear target sets. 
-Since the serial executions form a regular language (step 1), their Parikh image is effectively semilinear by Parikh's theorem, with size exponential in the NFA.
+Since the serial executions form a regular language (step 1), their Parikh Image is effectively semilinear by Parikh's theorem, with size exponential in the NFA.
 The interleaving Petri net (step 2) has $O(|G| + |L| + |\mathit{REQ}| \times |\mathit{RESP}|)$ places and $O(|\mathit{REQ}| + |\delta| + |\mathit{RESP}|)$ transitions.
 The reachability query (step 3) asks whether the Petri net can reach the complement of a semilinear set, which is decidable but Ackermann-complete~\cite{CzWo22}.
 Without optimizations, even simple examples can generate Petri nets with hundreds of places and exponentially-sized semilinear constraints, making the approach impractical.
@@ -343,7 +343,7 @@ Our optimizations (Section~\ref{sec:optimizations}) dramatically reduce both the
 
 \paragraph{Serializable NFA Extraction.}
 
-Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS presented in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen in Fig.~\ref{fig:code2ExampleNFA}, serial executions can produce only request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, when a request enters and exits the system, is $[X=0]$.
+Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS depicted in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen in Fig.~\ref{fig:code2ExampleNFA}, serial executions can produce only request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, when a request enters and exits the system, is [X=0].
 %
 Intuitively, this corresponds to the Listing~\ref{lst:MotivatingExample2NonSer} program updating [X:=1] as an intermediate assignments before yielding.
 
@@ -644,7 +644,7 @@ We get the following inductive invariants for each of the two (reachable) global
 
 %\subsection{Time/Space Complexity}
 
-\guy{Should we add something about time/space complexity?}
+%\guy{Should we add something about time/space complexity?}
 
 
 \subsection{Optimizations}
