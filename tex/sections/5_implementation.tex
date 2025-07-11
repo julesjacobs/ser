@@ -2,6 +2,26 @@
 
 \section{Implementation}
 \label{sec:implementation}
+\begin{wraptable}[12]{r}{0.32\textwidth}
+	\centering
+	\begin{tabular}{@{} l S[table-format=5.0] @{}}
+		\toprule
+		\textbf{Module}                & {\textbf{LoC}} \\
+		\midrule
+		Input \& Parsing               &  1723          \\
+		Model Construction             &  5561          \\
+		Petri–Net Conversion           &   843          \\
+		Reachability          &  2628          \\
+		Proof Checking                 &  3240          \\
+		Utilities                      &  2160          \\
+		Testing \& Evaluation          &  2118          \\
+		\midrule
+		\textbf{Total}                 & \textbf{18273} \\
+		\bottomrule
+	\end{tabular}
+	\caption{Lines of Code (LoC)}
+	\label{tab:loc_summary2}
+\end{wraptable}
 
 We implemented our approach in a publicly available end-to-end tool~\cite{ArtifactRepository}, consisting of over $18{,}200$ LoC written mostly in \texttt{Rust} (see Table.~\ref{tab:loc_summary2}).
 %
@@ -20,7 +40,6 @@ For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23} which supp
 %	\item Code architecture
 %	\item Optimizations
 %\end{enumerate}
-
 
 %\newpage
 \subsection{Code Architecture}
@@ -75,26 +94,26 @@ For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23} which supp
 %
 % this table summarizes the values without whitespaces/comments and without the code for SMPT (or the wrapper) or the carfo and toml files
 %
-\begin{wraptable}[8]{r}{0.32\textwidth}
-	\centering
-	\begin{tabular}{@{} l S[table-format=5.0] @{}}
-		\toprule
-		\textbf{Module}                & {\textbf{LoC}} \\
-		\midrule
-		Input \& Parsing               &  1723          \\
-		Model Construction             &  5561          \\
-		Petri–Net Conversion           &   843          \\
-		Reachability          &  2628          \\
-		Proof Checking                 &  3240          \\
-		Utilities                      &  2160          \\
-		Testing \& Evaluation          &  2118          \\
-		\midrule
-		\textbf{Total}                 & \textbf{18273} \\
-		\bottomrule
-	\end{tabular}
-	\caption{Lines of Code (LoC)}
-	\label{tab:loc_summary2}
-\end{wraptable}
+%\begin{wraptable}[8]{r}{0.32\textwidth}
+%	\centering
+%	\begin{tabular}{@{} l S[table-format=5.0] @{}}
+%		\toprule
+%		\textbf{Module}                & {\textbf{LoC}} \\
+%		\midrule
+%		Input \& Parsing               &  1723          \\
+%		Model Construction             &  5561          \\
+%		Petri–Net Conversion           &   843          \\
+%		Reachability          &  2628          \\
+%		Proof Checking                 &  3240          \\
+%		Utilities                      &  2160          \\
+%		Testing \& Evaluation          &  2118          \\
+%		\midrule
+%		\textbf{Total}                 & \textbf{18273} \\
+%		\bottomrule
+%	\end{tabular}
+%	\caption{Lines of Code (LoC)}
+%	\label{tab:loc_summary2}
+%\end{wraptable}
 %
 %\noindent
 %
