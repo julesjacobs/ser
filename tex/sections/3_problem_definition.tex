@@ -72,8 +72,8 @@ A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \begin{itemize}
 \item $G$ is a set of global states (assignments to all global variables)
 \item $L$ is a set of local states (local variable values and remaining program to execute)
-\item $\mathit{REQ}$ is a set of request types (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
-\item $\mathit{RESP}$ is a set of response types (each marked {\color{red}$\blacklozenge_\text{resp}$})
+\item $\mathit{REQ}$ is a finite set of request types (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
+\item $\mathit{RESP}$ is a finite set of response types (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
 \item $\mathit{req} \subseteq \mathit{REQ} \times L$ maps each request type to its initial local state
 \item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps final local states to response types

@@ -12,7 +12,7 @@ Each thread is spawned any number of times (and at any point in time) by a \text
 %
 For example, in the previous three examples, there is a single request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
 % 
-We analyze serializability through the lens of such ({\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$}) pairs. For example, The programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also produce ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}). We later formulate this via our network system framework. 
+We analyze serializability through the lens of such ({\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$}) pairs. For example, the programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also produce ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}). We later formulate this via our network system framework. 
 %
 We depict global variables with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
 %
@@ -488,7 +488,7 @@ The program has three types of requests:
 		
  request route_west:
      current := 1 // initial node
-     while (current == 2) or (current == 3): // still routing        
+     while (current == 1) or (current == 2): // still routing        
          if (current == 1): // west (switch 1)
              if (B == 1): // blue policy
                  current := 2

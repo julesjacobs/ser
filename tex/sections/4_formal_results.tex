@@ -157,7 +157,7 @@ Q = G
 	\mathsf{Ser}(\mathcal S)
 	\;=\;
 	\mathsf{Parikh}\bigl(L(\mathcal A_{\mathrm{ser}})\bigr)
-	\;\subseteq\;\mathbb N^{|\Sigma|}.
+	\;\subseteq\;\mathbb N^{\Sigma}.
 	\]
 	
 	\item 
@@ -372,7 +372,7 @@ Our optimizations (Section~\ref{sec:optimizations}) dramatically reduce both the
 
 Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS depicted in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen in Fig.~\ref{fig:code2ExampleNFA}, serial executions can produce only request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, when a request enters and exits the system, is [X=0].
 %
-Intuitively, this corresponds to the Listing~\ref{lst:MotivatingExample2NonSer} program updating [X:=1] as an intermediate assignment before yielding.
+%Intuitively, this corresponds to the Listing~\ref{lst:MotivatingExample2NonSer} program updating [X:=1] as an intermediate assignment before yielding.
 
 \begin{wrapfigure}{r}{0.50\textwidth}  % “r” = right, width = 0.5\textwidth
 	\centering
@@ -459,10 +459,10 @@ Regarding the aforementioned program, we automatically generate the following re
 \[
 P_1 = 0 \wedge 
 \textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
-\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
+\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} \ge 0 \wedge \textcolor{red}{P_8} \ge 1.
 \]
 
-This set encodes all reachable markings with no tokens on $P_1,P_4,P_5,P_6$,$\textcolor{red}{P_7}$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3}$.  
+This set encodes all reachable markings with no tokens on $P_1,P_4,P_5,P_6$, at least one token on $\textcolor{red}{P_8}$, and arbitrary tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3},\textcolor{red}{P_7}$.  
 %
 This target semilinear set of markings is, in fact non-empty. For example, it includes the following reachable marking:
 
@@ -574,7 +574,8 @@ Now, we observe again the adjusted program with locks (as previously described i
 %
 Due to space limitations, we relegate figures of the corresponding network system (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and Interleaving Petri Net (Fig.~\ref{fig:code3ExamplePN}) to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
 %
-In this specific example, non-serializability corresponds to the Petri Net being able to reach a marking satisfying the same semilinear formula as in the previous example for non-serializability (note however, that this is not always the case). 
+In this specific example, non-serializability corresponds to the Petri Net being able to reach a marking satisfying the same semilinear formula as in the previous example for non-serializability.
+% (note however, that this is not always the case). 
 %(but this time each place $P_i$ corresponds to the new PN). 
 %following formula:
 %
@@ -818,9 +819,9 @@ of $S^\ast$ when possible.
 Let $S$ be the semilinear set $\bigcup_{i=1}^m L_i$, as above.
 In the general case, the Kleene star $S^\ast$ is given as a semilinear set by
 \[
-  \bigcup_{I \subseteq \{1,...,m\}} \Big\{
+  S^\ast=\bigcup_{I \subseteq \{1,...,m\}} \Big\{
     \sum_{i \in I} b_i
-    + \sum_{p \in \bigcup_{i \in I} P_i} n_p p \;\Big\vert\; n_p \in \mathbb N \Big\}.
+    + \sum_{p \in \bigcup_{i \in I} P_i\cup \{b_i\}} n_p p \;\Big\vert\; n_p \in \mathbb N \Big\}.
 \]
 As the index set $I$ runs over all subsets of $\{1,...,m\}$, this has $2^m$
 many components! This can be intractable, especially when there are nested
