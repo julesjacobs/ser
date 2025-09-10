@@ -65,13 +65,13 @@ Our \toolname{} syntax is defined as follows:
 %    \label{fig:syntax}
 %\end{figure}
     %
-This is formalized as part of our network system (NS) setting, which is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
+The semantics are formalized as part of our network system (NS) setting, which is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
     
    
 A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
 \item $G$ is a set of global states (assignments to all global variables)
-\item $L$ is a set of local states (local variable values and remaining program to execute)
+\item $L$ is a set of local states, i.e., local variable values and the remaining program (which is a sequence of expressions until the subsequent \(\mathit{yield}\), or termination)
 \item $\mathit{REQ}$ is a finite set of request types (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 \item $\mathit{RESP}$ is a finite set of response types (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
@@ -79,6 +79,8 @@ A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps final local states to response types
 \item $\delta \subseteq (G \times L) \times (G \times L)$ defines atomic execution steps that update both global and local state
 \end{itemize}
+
+We refer to our transition rules in Fig.~\ref{fig:code2ExampleNS}.
 
 \begin{definition}[Request and Response]
 A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{r}} \in \mathit{REQ}$ represents the initiation of a concurrent computation unit. Each request has an associated handler expression from the program syntax that defines its behavior.
@@ -89,7 +91,7 @@ The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozeng
 
 
 
-\begin{figure}[t]
+\begin{figure}[htb]
     \centering
     \renewcommand{\arraystretch}{1.6}
     \[
