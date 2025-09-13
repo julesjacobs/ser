@@ -48,7 +48,7 @@ Ackermann-complete complexity~\cite{CzWo22,Le22}.
 An example of a toy Petri Net, and both reachable and unreachable markings, appears in Appendix~\ref{appendix:toyPN}.
 %
 %We focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. 
-We check whether a marking satisfying formula $F$ (a combination of linear constraints) is reachable. The property is \textit{reachable} (\sat) if some $M \in R(N)$ satisfies $M \models F$, and \textit{unreachable} (\unsat) otherwise. 
+We check whether a marking satisfying formula $F$ (a combination of linear constraints) is reachable. The property is \textit{reachable} (\sat) if some $M \in R(N)$ satisfies $F$, and \textit{unreachable} (\unsat) otherwise. 
 
 \paragraph{Verdict proofs.} 
 
@@ -716,7 +716,7 @@ We apply four optimizations to the base algorithm to control intermediate blowâ€
 %
 An extensive empirical evaluation of these optimizations appears later on in subsec.~\ref{subsec:optimization-results}.
 
-\paragraph{(1) Bidirectional Petri net pruning.}  
+\paragraph{(1) Bidirectional pruning.}  
 This optimization concerns the step in which a Petri net reachability problem is solved.
 In this model-checking phase, it is possible that only a subset of the places and transitions are relevant.
 Hence, before any heavy symbolic reasoning takes place, we identify places that are necessarily always empty on any potential path from the start state to an end state, and remove them from the Petri net.

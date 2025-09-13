@@ -4,6 +4,8 @@
 \label{sec:problem-definition}
 %\guy{Can someone check Sections 3-4-5? Especially the formulations}
 
+\subsection{The SER Language}
+%\subsection{Syntax}
 Our \toolname{} syntax is defined as follows: 
 %of Fig.~\ref{fig:syntax}.
 
@@ -65,6 +67,85 @@ Our \toolname{} syntax is defined as follows:
 %    \label{fig:syntax}
 %\end{figure}
     %
+    
+
+
+
+\todo{add other rebuttal promises}
+\todo{check semantics}
+
+
+% SER small-step semantics with explicit guard (congruence) rules
+% Requires: \usepackage{mathtools,amssymb,mathpartir}
+
+
+
+\noindent\textbf{SER small-step semantics with guard rules.}
+%
+%\subsection{Semantics}
+%
+Values are naturals; booleans use $0/1$. Locals $\ell:\mathrm{Locals}\to\mathbb{N}$, globals $g:\mathrm{Globals}\to\mathbb{N}$.
+Expression configs $\cfg{e}{\ell}{g}$, program configs $\langle g \mid (e,\ell)\cdot\Pi\rangle$ (FIFO queue).
+
+\smallskip
+\noindent\textit{Expression step} $(\step)$.
+\begin{mathpar}
+	\inferrule*[right=ND-0]{ }{\cfg{\nondet}{\ell}{g} \step \cfg{0}{\ell}{g}}
+	\and
+	\inferrule*[right=ND-1]{ }{\cfg{\nondet}{\ell}{g} \step \cfg{1}{\ell}{g}}
+	
+	\inferrule*[right=L-READ]{\ell(x)=v}{\cfg{x}{\ell}{g} \step \cfg{v}{\ell}{g}}
+	\and
+	\inferrule*[right=G-READ]{g(X)=v}{\cfg{X}{\ell}{g} \step \cfg{v}{\ell}{g}}
+	
+	\inferrule*[right=ASSIGN-STEP]{\cfg{e}{\ell}{g} \step \cfg{e'}{\ell'}{g'}}{\cfg{x := e}{\ell}{g} \step \cfg{x := e'}{\ell'}{g'}}
+	\and
+	\inferrule*[right=ASSIGN-DONE]{ }{\cfg{x := v}{\ell}{g} \step \cfg{v}{\update{\ell}{x}{v}}{g}}
+	
+	\inferrule*[right=GASSIGN-STEP]{\cfg{e}{\ell}{g} \step \cfg{e'}{\ell'}{g'}}{\cfg{X := e}{\ell}{g} \step \cfg{X := e'}{\ell'}{g'}}
+	\and
+	\inferrule*[right=GASSIGN-DONE]{ }{\cfg{X := v}{\ell}{g} \step \cfg{v}{\ell}{\update{g}{X}{v}}}
+	
+	\inferrule*[right=EQ-L]{\cfg{e_1}{\ell}{g} \step \cfg{e_1'}{\ell'}{g'}}{\cfg{e_1 == e_2}{\ell}{g} \step \cfg{e_1' == e_2}{\ell'}{g'}}
+	\and
+	\inferrule*[right=EQ-R]{\cfg{e_2}{\ell}{g} \step \cfg{e_2'}{\ell'}{g'}}{\cfg{v_1 == e_2}{\ell}{g} \step \cfg{v_1 == e_2'}{\ell'}{g'}}
+	\and
+	\inferrule*[right=EQ-T]{v_1=v_2}{\cfg{v_1 == v_2}{\ell}{g} \step \cfg{1}{\ell}{g}}
+	\and
+	\inferrule*[right=EQ-F]{v_1\neq v_2}{\cfg{v_1 == v_2}{\ell}{g} \step \cfg{0}{\ell}{g}}
+	
+	\inferrule*[right=SEQ-STEP]{\cfg{e_1}{\ell}{g} \step \cfg{e_1'}{\ell'}{g'}}{\cfg{e_1 ; e_2}{\ell}{g} \step \cfg{e_1' ; e_2}{\ell'}{g'}}
+	\and
+	\inferrule*[right=SEQ-DONE]{ }{\cfg{v ; e_2}{\ell}{g} \step \cfg{e_2}{\ell}{g}}
+	
+	\inferrule*[right=IF-GUARD]{\cfg{e_1}{\ell}{g} \step \cfg{e_1'}{\ell'}{g'}}{\cfg{\ifkw(e_1)\{e_2\}\elsekw\{e_3\}}{\ell}{g} \step \cfg{\ifkw(e_1')\{e_2\}\elsekw\{e_3\}}{\ell'}{g'}}
+	\and
+	\inferrule*[right=IF-T]{ }{\cfg{\ifkw(1)\{e_2\}\elsekw\{e_3\}}{\ell}{g} \step \cfg{e_2}{\ell}{g}}
+	\and
+	\inferrule*[right=IF-F]{ }{\cfg{\ifkw(0)\{e_2\}\elsekw\{e_3\}}{\ell}{g} \step \cfg{e_3}{\ell}{g}}
+	
+	\inferrule*[right=WHILE-UNFOLD]{ }{\cfg{\whilekw(e_1)\{e_2\}}{\ell}{g}
+		\step
+		\cfg{\ifkw(e_1)\{\,e_2 ; \whilekw(e_1)\{e_2\}\,\}\elsekw\{0\}}{\ell}{g}}
+\end{mathpar}
+
+\noindent\textit{Program step} $(\pstep)$ and scheduling.
+\begin{mathpar}
+	\inferrule*[right=S-STEP]{\cfg{e}{\ell}{g} \step \cfg{e'}{\ell'}{g'}}{\langle g \mid (e,\ell)\cdot \Pi\rangle \pstep \langle g' \mid (e',\ell')\cdot \Pi\rangle}
+	\and
+	\inferrule*[right=S-YIELD]{ }{\langle g \mid (\yieldkw ; e,\ell)\cdot \Pi\rangle \pstep \langle g \mid \Pi \cdot (e,\ell)\rangle}
+	\and
+	\inferrule*[right=S-RETIRE]{v\in\mathbb{N}}{\langle g \mid (v,\ell)\cdot \Pi\rangle \pstep \langle g \mid \Pi\rangle}
+	\and
+	\inferrule*[right=S-REQUEST]{i\in\{1,\dots,n\}}{\langle g \mid \Pi\rangle \pstep \langle g \mid \Pi \cdot (e_i,\ell_0)\rangle}
+\end{mathpar}
+
+
+   
+    
+    
+\subsection{Network System}    
+    
 The semantics are formalized as part of our network system (NS) setting, which is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
     
    
@@ -80,90 +161,116 @@ A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \item $\delta \subseteq (G \times L) \times (G \times L)$ defines atomic execution steps that update both global and local state
 \end{itemize}
 
-We refer to our transition rules in Fig.~\ref{fig:code2ExampleNS}.
+%\todo{new start}
+%We refer to our transition rules in Fig.~\ref{fig:code2ExampleNS}.
 
-\begin{definition}[Request and Response]
+\smallskip
+\noindent
+\textbf{Request and response.}
 A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{r}} \in \mathit{REQ}$ represents the initiation of a concurrent computation unit. Each request has an associated handler expression from the program syntax that defines its behavior.
 A \emph{response} ${\color{red}\blacklozenge_\text{s}} \in \mathit{RESP}$ represents the value returned by a request after its execution terminates.
 The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozenge_\text{s}}) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single request execution.
-\end{definition}
+
+
+\smallskip
+\noindent
+\textbf{States.}
+A (global) \emph{network state} is a triple $(g,\mathcal{P},M)$ where
+$g \in G$ is the current global state,
+$\mathcal{P} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (threads),
+and $M \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
+%
+The initial global state is $(g_0, \varnothing, \varnothing)$.
 
 
 
 
-\begin{figure}[htb]
-    \centering
-    \renewcommand{\arraystretch}{1.6}
-    \[
-    \begin{array}{c}
-    \textbf{States and Transitions:}
-    \\
-    \quad
-    \text{A (global) \emph{network state} is a triple }(g,\mathcal{P},M)\text{ where:}
-    \\
-    \quad
-    g \in G \text{ is the current global state,}
-    \\
-    \quad
-    \mathcal{P} \in \text{Multiset}(L \times \mathit{REQ}) \text{ is a multiset of in-flight requests (threads),}
-    \\
-    \quad
-    M \in \text{Multiset}(\mathit{REQ} \times \mathit{RESP}) \text{ is a multiset of request/response pairs already completed.}
-    \end{array}
-    \]
+% Non-figure version of the state-transition rules (caption text inlined)
+%\renewcommand{\arraystretch}{1.6}
+%\medskip
+\smallskip
+\noindent
+\textbf{Transition rules.}
+A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, M)\) by either
+(1) introducing a new request, (2) processing a request step via \(\delta\), or
+(3) consuming a request to produce its response. When no more steps are possible,
+the result set \(M\) is the final multiset of request/response pairs that arose during the run.
 
-    \[
-    \begin{array}{c}
-    \textbf{Initial state:}
-    \\
-    \quad (g_0,\,\varnothing,\,\varnothing)
-    \end{array}
-    \]
 
-    \[
-    \begin{array}{c}
-    \textbf{Transition rules:}
-    \\[1em]
-    \text{(New Request)}\quad\infer{
-    ({\color{ForestGreen}\blacklozenge_\text{r}},\ell)\,\in\,\mathit{req}
-    }
-    {(g,\;\mathcal{P},\;M) \;\longrightarrow\; (g,\;\mathcal{P} \uplus \{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\;M)}
-    \\[2em]
-    \text{(Processing Step)}\quad\infer{
-    ((g,\ell),\,(g',\ell')) \,\in\, \delta
-    }
-    {(g,\;\mathcal{P} \uplus \{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\;M) \;\longrightarrow\; (g',\;\mathcal{P} \uplus \{(\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\;M)}
-    \\[2em]
-    \text{(Response)}\quad\infer{
-    (\ell,{\color{red}\blacklozenge_\text{s}})\,\in\,\mathit{resp}
-    }
-    {(g,\;\mathcal{P} \uplus \{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\;M) \;\longrightarrow\; (g,\;\mathcal{P},\;M \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
-    \end{array}
-    \]
 
-    \[
-    \begin{array}{c}
-    \textbf{Complete runs:}
-    \\
-    \quad (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow\; (g_1,\,\mathcal{P}_1,\,M_1) \;\longrightarrow\; \cdots \;\longrightarrow\; (g_n,\,\mathcal{P}_{n-1},\,M_{n-1}) \;\longrightarrow\; (g_n,\,\varnothing,\,M_n)
-    \\[1em]
-    \textbf{Interleaved run: } \text{the } \mathcal{P}_i \text{ can have more than one request, and } \mathcal{P}_n = \varnothing \\
-    \textbf{Serial run: } \text{ each } \mathcal{P}_i \text{ has at most one request, and } \mathcal{P}_n = \varnothing\\
-    \text{Int}(\mathcal{N}) = \{ M \in \text{Multiset}(\mathit{REQ} \times \mathit{RESP}) \mid \exists \text{ interleaved run } (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow^*\; (g_n,\,\varnothing,\,M) \}\\
-    \text{Ser}(\mathcal{N}) = \{ M \in \text{Multiset}(\mathit{REQ} \times \mathit{RESP}) \mid \exists \text{ serial run } (g_0,\,\varnothing,\,\varnothing) \;\longrightarrow^*\; (g_n,\,\varnothing,\,M) \}\\
-    \end{array}
-    \]
+%\noindent\textbf{States and transitions.}
+%A (global) \emph{network state} is a triple $(g,\mathcal{P},M)$ where
+%$g \in G$ is the current global state,
+%$\mathcal{P} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (threads),
+%and $M \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
+%%
+%The initial state is $(g_0, \varnothing, \varnothing)$.
 
-    \caption{State-transition rules for executions of
-    \(\mathcal{N} = (G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})\).
-    A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, M)\) by either (1) introducing a new request, (2) processing a request step via \(\delta\), or (3) consuming a request to produce its response.  When no more steps are possible, the result set \(M\) is the final multiset of request/response pairs that arose during the run.
-    Runs are called \emph{serial} if there is at most one request in flight at any time, whereas \emph{interleaved} runs may have multiple requests in flight at once.}
-    \label{fig:network-transitions}
-\end{figure}
 
-\begin{definition}[Serializability]
+%\smallskip
+%\noindent\textbf{Initial state.} $(g_0, \varnothing, \varnothing)$.
+
+%\smallskip
+%\noindent\textbf{Transition rules.}
+\[
+\text{(New Request)}\quad
+\infer{({\color{ForestGreen}\blacklozenge_\text{r}},\ell)\in\mathit{req}}
+{(g,\mathcal{P},M) \rightarrow (g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; M)}
+\]
+\[
+\text{(Processing Step)}\quad
+\infer{((g,\ell),(g',\ell'))\in\delta}
+{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; M)
+	\rightarrow
+	(g',\; \mathcal{P}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\; M)}
+\]
+\[
+\text{(Response)}\quad
+\infer{(\ell,{\color{red}\blacklozenge_\text{s}})\in\mathit{resp}}
+{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; M)
+	\rightarrow
+	(g,\; \mathcal{P},\; M \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
+\]
+
+
+\smallskip
+\noindent
+\textbf{Serializability.}
+We define a \textit{run} of the network system as a complete execution:
+%\noindent\textbf{Complete runs.}
+\[
+(g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,M_1)
+\rightarrow \cdots \rightarrow (g_n,\mathcal{P}_{n-1},M_{n-1}) \rightarrow (g_n,\varnothing,M_n).
+\]
+
+\noindent
+A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,M)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
+%
+Furthermore, an interleaved run is said to be \textit{serial} if each $\mathcal{P}_i$ has at most one request, and $\mathcal{P}_n=\varnothing$.
+%
+Intuitively, \textit{serial} runs have at most one request in flight at any time,
+whereas \emph{interleaved} runs may have multiple requests in flight at once.
+%
+For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to  represent the set of all multisets of request/response pairs, for interleaving and serializable runs respectively:
+
+\[
+\mathrm{Int}(\mathcal{N})
+= \bigl\{\, M \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{interleaved run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,M) \,\bigr\}
+\]
+\[
+\mathrm{Ser}(\mathcal{N})
+= \bigl\{\, M \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{serial run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,M) \,\bigr\}.
+\]
+
+
+
 A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}) = \text{Ser}(\mathcal{N})$, meaning every multiset of request/response pairs attainable through an interleaved execution can also be achieved through some serial execution.
-\end{definition}
+
+
+
+
 
 \subsection{NS Example: Non-Serializability }
 \label{sec:ns-non-serializable}
