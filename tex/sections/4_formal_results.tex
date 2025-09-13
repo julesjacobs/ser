@@ -370,7 +370,9 @@ Our optimizations (Section~\ref{sec:optimizations}) dramatically reduce both the
 
 \paragraph{Serializable NFA Extraction.}
 
-Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS depicted in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen in Fig.~\ref{fig:code2ExampleNFA}, serial executions can produce only request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, when a request enters and exits the system, is [X=0].
+Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS depicted in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen in Fig.~\ref{fig:code2ExampleNFA}, serial executions can produce only request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, when a request enters and exits the system, is [X=0]. 
+%
+Intuitively, this corresponds to [X=0] being the initial global state, as well as the system's global state after every single packet exits the network in a serializable execution.
 %
 %Intuitively, this corresponds to the Listing~\ref{lst:MotivatingExample2NonSer} program updating [X:=1] as an intermediate assignment before yielding.
 
