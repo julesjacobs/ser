@@ -102,9 +102,13 @@ Given a network system \(\mathcal S\) with global states \(G\), our algorithm pr
 \mathcal A_{\mathrm{ser}}(\mathcal S)
 = \bigl(Q,\Sigma,\delta,q_0,F\bigr),
 \quad
-Q = G
+Q = F = G
 \quad\text{(the set of the NS’s global states)}
+%\quad
+%\\
 \]
+\guy{check that its also F=G}
+
 \[
 \Sigma
 = \Bigl\{
@@ -160,10 +164,26 @@ Q = G
 	\;\subseteq\;\mathbb N^{\Sigma}.
 	\]
 	
+	\[
+	q_0 = g_0
+	\quad\text{(the initial global state of the NS)}
+	\]
+	
 	\item 
 	\textbf{Interleaving Petri Net.}
 	
-	We build
+	\textit{Notation.}
+	We denote with \(\mathbf0\) a zero vector of dimension \(|P|\), and with \(\mathbf1_{p}\) a \(|P|\)-sized vector that has 0 in every coordinate except when corresponding to \(p \in P\).
+	% 
+	Pre/post maps $\mathsf{pre},\mathsf{post}:T\to\{0,1\}^{|P|}$ assign to each transition $t$ a binary vector over $P$ whose $1$-entries mark the places from which tokens are removed (for $\mathsf{pre}(t)$) and to which tokens are added (for $\mathsf{post}(t)$) when $t$ fires.
+	A transition $t$ is enabled at $M$ iff $\mathsf{pre}(t)\le M$ (componentwise); firing yields
+	\(
+	M\xrightarrow{t}M' \quad\text{where}\quad M' = M-\mathsf{pre}(t)+\mathsf{post}(t).
+	\).	
+	
+	\medskip
+	\textit{Construction.}
+	We build the Petri Net:
 	\[
 	N_{\mathrm{int}}(\mathcal S)
 	= (P,\,T,\,\mathsf{pre},\,\mathsf{post},\,M_0),
@@ -229,6 +249,8 @@ Q = G
 	
 	with \(G\) being the global states, \(L\) being the in‐flight local states (request‐state + remaining program), and \(\mathit{RESP}\) denoting the response labels.
 	
+	
+	
 	Transitions are partitioned as
 	\[
 	T = T_{\mathit{req}} \;\cup\; T_{\delta}\;\cup\;T_{\mathit{resp}}
@@ -250,6 +272,8 @@ Q = G
 		= \{\,t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})} \mid (\ell,{\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}\}.
 	\end{align*}
 	
+	
+	
 	Their pre/post vectors are:
 	\[
 	\begin{alignedat}{3}
@@ -259,7 +283,7 @@ Q = G
 		&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}}, 
 		&&\text{for each }({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req},\\
 		\mathsf{pre}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
-		&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell})} + \mathbf1_{p_g}, &
+		&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}} + \mathbf1_{p_g}, &
 		\mathsf{post}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
 		&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell')}} + \mathbf1_{p_{g'}}, 
 		&&\text{for each }(\ell,g)\!\to\!(\ell',g')\in\delta,\\
@@ -769,9 +793,9 @@ We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{t
 
 \begin{theorem}[Bidirectional Pruning Soundness]
 \label{thm:bidirectional-pruning}
-  Let $N = (P, T, \mathsf{pre}, \mathsf{post}, M_0)$ be a Petri net and $S$ a target set of markings.
+  Let $N = (P, T, Pre, Post, M_0)$ be a Petri net and $S$ a target set of markings.
   %
-  Let $P^\ast, T^\ast$ be the fixed point of the bidirectional pruning algorithm and $N' = (P^*, T^*, \Pre|_{P^*,T^*}, \mathsf{post}|_{T^*}, M_0)$ be the pruned net.
+  Let $N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr)$ be the net after applying the bidirectional pruning algorithm.
 %
   Then $S$ is reachable from $N$ iff it is reachable from $N'$.
 \end{theorem}

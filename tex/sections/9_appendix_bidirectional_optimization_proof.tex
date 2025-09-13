@@ -49,8 +49,7 @@
 
 \subsection{The Bidirectional Pruning Algorithm}
 
-Let $N=(P,T,\Pre,\Post)$, initial marking $M_0$, and target set
-$S\subseteq\mathbb{N}^P$ be fixed.
+Let $N=(P,T,\Pre,\Post, M_0)$ be a Petri Net and $S\subseteq\mathbb{N}^P$ be a target set.
 
 By convention, we assume that $P$ and $T$ are disjoint.
  
@@ -91,7 +90,7 @@ By convention, we assume that $P$ and $T$ are disjoint.
 \begin{definition}[Pruned Net]
 	The \emph{pruned} subnet is
 	\[
-	N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}\bigr)
+	N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P}\bigr)
 	\]
 	where
 	\[
