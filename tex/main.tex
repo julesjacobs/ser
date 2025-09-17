@@ -31,8 +31,9 @@
 %\definecolor{strongyellow}{RGB}{255,220,0}
 \definecolor{brightyellow}{RGB}{255,247,192}%{255,255,102}
 \definecolor{lightchacki}{RGB}{245,237,205}%{235,220,187}
-\usepackage{mathtools,amssymb,mathpartir}
-
+\usepackage{mathtools,mathpartir}
+\let\Bbbk\relax   % prevent double definition
+\usepackage{amssymb}
 % ---- handy notation (optional) ----
 \newcommand{\cfg}[3]{\langle #1,\; #2,\; #3\rangle}
 \newcommand{\update}[3]{#1[#2 \mapsto #3]}
@@ -133,12 +134,12 @@
 }
 
 % Make paragraph headings bold
-\makeatletter
-\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
-  {1.5ex \@plus1ex \@minus.2ex}%
-  {-1em}%
-  {\normalfont\normalsize\bfseries}}
-\makeatother
+%\makeatletter
+%\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+%  {1.5ex \@plus1ex \@minus.2ex}%
+%  {-1em}%
+%  {\normalfont\normalsize\bfseries}}
+%\makeatother
 
 % Redefine sections to display with § symbol
 \crefformat{section}{\S#2#1#3}

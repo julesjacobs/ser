@@ -197,8 +197,10 @@ affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks with
 
 In addition to time complexity, our optimizations also reduce the space complexity of the two main components --- the Petri Net and the semilinear set.
 
-\paragraph{Petri Net size reduction.}
-
+\medskip
+\noindent
+\textbf{Petri Net size reduction.}
+%
 With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct. 
 %of our reachability query. 
 %These results are summarized in Fig.~\ref{fig:petri_size_reduction}.
@@ -226,8 +228,10 @@ With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction
 
 
 
-\paragraph{Semilinear set size reduction.}
-
+\medskip
+\noindent
+\textbf{Semilinear set size reduction.}
+%
 Finally, our last experiment batch analyzed the size reduction among the semilinear sets.
 %
 Towards this end, we ran all our benchmarks with all optimizations to serve as a baseline. 

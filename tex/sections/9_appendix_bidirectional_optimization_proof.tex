@@ -132,14 +132,18 @@ Intuitively, $P'$ contains an over-approximation on the places that
 \begin{proof}
 	We split the argument into two parts.
 	
-	\paragraph{(1) Forward-reachability.}
+	\medskip
+	\noindent
+	\textbf{(1) Forward-reachability.}
 	Suppose $p$ is witnessable.  Then there is a prefix
 	$\sigma_1\in T^*$ such that $M_0\xrightarrow{\sigma_1}M$ and
 	$M(p)>0$.  By standard Petri-net monotonicity, every place that
 	receives a token in the course of $\sigma_1$ must appear in the
 	forward fixed-point $X^*_P$.  Hence $p\in X^*_P$.
 	
-	\paragraph{(2) Backward-relevance.}
+	\medskip
+	\noindent
+	\textbf{(2) Backward-relevance.}
 	Again, since $p$ is witnessable, there is a suffix
 	$\sigma_2\in T^*$ from $M$ to $M'\in S$ with $M(p)>0$.  Working
 	backward from $S$, every place that can contribute to satisfying
@@ -150,7 +154,9 @@ Intuitively, $P'$ contains an over-approximation on the places that
 	Combining (1) and (2) yields $p\in X^*_P\cap Y^*_P = P'$, as desired.
 \end{proof}
 
-\subsection{Termination and Complexity}
+\medskip
+\noindent
+\textbf{Termination and Complexity}
 
 \begin{lemma}
 	Each iteration of $\mathcal{F}$ and $\mathcal{B}$ strictly increases

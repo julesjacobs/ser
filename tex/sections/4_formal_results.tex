@@ -12,7 +12,9 @@
 
 \subsection{Background}
 
-\paragraph{Petri Nets.}
+%\medskip
+%\noindent
+\textbf{Petri Nets.}
 A \emph{Petri net} is a tuple
 \[
 N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
@@ -50,8 +52,10 @@ An example of a toy Petri Net, and both reachable and unreachable markings, appe
 %We focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. 
 We check whether a marking satisfying formula $F$ (a combination of linear constraints) is reachable. The property is \textit{reachable} (\sat) if some $M \in R(N)$ satisfies $F$, and \textit{unreachable} (\unsat) otherwise. 
 
-\paragraph{Verdict proofs.} 
-
+\medskip
+\noindent
+\textbf{Verdict proofs.} 
+%
 If a property $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ and marking $M$ such that $ M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F$
 %\[
 %M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F
@@ -70,7 +74,9 @@ If $F$ is unreachable, there exists~\cite{Le09} an inductive certificate $C$ (a 
 %\item $C \Rightarrow \neg F$, i.e., all markings satisfying $C$ falsify $F$.
 %\end{enumerate} 
 
-\paragraph{Semilinear sets and Parikh’s theorem.}
+\medskip
+\noindent
+\textbf{Semilinear sets and Parikh’s theorem.}
 A set \(S\subseteq\mathbb N^k\) is \emph{semilinear} iff
 \[
 S \;=\; \bigcup_{i=1}^m \Bigl\{\mathbf b_i + \sum_{j=1}^{r_i} n_j\,\mathbf p_{i,j}
@@ -84,7 +90,9 @@ Semilinear sets coincide exactly with the sets definable in \textit{Presburger a
 By Parikh's theorem~\cite{Parikh66}, the \textit{Parikh Image} of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
 finite description of its Parikh Image.
 
-\paragraph{Deciding serializability in unbounded systems.}
+\medskip
+\noindent
+\textbf{Deciding serializability in unbounded systems.}
 
 We build on Bouajjani et al.~\cite{BoEmEnHa13}, who proved that serializability is decidable for unbounded systems by reducing it to Petri net reachability. They showed this as a special case of \textit{bounded-barrier linearizability}.
 
@@ -364,7 +372,9 @@ Q = F = G
 
 \end{enumerate}
 
-\paragraph{Complexity Analysis.}
+\medskip
+\noindent
+\textbf{Complexity Analysis.}
 The core algorithm reduces serializability checking to Petri net reachability with semilinear target sets. 
 Since the serial executions form a regular language (step 1), their Parikh Image is effectively semilinear by Parikh's theorem, with size exponential in the NFA.
 The interleaving Petri net (step 2) has $O(|G| + |L| + |\mathit{REQ}| \times |\mathit{RESP}|)$ places and $O(|\mathit{REQ}| + |\delta| + |\mathit{RESP}|)$ transitions.
@@ -392,8 +402,10 @@ Our optimizations (Section~\ref{sec:optimizations}) dramatically reduce both the
 \subsection{Example: Non-Serializable Program}
 \label{subsec:ns-not-serializable}
 
-\paragraph{Serializable NFA Extraction.}
-
+\medskip
+\noindent
+\textbf{Serializable NFA Extraction.}
+%
 Continuing the running (non-serializable) example presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS depicted in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the NFA encoding all serial executions. The states encode the global variable values, and the edges encode request/response pairs for all serial executions. As can be seen in Fig.~\ref{fig:code2ExampleNFA}, serial executions can produce only request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, when a request enters and exits the system, is [X=0]. 
 %
 Intuitively, this corresponds to [X=0] being the initial global state, as well as the system's global state after every single packet exits the network in a serializable execution.
@@ -450,8 +462,10 @@ Intuitively, this corresponds to [X=0] being the initial global state, as well a
 %	\label{fig:code2ExampleNFA}
 %\end{figure}
 
-\paragraph{Petri Net Extraction.}
-
+\medskip
+\noindent
+\textbf{Petri Net Extraction.}
+%
 Finally, the NS gives rise to the PN in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings. The places \textcolor{blue}{ $P_2$} and \textcolor{blue}{$P_3$} represent the global states \textcolor{blue}{[X=1]} and \textcolor{blue}{[X=0]}, respectively, while the places $P_1$, $P_4$, $P_5$, and $P_6$ capture the local states of in-flight requests—that is, the remaining program code together with the assignments to each request’s local variables. Similarly, places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} correspond to {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$}, respectively, encoding terminated responses. Each token either models an active request, a completed request/response pair, or --- when residing in a global-state place --- the current global state. Finally, transitions implement the network system’s mappings ($\delta/req/resp$): they advance the program by one step, spawn a new request (e.g., transition $t_1$, producing {\color{ForestGreen}$\blacklozenge_{\mathrm{main}}$}), or return a response (e.g., transitions $t_6$ and $t_7$).
 
 
@@ -475,8 +489,10 @@ Finally, the NS gives rise to the PN in Fig.~\ref{fig:code2ExamplePN}, encoding 
 	\label{fig:code2ExamplePN}
 \end{figure}
 
-\paragraph{Counterexample Extraction.}
-
+\medskip
+\noindent
+\textbf{Counterexample Extraction.}
+%
 Regarding the aforementioned program, we automatically generate the following reachability query\footnote{If not for the equality constraints, the problem would have been considered a \textit{coverability} query, which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN}: we encode the target semilinear set by imposing the following constraints on the token distribution:
 
 %Regarding the aforementioned program, we automatically generate the following reachability query~\footnote{If not the equality constraints, the problem would have been considered a \textit{coverability} query which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN} we encode a target semilinear set with the following constraints on the token distribution:
@@ -740,7 +756,9 @@ We apply four optimizations to the base algorithm to control intermediate blow�
 %
 An extensive empirical evaluation of these optimizations appears later on in subsec.~\ref{subsec:optimization-results}.
 
-\paragraph{(1) Bidirectional pruning.}  
+\medskip
+\noindent
+\textbf{(1) Bidirectional pruning.}  
 This optimization concerns the step in which a Petri net reachability problem is solved.
 In this model-checking phase, it is possible that only a subset of the places and transitions are relevant.
 Hence, before any heavy symbolic reasoning takes place, we identify places that are necessarily always empty on any potential path from the start state to an end state, and remove them from the Petri net.
@@ -809,7 +827,9 @@ We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{t
 % Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify over-approximations on transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
 
 
-\paragraph{(2) Semilinear set pruning.}  
+\medskip
+\noindent
+\textbf{(2) Semilinear set pruning.}  
 Recall that a semilinear set is $S=\bigcup_{i=1}^m L_i$, with
 \[
 \displaystyle L_i=\Big\{\,b_i+\sum_{p\in P_i}n_p p \;\Big\vert\; n_p\in\mathbb N\Big\}.
@@ -834,7 +854,9 @@ Keeping semilinear sets compact reduces unnecessary blow-ups in the size of the 
 % \],
 % Dropping any ``redundant'' periods, and removing any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixed point so no two components subsume one another.
 
-\paragraph{(3) Generating fewer constraints.}
+\medskip
+\noindent
+\textbf{(3) Generating fewer constraints.}
 When computing the Parikh Image of a regular expression as a semilinear set,
 most regex operations can be implemented without an exponential blow-up.
 However, Kleene star is a notable exception: in the general case, the
@@ -909,7 +931,9 @@ half for every component on which they apply (i.e., a reduction exponential in t
 % %
 % During set construction --- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description.  In benchmarks with large state spaces, it can reduce the number of intermediate branches by orders of magnitude.
 
-\paragraph{(4) Strategic Kleene elimination order.}  
+\medskip
+\noindent
+\textbf{(4) Strategic Kleene elimination order.}  
 The size of the generated semilinear set is not only impacted by how the
 semilinear set operations are implemented, but also by what specific regular
 expression is given as input: a single regular language may be represented by a

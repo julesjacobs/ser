@@ -75,19 +75,28 @@ This produces the multiset \{(\texttt{main}, 0), (\texttt{main}, 1)\} of (reques
 Of course, having yields does not guarantee that an execution is necessarily not serializable, as observed in the third snippet (Listing~\ref{lst:MotivatingExample3Ser}). This program uses an additional lock variable ``L'', which guarantees that even if an interleaving occurs, the program is semantically equivalent to the first one.
 %
 These examples demonstrate that reasoning about serializability can be complex even for very simple programs with few requests running concurrently.
-\vspace{-.5em}
-\paragraph{Problem Definition.}
+%\vspace{-.5em}
+
+\medskip
+\noindent
+\textbf{Problem Definition.}
 Formally, we define the \textbf{observable execution} of a \toolname{} program as a multiset of (request, response) pairs. The \textbf{observable behavior} of a \toolname{} program is the set of all possible observable executions that can occur such that the requests are executed concurrently to obtain their paired responses.
 A program is \textbf{serializable} if every observable behavior is achievable serially (without interleavings). That is, a \toolname{} program is serializable if its semantics does not change when all yield statements are removed.
 %
 \emph{The goal of this paper is to design and develop the \toolname{} language and decision procedure for this problem.} In particular, \toolname{} can prove serializability \textbf{automatically} without requiring any manual proof by the user.
-\vspace{-.5em}
-\paragraph{Challenges.}
+
+%\vspace{-.5em}
+\medskip
+\noindent
+\textbf{Challenges.}
 To our knowledge, no prior implementation exists that can automatically generate proof certificates for this class of concurrent systems.
 Why not?
 Our decision procedure builds on Bouajjani et al.'s reduction from serializability to Petri Net (PN) reachability~\cite{BoEmEnHa13}. However, since Petri net reachability is Ackermann-complete~\cite{CzWo22}, a naive implementation would fail on all but the simplest programs. 
-\vspace{-.5em}
-\paragraph{Our Approach.}
+
+%\vspace{-.5em}
+\medskip
+\noindent
+\textbf{Our Approach.}
 To address this, we first introduce the abstraction of \textit{network systems} (NS) --- abstract concurrent programs where users send \textit{requests} that manipulate local and shared state before returning \textit{responses}. \toolname{} programs are compiled into NS, on which our decision procedure operates via reduction to Petri net and semilinear set analysis.
 
 As a backend solver, we use SMPT~\cite{AmDa23}, which is a state-of-the-art tool for Petri net reachability.
@@ -101,7 +110,9 @@ We evaluated our approach on programs with features such as loops, branching, lo
 To our knowledge, this leads to the first \emph{implemented} decision procedure that: (i) automatically \textit{proves} serializability for unbounded executions; (ii) generates \textit{proof certificates}; and (iii) handles non-trivial programs.
 
 
-\paragraph{Contributions.}
+\medskip
+\noindent
+\textbf{Contributions.}
 After a tour of examples in \Cref{sec:tour}, we present the following contributions:
 \begin{itemize}
     \item \Cref{sec:problem-definition} introduces the notion of a Network System (NS), a concurrent program abstraction that captures the essence of concurrent systems.
