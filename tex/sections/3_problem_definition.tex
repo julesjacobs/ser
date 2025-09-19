@@ -84,27 +84,29 @@ Our \toolname{} syntax is defined as follows:
 %
 %\subsection{Semantics}
 %
-Values are naturals; booleans use $0/1$. Locals $\ell:\mathrm{Locals}\to\mathbb{N}$, globals $g:\mathrm{Globals}\to\mathbb{N}$.
-Expression configs $\cfg{e}{\ell}{g}$, program configs $\langle g \mid (e,\ell)\cdot\Pi\rangle$ (FIFO queue).
+Values are naturals; booleans use $0/1$. Locals $\ell:\mathrm{Local}\to\mathbb{N}$, globals $g:\mathrm{Global}\to\mathbb{N}$ (with Local and Global being the local and global variable names, respectively).
+Expression configurations $\cfg{e}{\ell}{g}$, program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
+%
+We denote with \(\ell_0\) the initial local state of every packet.
 
 \smallskip
 \noindent\textit{Expression step} $(\step)$.
 \begin{mathpar}
 	\inferrule*[right=ND-0]{ }{\cfg{\nondet}{\ell}{g} \step \cfg{0}{\ell}{g}}
 	\and
-	\inferrule*[right=ND-1]{ }{\cfg{\nondet}{\ell}{g} \step \cfg{1}{\ell}{g}}
+	\inferrule*[right=ND-1]{ }{\cfg{\nondet}{\ell}{g} \step \cfg{1}{\ell}{g}}\\
 	
-	\inferrule*[right=L-READ]{\ell(x)=v}{\cfg{x}{\ell}{g} \step \cfg{v}{\ell}{g}}
+	\inferrule*[right=LOCAL-READ]{\ell(x)=v}{\cfg{x}{\ell}{g} \step \cfg{v}{\ell}{g}}
 	\and
-	\inferrule*[right=G-READ]{g(X)=v}{\cfg{X}{\ell}{g} \step \cfg{v}{\ell}{g}}
+	\inferrule*[right=GLOBAL-READ]{g(X)=v}{\cfg{X}{\ell}{g} \step \cfg{v}{\ell}{g}}\\
 	
-	\inferrule*[right=ASSIGN-STEP]{\cfg{e}{\ell}{g} \step \cfg{e'}{\ell'}{g'}}{\cfg{x := e}{\ell}{g} \step \cfg{x := e'}{\ell'}{g'}}
+	\inferrule*[right=LOCAL-ASSIGN-STEP]{\cfg{e}{\ell}{g} \step \cfg{e'}{\ell'}{g'}}{\cfg{x := e}{\ell}{g} \step \cfg{x := e'}{\ell'}{g'}}
 	\and
-	\inferrule*[right=ASSIGN-DONE]{ }{\cfg{x := v}{\ell}{g} \step \cfg{v}{\update{\ell}{x}{v}}{g}}
+	\inferrule*[right=LOCAL-ASSIGN-DONE]{ }{\cfg{x := v}{\ell}{g} \step \cfg{v}{\update{\ell}{x}{v}}{g}}
 	
-	\inferrule*[right=GASSIGN-STEP]{\cfg{e}{\ell}{g} \step \cfg{e'}{\ell'}{g'}}{\cfg{X := e}{\ell}{g} \step \cfg{X := e'}{\ell'}{g'}}
+	\inferrule*[right=GLOBAL-ASSIGN-STEP]{\cfg{e}{\ell}{g} \step \cfg{e'}{\ell'}{g'}}{\cfg{X := e}{\ell}{g} \step \cfg{X := e'}{\ell'}{g'}}
 	\and
-	\inferrule*[right=GASSIGN-DONE]{ }{\cfg{X := v}{\ell}{g} \step \cfg{v}{\ell}{\update{g}{X}{v}}}
+	\inferrule*[right=GLOBAL-ASSIGN-DONE]{ }{\cfg{X := v}{\ell}{g} \step \cfg{v}{\ell}{\update{g}{X}{v}}}
 	
 	\inferrule*[right=EQ-L]{\cfg{e_1}{\ell}{g} \step \cfg{e_1'}{\ell'}{g'}}{\cfg{e_1 == e_2}{\ell}{g} \step \cfg{e_1' == e_2}{\ell'}{g'}}
 	\and
@@ -131,13 +133,11 @@ Expression configs $\cfg{e}{\ell}{g}$, program configs $\langle g \mid (e,\ell)\
 
 \noindent\textit{Program step} $(\pstep)$ and scheduling.
 \begin{mathpar}
-	\inferrule*[right=S-STEP]{\cfg{e}{\ell}{g} \step \cfg{e'}{\ell'}{g'}}{\langle g \mid (e,\ell)\cdot \Pi\rangle \pstep \langle g' \mid (e',\ell')\cdot \Pi\rangle}
+	\inferrule*[right=YIELD]{\cfg{e}{\ell}{g} \step \cfg{\yieldkw \cdot e'}{\ell'}{g'}}{\langle g , \Pi \cup \{(e,\ell)\}\rangle \pstep \langle g' , \Pi \cup \{(e',\ell')\}\rangle}
+	\\
+	\inferrule*[right=SPAWN]{\requestkw\ name_i\{e_i\}\quad i\in\{1,\dots,n\}}{\langle g \mid \Pi\rangle \pstep \langle g \mid \Pi \cup \{(e_i,\ell_0)\}\rangle}
 	\and
-	\inferrule*[right=S-YIELD]{ }{\langle g \mid (\yieldkw ; e,\ell)\cdot \Pi\rangle \pstep \langle g \mid \Pi \cdot (e,\ell)\rangle}
-	\and
-	\inferrule*[right=S-RETIRE]{v\in\mathbb{N}}{\langle g \mid (v,\ell)\cdot \Pi\rangle \pstep \langle g \mid \Pi\rangle}
-	\and
-	\inferrule*[right=S-REQUEST]{i\in\{1,\dots,n\}}{\langle g \mid \Pi\rangle \pstep \langle g \mid \Pi \cdot (e_i,\ell_0)\rangle}
+	\inferrule*[right=TERMINATE]{\cfg{e}{\ell}{g} \step \cfg{v}{\ell'}{g'} \quad v\in\mathbb{N}}{\langle g \mid \Pi \cup \{(e,\ell)\} \rangle \pstep \langle g' \mid \Pi\rangle}	
 \end{mathpar}
 
 
@@ -175,10 +175,10 @@ The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozeng
 \smallskip
 \noindent
 \textbf{States.}
-A (global) \emph{network state} is a triple $(g,\mathcal{P},M)$ where
+A (global) \emph{network state} is a triple $(g,\mathcal{P},S)$ where
 $g \in G$ is the current global state,
 $\mathcal{P} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (threads),
-and $M \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
+and $S \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
 %
 The initial global state is $(g_0, \varnothing, \varnothing)$.
 
@@ -191,10 +191,10 @@ The initial global state is $(g_0, \varnothing, \varnothing)$.
 \smallskip
 \noindent
 \textbf{Transition rules.}
-A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, M)\) by either
+A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, S)\) by either
 (1) introducing a new request, (2) processing a request step via \(\delta\), or
 (3) consuming a request to produce its response. When no more steps are possible,
-the result set \(M\) is the final multiset of request/response pairs that arose during the run.
+the result set \(S\) is the final multiset of request/response pairs that arose during the run.
 
 
 
@@ -215,21 +215,21 @@ the result set \(M\) is the final multiset of request/response pairs that arose 
 \[
 \text{(New Request)}\quad
 \infer{({\color{ForestGreen}\blacklozenge_\text{r}},\ell)\in\mathit{req}}
-{(g,\mathcal{P},M) \rightarrow (g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; M)}
+{(g,\mathcal{P},S) \rightarrow (g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; S)}
 \]
 \[
 \text{(Processing Step)}\quad
 \infer{((g,\ell),(g',\ell'))\in\delta}
-{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; M)
+{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; S)
 	\rightarrow
-	(g',\; \mathcal{P}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\; M)}
+	(g',\; \mathcal{P}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\; S)}
 \]
 \[
 \text{(Response)}\quad
 \infer{(\ell,{\color{red}\blacklozenge_\text{s}})\in\mathit{resp}}
-{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; M)
+{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; S)
 	\rightarrow
-	(g,\; \mathcal{P},\; M \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
+	(g,\; \mathcal{P},\; S \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
 \]
 
 
@@ -239,12 +239,12 @@ the result set \(M\) is the final multiset of request/response pairs that arose 
 We define a \textit{run} of the network system as a complete execution:
 %\noindent\textbf{Complete runs.}
 \[
-(g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,M_1)
-\rightarrow \cdots \rightarrow (g_n,\mathcal{P}_{n-1},M_{n-1}) \rightarrow (g_n,\varnothing,M_n).
+(g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,S_1)
+\rightarrow \cdots \rightarrow (g_n,\mathcal{P}_{n-1},S_{n-1}) \rightarrow (g_n,\varnothing,S_n).
 \]
 
 \noindent
-A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,M)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
+A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,S)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
 %
 Furthermore, an interleaved run is said to be \textit{serial} if each $\mathcal{P}_i$ has at most one request, and $\mathcal{P}_n=\varnothing$.
 %
@@ -255,13 +255,13 @@ For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) an
 
 \[
 \mathrm{Int}(\mathcal{N})
-= \bigl\{\, M \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{interleaved run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,M) \,\bigr\}
+= \bigl\{\, S \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{interleaved run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,S) \,\bigr\}
 \]
 \[
 \mathrm{Ser}(\mathcal{N})
-= \bigl\{\, M \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{serial run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,M) \,\bigr\}.
+= \bigl\{\, S \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{serial run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,S) \,\bigr\}.
 \]
 
 
