@@ -144,7 +144,26 @@ Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep
 \end{mathpar}
 
 
-   
+\smallskip
+\noindent
+\textbf{Assumptions.}
+%
+In addition to the assumption that the request and response sets are finite, we also assume that a program has a \textit{finite number of reachable states}. 
+%
+These states are enumerated when converting a SER program to a Network System. 
+%
+For convenience, the input program may be written with unbounded integers as long as only a finite number are actually reached. 
+%
+%If the program can reach an infinite number of states, then this initial Network System conversion times out. 
+%
+If the input program is written with restricted syntax shown in the SER syntax, then the SER \(\step\) NS conversion always terminates. 
+
+\smallskip
+\noindent
+\textbf{Note.}
+Instead of defining a \texttt{spawn} instruction, as exists in some languages --- SER captures \textit{external} spawning via requests.
+%
+This setting can equivalently capture self-spawning (by using additional global variables), while translating more naturally to the networking domain --- in which threads are captured by packets sent by an external user.
     
     
 \subsection{Network System}    

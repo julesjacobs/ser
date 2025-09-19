@@ -110,7 +110,7 @@ Given a network system \(\mathcal S\) with global states \(G\), our algorithm pr
 \mathcal A_{\mathrm{ser}}(\mathcal S)
 = \bigl(Q,\Sigma,\delta,q_0,F\bigr),
 \quad
-Q = F = G
+Q = G, \quad F = G
 \quad\text{(the set of the NS’s global states)}
 %\quad
 %\\
@@ -179,8 +179,8 @@ Q = F = G
 	
 	\item 
 	\textbf{Interleaving Petri Net.}
-	
-	\textit{Notation.}
+%	
+%	\textit{Notation.}
 	We denote with \(\mathbf0\) a zero vector of dimension \(|P|\), and with \(\mathbf1_{p}\) a \(|P|\)-sized vector that has 0 in every coordinate except when corresponding to \(p \in P\).
 	% 
 	Pre/post maps $\mathsf{pre},\mathsf{post}:T\to\{0,1\}^{|P|}$ assign to each transition $t$ a binary vector over $P$ whose $1$-entries mark the places from which tokens are removed (for $\mathsf{pre}(t)$) and to which tokens are added (for $\mathsf{post}(t)$) when $t$ fires.
@@ -808,6 +808,8 @@ non-backwards-relevant places and transitions, to a fixed point.
 % case, we can discover that the target set is not reachable without needing to
 % invoke the solver.
 We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{thm:bidirectional-pruning} in Appendix~\ref{appendix:BidirectionalProof}.
+
+\guy{check with mark}
 
 \begin{theorem}[Bidirectional Pruning Soundness]
 \label{thm:bidirectional-pruning}
