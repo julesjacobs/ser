@@ -159,7 +159,7 @@ A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g
 \item $\mathit{REQ}$ is a finite set of request types (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 \item $\mathit{RESP}$ is a finite set of response types (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
-\item $\mathit{req} \subseteq \mathit{REQ} \times (\mathit{exp} \times L)$ maps each request type to its initial SER expression and  local state
+\item $\mathit{req} \subseteq \mathit{REQ} \times (\mathit{EXP} \times L)$ maps each request type to its initial SER expression and  local state
 \item $\mathit{resp} \subseteq (\mathit{EXP} \times L) \times \mathit{RESP}$ maps final SER expressions and local states to response types
 \item $\delta \subseteq (\mathit{EXP} \times L \times G) \times (\mathit{EXP} \times L \times G)$ defines atomic execution steps that update both global and local state (and the corresponding SER expressions)
 \end{itemize}
