@@ -85,9 +85,12 @@ Our \toolname{} syntax is defined as follows:
 %\subsection{Semantics}
 %
 Values are naturals; booleans use $0/1$. Locals $\ell:\mathrm{Local}\to\mathbb{N}$, globals $g:\mathrm{Global}\to\mathbb{N}$ (with Local and Global being the local and global variable names, respectively).
-Expression configurations $\cfg{e}{\ell}{g}$, program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
+Both program and expression configurations are denoted as $\cfg{e}{\ell}{g}$; 
+Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep)$.
 %
-We denote with \(\ell_0\) the initial local state of every packet.
+%program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
+%
+%We denote with \(\ell_0\) the initial local state of every packet.
 
 \smallskip
 \noindent\textit{Expression step} $(\step)$.
@@ -133,11 +136,11 @@ We denote with \(\ell_0\) the initial local state of every packet.
 
 \noindent\textit{Program step} $(\pstep)$ and scheduling.
 \begin{mathpar}
-	\inferrule*[right=YIELD]{\cfg{e}{\ell}{g} \step \cfg{\yieldkw \cdot e'}{\ell'}{g'}}{\langle g , \Pi \cup \{(e,\ell)\}\rangle \pstep \langle g' , \Pi \cup \{(e',\ell')\}\rangle}
+	\inferrule*[right=YIELD]{\cfg{e}{\ell}{g} \step \cfg{\yieldkw \cdot e'}{\ell'}{g'}}{\cfg{e}{\ell}{g} \pstep \cfg{e'}{\ell'}{g'}}
 	\\
-	\inferrule*[right=SPAWN]{\requestkw\ name_i\{e_i\}\quad i\in\{1,\dots,n\}}{\langle g \mid \Pi\rangle \pstep \langle g \mid \Pi \cup \{(e_i,\ell_0)\}\rangle}
+	\inferrule*[right=START]{\cfg{e_i}{\ell}{g}\pstep \cfg{e'_i}{\ell'}{g'} \quad i\in\{1,\dots,n\}}{\langle \requestkw\ name_i\{e_i\}, l, g \rangle \pstep  \cfg{e'_i}{\ell'}{g'} }
 	\and
-	\inferrule*[right=TERMINATE]{\cfg{e}{\ell}{g} \step \cfg{v}{\ell'}{g'} \quad v\in\mathbb{N}}{\langle g \mid \Pi \cup \{(e,\ell)\} \rangle \pstep \langle g' \mid \Pi\rangle}	
+	\inferrule*[right=TERMINATE]{\cfg{e}{\ell}{g} \step \cfg{v}{\ell'}{g'} \quad v\in\mathbb{N}}{\cfg{e}{\ell}{g} \pstep \cfg{v}{\ell'}{g'}}	
 \end{mathpar}
 
 
@@ -152,13 +155,13 @@ The semantics are formalized as part of our network system (NS) setting, which i
 A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
 \item $G$ is a set of global states (assignments to all global variables)
-\item $L$ is a set of local states, i.e., local variable values and the remaining program (which is a sequence of expressions until the subsequent \(\mathit{yield}\), or termination)
+\item $L$ is a set of local states, i.e., local variable values and the remaining program (which is a sequence of expressions until the subsequent \(\yieldkw\), or termination)
 \item $\mathit{REQ}$ is a finite set of request types (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 \item $\mathit{RESP}$ is a finite set of response types (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
-\item $\mathit{req} \subseteq \mathit{REQ} \times L$ maps each request type to its initial local state
-\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps final local states to response types
-\item $\delta \subseteq (G \times L) \times (G \times L)$ defines atomic execution steps that update both global and local state
+\item $\mathit{req} \subseteq \mathit{REQ} \times (\mathit{exp} \times L)$ maps each request type to its initial SER expression and  local state
+\item $\mathit{resp} \subseteq (\mathit{EXP} \times L) \times \mathit{RESP}$ maps final SER expressions and local states to response types
+\item $\delta \subseteq (\mathit{EXP} \times L \times G) \times (\mathit{EXP} \times L \times G)$ defines atomic execution steps that update both global and local state (and the corresponding SER expressions)
 \end{itemize}
 
 %\todo{new start}
@@ -175,9 +178,9 @@ The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozeng
 \smallskip
 \noindent
 \textbf{States.}
-A (global) \emph{network state} is a triple $(g,\mathcal{P},S)$ where
+A (global) \emph{network state} is a triple $(g,\mathcal{P},Z)$ where
 $g \in G$ is the current global state,
-$\mathcal{P} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (threads),
+$\mathcal{P} \in \mathrm{Multiset}(EXP \times L \times \mathit{REQ})$ is a multiset of in-flight requests (threads, i.e., triplets of SER expressions, local thread states, and the original request strings),
 and $S \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
 %
 The initial global state is $(g_0, \varnothing, \varnothing)$.
@@ -191,10 +194,10 @@ The initial global state is $(g_0, \varnothing, \varnothing)$.
 \smallskip
 \noindent
 \textbf{Transition rules.}
-A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, S)\) by either
+A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, Z)\) by either
 (1) introducing a new request, (2) processing a request step via \(\delta\), or
 (3) consuming a request to produce its response. When no more steps are possible,
-the result set \(S\) is the final multiset of request/response pairs that arose during the run.
+the result set \(Z\) is the final multiset of request/response pairs that arose during the run.
 
 
 
@@ -214,22 +217,22 @@ the result set \(S\) is the final multiset of request/response pairs that arose 
 %\noindent\textbf{Transition rules.}
 \[
 \text{(New Request)}\quad
-\infer{({\color{ForestGreen}\blacklozenge_\text{r}},\ell)\in\mathit{req}}
-{(g,\mathcal{P},S) \rightarrow (g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; S)}
+\infer{({\color{ForestGreen}\blacklozenge_\text{r}},exp,\ell)\in\mathit{req}}
+{(g,\mathcal{P},Z) \rightarrow (g,\; \mathcal{P}\uplus\{(exp,\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; Z)}
 \]
 \[
 \text{(Processing Step)}\quad
-\infer{((g,\ell),(g',\ell'))\in\delta}
-{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; S)
+\infer{((exp,\ell, g),(exp',\ell', g'))\in\delta}
+{(g,\; \mathcal{P}\uplus\{(exp,\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; Z)
 	\rightarrow
-	(g',\; \mathcal{P}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\; S)}
+	(g',\; \mathcal{P}\uplus\{(exp',\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\; Z)}
 \]
 \[
 \text{(Response)}\quad
-\infer{(\ell,{\color{red}\blacklozenge_\text{s}})\in\mathit{resp}}
-{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; S)
+\infer{(exp,\ell,{\color{red}\blacklozenge_\text{s}})\in\mathit{resp}}
+{(g,\; \mathcal{P}\uplus\{(exp,\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; Z)
 	\rightarrow
-	(g,\; \mathcal{P},\; S \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
+	(g,\; \mathcal{P},\; Z \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
 \]
 
 
@@ -239,12 +242,12 @@ the result set \(S\) is the final multiset of request/response pairs that arose 
 We define a \textit{run} of the network system as a complete execution:
 %\noindent\textbf{Complete runs.}
 \[
-(g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,S_1)
-\rightarrow \cdots \rightarrow (g_n,\mathcal{P}_{n-1},S_{n-1}) \rightarrow (g_n,\varnothing,S_n).
+(g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,Z_1)
+\rightarrow \cdots \rightarrow (g_n,\mathcal{P}_{n-1},Z_{n-1}) \rightarrow (g_n,\varnothing,Z_n).
 \]
 
 \noindent
-A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,S)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
+A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
 %
 Furthermore, an interleaved run is said to be \textit{serial} if each $\mathcal{P}_i$ has at most one request, and $\mathcal{P}_n=\varnothing$.
 %
@@ -255,13 +258,13 @@ For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) an
 
 \[
 \mathrm{Int}(\mathcal{N})
-= \bigl\{\, S \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{interleaved run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,S) \,\bigr\}
+= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{interleaved run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}
 \]
 \[
 \mathrm{Ser}(\mathcal{N})
-= \bigl\{\, S \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{serial run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,S) \,\bigr\}.
+= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{serial run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
 \]
 
 
@@ -285,7 +288,9 @@ The set $G$ is defined as $G=\{[\texttt{X=0}], [\texttt{X=1}]\}$
 The initial global state is defined as $g_0 = [\texttt{X=0}]$.
 
 \item 
-We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$) and ``remaining'' programs.
+We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$) and ``remaining'' SER programs~\footnote{
+These are continuations of a SER program at a point of execution. Concretely, this can mean either (i) the suffix of the program when it is first initialized (the part that has not yet executed); or (ii) the continuation of the program after a \(\yieldkw\) statement, where execution may later resume.}. 
+
 
 \item 
 The set of requests is $REQ = \{{\color{ForestGreen}\blacklozenge_\text{main}}\}$
