@@ -84,9 +84,11 @@ Our \toolname{} syntax is defined as follows:
 %
 %\subsection{Semantics}
 %
-Values are naturals; booleans use $0/1$. Locals $\ell:\mathrm{Local}\to\mathbb{N}$, globals $g:\mathrm{Global}\to\mathbb{N}$ (with Local and Global being the local and global variable names, respectively).
-Both program and expression configurations are denoted as $\cfg{e}{\ell}{g}$; 
-Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep)$.
+Values are naturals; booleans use $0/1$. Mapping $\ell:\mathrm{Local}\to\mathbb{N}$, and $g:\mathrm{Global}\to\mathbb{N}$ respectively map a local or global variable to its current value.
+%
+Configurations of both programs and expression are denoted as $\cfg{e}{\ell}{g}$, with \(e\) being a valid SER expression/program. 
+%
+Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep)$, and may comprise of a sequence of expression steps.
 %
 %program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
 %
@@ -156,7 +158,7 @@ For convenience, the input program may be written with unbounded integers as lon
 %
 %If the program can reach an infinite number of states, then this initial Network System conversion times out. 
 %
-If the input program is written with restricted syntax shown in the SER syntax, then the SER \(\step\) NS conversion always terminates. 
+%If the input program is written with restricted syntax shown in the SER syntax, then the SER \(\step\) NS conversion always terminates. 
 
 \smallskip
 \noindent
@@ -169,18 +171,19 @@ This setting can equivalently capture self-spawning (by using additional global 
 \subsection{Network System}    
     
 The semantics are formalized as part of our network system (NS) setting, which is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
-    
-   
-A network system $\mathcal{N}$ is a tuple $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
+%
+%
+Given a SER program, we define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{EXP}, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
-\item $G$ is a set of global states (assignments to all global variables)
-\item $L$ is a set of local states, i.e., local variable values and the remaining program (which is a sequence of expressions until the subsequent \(\yieldkw\), or termination)
+\item $G$ is a set of global states, i.e., assignments to all \textit{global} variables
+\item $L$ is a set of local states, i.e., assignments to all \textit{local} variables
+\item $EXP$ is a finite set of SER expressions that are reachable from the original SER program, i.e., a sequence of expressions until: (i) the subsequent \(\yieldkw\); or (ii) termination 
 \item $\mathit{REQ}$ is a finite set of request types (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 \item $\mathit{RESP}$ is a finite set of response types (each marked {\color{red}$\blacklozenge_\text{resp}$})
 \item $g_0 \in G$ is the initial global state
 \item $\mathit{req} \subseteq \mathit{REQ} \times (\mathit{EXP} \times L)$ maps each request type to its initial SER expression and  local state
 \item $\mathit{resp} \subseteq (\mathit{EXP} \times L) \times \mathit{RESP}$ maps final SER expressions and local states to response types
-\item $\delta \subseteq (\mathit{EXP} \times L \times G) \times (\mathit{EXP} \times L \times G)$ defines atomic execution steps that update both global and local state (and the corresponding SER expressions)
+\item $\delta \subseteq (\mathit{EXP} \times L \times G) \times (\mathit{EXP} \times L \times G)$ defines atomic execution steps that update both global and local state (and the corresponding SER expressions); as based on SER's small-step semantics
 \end{itemize}
 
 %\todo{new start}
@@ -200,7 +203,7 @@ The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozeng
 A (global) \emph{network state} is a triple $(g,\mathcal{P},Z)$ where
 $g \in G$ is the current global state,
 $\mathcal{P} \in \mathrm{Multiset}(EXP \times L \times \mathit{REQ})$ is a multiset of in-flight requests (threads, i.e., triplets of SER expressions, local thread states, and the original request strings),
-and $S \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
+and $Z \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
 %
 The initial global state is $(g_0, \varnothing, \varnothing)$.
 
@@ -258,7 +261,7 @@ the result set \(Z\) is the final multiset of request/response pairs that arose 
 \smallskip
 \noindent
 \textbf{Serializability.}
-We define a \textit{run} of the network system as a complete execution:
+We define an \textit{interleaving run} of the network system as a complete execution (also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\)):
 %\noindent\textbf{Complete runs.}
 \[
 (g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,Z_1)
@@ -266,9 +269,9 @@ We define a \textit{run} of the network system as a complete execution:
 \]
 
 \noindent
-A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
+%A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
 %
-Furthermore, an interleaved run is said to be \textit{serial} if each $\mathcal{P}_i$ has at most one request, and $\mathcal{P}_n=\varnothing$.
+An interleaved run is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request, and $\mathcal{P}_n=\varnothing$.
 %
 Intuitively, \textit{serial} runs have at most one request in flight at any time,
 whereas \emph{interleaved} runs may have multiple requests in flight at once.
@@ -278,12 +281,12 @@ For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) an
 \[
 \mathrm{Int}(\mathcal{N})
 = \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{interleaved run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}
+\;\big|\; \exists\ \text{\textit{interleaved} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}
 \]
 \[
 \mathrm{Ser}(\mathcal{N})
 = \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{serial run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
+\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
 \]
 
 
@@ -307,8 +310,12 @@ The set $G$ is defined as $G=\{[\texttt{X=0}], [\texttt{X=1}]\}$
 The initial global state is defined as $g_0 = [\texttt{X=0}]$.
 
 \item 
-We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$) and ``remaining'' SER programs~\footnote{
-These are continuations of a SER program at a point of execution. Concretely, this can mean either (i) the suffix of the program when it is first initialized (the part that has not yet executed); or (ii) the continuation of the program after a \(\yieldkw\) statement, where execution may later resume.}. 
+We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$) 
+
+\item
+$EXP$ includes all ``reachable'' SER programs~\footnote{
+These are continuations of a SER program at a point of execution. Concretely, this can mean either (i) the suffix of the program when it is first initialized (the part that has not yet executed); or (ii) the continuation of the program after a \(\yieldkw\) statement, where execution may later resume.}.
+For example, the reachable programs for Listing~\ref{lst:MotivatingExample2NonSer} are depicted in Fig.~\ref{fig:code2ExampleNS}. 
 
 
 \item 

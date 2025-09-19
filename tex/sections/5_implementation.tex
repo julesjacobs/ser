@@ -212,13 +212,30 @@ an \texttt{HTML} report embedding the original net, symbolic constraints, reacha
 
 \subsection{Benchmark Overview} 
 \label{subsec:benchmarks}
-
-As there are no standard benchmarks for evaluating serializability, we wrote dozens of programs in our abstract NS language. These benchmarks span a wide range of complexity --- covering branching, looping constructs, arithmetic, non-deterministic choice, and multi-request workflows that manipulate both shared (global) variables and per-request (local) state. 
+To the best of our knowledge, ours is the first and only tool to: (i) statically check serializability on \textit{unbounded} programs; and (ii) \textit{prove serializability holds}.
 %
-We include both serializable and non-serializable instances and summarize the benchmarks' features and categorizations in Table~\ref{tab:benchmarks-all}. 
+Thus, and due to lack of standard benchmarks for evaluating serializability, we 
+assembled a suite of dozens of benchmarks (accompanying our artifact~\cite{ArtifactRepository}).
+These include both serializable and non-serializable instances encoded in both \texttt{SER} and \texttt{JSON} formats, and covering a broad range of features, including arithmetic, locks, loops, non-determinism, and more (see Table~\ref{tab:benchmarks-all}).
 %
-In particular, our most sophisticated examples are drawn from realistic networking and system-protocol scenarios, including stateful firewalls, BGP routing, network monitoring, and more --- highlighting the serializability challenges inherent in real-world distributed programs.
+We note that although the benchmarks themselves are not the main part of the paper, we believe they have merit on their own, due to their relevance to various real-world systems of interest.
+%
+Specifically, we wish to note our suite of benchmarks encoding \textit{networking \& system protocols}, which include stateful firewalls, BGP routing programs, network monitors, and more --- 
+%highlighting the serializability challenges inherent in real-world distributed programs.
+%
+%Here, we were motivated by 
+as motivated by real-world concurrency problems in this domain. One such example is our \textit{routing-cycle benchmark} in software-defined networks, (motivated by~\cite{NaGhSa24}). Another real-world example is our \textit{snapshot isolation benchmark} (explained in Appendix~\ref{appendix:snapshotIsolationExample}), that was motivated by a real database bug, namely, duplicate-key errors~\cite{cockroach-issue-14099} in the \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}, and the non-serializable behavior was automatically identified by our toolchain.
+%
+%Our benchmarks include both serializable and non-serializable instances, and their features and categorization appears in Table~\ref{tab:benchmarks-all}. 
 
+
+
+%As there are no standard benchmarks for evaluating serializability, we wrote dozens of programs in our abstract NS language. These benchmarks span a wide range of complexity --- covering branching, looping constructs, arithmetic, non-deterministic choice, and multi-request workflows that manipulate both shared (global) variables and per-request (local) state. 
+%
+%We include both serializable and non-serializable instances and summarize the benchmarks' features and categorizations in Table~\ref{tab:benchmarks-all}. 
+%
+%In particular, our most sophisticated examples are drawn from realistic networking and system-protocol scenarios, including stateful firewalls, BGP routing, network monitoring, and more --- highlighting the serializability challenges inherent in real-world distributed programs.
+%
 %As there are no official benchmarks for evaluating serializability, we hand-coded dozes of programs in our abstract network-system language.
 %%
 %The benchmarks vary in the complexity, and have multiple features: branching, loops, arithmetic, non-determinism, and multiple requests and responses, operating on both shared (global) variables and per-request (local) variables.
