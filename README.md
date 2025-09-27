@@ -96,6 +96,7 @@ If you're having issues with the ISL path, verify the installed version with `br
 Example:
 
     {
+        "initial_global": "G0",
         "requests": [["Req1", "L0"], ["Req2", "L1"], ["Req3", "L2"]],
         "responses": [["L0", "RespA"], ["L1", "RespB"], ["L2", "RespC"]],
         "transitions": [
