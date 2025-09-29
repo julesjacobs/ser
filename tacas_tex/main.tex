@@ -209,6 +209,17 @@
 	}%
 }
 
+% This forces \citet, \citep, etc. to behave like numeric \cite.
+\makeatletter
+\@ifpackageloaded{natbib}{}{%
+	\let\citet\cite
+	\let\citep\cite
+	\let\citealt\cite
+	\let\citealp\cite
+	\let\citeyear\relax
+	\let\citeauthor\relax
+}
+\makeatother
 
 % Length-related magic, to be removed for final version
 %\addtolength{\oddsidemargin}{-0.2cm}
