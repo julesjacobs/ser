@@ -1,0 +1,846 @@
+%\newpage
+
+\section{Problem Definition}
+\label{sec:problem-definition}
+%\guy{Can someone check Sections 3-4-5? Especially the formulations}
+
+\subsection{The SER Language}
+%\subsection{Syntax}
+Our \toolname{} syntax is defined as follows: 
+%of Fig.~\ref{fig:syntax}.
+
+\[
+\begin{aligned}
+	\mathbf{Expression}\quad e ::={}&{} \\
+	&0 \mid 1 \mid 2 \mid \dots 
+	&&\grammartag{Numeric constants}\\
+	&\nondet
+	&&\grammartag{Nondeterministic value: 0 or 1}\\
+	&x := e
+	&&\grammartag{Write to local variable}\\
+	&x
+	&&\grammartag{Read from local variable}\\
+	&X := e
+	&&\grammartag{Write to global variable}\\
+	&X
+	&&\grammartag{Read from global variable}\\
+	&e_1 == e_2
+	&&\grammartag{Equality test}\\
+	&e_1 ; e_2
+	&&\grammartag{Sequencing}\\
+	&\ifkw(e_1)\{e_2\}\elsekw\{e_3\}
+	&&\grammartag{Conditional}\\
+	&\whilekw(e_1)\{e_2\}
+	&&\grammartag{While loop}\\
+	&\yieldkw
+	&&\grammartag{Yields to scheduler}\\[1em]
+	\mathbf{Program}\quad p ::={}&{} \\
+	&\requestkw\ name_1\{e_1\}
+	&&\grammartag{Set of request handlers}\\
+	&\quad\vdots\\
+	&\requestkw\ name_n\{e_n\}
+\end{aligned}
+\]
+
+%
+%
+%\begin{figure}[!htbp]
+%    \begin{align*}
+%    \mathbf{Expression}\quad e ::= &&& \\
+%       | & \quad 0 \mid 1 \mid 2 \mid \ldots                                && \grammartag{Numeric constants} \\
+%       | & \quad \nondet                                 && \grammartag{Nondeterministic value: 0 or 1}\\
+%       | & \quad x := e                            && \grammartag{Write to local variable field} \\
+%       | & \quad x                                 && \grammartag{Read from local variable field} \\
+%       | & \quad X := e                            && \grammartag{Write to global  variable} \\
+%       | & \quad X                                 && \grammartag{Read from global  variable} \\
+%       | & \quad e_1 == e_2                        && \grammartag{Equality test} \\
+%       | & \quad e_1 ; e_2                         && \grammartag{Sequencing} \\
+%       | & \quad \ifkw(e_1)\{\ e_2\ \}\elsekw\{\ e_3\ \} && \grammartag{Conditional} \\
+%       | & \quad \whilekw(e_1)\{\ e_2\ \}              && \grammartag{While loop} \\
+%       | & \quad \yieldkw                      && \grammartag{Yields to scheduler}\\[1em]
+%    \mathbf{Program}\quad p ::=
+%        & \quad \requestkw\ name_1\ \{\ e_1\ \}&&\grammartag{Set of request handlers}\\[-0.5em]
+%        & \quad \qquad \vdots &&\\
+%        & \quad \requestkw\ name_n\ \{\ e_n\ \}\ 
+%    \end{align*}
+%    \caption{Syntax of expressians and programs}
+%    \label{fig:syntax}
+%\end{figure}
+    %
+    
+
+
+
+%\guy{add other rebuttal promises}
+\guy{check semantics}
+
+
+% SER small-step semantics with explicit guard (congruence) rules
+% Requires: \usepackage{mathtools,amssymb,mathpartir}
+
+
+
+\noindent\textbf{SER small-step semantics with guard rules.}
+%
+%\subsection{Semantics}
+%
+The set \(V\) is a finite set of numeric constants; booleans use $0/1$. We respectively denote with \(VARS\) and \(vars\) the (finite) sets of global and local variables. $\rho:{vars}\to V$, and $g:{VARS}\to V$ respectively map a local or global variable to its current value in \(V\).
+%
+Configurations of both programs and expression are denoted as $\cfg{e}{\rho}{g}$, with \(e\) being a valid \toolname{} expression/program. 
+%
+Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep)$, and may comprise of a sequence of expression steps.
+%
+%program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
+%
+%We denote with \(\ell_0\) the initial local state of every packet.
+
+\smallskip
+\noindent\textit{Expression step} $(\step)$.
+\begin{mathpar}
+	\inferrule*[right=ND-0]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{0}{\rho}{g}}
+	\and
+	\inferrule*[right=ND-1]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{1}{\rho}{g}}\\
+	
+	\inferrule*[right=LOCAL-READ]{\rho(x)=v}{\cfg{x}{\rho}{g} \step \cfg{v}{\rho}{g}}
+	\and
+	\inferrule*[right=GLOBAL-READ]{g(X)=v}{\cfg{X}{\rho}{g} \step \cfg{v}{\rho}{g}}\\
+	
+	\inferrule*[right=LOCAL-ASSIGN-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{x := e}{\rho}{g} \step \cfg{x := e'}{\rho'}{g'}}
+	\and
+	\inferrule*[right=LOCAL-ASSIGN-DONE]{ }{\cfg{x := v}{\rho}{g} \step \cfg{v}{\update{\rho}{x}{v}}{g}}
+	
+	\inferrule*[right=GLOBAL-ASSIGN-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{X := e}{\rho}{g} \step \cfg{X := e'}{\rho'}{g'}}
+	\and
+	\inferrule*[right=GLOBAL-ASSIGN-DONE]{ }{\cfg{X := v}{\rho}{g} \step \cfg{v}{\rho}{\update{g}{X}{v}}}
+	
+	\inferrule*[right=EQ-L]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 == e_2}{\rho}{g} \step \cfg{e_1' == e_2}{\rho'}{g'}}
+	\and
+	\inferrule*[right=EQ-R]{\cfg{e_2}{\rho}{g} \step \cfg{e_2'}{\rho'}{g'}}{\cfg{v_1 == e_2}{\rho}{g} \step \cfg{v_1 == e_2'}{\rho'}{g'}}
+	\and
+	\inferrule*[right=EQ-T]{v_1=v_2}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{1}{\rho}{g}}
+	\and
+	\inferrule*[right=EQ-F]{v_1\neq v_2}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{0}{\rho}{g}}
+	
+	\inferrule*[right=SEQ-STEP]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 ; e_2}{\rho}{g} \step \cfg{e_1' ; e_2}{\rho'}{g'}}
+	\and
+	\inferrule*[right=SEQ-DONE]{ }{\cfg{v ; e_2}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
+	
+	\inferrule*[right=IF-GUARD]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{\ifkw(e_1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{\ifkw(e_1')\{e_2\}\elsekw\{e_3\}}{\rho'}{g'}}
+	\and
+	\inferrule*[right=IF-T]{ }{\cfg{\ifkw(1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
+	\and
+	\inferrule*[right=IF-F]{ }{\cfg{\ifkw(0)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{e_3}{\rho}{g}}
+	
+	\inferrule*[right=WHILE-UNFOLD]{ }{\cfg{\whilekw(e_1)\{e_2\}}{\rho}{g}
+		\step
+		\cfg{\ifkw(e_1)\{\,e_2 ; \whilekw(e_1)\{e_2\}\,\}\elsekw\{0\}}{\rho}{g}}
+\end{mathpar}
+
+\noindent\textit{Program step} $(\pstep)$ and scheduling.
+\begin{mathpar}
+	\inferrule*[right=YIELD]{\cfg{e}{\rho}{g} \step \cfg{\yieldkw \cdot e'}{\rho'}{g'}}{\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'}}
+	\\
+	\inferrule*[right=START]{\cfg{e_i}{\rho}{g}\pstep \cfg{e'_i}{\rho'}{g'} \quad i\in\{1,\dots,n\}}{\langle \requestkw\ name_i\{e_i\}, \rho, g \rangle \pstep  \cfg{e'_i}{\rho'}{g'} }
+	\and
+	\inferrule*[right=TERMINATE]{\cfg{e}{\rho}{g} \step \cfg{v}{\rho'}{g'} \quad v\in{V}}{\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'}}	
+\end{mathpar}
+
+
+
+\smallskip
+\noindent
+\textbf{Note.}
+Instead of defining a \texttt{spawn} instruction, as exists in some languages --- \toolname{} captures \textit{external} spawning via requests.
+%
+This setting can equivalently capture self-spawning (by using additional global variables), while translating more naturally to the networking domain --- in which threads are captured by packets sent by an external user.
+%
+Furthermore, we denote that our syntax and semantics can both be extended to include \textit{arithmetic operations} in a straightforward manner, however, we omit these for simplicity. 
+    
+    
+\subsection{Network System}    
+We now present our abstract network system (NS) setting, which is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
+%
+We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
+\begin{itemize}
+\item $G$ is a set of \textit{global network states} (e.g., a state variable on a switch)
+
+\item $L$ is a set of \textit{local packet states} (e.g., a packet header value)
+
+\item $\mathit{REQ}$ is a finite set of\textit{ request strings} (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
+
+\item $\mathit{RESP}$ is a finite set of \textit{response strings} (each marked {\color{red}$\blacklozenge_\text{resp}$})
+
+\item $g_0 \in G$ is the \textit{initial global state} of the network system
+
+\item $\mathit{req} \subseteq \mathit{REQ} \times  L$ maps each request to its corresponding local state --- this represents externally spawning a packet matching the request type
+
+\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps a final local state to the corresponding final response --- this corresponds to a packet exiting the network and returning the computation to the user
+
+\item $\delta \subseteq  (L \times G) \times ( L \times G)$ defines atomic execution steps that update both global and local state --- this corresponds to a single packet doing a single hop in the network
+%(and the corresponding SER expressions); as based on SER's small-step semantics
+\end{itemize}
+
+%\todo{new start}
+%We refer to our transition rules in Fig.~\ref{fig:code2ExampleNS}.
+
+\smallskip
+\noindent
+\textbf{Request and response.}
+A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{r}} \in \mathit{REQ}$ represents the initiation of a concurrent computation unit. Each request has an associated handler expression from the program syntax that defines its behavior.
+A \emph{response} ${\color{red}\blacklozenge_\text{s}} \in \mathit{RESP}$ represents the value returned by a request after its execution terminates.
+The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozenge_\text{s}}) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single request execution.
+
+
+\smallskip
+\noindent
+\textbf{States.}
+A (global) \emph{network state} is a triple $(g,\mathcal{P},Z)$ where
+$g \in G$ is the current global network state,
+$\mathcal{P} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (threads, i.e., triplets of SER expressions, local thread states, and the original request strings),
+and $Z \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
+%
+The initial global state is $(g_0, \varnothing, \varnothing)$.
+
+
+
+
+% Non-figure version of the state-transition rules (caption text inlined)
+%\renewcommand{\arraystretch}{1.6}
+%\medskip
+\smallskip
+\noindent
+\textbf{Transition rules.}
+A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, Z)\) by either
+(1) introducing a new request, (2) processing a request step via \(\delta\), or
+(3) consuming a request to produce its response. When no more steps are possible,
+the result set \(Z\) is the final multiset of request/response pairs that arose during the run.
+
+
+
+%\noindent\textbf{States and transitions.}
+%A (global) \emph{network state} is a triple $(g,\mathcal{P},M)$ where
+%$g \in G$ is the current global state,
+%$\mathcal{P} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (threads),
+%and $M \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
+%%
+%The initial state is $(g_0, \varnothing, \varnothing)$.
+
+
+%\smallskip
+%\noindent\textbf{Initial state.} $(g_0, \varnothing, \varnothing)$.
+
+%\smallskip
+%\noindent\textbf{Transition rules.}
+\[
+\text{(New Request)}\quad
+\infer{({\color{ForestGreen}\blacklozenge_\text{r}},\ell)\in\mathit{req}}
+{(g,\mathcal{P},Z) \rightarrow (g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; Z)}
+\]
+\[
+\text{(Processing Step)}\quad
+\infer{((\ell, g),(\ell', g'))\in\delta}
+{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; Z)
+	\rightarrow
+	(g',\; \mathcal{P}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\; Z)}
+\]
+\[
+\text{(Response)}\quad
+\infer{(\ell,{\color{red}\blacklozenge_\text{s}})\in\mathit{resp}}
+{(g,\; \mathcal{P}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; Z)
+	\rightarrow
+	(g,\; \mathcal{P},\; Z \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
+\]
+
+
+\smallskip
+\noindent
+\textbf{Serializability.}
+We define an \textit{interleaving run} of the network system as a complete execution (also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\)):
+%\noindent\textbf{Complete runs.}
+\[
+(g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,Z_1)
+\rightarrow \cdots \rightarrow (g_n,\mathcal{P}_{n-1},Z_{n-1}) \rightarrow (g_n,\varnothing,Z_n).
+\]
+
+\noindent
+%A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
+%
+An interleaved run is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request, and $\mathcal{P}_n=\varnothing$.
+%
+Intuitively, \textit{serial} runs have at most one request in flight at any time,
+whereas \emph{interleaved} runs may have multiple requests in flight at once.
+%
+For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to  represent the set of all multisets of request/response pairs, for interleaving and serializable runs respectively:
+
+\[
+\mathrm{Int}(\mathcal{N})
+= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{\textit{interleaved} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}
+\]
+\[
+\mathrm{Ser}(\mathcal{N})
+= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
+\]
+
+
+
+A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}) = \text{Ser}(\mathcal{N})$, i.e., every multiset of request/response pairs attainable through an interleaved execution can also be attained through a serial one.
+
+\subsection{Translating \toolname{} programs to NS}
+%
+The NS abstraction is useful beyond its capability to capture concurrent behaviors in software-defined networks.
+%
+Specifically, another advantage is the natural translation from  \toolname{} programs to their corresponding NS, as we demonstrate next.
+%
+
+\smallskip
+\noindent
+Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\); (ii) an initial global state \(g_0\); (iii) local variables (\(vars\)); (iv) global variables (\(VARS\)); (v) mappings \(\rho\) and (vi) \(g\) from local/global variables to (vii) a finite set of values \(V\), we define the following NS $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
+
+\begin{itemize}
+	\item The set of global states include all mappings from global variables to values:
+	\[
+	G = \{\, g \mid g : \text{VARS} \to V \,\}.
+	\]
+	
+	\item The set of local states include a pair of the local variable assignments coupled with the remaining \toolname{} program to execute, i.e., a sequence of expressions until: (i) the subsequent \(\yieldkw\); or (ii) termination
+	\[
+	L = \{\, (r,\rho) \mid \exists \rho : \text{vars} \to V \ \exists \, name_i\{e_i\} \in P_0 \ \exists k \ge 0 \,.\, (e_k';\yieldkw)^k ; e = e_i \in P_0 \,\}.
+	\]
+
+	
+	\item The set of requests are the handlers of the \toolname{} program:
+	\[
+	REQ = \{\, name_i \mid name_i\{e_i\} \in P_0 \,\}.
+	\]
+	
+	\item The set of responses include all possible numerical constants:
+	\[
+	RESP = V.
+	\]
+	
+	\item The request relation maps every request to a local state with the corresponding request handler and the initial local assignment:
+	\[
+	req = \{\, (r,\ell) \mid r = name_i \in REQ, \, \ell = (e_i,\rho_0) \in L \,\}.
+	\]
+	
+	\item The response relation maps the computed constant (attained prior to termination) with the corresponding response:
+	\[
+	resp = \{\, (\ell',r') \mid \exists v \in V \,.\, \ell' = (v',\rho') \in L, \, r' \in RESP \,\}.
+	\]
+	
+	\item The transition relation, defined according to the \toolname{} semantics:
+	\[
+	\delta = \bigl\{ \, 
+	(((e,\rho),g),((e',\rho'),g')) \,\bigm|\, 
+	(e,\rho),(e',\rho') \in L, \ g,g' \in G, \ 
+	\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'} 
+	\,\bigr\}.
+	\]
+\end{itemize}
+
+
+
+
+% $\mathit{req} \subseteq \mathit{REQ} \times  L$ maps each request type to its corresponding local state
+%initial SER expression and  local state
+%
+% $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps final SER expressions and local states to response types
+%
+% $\delta \subseteq  (L \times G) \times ( L \times G)$ defines atomic execution steps that update both global and local state 
+%(and the corresponding SER expressions); as based on SER's small-step semantics
+
+
+
+\smallskip
+\noindent
+\textbf{Assumptions.}
+%
+In addition to the assumption that the request and response sets are finite, we also assume that a program has a \textit{finite number of reachable states}. 
+%
+These states are enumerated when converting a \toolname{} program to a Network System. 
+%
+For convenience, the input program may be written with unbounded values as long as only a finite number are actually reached. 
+%
+If the program can reach an infinite number of states, then this initial Network System conversion times out. 
+%
+%If the input program is written with restricted syntax shown in the SER syntax, then the SER \(\step\) NS conversion always terminates. 
+
+
+%\subsection{NS Example: Non-Serializability }
+%\label{sec:ns-non-serializable}
+\medskip
+\noindent
+\textbf{Example: \toolname{} to NS.}
+%
+Recall the code snippet from the simple, non-serializable example presented in Listing~\ref{lst:MotivatingExample2NonSer}. We can represent its NS with the following mapping:
+
+\begin{itemize}
+\item 
+The set $G$ is defined as $G=\{[\texttt{X=0}], [\texttt{X=1}]\}$.
+
+\item 
+The initial global state is defined as $g_0 = [\texttt{X=0}]$.
+
+\item 
+We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$), coupled with all reachable \toolname{} programs~\footnote{
+These are continuations of a \toolname{} program at a point of execution. Concretely, this can mean either (i) the suffix of the program when it is first initialized (the part that has not yet executed); or (ii) the continuation of the program after a \(\yieldkw\) statement, where execution may later resume.}.
+For example, the reachable programs for Listing~\ref{lst:MotivatingExample2NonSer} are depicted in Fig.~\ref{fig:code2ExampleNS}. 
+
+
+\item 
+The set of requests is $REQ = \{{\color{ForestGreen}\blacklozenge_\text{main}}\}$.
+
+\item 
+The set of responses is $RESP = \{{\color{red}\blacklozenge_0},{\color{red}\blacklozenge_1}\}$.
+
+\item
+The function \(\delta\) is presented in the bottom part of Fig.~\ref{fig:code2ExampleNS}.
+
+
+\end{itemize}
+
+
+We define the three mappings $req$, $resp$, and $\delta$ in Fig.~\ref{fig:code2ExampleNS}.
+The figure also includes the explicit network system that
+serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
+%
+We note that we depicted only part of the states that are \textit{reachable}, in our finite-state setting.
+%
+
+\begin{figure}[!htbp]
+	\centering
+	%–––– Network system diagram ––––
+	% \includegraphics[width=\textwidth]{plots/code_2_NS.png}\\[1ex]
+
+	\begin{tikzpicture}[
+		node distance=1.5cm and 2.5cm,
+		>=stealth,
+		thick,
+		every node/.style={font=\small}
+	]
+	  % [main request] -> [y=0][full program below that] ---[X=1 -> X=1][X=0 -> X=1 below that]--->[y=0][rest of program below that]
+	  %   (first outgoing edge of last node on previous line)
+      %   --[X=0 -> X=0]-->[y=0][empty program below that] ---> [0 response]
+	  %   (second outgoing edge)
+	  %   --[X=1 -> X=0]-->[y=1][empty program below that] ---> [1 response]
+	  
+	  % Main request node
+	  \node[
+		draw=black,
+		line width=0.8pt,
+		fill=ForestGreen!20,
+		text=black,
+		diamond,
+		aspect=2,
+		inner sep=2pt,
+		scale=0.7
+	  ] (main) {\texttt{main}};
+	  
+	  % First state node with full program
+	  \node[right=0.7cm of main, align=center] (state1) {
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=brightyellow,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\texttt{y=0}};
+		\end{tikzpicture}\\[-2.5pt]
+		\begin{minipage}{2cm}
+			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+X := 1
+yield
+y := X
+X := 0
+return y
+			\end{lstlisting}
+		\end{minipage}
+	  };
+	  
+	  % Second state node with rest of program
+	  \node[right=of state1, align=center] (state2) {
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=brightyellow,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\texttt{y=0}};
+		\end{tikzpicture}\\[-2.5pt]
+		\begin{minipage}{1.5cm}
+			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+y := X
+X := 0
+return y
+			\end{lstlisting}
+		\end{minipage}
+	  };
+	  
+	  % Final state y=0 with empty program
+	  \node[above right=-0.5cm and 2.2cm of state2, align=center] (state3) {
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=brightyellow,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\texttt{y=0}};
+		\end{tikzpicture}\\[-2.5pt]
+		\begin{minipage}{0.8cm}
+			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+// end
+			\end{lstlisting}
+		\end{minipage}
+	  };
+	  
+	  % Final state y=1 with empty program
+	  \node[below right=-0.2cm and 2.2cm of state2, align=center] (state4) {
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=brightyellow,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\texttt{y=1}};
+		\end{tikzpicture}\\[-2.5pt]
+		\begin{minipage}{0.8cm}
+			\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+// end
+			\end{lstlisting}
+		\end{minipage}
+	  };
+	  
+	  % Response 0
+	  \node[
+		right=0.6cm of state3,
+		draw=black,
+		line width=0.8pt,
+		fill=RedViolet!20,
+		text=black,
+		diamond,
+		aspect=2,
+		inner sep=2pt,
+		scale=0.7,
+		font=\Large
+	  ] (resp0) {\texttt{0}};
+	  
+	  % Response 1
+	  \node[
+		right=0.6cm of state4,
+		draw=black,
+		line width=0.8pt,
+		fill=RedViolet!20,
+		text=black,
+		diamond,
+		aspect=2,
+		inner sep=2pt,
+		scale=0.7,
+		font=\Large
+	  ] (resp1) {\texttt{1}};
+	  
+	  % Arrows
+	  \draw[->] (main) -- (state1);
+	  
+	  % Transition labels for state1 to state2
+	  \draw[->] (state1) -- node[above] {\begin{tikzpicture}[baseline=(a.base)]\node[draw=black,line width=0.8pt,fill=blue!10,rectangle,rounded corners=1pt,inner sep=2pt] (a) {\texttt{X=0}};\end{tikzpicture} $\to$ \begin{tikzpicture}[baseline=(b.base)]\node[draw=black,line width=0.8pt,fill=blue!10,rectangle,rounded corners=1pt,inner sep=2pt] (b) {\texttt{X=1}};\end{tikzpicture}} node[below] {\begin{tikzpicture}[baseline=(c.base)]\node[draw=black,line width=0.8pt,fill=blue!10,rectangle,rounded corners=1pt,inner sep=2pt] (c) {\texttt{X=1}};\end{tikzpicture} $\to$ \begin{tikzpicture}[baseline=(d.base)]\node[draw=black,line width=0.8pt,fill=blue!10,rectangle,rounded corners=1pt,inner sep=2pt] (d) {\texttt{X=1}};\end{tikzpicture}} (state2);
+	  
+	  % From state2 to final states
+	  \draw[->] ([yshift=4pt]state2.east) to[out=50,in=180] node[above, sloped] {\begin{tikzpicture}[baseline=(a.base)]\node[draw=black,line width=0.8pt,fill=blue!10,rectangle,rounded corners=1pt,inner sep=2pt] (a) {\texttt{X=0}};\end{tikzpicture} $\to$ \begin{tikzpicture}[baseline=(b.base)]\node[draw=black,line width=0.8pt,fill=blue!10,rectangle,rounded corners=1pt,inner sep=2pt] (b) {\texttt{X=0}};\end{tikzpicture}} (state3.west);
+	  \draw[->] ([yshift=-16pt]state2.east) to[out=-50,in=180] node[below, sloped] {\begin{tikzpicture}[baseline=(a.base)]\node[draw=black,line width=0.8pt,fill=blue!10,rectangle,rounded corners=1pt,inner sep=2pt] (a) {\texttt{X=1}};\end{tikzpicture} $\to$ \begin{tikzpicture}[baseline=(b.base)]\node[draw=black,line width=0.8pt,fill=blue!10,rectangle,rounded corners=1pt,inner sep=2pt] (b) {\texttt{X=0}};\end{tikzpicture}} (state4.west);
+	  
+	  % To responses
+	  \draw[->] (state3) -- (resp0);
+	  \draw[->] (state4) -- (resp1);
+	  
+	\end{tikzpicture}
+	
+	%–––– req, resp, and δ definitions ––––
+	\[
+	\begin{array}{@{}r@{\;}l}
+	req \coloneq & 
+	\big\{
+	\big[
+	\begin{array}{c c c}
+		\begin{tikzpicture}[baseline=(textnode.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=ForestGreen!20,
+			text=black,
+			diamond,
+			aspect=2,
+			inner sep=2pt,
+			scale=0.7
+			] (textnode) {\texttt{main}};
+		\end{tikzpicture}
+		&\!\!\rightarrow\!\!&
+		\begin{array}{c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\texttt{y=0}};
+			\end{tikzpicture}\vspace{-2pt}
+			\\
+			\begin{minipage}{0.20\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+X := 1 
+yield 
+y := X
+X := 0
+return y
+				\end{lstlisting}
+			\end{minipage}
+		\end{array}
+	\end{array}
+	\big]
+	\big\}
+	\\[2em]
+	resp \coloneq &
+	\big\{
+	\big[
+	\begin{array}{c c c}
+		\begin{array}{c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\texttt{y=0}};
+			\end{tikzpicture}\vspace{-2pt}
+			\\
+			\begin{minipage}{0.11\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+// end
+				\end{lstlisting}
+			\end{minipage}
+		\end{array}
+		&\!\!\rightarrow\!\!&
+		\begin{tikzpicture}[baseline=(textnode.base),scale=0.7]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=RedViolet!20,
+			text=black,
+			diamond,
+			aspect=2,
+			inner sep=2pt,
+			font=\small
+			] (textnode) {\texttt{0}};
+		\end{tikzpicture}
+	\end{array}
+	\big]\,{},
+	\big[
+	\begin{array}{c c c}
+		\begin{array}{c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\texttt{y=1}};
+			\end{tikzpicture}\vspace{-2pt}
+			\\
+			\begin{minipage}{0.11\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+// end
+				\end{lstlisting}
+			\end{minipage}
+		\end{array}
+		&\!\!\rightarrow\!\!&
+		\begin{tikzpicture}[baseline=(textnode.base),scale=0.7]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=RedViolet!20,
+			text=black,
+			diamond,
+			aspect=2,
+			inner sep=2pt,
+			font=\small
+			] (textnode) {\texttt{1}};
+		\end{tikzpicture}
+	\end{array}
+	\big]
+	\big\}
+	\\[2em]
+	\delta \coloneq & 
+	\big\{\big[(
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=blue!10,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\texttt{X=0}};
+		\end{tikzpicture}\,{},
+		\begin{array}{c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\texttt{y=0}};
+			\end{tikzpicture}\vspace{-2pt}
+			\\
+			\begin{minipage}{0.14\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+X := 1
+yield
+y := X
+X := 0
+return y
+				\end{lstlisting}
+			\end{minipage}
+		\end{array}
+		)
+		\;\rightarrow\;
+		(
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=blue!10,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\texttt{X=1}};
+		\end{tikzpicture}\,{},
+		\begin{array}{c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\texttt{y=0}};
+			\end{tikzpicture}\vspace{-2pt}
+			\\
+			\begin{minipage}{0.14\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+y := X
+X := 0
+return y
+				\end{lstlisting}
+			\end{minipage}
+		\end{array}
+		)
+		\big],
+	\\[0.5em]
+	& \phantom{\big\{}
+		\big[(
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=blue!10,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\texttt{X=1}};
+		\end{tikzpicture}\,{},
+		\begin{array}{c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\texttt{y=0}};
+			\end{tikzpicture}\vspace{-2pt}
+			\\
+			\begin{minipage}{0.14\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+y := X
+X := 0
+return y
+				\end{lstlisting}
+			\end{minipage}
+		\end{array}
+		)
+		\;\rightarrow\;
+		(
+		\begin{tikzpicture}[baseline=(ybox.base)]
+			\node[
+			draw=black,
+			line width=0.8pt,
+			fill=blue!10,
+			text=black,
+			rectangle,
+			rounded corners=1pt,
+			inner sep=2pt
+			] (ybox) {\texttt{X=0}};
+		\end{tikzpicture}\,{},
+		\begin{array}{c}
+			\begin{tikzpicture}[baseline=(ybox.base)]
+				\node[
+				draw=black,
+				line width=0.8pt,
+				fill=brightyellow,
+				text=black,
+				rectangle,
+				rounded corners=1pt,
+				inner sep=2pt
+				] (ybox) {\texttt{y=1}};
+			\end{tikzpicture}
+			\vspace{-2pt}
+			\\
+			\begin{minipage}{0.11\linewidth}
+				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
+// end
+				\end{lstlisting}
+			\end{minipage}
+		\end{array}
+		)
+		\big],
+		\ldots
+	\big\}
+	\end{array}
+	\]
+	\caption{Network system and transition functions for the program in Listing~\ref{lst:MotivatingExample2NonSer}. Local states consist of local variable assignments and a remaining program text. Edges in the NS are labeled with their corresponding global state transition(s). Requests and responses are diamonds.}
+\label{fig:code2ExampleNS}
+\end{figure}
+
+

@@ -1,0 +1,129 @@
+%\newpage
+
+\section{Proof of Inductive Invariant}
+\label{appendix:InductiveInvariantExample}
+
+
+\begin{proof}
+	
+Define the predicate
+\[
+\begin{aligned}
+	I(P_{1},\dots,P_{8})
+	:={}&
+		(P_{1},\textcolor{black}{P_{2}},\textcolor{black}{P_{3}},P_{4},P_{5},P_{6},\textcolor{black}{P_{7}},\textcolor{black}{P_{8}})
+		\;\mapsto\;\\
+		&\quad
+		\exists\,e_{0},\dots,e_{5}\ge0.\;
+		\Bigl(
+		e_{2}-e_{1}+\textcolor{black}{P_{3}}-1=0\;\land\;
+		e_{2}+P_{1}-e_{5}=0\;\land\;
+		P_{5}-e_{1}+e_{4}=0\;\land\\
+		&\qquad\quad
+		-\,e_{4}+\textcolor{black}{P_{7}}=0\;\land\;
+		P_{6}+e_{3}-e_{0}=0\;\land\;
+		\textcolor{black}{P_{8}}-e_{3}=0\;\land\\
+		&\qquad\quad
+		-\,e_{2}+e_{1}+e_{0}+P_{4}=0\;\land\;
+		-\,e_{2}+e_{1}+\textcolor{black}{P_{2}}=0
+		\Bigr)
+		\;\land\;
+		\bigl(P_{4}-1\ge0\;\lor\;\textcolor{black}{P_{3}}-1\ge0\bigr).
+	\end{aligned}
+	\]
+	
+	
+	\medskip\noindent
+	\textbf{(1) Initialization.}
+	The initial marking has $P_{3}=1$ and $P_{1}=P_{2}=P_{4}=P_{5}=P_{6}=P_{7}=P_{8}=0$.
+	Choose $e_{0}=\cdots=e_{5}=0$.  Then
+	\[
+	e_{i}\ge0,\quad
+	e_{2}-e_{1}+P_{3}-1=0-0+1-1=0,\;\dots,\;-e_{2}+e_{1}+P_{2}=0,
+	\]
+	and 
+	\[
+	P_{4}-1\ge0\;\lor\;P_{3}-1\ge0
+	\;=\;-1\ge0\;\lor\;0\ge0
+	\;=\;\texttt{FALSE}\;\lor\;\texttt{TRUE}
+	\;=\;\texttt{TRUE}.
+	\]
+	Thus $I$ holds initially.
+	
+	\medskip\noindent
+	\textbf{(2) Consecution.}
+	One checks for each transition $t_{k}$ of the Petri net that
+	\[
+	I(M)\;\Longrightarrow\;I\bigl(t_{k}(M)\bigr).
+	\]
+	In each case the same $(e_{0},\dots,e_{5})$ can be adjusted (per the SMT certificate) to show the eight equalities and the disjunction remain valid. See our accompanying artifact~\cite{ArtifactRepository} for generating a full proof in the standard \texttt{SMT-LIB} format.
+	
+	\medskip\noindent
+	\textbf{(3) Refutation of the property.}
+	Suppose by contradiction that both $I(P)$ and it holds that:
+	\[
+	\phi(P):\quad
+	P_{1}=0,\;
+	P_{2}\ge0,\;
+	P_{3}\ge0,\;
+	P_{4}=0,\;
+	P_{5}=0,\;
+	P_{6}=0,\;
+	P_{7}=0,\;
+	P_{8}\ge1.
+	\] 
+	
+	\noindent
+	From
+	\[
+	e_{2}-e_{1}+P_{3}-1=0
+	\quad\text{and}\quad
+	-e_{2}+e_{1}+P_{2}=0
+	\]
+	we get
+	\[
+	P_{2}=1-P_{3}.
+	\]
+	From
+	\[
+	P_{8}-e_{3}=0
+	\quad\text{and}\quad
+	P_{6}+e_{3}-e_{0}=0
+	\]
+	and from the assumption that $P_6=0$, we get
+	\[
+	e_{0}=e_{3}=P_{8}
+	\].
+	
+	
+	\noindent
+	Similarly, the invariant equalities 
+	$(-\,e_{2}+e_{1}+e_{0}+P_{4}=0)$ and $(	-\,e_{2}+e_{1}+\textcolor{black}{P_{2}}=0)$
+	induce
+	\[
+	P_{2}=P_{4}+e_{0}=P_{4}+P_{8},
+	\]
+	thus
+	\[
+	P_{8}=P_2-P4=(1-P_{3})-P_{4}=1-P_{3}-0=1-P_3.
+	\]
+	as we also assume that $P_4=0$.
+
+
+	
+	
+	\noindent
+	But $\phi$ also gives $P_{3}\ge0$ and $P_{8}\ge1$, hence $P_{3}=0$.  
+	Furthermore, as our invariant includes a conjunction with $\bigl(P_{4}-1\ge0\;\lor\;\textcolor{black}{P_{3}}-1\ge0\bigr)$. As we assume by negation that the semilinear set is reachable, then $P_4=0$; and in order for both the invariant and the property to hold, then necessarily $P_3 \ge 1$, in contradiction with $P_3=0$.
+	%
+	  Thus $I\land\phi$ is unsatisfiable, i.e., 
+	%\[
+	$
+	I(P)\;\Longrightarrow\;\neg\phi(P)$
+	.
+	%\]
+	This completes the proof that $I$ is an inductive invariant refuting the given property.
+\end{proof}
+
+
+%\newpage

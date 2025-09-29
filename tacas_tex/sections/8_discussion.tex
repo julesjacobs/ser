@@ -1,0 +1,57 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Conclusion}
+
+We present the first implemented tool that verifies serializability for unbounded concurrent systems and generates proof certificates.
+Our approach bridges theory and practice by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
+%
+Key contributions include: (1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude, and (4) demonstrating feasibility on SDN-inspired benchmarks.
+
+%
+
+\subsection{Limitations}
+
+While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
+First, the underlying Petri Net reachability problem has \texttt{Ackermann}-complete complexity, causing our tool to time out on some complex benchmarks despite optimizations.
+Second, our current implementation relies on \texttt{SMPT}, which may fail to find proofs even when they exist, limiting completeness.
+Third, our network system model assumes a simple request/response pattern and cannot model more complex interactions, such as streaming, callbacks, or partial responses.
+Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
+These limitations suggest important directions for future research.
+
+\subsection{Future Work}
+
+\paragraph{Scalability.}
+
+%Our evaluation shows that some benchmarks still time out.
+To improve scalability, we are developing both theory and implementation of \textit{polyhedral reductions}~\cite{AmBeDa21} --- structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri Net and $E$ is a formula enabling reconstruction of $N_1$'s state space from $N_2$'s. This would let us verify the reduced net and lift proofs back to the original net.
+%
+%\guy{Nicolas are you sure about the next sentence? Do you have an explanation or a "negative proof"?}
+%
+%Furthermore, we note that polyhedral reductions are the only type of structural reduction for which such a conversion is possible.
+%
+%We are developing both theory and implementation for this extension.
+%
+%\todo{Limitations?}
+%Examples we cannot solve, future work that would help
+%To conclude..
+
+
+\paragraph{Extensions to diverse communication models.}
+
+Our current framework assumes that clients act independently --- each submits a request, receives a response, and only afterward collaborates to verify (in a centralized manner) whether the combined outcomes are serializable. However, in a stronger model, clients may communicate during execution or enforce partial ordering of their interactions. More generally, this can be formalized via Lamport’s \textit{happens‐before} relation over request/response pairs~\cite{La78}. 
+%
+In contrast, a weaker model disallows communication --- in which case clients either cannot communicate after receiving responses or may only share limited summaries. Jointly deciding serializability in this setting will require decentralized certification techniques or streaming proofs that respect tight communication constraints. 
+%
+By extending our theory and tool along these two axes, we aim to cover a broad spectrum of practical distributed‐system guarantees, that are more complex and match broader, real-world scenarios.
+
+%
+%
+%
+%\todo{Different notions of serializability}
+%\begin{itemize}
+%    \item \todo{Current notion: clients independently submit a request and get a response, and later they all get together and see if what they got was serializable}
+%    \item \todo{Stronger: clients are not independent, or sequentially execute some parts. General: we have some happens-before on the requests/responses}
+%    \item \todo{Weaker: the clients cannot communicate with each other afterwards to determine whether what they got was serializable, or they can only communicate in a limited way}
+%    \item \todo{Infinite / unbounded executions}
+%\end{itemize}

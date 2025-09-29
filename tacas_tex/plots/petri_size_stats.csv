@@ -1,0 +1,19 @@
+bidirectional_pruning ON,remove_redundant ON,generate_less ON,smart_order ON,benchmark,index,stage,num_places,num_transitions
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
+1,1,1,1,ex,0,pre_pruning,8,7
+1,1,1,1,ex,0,post_pruning,8,6
