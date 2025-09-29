@@ -1,8 +1,7 @@
-%\documentclass[acmsmall,review,anonymous,nonacm]{acmart}
 \documentclass[a4paper]{llncs}
 
 \usepackage{mathpartir}
-
+\usepackage{url}
 \usepackage{listings}
 \usepackage{svg}
 \usepackage{float}
@@ -122,13 +121,10 @@
 
 %\author{Anonymous}
 	\author{
-			Guy Amir\inst{1} \and
-			Davide Corsi\inst{2} \and
-			Raz Yerushalmi\inst{1,3} \and
-			Luca Marzari\inst{2} \and \\
-			David Harel\inst{3} \and
-			Alessandro Farinelli\inst{2} \and
-			Guy Katz\inst{1}
+			Guy Amir \and
+			Mark Barbone \and
+			Nicolas Amat \and
+			Jules Jacobs
 		}
 \institute{}
 %		The Hebrew University of Jerusalem, Jerusalem, Israel \\
@@ -179,7 +175,24 @@
 	}%
 }
 
+
+% Length-related magic, to be removed for final version
+%\addtolength{\oddsidemargin}{-0.2cm}
+%\addtolength{\evensidemargin}{-0.2cm}
+%\addtolength{\textwidth}{0.4cm}
+%\addtolength{\topmargin}{-0.1cm}
+%\addtolength{\textheight}{0.4cm}
+%\addtolength{\intextsep}{-0.4cm}
+%\addtolength{\belowcaptionskip}{-0.2cm}
 \begin{document}
+
+
+
+%\begin{abstract}
+%	\input{sections/0_abstract}
+%\end{abstract}
+
+\maketitle
 
 \begin{abstract}
 	We introduce the \toolname{} modeling language and toolchain for automatically verifying or disproving serializability of concurrent programs, i.e., whether every concurrent execution of the program is equivalent to some serial execution. \toolname{} programs are suitably restricted to make this problem decidable, while still allowing for an unbounded number of concurrent threads of execution, each potentially running for an unbounded number of steps.
@@ -188,12 +201,6 @@
 	Our verifier operates by translating network system programs into Petri nets, but this is not enough: we introduce various techniques, such as Petri net pruning, semilinear-set compression, and Presburger-formula manipulation.
 	Our solver is thus able to automatically prove serializability or prove non-serializability for interesting examples, despite the theoretical hardness of the problem.
 \end{abstract}
-
-%\begin{abstract}
-%	\input{sections/0_abstract}
-%\end{abstract}
-
-\maketitle
 
 % \keywords{programming languages, static analysis, verification}
 
@@ -209,8 +216,10 @@
 
 \newpage
 
-\bibliographystyle{ACM-Reference-Format}
-\bibliography{references}
+{
+	\bibliographystyle{abbrv}
+	\bibliography{references}
+}
 
 \newpage
 
