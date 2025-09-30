@@ -4,6 +4,46 @@
 \label{appendix:smpt}
 
 
+%\smallskip
+%\noindent
+\subsection{Petri Nets and VAS(S) reachability.}
+%\label{sec:related:petri}
+	
+	In addition, our work builds on both theoretical and practical advances in 
+	Petri Net research~\cite{Mu89, Es96, Re12, EsNi24}, and specifically, Petri Net model checking.
+	%The undecidability we prove 
+	%for equivalence of interleavings stems from Hack’s seminal result~\cite{Ha76, 
+		%HaThesis76} showing the undecidability of reachability set equivalence for 
+	%Petri Nets. This undecidability originates in a series of reductions from 
+	%Hilbert’s 10th problem, specifically the possibility of determining whether 
+	%there exists an integer root for Diophantine equations, a problem that was 
+	%later proven undecidable by Matijasēvič~\cite{Ma70}.
+	%%
+	%Jančar~\cite{Ja95} later provided an alternative proof to this undecidability 
+	%result, by showing that Petri Nets can simulate universal (and thus 
+	%undecidable) 2-counter Minsky machines~\cite{Mi67}. In addition, Jančar further 
+	%strengthened the original result by proving that undecidability holds even for 
+	%Petri nets with just five unbounded places.
+	%
+	%Furthermore, our approach also builds on 
+	While the solution is 
+	straightforward for bounded nets (through exhaustive enumeration), the unbounded case is highly nontrivial and was first solved by 
+	Mayr~\cite{Ma81}, with subsequent improvements by Kosaraju~\cite{Ko82} and 
+	Lambert~\cite{La92}. Recent work~\cite{CzWo22} has also established this 
+	problem is \texttt{Ackermann}-complete.
+	%
+	These theoretical advances in Petri Net reachability have given rise to a 
+	plethora of practical tools, including \texttt{KReach}~\cite{DiLa20}, 
+	\texttt{DICER}~\cite{XiZhLi21}, \texttt{MARCIE}~\cite{HeRoSc13}, and others. 
+	%
+	Our implementation leverages \texttt{SMPT}~\cite{AmDa23}, a state-of-the-art model checker that combines SMT-solving with structural invariants~\cite{AmBeDa21,AmDaHu22}.
+%	 (see Appendix~\ref{appendix:smpt}). 
+	%However,
+	%other PN model checkers can be used as well.
+	
+	
+\subsection{SMPT}
+
 
 \texttt{SMPT} (\emph{Satisfiability Modulo Petri Nets}) is a tool incorporating a portfolio of symbolic model checking techniques --- including Bounded Model Checking (BMC)~\cite{BiCiClZh99}, state equation reasoning~\cite{Mu77}, $k$-induction~\cite{ShSiSt20}, Property Directed Reachability (PDR)~\cite{Br11,AmDaHu22}, and random state space exploration. It acts as a front-end to an SMT solver (\texttt{Z3}~\cite{DeBj08} in our setting), while also incorporating domain-specific knowledge from Petri net theory, such as invariants and structural properties. \texttt{SMPT} has participated in the last five editions of the \textit{Model Checking Contest} (MCC), an international competition for model-checking tools. In its most recent participation, it achieved a bronze medal and a $100\%$ confidence level score, indicating it never returned an incorrect verdict~\cite{mcc:2025}.
 
