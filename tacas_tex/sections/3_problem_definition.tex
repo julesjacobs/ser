@@ -67,92 +67,20 @@ Our \toolname{} syntax is defined as follows:
 %    \label{fig:syntax}
 %\end{figure}
     %
-    
-
-
-
+%    
+%
+%
+%
 %\guy{add other rebuttal promises}
-\guy{check semantics}
-
-
+%\guy{check semantics}
+%
+%
 % SER small-step semantics with explicit guard (congruence) rules
 % Requires: \usepackage{mathtools,amssymb,mathpartir}
 
 
 
-\noindent\textbf{SER small-step semantics with guard rules.}
-%
-%\subsection{Semantics}
-%
-The set \(V\) is a finite set of numeric constants; booleans use $0/1$. We respectively denote with \(VARS\) and \(vars\) the (finite) sets of global and local variables. $\rho:{vars}\to V$, and $g:{VARS}\to V$ respectively map a local or global variable to its current value in \(V\).
-%
-Configurations of both programs and expression are denoted as $\cfg{e}{\rho}{g}$, with \(e\) being a valid \toolname{} expression/program. 
-%
-Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep)$, and may comprise of a sequence of expression steps.
-%
-%program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
-%
-%We denote with \(\ell_0\) the initial local state of every packet.
-
-\smallskip
-\noindent\textit{Expression step} $(\step)$.
-\begin{mathpar}
-	\inferrule*[right=ND-0]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{0}{\rho}{g}}
-	\and
-	\inferrule*[right=ND-1]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{1}{\rho}{g}}\\
-	
-	\inferrule*[right=LOCAL-READ]{\rho(x)=v}{\cfg{x}{\rho}{g} \step \cfg{v}{\rho}{g}}
-	\and
-	\inferrule*[right=GLOBAL-READ]{g(X)=v}{\cfg{X}{\rho}{g} \step \cfg{v}{\rho}{g}}\\
-	
-	\inferrule*[right=LOCAL-ASSIGN-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{x := e}{\rho}{g} \step \cfg{x := e'}{\rho'}{g'}}
-	\and
-	\inferrule*[right=LOCAL-ASSIGN-DONE]{ }{\cfg{x := v}{\rho}{g} \step \cfg{v}{\update{\rho}{x}{v}}{g}}
-	
-	\inferrule*[right=GLOBAL-ASSIGN-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{X := e}{\rho}{g} \step \cfg{X := e'}{\rho'}{g'}}
-	\and
-	\inferrule*[right=GLOBAL-ASSIGN-DONE]{ }{\cfg{X := v}{\rho}{g} \step \cfg{v}{\rho}{\update{g}{X}{v}}}
-	
-	\inferrule*[right=EQ-L]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 == e_2}{\rho}{g} \step \cfg{e_1' == e_2}{\rho'}{g'}}
-	\and
-	\inferrule*[right=EQ-R]{\cfg{e_2}{\rho}{g} \step \cfg{e_2'}{\rho'}{g'}}{\cfg{v_1 == e_2}{\rho}{g} \step \cfg{v_1 == e_2'}{\rho'}{g'}}
-	\and
-	\inferrule*[right=EQ-T]{v_1=v_2}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{1}{\rho}{g}}
-	\and
-	\inferrule*[right=EQ-F]{v_1\neq v_2}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{0}{\rho}{g}}
-	
-	\inferrule*[right=SEQ-STEP]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 ; e_2}{\rho}{g} \step \cfg{e_1' ; e_2}{\rho'}{g'}}
-	\and
-	\inferrule*[right=SEQ-DONE]{ }{\cfg{v ; e_2}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
-	
-	\inferrule*[right=IF-GUARD]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{\ifkw(e_1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{\ifkw(e_1')\{e_2\}\elsekw\{e_3\}}{\rho'}{g'}}
-	\and
-	\inferrule*[right=IF-T]{ }{\cfg{\ifkw(1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
-	\and
-	\inferrule*[right=IF-F]{ }{\cfg{\ifkw(0)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{e_3}{\rho}{g}}
-	
-	\inferrule*[right=WHILE-UNFOLD]{ }{\cfg{\whilekw(e_1)\{e_2\}}{\rho}{g}
-		\step
-		\cfg{\ifkw(e_1)\{\,e_2 ; \whilekw(e_1)\{e_2\}\,\}\elsekw\{0\}}{\rho}{g}}
-\end{mathpar}
-
-\noindent\textit{Program step} $(\pstep)$ and scheduling.
-\begin{mathpar}
-	\inferrule*[right=YIELD]{\cfg{e}{\rho}{g} \step \cfg{\yieldkw \cdot e'}{\rho'}{g'}}{\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'}}
-	\\
-	\inferrule*[right=START]{\cfg{e_i}{\rho}{g}\pstep \cfg{e'_i}{\rho'}{g'} \quad i\in\{1,\dots,n\}}{\langle \requestkw\ name_i\{e_i\}, \rho, g \rangle \pstep  \cfg{e'_i}{\rho'}{g'} }
-	\and
-	\inferrule*[right=TERMINATE]{\cfg{e}{\rho}{g} \step \cfg{v}{\rho'}{g'} \quad v\in{V}}{\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'}}	
-\end{mathpar}
-
-
-
-\smallskip
-\noindent
-\textbf{Note.}
-Instead of defining a \texttt{spawn} instruction, as exists in some languages --- \toolname{} captures \textit{external} spawning via requests.
-%
-This setting can equivalently capture self-spawning (by using additional global variables), while translating more naturally to the networking domain --- in which threads are captured by packets sent by an external user.
+Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
 %
 Furthermore, we denote that our syntax and semantics can both be extended to include \textit{arithmetic operations} in a straightforward manner, however, we omit these for simplicity. 
     
@@ -353,27 +281,29 @@ Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\);
 
 
 
-\smallskip
-\noindent
-\textbf{Assumptions.}
-%
-In addition to the assumption that the request and response sets are finite, we also assume that a program has a \textit{finite number of reachable states}. 
-%
-These states are enumerated when converting a \toolname{} program to a Network System. 
-%
-For convenience, the input program may be written with unbounded values as long as only a finite number are actually reached. 
-%
-If the program can reach an infinite number of states, then this initial Network System conversion times out. 
+%\smallskip
+%\noindent
+%\textbf{Assumptions.}
+%%
+%In addition to the assumption that the request and response sets are finite, we also assume that a program has a \textit{finite number of reachable states}. 
+%%
+%These states are enumerated when converting a \toolname{} program to a Network System. 
+%%
+%For convenience, the input program may be written with unbounded values as long as only a finite number are actually reached. 
+%%
+%If the program can reach an infinite number of states, then this initial Network System conversion times out. 
 %
 %If the input program is written with restricted syntax shown in the SER syntax, then the SER \(\step\) NS conversion always terminates. 
 
 
 %\subsection{NS Example: Non-Serializability }
 %\label{sec:ns-non-serializable}
-\medskip
-\noindent
-\textbf{Example: \toolname{} to NS.}
+%\medskip
+%\noindent
+%\textbf{Example: \toolname{} to NS.}
 %
+\begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
+\textbf{Example.}
 Recall the code snippet from the simple, non-serializable example presented in Listing~\ref{lst:MotivatingExample2NonSer}. We can represent its NS with the following mapping:
 
 \begin{itemize}
@@ -402,12 +332,12 @@ The function \(\delta\) is presented in the bottom part of Fig.~\ref{fig:code2Ex
 \end{itemize}
 
 
-We define the three mappings $req$, $resp$, and $\delta$ in Fig.~\ref{fig:code2ExampleNS}.
-The figure also includes the explicit network system that
+We depict in Fig.~\ref{fig:code2ExampleNS} the explicit network system that
 serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
 %
 We note that we depicted only part of the states that are \textit{reachable}, in our finite-state setting.
 %
+\end{tcolorbox}
 
 \begin{figure}[!htbp]
 	\centering
@@ -568,278 +498,7 @@ return y
 	  
 	\end{tikzpicture}
 	
-	%–––– req, resp, and δ definitions ––––
-	\[
-	\begin{array}{@{}r@{\;}l}
-	req \coloneq & 
-	\big\{
-	\big[
-	\begin{array}{c c c}
-		\begin{tikzpicture}[baseline=(textnode.base)]
-			\node[
-			draw=black,
-			line width=0.8pt,
-			fill=ForestGreen!20,
-			text=black,
-			diamond,
-			aspect=2,
-			inner sep=2pt,
-			scale=0.7
-			] (textnode) {\texttt{main}};
-		\end{tikzpicture}
-		&\!\!\rightarrow\!\!&
-		\begin{array}{c}
-			\begin{tikzpicture}[baseline=(ybox.base)]
-				\node[
-				draw=black,
-				line width=0.8pt,
-				fill=brightyellow,
-				text=black,
-				rectangle,
-				rounded corners=1pt,
-				inner sep=2pt
-				] (ybox) {\texttt{y=0}};
-			\end{tikzpicture}\vspace{-2pt}
-			\\
-			\begin{minipage}{0.20\linewidth}
-				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-X := 1 
-yield 
-y := X
-X := 0
-return y
-				\end{lstlisting}
-			\end{minipage}
-		\end{array}
-	\end{array}
-	\big]
-	\big\}
-	\\[2em]
-	resp \coloneq &
-	\big\{
-	\big[
-	\begin{array}{c c c}
-		\begin{array}{c}
-			\begin{tikzpicture}[baseline=(ybox.base)]
-				\node[
-				draw=black,
-				line width=0.8pt,
-				fill=brightyellow,
-				text=black,
-				rectangle,
-				rounded corners=1pt,
-				inner sep=2pt
-				] (ybox) {\texttt{y=0}};
-			\end{tikzpicture}\vspace{-2pt}
-			\\
-			\begin{minipage}{0.11\linewidth}
-				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-// end
-				\end{lstlisting}
-			\end{minipage}
-		\end{array}
-		&\!\!\rightarrow\!\!&
-		\begin{tikzpicture}[baseline=(textnode.base),scale=0.7]
-			\node[
-			draw=black,
-			line width=0.8pt,
-			fill=RedViolet!20,
-			text=black,
-			diamond,
-			aspect=2,
-			inner sep=2pt,
-			font=\small
-			] (textnode) {\texttt{0}};
-		\end{tikzpicture}
-	\end{array}
-	\big]\,{},
-	\big[
-	\begin{array}{c c c}
-		\begin{array}{c}
-			\begin{tikzpicture}[baseline=(ybox.base)]
-				\node[
-				draw=black,
-				line width=0.8pt,
-				fill=brightyellow,
-				text=black,
-				rectangle,
-				rounded corners=1pt,
-				inner sep=2pt
-				] (ybox) {\texttt{y=1}};
-			\end{tikzpicture}\vspace{-2pt}
-			\\
-			\begin{minipage}{0.11\linewidth}
-				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-// end
-				\end{lstlisting}
-			\end{minipage}
-		\end{array}
-		&\!\!\rightarrow\!\!&
-		\begin{tikzpicture}[baseline=(textnode.base),scale=0.7]
-			\node[
-			draw=black,
-			line width=0.8pt,
-			fill=RedViolet!20,
-			text=black,
-			diamond,
-			aspect=2,
-			inner sep=2pt,
-			font=\small
-			] (textnode) {\texttt{1}};
-		\end{tikzpicture}
-	\end{array}
-	\big]
-	\big\}
-	\\[2em]
-	\delta \coloneq & 
-	\big\{\big[(
-		\begin{tikzpicture}[baseline=(ybox.base)]
-			\node[
-			draw=black,
-			line width=0.8pt,
-			fill=blue!10,
-			text=black,
-			rectangle,
-			rounded corners=1pt,
-			inner sep=2pt
-			] (ybox) {\texttt{X=0}};
-		\end{tikzpicture}\,{},
-		\begin{array}{c}
-			\begin{tikzpicture}[baseline=(ybox.base)]
-				\node[
-				draw=black,
-				line width=0.8pt,
-				fill=brightyellow,
-				text=black,
-				rectangle,
-				rounded corners=1pt,
-				inner sep=2pt
-				] (ybox) {\texttt{y=0}};
-			\end{tikzpicture}\vspace{-2pt}
-			\\
-			\begin{minipage}{0.14\linewidth}
-				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-X := 1
-yield
-y := X
-X := 0
-return y
-				\end{lstlisting}
-			\end{minipage}
-		\end{array}
-		)
-		\;\rightarrow\;
-		(
-		\begin{tikzpicture}[baseline=(ybox.base)]
-			\node[
-			draw=black,
-			line width=0.8pt,
-			fill=blue!10,
-			text=black,
-			rectangle,
-			rounded corners=1pt,
-			inner sep=2pt
-			] (ybox) {\texttt{X=1}};
-		\end{tikzpicture}\,{},
-		\begin{array}{c}
-			\begin{tikzpicture}[baseline=(ybox.base)]
-				\node[
-				draw=black,
-				line width=0.8pt,
-				fill=brightyellow,
-				text=black,
-				rectangle,
-				rounded corners=1pt,
-				inner sep=2pt
-				] (ybox) {\texttt{y=0}};
-			\end{tikzpicture}\vspace{-2pt}
-			\\
-			\begin{minipage}{0.14\linewidth}
-				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-y := X
-X := 0
-return y
-				\end{lstlisting}
-			\end{minipage}
-		\end{array}
-		)
-		\big],
-	\\[0.5em]
-	& \phantom{\big\{}
-		\big[(
-		\begin{tikzpicture}[baseline=(ybox.base)]
-			\node[
-			draw=black,
-			line width=0.8pt,
-			fill=blue!10,
-			text=black,
-			rectangle,
-			rounded corners=1pt,
-			inner sep=2pt
-			] (ybox) {\texttt{X=1}};
-		\end{tikzpicture}\,{},
-		\begin{array}{c}
-			\begin{tikzpicture}[baseline=(ybox.base)]
-				\node[
-				draw=black,
-				line width=0.8pt,
-				fill=brightyellow,
-				text=black,
-				rectangle,
-				rounded corners=1pt,
-				inner sep=2pt
-				] (ybox) {\texttt{y=0}};
-			\end{tikzpicture}\vspace{-2pt}
-			\\
-			\begin{minipage}{0.14\linewidth}
-				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-y := X
-X := 0
-return y
-				\end{lstlisting}
-			\end{minipage}
-		\end{array}
-		)
-		\;\rightarrow\;
-		(
-		\begin{tikzpicture}[baseline=(ybox.base)]
-			\node[
-			draw=black,
-			line width=0.8pt,
-			fill=blue!10,
-			text=black,
-			rectangle,
-			rounded corners=1pt,
-			inner sep=2pt
-			] (ybox) {\texttt{X=0}};
-		\end{tikzpicture}\,{},
-		\begin{array}{c}
-			\begin{tikzpicture}[baseline=(ybox.base)]
-				\node[
-				draw=black,
-				line width=0.8pt,
-				fill=brightyellow,
-				text=black,
-				rectangle,
-				rounded corners=1pt,
-				inner sep=2pt
-				] (ybox) {\texttt{y=1}};
-			\end{tikzpicture}
-			\vspace{-2pt}
-			\\
-			\begin{minipage}{0.11\linewidth}
-				\begin{lstlisting}[language=CustomPseudoCode,numbers=none,basicstyle=\tiny\ttfamily]
-// end
-				\end{lstlisting}
-			\end{minipage}
-		\end{array}
-		)
-		\big],
-		\ldots
-	\big\}
-	\end{array}
-	\]
-	\caption{Network system and transition functions for the program in Listing~\ref{lst:MotivatingExample2NonSer}. Local states consist of local variable assignments and a remaining program text. Edges in the NS are labeled with their corresponding global state transition(s). Requests and responses are diamonds.}
+	\caption{Network system for the program in Listing~\ref{lst:MotivatingExample2NonSer}. Local states consist of local variable assignments and a remaining program text. Edges in the NS are labeled with their corresponding global state transition(s). Requests and responses are diamonds. For the explicit schemes of \(delta\), \(req\), and \(resp\) see Appendix~\ref{appendix:delta-req-resp-examples}.}
 \label{fig:code2ExampleNS}
 \end{figure}
 

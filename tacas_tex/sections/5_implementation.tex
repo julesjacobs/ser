@@ -131,7 +131,8 @@ The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and
 	\item \textbf{Input \& Parsing.} 
 	Our framework receives either a \texttt{SER} program with the syntax described in Sec.~\ref{sec:problem-definition}; or a \texttt{JSON} file directly encoding a network system. In the case of the former, an additional step takes place, parsing the input (using the \texttt{parser.rs} module) to an expression tree that is translated to an equivalent NS, represented as a struct in the \texttt{ns.rs} module. 
 	
-	\item \textbf{Petri Net Conversion.} The NS is then translated into a Petri Net (see the \texttt{petri.rs} module) which represents the interleavings as depicted, for example, in subsec.~\ref{subsec:ns-not-serializable}.
+	\item \textbf{Petri Net Conversion.} The NS is then translated into a Petri Net (see the \texttt{petri.rs} module) which represents the interleavings. 
+%	.as depicted, for example, in subsec.~\ref{subsec:ns-not-serializable}.
 %	Each place represents a state (either global or local) or a response. Each token represents a single in-flight request or a terminated response. 
 The PN is encoded in the de-facto standard \texttt{NET} format, to support off-the-shelf PN model checkers. 
 	
@@ -224,7 +225,7 @@ Specifically, we wish to note our suite of benchmarks encoding \textit{networkin
 %highlighting the serializability challenges inherent in real-world distributed programs.
 %
 %Here, we were motivated by 
-as motivated by real-world concurrency problems in this domain. One such example is our \textit{routing-cycle benchmark} in software-defined networks, (motivated by~\cite{NaGhSa24}). Another real-world example is our \textit{snapshot isolation benchmark} (explained in Appendix~\ref{appendix:snapshotIsolationExample}), that was motivated by a real database bug, namely, duplicate-key errors~\cite{cockroach-issue-14099} in the \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}, and the non-serializable behavior was automatically identified by our toolchain.
+as motivated by real-world concurrency problems in this domain. One such example is our \textit{routing-cycle benchmark} in software-defined networks, (motivated by~\cite{NaGhSa24}). Another real-world example is our \textit{snapshot isolation benchmark} (explained in Appendix~\ref{appendix:tour}), that was motivated by a real database bug, namely, duplicate-key errors~\cite{cockroach-issue-14099} in the \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}, and the non-serializable behavior was automatically identified by our toolchain.
 %
 %Our benchmarks include both serializable and non-serializable instances, and their features and categorization appears in Table~\ref{tab:benchmarks-all}. 
 

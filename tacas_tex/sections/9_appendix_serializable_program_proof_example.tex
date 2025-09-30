@@ -1,0 +1,139 @@
+
+\section{Example: Serializable Program}
+\label{appendix:ns-serializable}
+
+
+Now, we observe again the adjusted program with locks (as previously described in Listing~\ref{lst:MotivatingExample3Ser}).
+%
+Due to space limitations, we relegate figures of the corresponding network system (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and Interleaving Petri Net (Fig.~\ref{fig:code3ExamplePN}) to Appendix~\ref{appendix:MoreNsExamples}, and focus on the serializability proof certificate.
+%
+In this specific example, non-serializability corresponds to the Petri Net being able to reach a marking satisfying the same semilinear formula as in the previous example for non-serializability.
+% (note however, that this is not always the case). 
+%(but this time each place $P_i$ corresponds to the new PN). 
+%following formula:
+%
+%\[
+%\textcolor{blue}
+%P_1 = 0 \wedge 
+%{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
+%\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} = 0 \wedge \textcolor{red}{P_8} \ge 1.
+%\]
+
+
+In addition, although the target set is the same as in the previous example, however, the Petri Net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, $X$ and $L$, and the initial global state corresponds to the place encoding the initial assignment \textcolor{blue}{[X=0, L=0]}, etc.
+%
+Furthermore, unlike the previous example, this target set of markings (encoding request/response pairs of non-serial executions) is \textit{unreachable}, as witnessed by the inductive invariant:
+
+
+\[
+\begin{aligned}
+	&(P_{1},\textcolor{blue}{P_{2}},\textcolor{blue}{P_{3}},P_{4},P_{5},P_{6},\textcolor{red}{P_{7}},\textcolor{red}{P_{8}})
+	\;\mapsto\;\\
+	&\quad
+	\exists\,e_{0},\dots,e_{5}\ge0.\;
+	\Bigl(
+	e_{2}-e_{1}+\textcolor{blue}{P_{3}}-1=0\;\land\;
+	e_{2}+P_{1}-e_{5}=0\;\land\;
+	P_{5}-e_{1}+e_{4}=0\;\land\\
+	&\qquad\quad
+	-\,e_{4}+\textcolor{red}{P_{7}}=0\;\land\;
+	P_{6}+e_{3}-e_{0}=0\;\land\;
+	\textcolor{red}{P_{8}}-e_{3}=0\;\land\\
+	&\qquad\quad
+	-\,e_{2}+e_{1}+e_{0}+P_{4}=0\;\land\;
+	-\,e_{2}+e_{1}+\textcolor{blue}{P_{2}}=0
+	\Bigr)
+	\;\land\;
+	\bigl(P_{4}-1\ge0\;\lor\;\textcolor{blue}{P_{3}}-1\ge0\bigr).
+\end{aligned}
+\]
+
+
+We then revert and project it on request/response pairs of the network system.
+%
+We get the following inductive invariants for each of the two (reachable) global states:
+
+\begin{proof}
+	
+	\medskip\noindent
+	For global state \textcolor{blue}{[L=0,X=0]}
+	the projected invariant is:
+	\[
+	\bigl(\,\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$},\;
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}\bigr)
+	\;\mapsto\;
+	\exists\,e_{0},\dots,e_{5}\ge0.\;
+	\begin{aligned}[t]
+		& e_{2}-e_{1}=0,\quad
+		e_{2}-e_{5}=0,\quad
+		-e_{1}+e_{4}=0,\\
+		& -e_{4}+\bigl(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}\bigr)=0,\quad
+		-e_{0}+e_{3}=0,\quad
+		-e_{3}+\bigl(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\bigr)=0,\\
+		& -e_{2}+e_{1}+e_{0}=0,\quad
+		-e_{2}+e_{1}=0.
+	\end{aligned}
+	\]
+	\noindent From $e_{1}=e_{2}=e_{4}=e_{5}=(\;
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}),\;
+	e_{0}=e_{3}=
+	(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$})$
+	
+	it follows that $-e_{2}+e_{1}+e_{0}=0\;\Longrightarrow\;e_{0}=0$,
+	
+	thus: $(	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$})
+	=0$ and $(	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
+	=0$
+	
+	indicating that  (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) cannot be attained from the global state
+	\textcolor{blue}{[L=0,X=0]}.
+	
+	\medskip\noindent
+	In the second case, for the global state \textcolor{blue}{[L=1, X=1]}
+	the projected invariant is:
+	
+	
+	\[
+	\bigl(\,\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$},\;
+	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$}\bigr)
+	\;\mapsto\;
+	\exists\,e_{0},\dots,e_{5}.\;\bot,
+	\]
+	which is unsatisfiable. Hence, no completed request/response pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) can be produced from this state via \textit{any} execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the lock is acquired (\textcolor{blue}{[L=1]}) 
+	%	\guy{Mark/Jules is this part correct?}
+	
+	\medskip
+	\noindent\textbf{Conclusion.}
+	In every reachable state, no request/response pair of the form
+	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$})
+	$
+	can occur. Consequently, the only possible pairs are
+	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
+	$,
+	all of which lie within the NFA’s language for serial executions.
+	Hence, the program is serializable. Moreover, as proven in Appendix~\ref{appendix:InductiveInvariantExample},
+	these invariants are inductive: they hold in the initial state and are preserved under every transition.
+\end{proof}
+
+%	\medskip\noindent
+%	\textbf{Conclusion.}
+%	In all reachable states
+%	it holds that there cannot be any request/response pair of type
+%	(	$	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}
+%	$).
+%	%
+%	Furthermore, this indicates that the only attainable request/response pairs are of the form 	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
+%	$, which are included in the language of of NFA for serial executions. Thus, this program is serializable.
+%	%
+%	We further show (in Appendix~\ref{appendix:InductiveInvariantExample}) that these invariants are \textit{inductive}: they encompass the system’s initial state and, once satisfied, remain true for all subsequent executions.
+
+
+
+
+%\newpage
+
+
+%\subsection{Time/Space Complexity}
+%
+%\guy{Should we add something about time/space complexity?}
+

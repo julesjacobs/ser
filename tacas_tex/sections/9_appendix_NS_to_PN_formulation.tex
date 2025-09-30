@@ -1,0 +1,149 @@
+\section{Translating NS to PN}
+\label{appendix:NS-to-PN-formulation}
+
+
+We denote with \(\mathbf0\) a zero vector of dimension \(|P|\), and with \(\mathbf1_{p}\) a \(|P|\)-sized vector that has 0 in every coordinate except when corresponding to \(p \in P\).
+% 
+Pre/post maps $\mathsf{pre},\mathsf{post}:T\to\{0,1\}^{|P|}$ assign to each transition $t$ a binary vector over $P$ whose $1$-entries mark the places from which tokens are removed (for $\mathsf{pre}(t)$) and to which tokens are added (for $\mathsf{post}(t)$) when $t$ fires.
+A transition $t$ is enabled at $M$ iff $\mathsf{pre}(t)\le M$ (componentwise); firing yields
+\(
+M\xrightarrow{t}M' \quad\text{where}\quad M' = M-\mathsf{pre}(t)+\mathsf{post}(t).
+\).	
+
+\medskip
+\textit{Construction.}
+We build the Petri Net:
+\[
+N_{\mathrm{int}}(\mathcal S)
+= (P,\,T,\,\mathsf{pre},\,\mathsf{post},\,M_0),
+\]
+where
+\[
+P
+=
+P_G \;\cup\; P_{REQ,L} \;\cup\; P_{REQ,RESP}
+\]
+
+for 
+\[
+\begin{aligned}
+	P_G
+	&= \{\,p_g \mid g\in G\},\quad
+	P_{REQ,L}
+	= \bigl\{\,p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}}/\ell)}
+	\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,\ell\in  L\bigr\},\\[1ex]
+	P_{REQ,RESP}
+	&= \bigl\{\,p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}})}
+	\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,
+	{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\bigr\}.
+\end{aligned}
+\]
+
+
+%	\[
+%	\begin{aligned}
+	%		P_G &= \{\,p_g \mid g\in G\},\;\,
+	%		P_{REQ,L} = \{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/\ell}
+	%		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,\ell\in L\},\\
+	%		P_{REQ,RESP} &= \{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}
+	%		\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\,
+	%		{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\}.
+	%	\end{aligned}
+%	\]
+
+%	\[
+%	P_G 
+%	= \{\,p_g \mid g\in G\}
+%	\quad 
+%%	P_L 
+%%	= \{\,p_\ell \mid \ell\in L\}
+%%	\quad
+%	P_{REQ,L} =
+%	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/\ell} \mid
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, \ell\in L\},%\\
+%	\quad
+%	P_{REQ,RESP}=
+%	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
+%	\]
+%	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
+%	\]
+
+%	\[
+%	P_{REQ,RESP}=
+%	\{\,p_{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} \mid
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
+%	\]
+
+with \(G\) being the global states, \(L\) being the local states (in the case of a \toolname-derived NS this is the local variables and remaining \toolname{} program to execute), \(\mathit{REQ}\) denotes the request labels; and \(\mathit{RESP}\) denotes the response labels.
+
+
+
+Transitions are partitioned as
+\[
+T = T_{\mathit{req}} \;\cup\; T_{\delta}\;\cup\;T_{\mathit{resp}}
+\]
+where
+%	\[
+%	T_{\mathit{req}} = \{\,t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)} \mid {(\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req}\},\quad
+%	T_{\delta} = \{\,t_{(\ell,g)\to(\ell',g')} \mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta\},\quad
+%	T_{\mathit{resp}} = \{\,t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})} \mid (\ell,{\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}\}.
+%	\]
+
+\begin{align*}
+	T_{\mathit{req}}
+	&= \{\,t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)} \mid {(\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req}\},\\[1ex]
+	T_{\delta}
+	&= \bigl\{\,t_{(\ell,g)\to(\ell',g')} 
+	\mid (\ell,g)\xrightarrow{}(\ell',g')\in\delta\bigr\},\quad
+	T_{\mathit{resp}}
+	= \{\,t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})} \mid (\ell,{\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}\}.
+\end{align*}
+
+
+
+Their pre/post vectors are:
+\[
+\begin{alignedat}{3}
+	\mathsf{pre}\bigl(t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}\bigr)
+	&= \mathbf0, &
+	\mathsf{post}\bigl(t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}\bigr)
+	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}}, 
+	&&\text{for each }({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req},\\
+	\mathsf{pre}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
+	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}} + \mathbf1_{p_g}, &
+	\mathsf{post}\bigl(t_{(\ell,g)\to(\ell',g')}\bigr)
+	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell')}} + \mathbf1_{p_{g'}}, 
+	&&\text{for each }(\ell,g)\!\to\!(\ell',g')\in\delta,\\
+	\mathsf{pre}\bigl(t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})}\bigr)
+	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}}, &
+	\mathsf{post}\bigl(t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})}\bigr)
+	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}})}}, 
+	&&\text{for each }{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{req},(\ell,\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}
+	%\ %(\ell\text{ the matching local state).
+		%		}
+\end{alignedat}
+\]
+
+The initial marking is a single token on the place representing the initial global state $g_0$ of the NS:
+\[
+M_0(p_{g_0}) = 1,
+\quad
+M_0(p) = 0 \text{ for all }p\neq p_{g_0},
+\]
+%	where \(g_0\) is the initial global state of the network system \(\mathcal S\).  
+
+
+
+Define the projection of all reachable markings to the places representing completed request/response pairs:
+\[
+\pi \;:\;\mathbb N^P \;\longrightarrow\;\mathbb N^{P_R}
+\quad\bigl(\pi(M)\bigr)(p_{({{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}})})\;=\;M(p_{({{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}})})\text{ for }p_{({{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}})}\in P_{REQ,RESP}.
+\]
+Then the multiset of all  (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs of the NS, attained by any interleaving, is:
+\[
+\mathsf{Int}(\mathcal S)
+\;=\;
+\bigl\{\;\pi(M)\;\bigm|\;M_0 \xrightarrow{}^{*} M\text{ in }N_{\mathrm{int}}(\mathcal S)\bigr\}.
+\]
