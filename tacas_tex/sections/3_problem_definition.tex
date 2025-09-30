@@ -250,13 +250,14 @@ An \textit{interleaving run} is a complete execution
 \[
 (g_0,\varnothing,\varnothing) \;\to\; (g_1,\mathcal{P}_1,Z_1) \;\to\; \cdots \;\to\; (g_{n-1},\mathcal{P}_{n-1},Z_{n-1}) \;\to\; (g_n,\varnothing,Z).
 \]
-An \textit{interleaving run} is \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request, and $\mathcal{P}_n=\varnothing$.
+It is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request, and $\mathcal{P}_n=\varnothing$.
 	%
 	Intuitively, serial runs have at most one request in flight at any time.
 %	,
 %	whereas \emph{interleaved} runs may have multiple requests in flight at once.
 	%
-	For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to  represent the set of all multisets of request/response pairs, for interleaving and serializable runs respectively:
+	
+	For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to respectively represent the sets of all multisets of request/response pairs, for interleaving and serializable runs :
 %
 \[
 \mathrm{Int}(\mathcal{N})
@@ -270,45 +271,45 @@ An \textit{interleaving run} is \textit{serial} if each $\mathcal{P}_i$ has \tex
 \;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
 \]
 
-A network system is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs attained by an interleaving execution can be attained serially.
+A network system is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs attained by an interleaving execution can also be attained serially.
 
 
-
-\todo{old}
-\smallskip
-\noindent
-\textbf{Serializability.}
-We define an \textit{interleaving run} of the network system as a complete execution (also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\)):
-%\noindent\textbf{Complete runs.}
-\[
-(g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,Z_1)
-\rightarrow \cdots \rightarrow (g_n,\mathcal{P}_{n-1},Z_{n-1}) \rightarrow (g_n,\varnothing,Z_n).
-\]
-
-\noindent
-%A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
 %
-An interleaved run is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request, and $\mathcal{P}_n=\varnothing$.
+%\todo{old}
+%\smallskip
+%\noindent
+%\textbf{Serializability.}
+%We define an \textit{interleaving run} of the network system as a complete execution (also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\)):
+%%\noindent\textbf{Complete runs.}
+%\[
+%(g_0,\varnothing,\varnothing) \rightarrow (g_1,\mathcal{P}_1,Z_1)
+%\rightarrow \cdots \rightarrow (g_n,\mathcal{P}_{n-1},Z_{n-1}) \rightarrow (g_n,\varnothing,Z_n).
+%\]
 %
-Intuitively, \textit{serial} runs have at most one request in flight at any time,
-whereas \emph{interleaved} runs may have multiple requests in flight at once.
+%\noindent
+%%A full run is also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\), and is called an \textit{interleaved} run if the $\mathcal{P}_i$ may contain multiple requests and $\mathcal{P}_n=\varnothing$.
+%%
+%An interleaved run is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request, and $\mathcal{P}_n=\varnothing$.
+%%
+%Intuitively, \textit{serial} runs have at most one request in flight at any time,
+%whereas \emph{interleaved} runs may have multiple requests in flight at once.
+%%
+%For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to  represent the set of all multisets of request/response pairs, for interleaving and serializable runs respectively:
 %
-For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to  represent the set of all multisets of request/response pairs, for interleaving and serializable runs respectively:
-
-\[
-\mathrm{Int}(\mathcal{N})
-= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{\textit{interleaved} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}
-\]
-\[
-\mathrm{Ser}(\mathcal{N})
-= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
-\]
-
-
-
-A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}) = \text{Ser}(\mathcal{N})$, i.e., every multiset of request/response pairs attainable through an interleaved execution can also be attained through a serial one.
+%\[
+%\mathrm{Int}(\mathcal{N})
+%= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+%\;\big|\; \exists\ \text{\textit{interleaved} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}
+%\]
+%\[
+%\mathrm{Ser}(\mathcal{N})
+%= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+%\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
+%\]
+%
+%
+%
+%A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}) = \text{Ser}(\mathcal{N})$, i.e., every multiset of request/response pairs attainable through an interleaved execution can also be attained through a serial one.
 
 \subsection{Translating \toolname{} programs to NS}
 %
