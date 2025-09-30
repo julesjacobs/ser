@@ -10,13 +10,16 @@ Key contributions include: (1) formalizing serializability for network systems, 
 
 %
 
+
+
+
 \subsection{Limitations}
 
 While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
-First, the underlying Petri Net reachability problem has \texttt{Ackermann}-complete complexity, causing our tool to time out on some complex benchmarks despite optimizations.
+First, the underlying Petri Net reachability problem has \texttt{Ackermann}-complete complexity, causing our tool to time out on some complex benchmarks. %despite optimizations.
 Second, our current implementation relies on \texttt{SMPT}, which may fail to find proofs even when they exist, limiting completeness.
 Third, our network system model assumes a simple request/response pattern and cannot model more complex interactions, such as streaming, callbacks, or partial responses.
-Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
+%Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
 These limitations suggest important directions for future research.
 
 \subsection{Future Work}
@@ -37,13 +40,18 @@ To improve scalability, we are developing both theory and implementation of \tex
 %To conclude..
 
 
-\paragraph{Extensions to diverse communication models.}
 
-Our current framework assumes that clients act independently --- each submits a request, receives a response, and only afterward collaborates to verify (in a centralized manner) whether the combined outcomes are serializable. However, in a stronger model, clients may communicate during execution or enforce partial ordering of their interactions. More generally, this can be formalized via Lamport’s \textit{happens‐before} relation over request/response pairs~\cite{La78}. 
+\paragraph{Extensions to diverse communication models.}
+Currently, clients act independently: each issues a request, receives a response, then verification is centralized. Stronger models allow inter-client communication or partial orderings (Lamport’s \textit{happens-before}~\cite{La78}); weaker ones forbid post-response communication or permit only limited summaries. Addressing such settings will require decentralized certification or streaming proofs under communication constraints. Extending our framework along these axes would capture a broader class of practical distributed-system guarantees.
+
+
+%\paragraph{Extensions to diverse communication models.}
 %
-In contrast, a weaker model disallows communication --- in which case clients either cannot communicate after receiving responses or may only share limited summaries. Jointly deciding serializability in this setting will require decentralized certification techniques or streaming proofs that respect tight communication constraints. 
-%
-By extending our theory and tool along these two axes, we aim to cover a broad spectrum of practical distributed‐system guarantees, that are more complex and match broader, real-world scenarios.
+%Our current framework assumes that clients act independently --- each submits a request, receives a response, and only afterward collaborates to verify (in a centralized manner) whether the combined outcomes are serializable. However, in a stronger model, clients may communicate during execution or enforce partial ordering of their interactions. More generally, this can be formalized via Lamport’s \textit{happens‐before} relation over request/response pairs~\cite{La78}. 
+%%
+%In contrast, a weaker model disallows communication --- in which case clients either cannot communicate after receiving responses or may only share limited summaries. Jointly deciding serializability in this setting will require decentralized certification techniques or streaming proofs that respect tight communication constraints. 
+%%
+%By extending our theory and tool along these two axes, we aim to cover a broad spectrum of practical distributed‐system guarantees, that are more complex and match broader, real-world scenarios.
 
 %
 %

@@ -172,23 +172,38 @@ extended to \textit{collections}~\cite{EmEn18}). The \emph{correctness problem} 
 
 \smallskip
 \noindent
-\textbf{Model checking and runtime verification}
+\textbf{Model checking and runtime verification.}
 %
-Wang and Stoller propose runtime checks for serializability and conflict/view‐serializability by recombining executions~\cite{WaSt06a,WaSt06b}. 
-TLA logic~\cite{La94} provides a formal specification to ensure only serializable (or conflict-serializable~\cite{CoOlPnTuZu07}) executions occur. While it can naturally express ``real” serializability via final‐state equivalence, existing TLA-based methods~\cite{SoVaVi20, Ho24} 
+Runtime checks for serializability and conflict/view‐serializability were proposed by Wang and Stoller~\cite{WaSt06a,WaSt06b}.  
+TLA logic~\cite{La94} can express serializability via final‐state equivalence (and conflict‐serializability~\cite{CoOlPnTuZu07}), but TLA‐based approaches~\cite{SoVaVi20,Ho24} remain restricted to bounded systems due to finite‐state tools (\texttt{TLC}, \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}).  
+Heuristic or enumeration model checkers include \texttt{Line-up}~\cite{BuDeMuTa10} (build on \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{LinTSO}~\cite{BuGoMuYa12}, \texttt{Violat} and its schema precursor~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, and PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}.  
+Recent work includes \texttt{RELINCHE} for bounded linearizability~\cite{GoKoVa25}, \texttt{CDSSpec}~\cite{OuDe17} (for \texttt{C/C++11}), \texttt{Lincheck}~\cite{KoDeSoTsAl23}, and SAT‐based approaches~\cite{BuAlMa07}.  
+Symbolic testing~\cite{EmEnHa15} can expose violations of observational refinement~\cite{FiOhRiYa10,BoEmCoHa15}.  
+Other checkers, e.g. \texttt{SPIN}/\texttt{PARGLIDER}~\cite{Fl04,VeYaYo09,Ho97,VeYa08}, depend on explicit linearization points, which are difficult to determine~\cite{VeYaYo09}.  
+Overall, existing methods are incomplete, bounded, or assume prior knowledge.  
+By contrast, our method covers unbounded threads and uniquely produces serializability certificates.
+
+
+
+%\smallskip
+%\noindent
+%\textbf{Model checking and runtime verification}
+%
+%Wang and Stoller propose runtime checks for serializability and conflict/view‐serializability by recombining executions~\cite{WaSt06a,WaSt06b}. 
+%TLA logic~\cite{La94} provides a formal specification to ensure only serializable (or conflict-serializable~\cite{CoOlPnTuZu07}) executions occur. While it can naturally express ``real” serializability via final‐state equivalence, existing TLA-based methods~\cite{SoVaVi20, Ho24} 
 %are confined to bounded transaction systems, as TLA-based model checkers like \texttt{TLC} and \texttt{Apalache} ~\cite{YuMaLa99, KoKuTr19} cannot handle unbounded transaction counts.
 %While TLA encodings can capture ``real'' serializability (based on final-state 
 %equivalence), as well as conflict-serializability~\cite{CoOlPnTuZu07}, 
-are confined solely to bounded systems due to finite‐state tools like \texttt{TLC} and \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}. Heuristic and enumeration‐based model checkers include \texttt{Line-up}~\cite{BuDeMuTa10} (built upon \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{LinTSO} for TSO~\cite{BuGoMuYa12}, \texttt{Violat} (and its schema‐based predecessor)~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, and PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}. 
+%are confined solely to bounded systems due to finite‐state tools like \texttt{TLC} and \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}. Heuristic and enumeration‐based model checkers include \texttt{Line-up}~\cite{BuDeMuTa10} (built upon \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{LinTSO} for TSO~\cite{BuGoMuYa12}, \texttt{Violat} (and its schema‐based predecessor)~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, and PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}. 
 %and RELINCHE for bounded linearizability~\cite{GoKoVa25}. 
-Golovin et al.~\cite{GoKoVa25} recently introduced \texttt{RELINCHE}, a model checker for bounded linearizability that limits the number of invocable operations.
-Additional tools include \texttt{CDSSpec} (with regard to the \texttt{C/C++ 11} memory model), \texttt{Lincheck}~\cite{KoDeSoTsAl23,OuDe17}, SAT‐based methods~\cite{BuAlMa07}. Others have put forth symbolic  testing methods~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
-	BoEmCoHa15}.
-Furthermore, checkers such as \texttt{SPIN}/\texttt{PARGLIDER} rely on explicit linearization points~\cite{Fl04,VeYaYo09,Ho97,VeYa08}, which are hard to identify~\cite{VeYaYo09}.
+%Golovin et al.~\cite{GoKoVa25} recently introduced \texttt{RELINCHE}, a model checker for bounded linearizability that limits the number of invocable operations.
+%Additional tools include \texttt{CDSSpec} (with regard to the \texttt{C/C++ 11} memory model)~\cite{OuDe17}, \texttt{Lincheck}~\cite{KoDeSoTsAl23}, SAT‐based methods~\cite{BuAlMa07}. Others have put forth symbolic  testing methods~\cite{EmEnHa15} to identify violations of \textit{observational refinement} --- a property equivalent to linearizability in some settings~\cite{FiOhRiYa10, 
+%	BoEmCoHa15}.
+%Furthermore, checkers such as \texttt{SPIN}/\texttt{PARGLIDER} rely on explicit linearization points~\cite{Fl04,VeYaYo09,Ho97,VeYa08}, which are hard to identify~\cite{VeYaYo09}.
 %
-Furthermore, the remaining aforementioned methods are incomplete, limited to finite threads, or assume prior knowledge.
+%Furthermore, the remaining aforementioned methods are incomplete, limited to finite threads, or assume prior knowledge.
  %
-Unlike these, our method affords complete coverage for unbounded threads and is also the only one to produce serializability certificates.
+%Unlike these, our method affords complete coverage for unbounded threads and is also the only one to produce serializability certificates.
 %\guy{The above point is a bit tricky because SMPT is not complete..}
 
 
@@ -272,10 +287,34 @@ Unlike these, our method affords complete coverage for unbounded threads and is 
 
 \smallskip
 \noindent
-\textbf{Static analysis}
-%
-Static techniques prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded~\cite{BeLeMaRaSa08,Va09,Va10} systems, but typically depend on heuristics or annotations of linearization points as well. Lian and Feng~\cite{LiFe13} offer a logic that handles non‐fixed points. Additional techniques that rely on linearization points include~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}. 
-However, annotation‐based checkers and analyses are inconclusive, since failures may reflect incorrect annotation rather than true violations~\cite{BoEmCoHa15}.
+\textbf{Static analysis.}
+Static methods prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded systems~\cite{BeLeMaRaSa08,Va09,Va10}, but usually rely on heuristics or annotated linearization points.  
+	Lian and Feng~\cite{LiFe13} propose a logic for non‐fixed points.  
+	Other approaches also depend on linearization points~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}.  
+	However, annotation‐based analyses may be inconclusive, as failures can stem from incorrect annotations rather than true violations~\cite{BoEmCoHa15}.
+
+\smallskip
+\noindent
+\textbf{Manual proofs and specific data types.}
+Tasiran~\cite{Ta08} proved serializability for \texttt{Bartok-STM}, while Colvin et al.~\cite{CoGrLuMo06} used I/O automata for list‐set linerizability.  
+	Simplifications exist for specific data structures~\cite{BoEmEnMu17,FeEnMoRiSh18}.
+%	, and verification has been pursued with~\cite{CoGrLuMo06} or without~\cite{DoGrLuMo04} proof assistants.  
+	Other notable linerizability results include Wing and Gong's~\cite{WiGo93} on unbounded FIFO/priority queues, Chakraborty et al.~\cite{ChHeSeVa15} on queues, and Cerný et al.’s \texttt{CoLT} for linked heaps (which is complete only under bounded threads~\cite{CeRaZuChAl10}).  
+	Bouajjani et al.~\cite{BoEnWa17} introduce a recursive priority‐queue violation detector, akin to their stack/queue methods~\cite{BoEmEnHa18}.
+
+\smallskip
+\noindent
+\textbf{Additional approaches.}
+Other strategies include testing~\cite{WiGo93,PrGr12,PrGr13,EmEn17,Lo17}, theorem proving~\cite{CoDoGr05,DeScWe11}, and further verification frameworks~\cite{BoEmEnMu17,FeEnMoRiSh18,EnKo24}.
+
+
+
+%\smallskip
+%\noindent
+%\textbf{Static analysis}
+%%
+%Static techniques prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded~\cite{BeLeMaRaSa08,Va09,Va10} systems, but typically depend on heuristics or annotations of linearization points as well. Lian and Feng~\cite{LiFe13} offer a logic that handles non‐fixed points. Additional techniques that rely on linearization points include~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}. 
+%However, annotation‐based checkers and analyses are inconclusive, since failures may reflect incorrect annotation rather than true violations~\cite{BoEmCoHa15}.
 
 
 %\todo{original:}
@@ -302,20 +341,20 @@ However, annotation‐based checkers and analyses are inconclusive, since failur
 %inconclusive, as any failed proof can be due to incorrect annotation of the 
 %linearization points~\cite{BoEmCoHa15}.
 %%
-\smallskip
-\noindent
-\textbf{Manual proofs and specific data types}
+%\smallskip
+%\noindent
+%\textbf{Manual proofs and specific data types}
 %
-Tasiran~\cite{Ta08} proved serializability of the \texttt{Bartok STM}, and Colvin et al.~\cite{CoGrLuMo06} showed list‐set linearizability via I/O automata. 
+%Tasiran~\cite{Ta08} proved serializability of the \texttt{Bartok STM}, and Colvin et al.~\cite{CoGrLuMo06} showed list‐set linearizability via I/O automata. 
+%%
+%Other methods demonstrate that in some cases, proofs can be simplified for specific data structures to which certain properties hold~\cite{BoEmEnMu17,FeEnMoRiSh18}.
+%%
+%Additional verification attempts of linearizability have been presented both 
+%with~\cite{CoGrLuMo06} and without~\cite{DoGrLuMo04} the use of 
+%proof assistants.
+%%
+%Wing and Gong~\cite{WiGo93} established linearizability for unbounded FIFO and priority queues, and Chakraborty et al.~\cite{ChHeSeVa15} developed a queue‐checking technique. Cerný et al.’s CoLT checks singly‐linked heap objects, however, this method is complete only for bounded threads~\cite{CeRaZuChAl10}. Bouajjani et al.~\cite{BoEnWa17} present a recursive priority‐queue violation detector, akin to their stack and queue methods~\cite{BoEmEnHa18}.
 %
-Other methods demonstrate that in some cases, proofs can be simplified for specific data structures to which certain properties hold~\cite{BoEmEnMu17,FeEnMoRiSh18}.
-%
-Additional verification attempts of linearizability have been presented both 
-with~\cite{CoGrLuMo06} and without~\cite{DoGrLuMo04} the use of 
-proof assistants.
-%
-Wing and Gong~\cite{WiGo93} established linearizability for unbounded FIFO and priority queues, and Chakraborty et al.~\cite{ChHeSeVa15} developed a queue‐checking technique. Cerný et al.’s CoLT checks singly‐linked heap objects, however, this method is complete only for bounded threads~\cite{CeRaZuChAl10}. Bouajjani et al.~\cite{BoEnWa17} present a recursive priority‐queue violation detector, akin to their stack and queue methods~\cite{BoEmEnHa18}.
-
 %
 %\todo{original}
 %
@@ -352,11 +391,11 @@ Wing and Gong~\cite{WiGo93} established linearizability for unbounded FIFO and p
 %and (regular) queues~\cite{BoEmEnHa18}.
 %%
 
-\smallskip
-\noindent
-\textbf{Additional approaches.}
-%
-Additional approaches include  testing~\cite{WiGo93,PrGr12,PrGr13,EmEn17,Lo17}, theorem‐proving~\cite{CoDoGr05,DeScWe11}, and more~\cite{BoEmEnMu17,FeEnMoRiSh18,EnKo24}.
+%\smallskip
+%\noindent
+%\textbf{Additional approaches.}
+%%
+%Additional approaches include  testing~\cite{WiGo93,PrGr12,PrGr13,EmEn17,Lo17}, theorem‐proving~\cite{CoDoGr05,DeScWe11}, and more~\cite{BoEmEnMu17,FeEnMoRiSh18,EnKo24}.
 
 %
 %\todo{original}
