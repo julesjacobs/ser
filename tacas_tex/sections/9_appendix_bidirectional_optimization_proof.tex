@@ -50,7 +50,7 @@
 \subsection{The Bidirectional Pruning Algorithm}
 
 Let $N=(P,T,\Pre,\Post, M_0)$ be a Petri Net and $S\subseteq\mathbb{N}^P$ be a target set.
-
+%
 By convention, we assume that $P$ and $T$ are disjoint.
  
 \begin{definition}[Forward Over-Approximation]
@@ -174,5 +174,54 @@ Therefore the bidirectional pruning converges in polynomial time, and preserves 
 places and transitions that \emph{may} appear in some execution from
 $M_0$ into $S$.
 
+
+%\newpage
+
+
+
+
+\begin{figure}[h]
+	\centering
+	
+	% Top row: (a), (b)
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_a_updated.pdf}
+		\caption{Step 0: initial Petri Net, before pruning.}
+		\label{fig:step:a}
+	\end{subfigure}\hfill
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_b_updated.pdf}
+		\caption{Step 1: first forward pass.}
+		\label{fig:step:b}
+	\end{subfigure}
+	
+	\vspace{1em}
+	
+	% Bottom row: (c), (d), and (e) matching (d)’s height
+	\begin{subfigure}[b]{0.30\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_c_updated.pdf}
+		\caption{Step 3: first backward pass.}
+		\label{fig:step:c}
+	\end{subfigure}\hfill
+	\begin{subfigure}[b]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_d_updated_2.pdf}
+		\caption{Step 4: second forward pass.}
+		\label{fig:step:d}
+	\end{subfigure}\hfill
+	% <-- three-arg form: [vpos][total height][inner vpos]
+	\begin{subfigure}[b][\subfigheight][b]{0.23\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_e_updated_2.pdf}
+		\caption{Step 6: final Petri Net.}
+		\label{fig:step:e}
+	\end{subfigure}
+	
+	\caption{A Petri net after three rounds of bidirectional pruning: two forward passes and one backward pass. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
+	\label{fig:bidirectional_pruning}
+\end{figure}
 
 %\newpage

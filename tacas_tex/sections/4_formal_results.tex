@@ -19,31 +19,24 @@ Given a network system \(\mathcal S\) with global states \(G\), our algorithm pr
 \begin{enumerate}
 	\item  \textbf{Serializability automaton.}  
 	We define an NFA
-	
-\[
-\mathcal A_{\mathrm{ser}}(\mathcal S)
-= \bigl(Q,\Sigma,\delta,q_0,F\bigr),
-\quad
-Q = G, \quad F = G
-\quad\text{(the set of the NS’s global states)}
-%\quad
-%\\
-\]
+	\[
+	\mathcal A_{\mathrm{ser}}(\mathcal S)
+	= \bigl(Q,\Sigma,\delta,q_0,F\bigr),
+	\quad
+	Q = G,\quad F = G \;\;(\text{global states}),\quad
+	q_0 = g_0 \;\;(\text{initial state}),
+	\]
+	\[
+	\Sigma
+	= \Bigl\{
+	({\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
+	{\color{red}\blacklozenge_{\mathit{resp}}})
+	\;\Big|\;
+	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\;
+	{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}
+	\Bigr\}.
+	\]
 
-
-\[
-\Sigma
-= \Bigl\{
-{(\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
-{\color{red}\blacklozenge_{\mathit{resp}}})
-\;\Big|\;
-{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\;
-{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}
-\Bigr\}
-\quad
-q_0 = g_0
-\quad\text{(the initial global state of the NS)}
-\]
 Finally, we define:
 \(
 \delta \;\subseteq\; Q \times \Sigma_{	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
@@ -136,6 +129,9 @@ i.e., each transition is a request/response pair.  Its language
 		\caption{Serial NFA of Listing~\ref{lst:MotivatingExample2NonSer}.}
 		\label{fig:code2ExampleNFA}
 	\end{figure}
+	
+	
+
 	
 %	\begin{wrapfigure}{r}{0.50\textwidth}  % “r” = right, width = 0.5\textwidth
 %		\centering
@@ -253,16 +249,15 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 	
 	\begin{itemize}
 		\item [\sat]: yields a counterexample interleaving \(M\) with
-		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\).
-		We validate a reachable trace and embed it into the NS semantics, yielding a valid interleaving that produces request/response pairs unattainable under any serial execution.
+		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\), which is automatically embedded into the NS semantics.
+%		We validate a reachable trace and embed it into the NS semantics, yielding a valid interleaving that produces request/response pairs unattainable under any serial execution.
 		
 		\item [\unsat]: yields an inductive invariant of
 		\(N_{\mathrm{int}}\), which back-translates to a proof of
 		serializability 
-		for \(\mathcal S\).
+		for \(\mathcal S\),
 		%
-		This is validated by synthesizing an inductive invariant over the interleaving PN, thereby proving that the corresponding semilinear set cannot be realized by any interleaving.
-		See the example in Appendix~\ref{appendix:ns-serializable}.
+		validated by synthesizing an inductive invariant over the interleaving PN, thereby proving that the corresponding semilinear set cannot be realized by any interleaving (see Appendix~\ref{appendix:ns-serializable}).
 	\end{itemize}
 
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
@@ -342,59 +337,25 @@ This optimization concerns the step in which a Petri net reachability problem is
 In this model-checking phase, it is possible that only a subset of the places and transitions are relevant.
 Hence, before any heavy symbolic reasoning takes place, we identify places that are necessarily always empty on any potential path from the start state to an end state, and remove them from the Petri net.
 %
-Formally, let $N=(P,T,\Pre,\Post,M_0)$ be a Petri net, and $S\subseteq\mathbb{N}^P$ a target set. By convention, we assume that $P$ and $T$ are disjoint.
-
-\begin{definition}[Forward Over-Approximation]
-	Define the operator $\mathcal{F}:\mathcal{P}(P\cup T)\to\mathcal{P}(P\cup T)$ by
-	\[
-	X \mapsto X
-	~\cup~
-	\{\,t\in T \mid \forall p\in P:\; \Pre(p,t)>0 \implies p\in X\}
-	~\cup~
-	\{\,p\in P \mid \exists t\in X\cap T,\ \Post(p,t)>0\}.
-	\]
-	Starting from $X_0 = \{\,p\mid M_0(p)>0\}$, iterate
-	$X_{i+1} = \mathcal{F}(X_i)$ until a least fixed-point
-	$X^*=\bigcup_i X_i$ is reached.  Call $X^*\cap P$ (resp. $X^* \cap T$) the set of
-	\emph{forward-reachable} places (resp. transitions).
-\end{definition}
-
-\begin{definition}[Backward Over-Approximation]
-	Let
-	\[
-	%	$
-	Y_0 = \{\,p\in P \mid \exists M\in S:\;M(p)\neq0\}
-	%	$
-	\]
-	be the places unconstrained to zero by the target.  Define
-	$\mathcal{B}:\mathcal{P}(P\cup T)\to\mathcal{P}(P\cup T)$ by
-	\[
-	Y \mapsto Y
-	~\cup~
-	\{\,t\in T \mid \forall p\in P:\; \Post(p,t)>0 \implies p\in Y\}
-	~\cup~
-	\{\,p\in P \mid \exists t\in Y\cap T,\ \Pre(p,t)>0\}.
-	\]
-	Iterate $Y_{i+1} = \mathcal{B}(Y_i)$ until a least fixed-point
-	$Y^*=\bigcup_i Y_i$ is reached.  Call $Y^*\cap P$ (resp. $Y^* \cap T$) the set of
-	\emph{backward-relevant} places (resp. transitions).
-\end{definition}
-
+Formally, let $N=(P,T,\Pre,\Post,M_0)$ be a Petri net, and $S\subseteq\mathbb{N}^P$ a target set. 
+%
+%By convention, we assume that $P$ and $T$ are disjoint.
+%
 In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; symmetrically, in the backward pass, we traverse backward from any place that can influence a target constraint, and identify an over-approximation of the places and transitions which may fire along a transition sequence ending at an end state.
 In bidirectional pruning, we iteratively remove non-forwards-reachable and
 non-backwards-relevant places and transitions, to a fixed point.
 % This pruning can be quite effective: in the best
 % case, we can discover that the target set is not reachable without needing to
 % invoke the solver.
-We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{thm:bidirectional-pruning} in Appendix~\ref{appendix:BidirectionalProof}.
-
-\guy{check with mark}
+We include in Appendix~\ref{appendix:BidirectionalProof}
+an example depicting this in optimization (see Fig.~\ref{fig:bidirectional_pruning}), as well as a proof of Theorem~\ref{thm:bidirectional-pruning}:
+\guy{check with mark (M0 projected on P or P'?)}
 
 \begin{theorem}[Bidirectional Pruning Soundness]
 	\label{thm:bidirectional-pruning}
 	Let $N = (P, T, Pre, Post, M_0)$ be a Petri net and $S$ a target set of markings.
 	%
-	Let $N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr)$ be the net after applying the bidirectional pruning algorithm.
+	Let $N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr)$ be the net after applying the bidirectional pruning algorithm (for some \(P \subseteq P', T \subseteq T'\)).
 	%
 	Then $S$ is reachable from $N$ iff it is reachable from $N'$.
 \end{theorem}
@@ -543,49 +504,3 @@ This empirically keeps the resulting regexes small.
 % This optimization allows for circumventing 
 % overblown expressions resulting in naive translations, especially with regard to  Kleene closures (the “\(\mathsf{*}\)” operator).  Instead, we analyze the structure of sub-expressions under the various operators --- estimating their branching factor, and reordering them so that simpler, low‐branching components are expanded first.  
 %This adaptive ordering often leads to early detection of fixed points or dead‐ends, preventing the combinatorial explosion that arises when complex loops are expanded prematurely.  
-
-\begin{figure}[!htbp]
-	\centering
-	
-	% Top row: (a), (b)
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_a_updated.pdf}
-		\caption{Step 0: initial Petri Net, before pruning.}
-		\label{fig:step:a}
-	\end{subfigure}\hfill
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_b_updated.pdf}
-		\caption{Step 1: first forward pass.}
-		\label{fig:step:b}
-	\end{subfigure}
-	
-	\vspace{1em}
-	
-	% Bottom row: (c), (d), and (e) matching (d)’s height
-	\begin{subfigure}[b]{0.30\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_c_updated.pdf}
-		\caption{Step 3: first backward pass.}
-		\label{fig:step:c}
-	\end{subfigure}\hfill
-	\begin{subfigure}[b]{0.23\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_d_updated_2.pdf}
-		\caption{Step 4: second forward pass.}
-		\label{fig:step:d}
-	\end{subfigure}\hfill
-	% <-- three-arg form: [vpos][total height][inner vpos]
-	\begin{subfigure}[b][\subfigheight][b]{0.23\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_e_updated_2.pdf}
-		\caption{Step 6: final Petri Net.}
-		\label{fig:step:e}
-	\end{subfigure}
-	
-	\caption{A Petri net after three rounds of bidirectional pruning: two forward passes and one backward pass. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
-	\label{fig:bidirectional_pruning}
-\end{figure}
-
-%\newpage
