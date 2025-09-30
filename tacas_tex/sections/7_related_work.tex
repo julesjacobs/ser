@@ -15,20 +15,25 @@
 %\label{subsec:related:notions-of-serializability}
 %\smallskip
 %\noindent
-\textbf{Notions of serializability.}
-Serializability (or \emph{atomicity}) was
-first introduced by Eswaran et al.~\cite{EsGrKoTr76}, which can be viewed as a relaxtion of \emph{conflict serializability} 
-%--- a stricter property, 
-%that not only require that the final state of the system be attained by an equivalent serial execution, but also, that this equivalence be attained by reordering non-conflicting operations.
-%formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for transactional systems, introducing \emph{conflict serializability}, a stricter variant 
-%that requires equivalence to a serial 
-%schedule solely by reordering non-conflicting operations (e.g., two reads by 
-%different threads). 
-and \emph{Strict serializability} (SSR)~\cite{Pa79}. Herlihy and Wing~\cite{HeWe87,HeWi90} adapted these ideas to define \emph{linearizability} for concurrent data structures.
-% --- this can also be viewed as a case of SSR in 
-%which each transaction consists of a single action, operating on a single 
-%concurrent object~\cite{WaSt06a}.
-Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \emph{predicate-wise serializability}~\cite{RaMeBrKoSi93}. Weaker models like \emph{causal consistency}~\cite{La78,AhNeBuKoHu95}, realized in systems such as \texttt{COPS}~\cite{LlFrKaAn11}, inspiring extensive research on model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
+%\textbf{Notions of serializability.}
+%Serializability (or \emph{atomicity}) was
+%first introduced by Eswaran et al.~\cite{EsGrKoTr76}, which can be viewed as a relaxtion of \emph{conflict serializability} 
+%%--- a stricter property, 
+%%that not only require that the final state of the system be attained by an equivalent serial execution, but also, that this equivalence be attained by reordering non-conflicting operations.
+%%formalized by Eswaran et al.~\cite{EsGrKoTr76} as a correctness condition for transactional systems, introducing \emph{conflict serializability}, a stricter variant 
+%%that requires equivalence to a serial 
+%%schedule solely by reordering non-conflicting operations (e.g., two reads by 
+%%different threads). 
+%and \emph{Strict serializability} (SSR)~\cite{Pa79}. Herlihy and Wing~\cite{HeWe87,HeWi90} adapted these ideas to define \emph{linearizability} for concurrent data structures,
+%% --- this can also be viewed as a case of SSR in 
+%%which each transaction consists of a single action, operating on a single 
+%%concurrent object~\cite{WaSt06a}.
+%giving rise to additional consistency models~\cite{ZhChWa13, RaMeBrKoSi93, La78,AhNeBuKoHu95}, 
+%%Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \emph{predicate-wise serializability}~\cite{RaMeBrKoSi93}. Weaker models like 
+%%\emph{causal consistency}~\cite{La78,AhNeBuKoHu95}, realized in systems such as \texttt{COPS}~\cite{LlFrKaAn11}, 
+%inspiring extensive research on model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
+
+
 
 %\todo{original}
 %
@@ -102,6 +107,12 @@ Subsequent variants include \emph{quasi-linearizability}~\cite{ZhChWa13} and \em
 \smallskip
 \noindent
 \textbf{Theoretical Results.}
+Serializability (or \emph{atomicity}) was
+first introduced by Eswaran et al.~\cite{EsGrKoTr76}, which can be viewed as a relaxtion of \emph{conflict serializability} 
+and \emph{Strict serializability} (SSR)~\cite{Pa79}. Herlihy and Wing~\cite{HeWe87,HeWi90} adapted these ideas to define \emph{linearizability} for concurrent data structures,
+giving rise to additional consistency models~\cite{ZhChWa13, RaMeBrKoSi93, La78,AhNeBuKoHu95}, 
+inspiring extensive research on model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
+%
 The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is \texttt{NP}-complete~\cite{Pa79}, a result that was later extended~\cite{BiEn19} to 
 other consistency models. Likewise, membership for linearizability is \texttt{NP}-complete in general~\cite{GiKo97} --- a result that was later 
 extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the linearizability criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations. 

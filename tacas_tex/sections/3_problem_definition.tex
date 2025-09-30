@@ -4,6 +4,50 @@
 \label{sec:problem-definition}
 %\guy{Can someone check Sections 3-4-5? Especially the formulations}
 
+
+\subsection{Background}
+\label{subsec:background}
+
+\textbf{Petri Nets.} 
+A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with places $P$, transitions $T$, input/output maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and initial marking (token distribution) $M_0\in\mathbb N^P$.  
+A transition $t$ is \textit{enabled} at marking $M \in \mathbb N^P$ if $M\ge \mathsf{pre}(t)$ coordinate-wise, i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
+%
+If an enabled transition \(t\) \textit{fires} (denoted $M\xrightarrow{t}M'$), it produces the marking $M' = M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
+%
+This can extend naturally to a sequence of firings $\sigma = t_1\cdots t_k$ (denoted $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ with $M=M_0$, $M'=M_k$, and $M_i \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$. 
+% 
+We define the reachable set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all markings reachable from the initial state $M_0$.
+% 
+The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
+%
+Specifically, we focus on reachability of a formula $F$, encoding a combination of linear constraints; it is \sat\ if some $M\in R(N)$ satisfies $F$ (marked $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
+%
+Surprisingly, even for the \textit{unbounded} setting, where places can hold unbounded many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although Ackermann-complete~\cite{CzWo22,Le22}.   
+
+
+
+\medskip
+\noindent
+\textbf{Verdict proofs.} 
+If $F$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models F$ is a proof, verifiable by simulation of the Petri net.  
+If $F$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ such that:  
+(i) $M_0\models C$, (ii) $M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
+
+\medskip
+\noindent
+\textbf{Semilinear sets and Parikh’s theorem.} 
+A set $S\subseteq\mathbb N^k$ is \textit{semilinear} iff  
+$S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\mathbb N\}$,  
+for $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$.  
+Semilinear sets coincide with sets defined by \textit{Presburger arithmetic}~\cite{Pr29}.  
+By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh Image} of any context-free language is semilinear, with an effective construction.
+
+\medskip
+\noindent
+\textbf{Deciding serializability in unbounded systems.} 
+Bouajjani et al.~\cite{BoEmEnHa13} have proved that serializability in unbounded systems reduces to Petri net reachability, as a special case of \textit{bounded-barrier linearizability}.
+
+
 \subsection{The SER Language}
 %\subsection{Syntax}
 Our \toolname{} syntax is defined as follows: 
@@ -201,6 +245,39 @@ the result set \(Z\) is the final multiset of request/response pairs that arose 
 \smallskip
 \noindent
 \textbf{Serializability.}
+An \textit{interleaving run} is a complete execution 
+\((g_0,\varnothing,\varnothing)\!\to^*\!(g_n,\varnothing,Z)\):
+\[
+(g_0,\varnothing,\varnothing) \;\to\; (g_1,\mathcal{P}_1,Z_1) \;\to\; \cdots \;\to\; (g_{n-1},\mathcal{P}_{n-1},Z_{n-1}) \;\to\; (g_n,\varnothing,Z).
+\]
+An \textit{interleaving run} is \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request, and $\mathcal{P}_n=\varnothing$.
+	%
+	Intuitively, serial runs have at most one request in flight at any time.
+%	,
+%	whereas \emph{interleaved} runs may have multiple requests in flight at once.
+	%
+	For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to  represent the set of all multisets of request/response pairs, for interleaving and serializable runs respectively:
+%
+\[
+\mathrm{Int}(\mathcal{N})
+= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{\textit{interleaved} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}
+\]
+%
+\[
+\mathrm{Ser}(\mathcal{N})
+= \bigl\{\, Z \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
+\]
+
+A network system is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs attained by an interleaving execution can be attained serially.
+
+
+
+\todo{old}
+\smallskip
+\noindent
+\textbf{Serializability.}
 We define an \textit{interleaving run} of the network system as a complete execution (also denoted \((g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z)\)):
 %\noindent\textbf{Complete runs.}
 \[
@@ -237,11 +314,12 @@ A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}
 %
 The NS abstraction is useful beyond its capability to capture concurrent behaviors in software-defined networks.
 %
-Specifically, another advantage is the natural translation from  \toolname{} programs to their corresponding NS, as we demonstrate next.
+Specifically, another advantage is the natural translation from  \toolname{} programs to their corresponding NS.
+%, as we demonstrate next.
 %
-
-\smallskip
-\noindent
+%
+%\smallskip
+%\noindent
 Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\); (ii) an initial global state \(g_0\); (iii) local variables (\(vars\)); (iv) global variables (\(VARS\)); (v) mappings \(\rho\) and (vi) \(g\) from local/global variables to (vii) a finite set of values \(V\), we define the following NS $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
 
 \[

@@ -1,60 +1,102 @@
-\section{Background}
-\label{sec:background}
+\subsection{Background}
+\label{subsec:background}
 
-%\medskip
-%\noindent
-\textbf{Petri Nets.}
-A \emph{Petri net} is a tuple
-\(
-N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
-\)
-where \(P\) is a finite set of \emph{places}, \(T\) is a finite set of \emph{transitions},
-\(\mathsf{pre},\mathsf{post}:T\to\mathbb N^P\) are the input/output vectors, and
-\(M_0\in\mathbb N^P\) is the initial marking (token distribution). We use the terms \textit{state} and \textit{marking} interchangeably.
+\textbf{Petri Nets.} 
+A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with places $P$, transitions $T$, input/output maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and initial marking (token distribution) $M_0\in\mathbb N^P$.  
+	A transition $t$ is \textit{enabled} at marking $M \in \mathbb N^P$ if $M\ge \mathsf{pre}(t)$ coordinate-wise, i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
+	%
+	If an enabled transition \(t\) \textit{fires} (denoted $M\xrightarrow{t}M'$), it produces the marking $M' = M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
+	%
+	This can extend naturally to a sequence of firings $\sigma = t_1\cdots t_k$ (denoted $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ with $M=M_0$, $M'=M_k$, and $M_i \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$. 
+	% 
+	We define the reachable set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all markings reachable from the initial state $M_0$.
+	% 
+	The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
+	%
+	Specifically, we focus on reachability of a formula $F$, encoding a combination of linear constraints; it is \sat\ if some $M\in R(N)$ satisfies $F$ (marked $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
+	%
+	Surprisingly, even for the \textit{unbounded} setting, where places can hold unbounded many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although Ackermann-complete~\cite{CzWo22,Le22}.   
 
-\noindent We say that a transition \(t\in T\) is \emph{enabled} at a marking \(M\in\mathbb N^P\) iff
-\(
-M \;\ge\; \mathsf{pre}(t)
-\quad(\text{coordinate‐wise}).
-\)
-i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
-When $t$ is enabled at $M$, firing $t$ produces a new marking $M'$ defined as
-\(
-M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t),
-\)
-which consumes input tokens and produces output tokens. We write $M \xrightarrow{t} M'$ when firing $t$ transforms $M$ to $M'$.
-%
-A marking \(M'\) is \emph{reachable} from $M$ via sequence $\sigma = t_1 \ldots t_k$ if there exist markings $M_0, \ldots, M_k$ where $M = M_0$, $M' = M_k$, and $M_i \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$. We write $M \xrightarrow{\sigma} M'$.
-%%
-The set $R(N)$ contains all reachable markings:
-\(
-R(N) = \{M \mid \exists \sigma \in T^* .\ M_0 \;\xrightarrow{\sigma}\!^*\; M\}
-\)
-%
-The \emph{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M$ is reachable from $M_0$, the initial marking of $N$.  Surprisingly, even in the
-\emph{unbounded} setting (where places may hold arbitrarily many tokens) this problem is
-decidable~\cite{Ma81,Ko82,La92}, although with
-Ackermann-complete complexity~\cite{CzWo22,Le22}.
-%
-An example of a toy Petri Net, and both reachable and unreachable markings, appears in Appendix~\ref{appendix:toyPN}.
-%
-%We focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. 
-We check whether a marking satisfying formula $F$ (a combination of linear constraints) is reachable. The property is \textit{reachable} (\sat) if some $M \in R(N)$ satisfies $F$ (denoted $M \models F$), and \textit{unreachable} (\unsat) otherwise. 
-
+	
+	
 \medskip
 \noindent
 \textbf{Verdict proofs.} 
+If $F$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models F$ is a proof, verifiable by simulation of the Petri net.  
+	If $F$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ such that:  
+	(i) $M_0\models C$, (ii) $M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
+
+\medskip
+\noindent
+\textbf{Semilinear sets and Parikh’s theorem.} 
+A set $S\subseteq\mathbb N^k$ is \textit{semilinear} iff  
+	$S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\mathbb N\}$,  
+	for $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$.  
+	Semilinear sets coincide with sets defined by \textit{Presburger arithmetic}~\cite{Pr29}.  
+	By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh Image} of any context-free language is semilinear, with an effective construction.
+
+\medskip
+\noindent
+\textbf{Deciding serializability in unbounded systems.} 
+Bouajjani et al.~\cite{BoEmEnHa13} have proved that serializability in unbounded systems reduces to Petri net reachability, as a special case of \textit{bounded-barrier linearizability}.
+
+
+
+%\medskip
+%\noindent
+%\textbf{Petri Nets.}
+%A \emph{Petri net} is a tuple
+%\(
+%N = (P, T, \mathsf{pre}, \mathsf{post}, M_0),
+%\)
+%where \(P\) is a finite set of \emph{places}, \(T\) is a finite set of \emph{transitions},
+%\(\mathsf{pre},\mathsf{post}:T\to\mathbb N^P\) are the input/output vectors, and
+%\(M_0\in\mathbb N^P\) is the initial marking (token distribution). We use the terms \textit{state} and \textit{marking} interchangeably.
 %
-If a property $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ and marking $M$ such that $ M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F$
-%\[
-%M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F
-%\] 
-serves as a proof of reachability. One can verify the claim by simulating $\sigma$ from $M_0$ and checking that the resulting marking satisfies $F$.
-%
-If $F$ is unreachable, there exists~\cite{Le09} an inductive certificate $C$ (a Presburger formula) satisfying:
-(i) $M_0 \models C$ (initial state satisfies $C$);
-(ii) if $M \models C$ and $M \xrightarrow{t} M'$, then $M' \models C$ (inductiveness); and
-(iii) $C \Rightarrow \neg F$ (certificate implies property is false).
+%\noindent We say that a transition \(t\in T\) is \emph{enabled} at a marking \(M\in\mathbb N^P\) iff
+%\(
+%M \;\ge\; \mathsf{pre}(t)
+%\quad(\text{coordinate‐wise}).
+%\)
+%i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
+%When $t$ is enabled at $M$, firing $t$ produces a new marking $M'$ defined as
+%\(
+%M' \;=\; M \;-\;\mathsf{pre}(t)\;+\;\mathsf{post}(t),
+%\)
+%which consumes input tokens and produces output tokens. We write $M \xrightarrow{t} M'$ when firing $t$ transforms $M$ to $M'$.
+%%
+%A marking \(M'\) is \emph{reachable} from $M$ via sequence $\sigma = t_1 \ldots t_k$ if there exist markings $M_0, \ldots, M_k$ where $M = M_0$, $M' = M_k$, and $M_i \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$. We write $M \xrightarrow{\sigma} M'$.
+%%%
+%The set $R(N)$ contains all reachable markings:
+%\(
+%R(N) = \{M \mid \exists \sigma \in T^* .\ M_0 \;\xrightarrow{\sigma}\!^*\; M\}
+%\)
+%%
+%The \emph{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M$ is reachable from $M_0$, the initial marking of $N$.  Surprisingly, even in the
+%\emph{unbounded} setting (where places may hold arbitrarily many tokens) this problem is
+%decidable~\cite{Ma81,Ko82,La92}, although with
+%Ackermann-complete complexity~\cite{CzWo22,Le22}.
+%%
+%An example of a toy Petri Net, and both reachable and unreachable markings, appears in Appendix~\ref{appendix:toyPN}.
+%%
+%%We focus on the verification of \textit{reachability properties}, meaning properties on the states that a net $N$ can reach. 
+%We check whether a marking satisfying formula $F$ (a combination of linear constraints) is reachable. The property is \textit{reachable} (\sat) if some $M \in R(N)$ satisfies $F$ (denoted $M \models F$), and \textit{unreachable} (\unsat) otherwise. 
+
+
+%\medskip
+%\noindent
+%\textbf{Verdict proofs.} 
+%%
+%If a property $F$ is reachable in $N$, then a witness sequence $\sigma \in T^*$ and marking $M$ such that $ M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F$
+%%\[
+%%M_0 \;\xrightarrow{\sigma}\; M \text{ and }M \models F
+%%\] 
+%serves as a proof of reachability. One can verify the claim by simulating $\sigma$ from $M_0$ and checking that the resulting marking satisfies $F$.
+%%
+%If $F$ is unreachable, there exists~\cite{Le09} an inductive certificate $C$ (a Presburger formula) satisfying:
+%(i) $M_0 \models C$ (initial state satisfies $C$);
+%(ii) if $M \models C$ and $M \xrightarrow{t} M'$, then $M' \models C$ (inductiveness); and
+%(iii) $C \Rightarrow \neg F$ (certificate implies property is false).
 
 %
 %\begin{enumerate}
@@ -63,24 +105,24 @@ If $F$ is unreachable, there exists~\cite{Le09} an inductive certificate $C$ (a 
 %\item $C \Rightarrow \neg F$, i.e., all markings satisfying $C$ falsify $F$.
 %\end{enumerate} 
 
-\medskip
-\noindent
-\textbf{Semilinear sets and Parikh’s theorem.}
-A set \(S\subseteq\mathbb N^k\) is \emph{semilinear} iff
-\[
-S \;=\; \bigcup_{i=1}^m \Bigl\{\mathbf b_i + \sum_{j=1}^{r_i} n_j\,\mathbf p_{i,j}
-\;\Big|\; n_j\in\mathbb N\Bigr\}.
-\]
+%\medskip
+%\noindent
+%\textbf{Semilinear sets and Parikh’s theorem.}
+%A set \(S\subseteq\mathbb N^k\) is \emph{semilinear} iff
+%\[
+%S \;=\; \bigcup_{i=1}^m \Bigl\{\mathbf b_i + \sum_{j=1}^{r_i} n_j\,\mathbf p_{i,j}
+%\;\Big|\; n_j\in\mathbb N\Bigr\}.
+%\]
+%
+%for $b_i, p_{i,j}\in \mathbb N^k$ being k-dimensional vectors of non-negative values.
+%%
+%Semilinear sets coincide exactly with the sets definable in \textit{Presburger arithmetic}~\cite{Pr29}.
+%%
+%By Parikh's theorem~\cite{Parikh66}, the \textit{Parikh Image} of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
+%finite description of its Parikh Image.
 
-for $b_i, p_{i,j}\in \mathbb N^k$ being k-dimensional vectors of non-negative values.
-%
-Semilinear sets coincide exactly with the sets definable in \textit{Presburger arithmetic}~\cite{Pr29}.
-%
-By Parikh's theorem~\cite{Parikh66}, the \textit{Parikh Image} of any context-free language is semilinear, and there is an effective construction mapping each word in the language to a
-finite description of its Parikh Image.
-
-\medskip
-\noindent
-\textbf{Deciding serializability in unbounded systems.}
-%
-We build on Bouajjani et al.~\cite{BoEmEnHa13}, who proved that serializability is decidable for unbounded systems by reducing it to Petri net reachability. They showed this as a special case of \textit{bounded-barrier linearizability}.
+%\medskip
+%\noindent
+%\textbf{Deciding serializability in unbounded systems.}
+%%
+%We build on Bouajjani et al.~\cite{BoEmEnHa13}, who proved that serializability is decidable for unbounded systems by reducing it to Petri net reachability. They showed this as a special case of \textit{bounded-barrier linearizability}.
