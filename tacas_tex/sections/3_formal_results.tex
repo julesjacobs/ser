@@ -17,36 +17,55 @@
 Given a network system \(\mathcal S\) with global states \(G\), our algorithm proceeds as follows:  
 
 \begin{enumerate}
-	\item  \textbf{Serializability automaton.}  
-	We define an NFA
-	\[
-	\mathcal A_{\mathrm{ser}}(\mathcal S)
-	= \bigl(Q,\Sigma,\delta,q_0,F\bigr),
-	\quad
-	Q = G,\quad F = G \;\;(\text{global states}),\quad
-	q_0 = g_0 \;\;(\text{initial state}),
-	\]
-	\[
-	\Sigma
-	= \Bigl\{
-	({\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
-	{\color{red}\blacklozenge_{\mathit{resp}}})
-	\;\Big|\;
-	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\;
-	{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}
-	\Bigr\}.
-	\]
-
+	\item  \textbf{Serializability automaton.} 
+	We define an NFA 
+	\(
+	\mathcal A_{\mathrm{ser}}(\mathcal S)=(Q,\Sigma,\delta,q_0,F)
+	\), with
+	\( Q=G,\;F=G,\;q_0=g_0,
+	\)
+	over an alphabet
+	\(
+	\Sigma=\{({\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}})
+	\mid {\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\;
+	{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}\}.
+	\)
+%	
+%	\todo{old}
+%	We define an NFA
+%	\[
+%	\mathcal A_{\mathrm{ser}}(\mathcal S)
+%	= \bigl(Q,\Sigma,\delta,q_0,F\bigr),
+%	\quad
+%	Q = G,\quad F = G \;\;(\text{global states}),\quad
+%	q_0 = g_0 \;\;(\text{initial state}),
+%	\]
+%	\[
+%	\Sigma
+%	= \Bigl\{
+%	({\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
+%	{\color{red}\blacklozenge_{\mathit{resp}}})
+%	\;\Big|\;
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},\;
+%	{\color{red}\blacklozenge_{\mathit{resp}}}\in\mathit{RESP}
+%	\Bigr\}.
+%	\]
+%
 Finally, we define:
 \(
-\delta \;\subseteq\; Q \times \Sigma_{	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
-	{\color{red}\blacklozenge_{\mathit{resp}}}} \times Q,
-\quad
-\bigl(q \xrightarrow{%
-	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
-	{\color{red}\blacklozenge_{\mathit{resp}}}%
-} q'\bigr),
-\)
+\delta \subseteq Q \times \Sigma \times Q,
+\qquad q \xrightarrow{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} q'
+\),
+%old
+%\(
+%\delta \;\subseteq\; Q \times \Sigma_{	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
+%	{\color{red}\blacklozenge_{\mathit{resp}}}} \times Q,
+%\quad
+%\bigl(q \xrightarrow{%
+%	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\,/\,%
+%	{\color{red}\blacklozenge_{\mathit{resp}}}%
+%} q'\bigr),
+%\)
 %
 %\;\Longleftrightarrow\;
 %\begin{array}{l}
@@ -342,12 +361,12 @@ When solving Petri net reachability, many places and transitions might be irrele
 	Appendix~\ref{appendix:BidirectionalProof} illustrates this (Fig.~\ref{fig:bidirectional_pruning}) and proves soundness (Theorem~\ref{thm:bidirectional-pruning}):
 
 
-\guy{check with mark (M0 projected on P or P'?)}
+%\guy{check with mark (M0 projected on P or P'?)}
 
 \begin{theorem}[Bidirectional Pruning Soundness]
 	\label{thm:bidirectional-pruning}
 	Let $N = (P, T, Pre, Post, M_0)$ be a Petri net and $S$ a target set.  
-	Let $N' = (P',T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'},\,M_0|_{P'})$ be the pruned net.  
+	Let $N' = (P',T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'},\,M_0|_{P})$ be the pruned net.  
 	Then $S$ is reachable from $N$ iff it is reachable from from $N'$.
 \end{theorem}
 %

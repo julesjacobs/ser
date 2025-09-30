@@ -426,8 +426,9 @@ The set $G$ is defined as $G=\{[\texttt{X=0}], [\texttt{X=1}]\}$.
 The initial global state is defined as $g_0 = [\texttt{X=0}]$.
 
 \item 
-We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$), coupled with all reachable \toolname{} programs~\footnote{
-These are continuations of a \toolname{} program at a point of execution. Concretely, this can mean either (i) the suffix of the program when it is first initialized (the part that has not yet executed); or (ii) the continuation of the program after a \(\yieldkw\) statement, where execution may later resume.}.
+We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$), coupled with all reachable \toolname{} programs (continuations of a program at a point of execution).
+%~\footnote{
+%These are continuations of a \toolname{} program at a point of execution. Concretely, this can mean either (i) the suffix of the program when it is first initialized (the part that has not yet executed); or (ii) the continuation of the program after a \(\yieldkw\) statement, where execution may later resume.}.
 For example, the reachable programs for Listing~\ref{lst:MotivatingExample2NonSer} are depicted in Fig.~\ref{fig:code2ExampleNS}. 
 
 

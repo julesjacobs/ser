@@ -108,14 +108,21 @@
 \noindent
 \textbf{Theoretical Results.}
 Serializability (or \emph{atomicity}) was
-first introduced by Eswaran et al.~\cite{EsGrKoTr76}, which can be viewed as a relaxtion of \emph{conflict serializability} 
-and \emph{Strict serializability} (SSR)~\cite{Pa79}. Herlihy and Wing~\cite{HeWe87,HeWi90} adapted these ideas to define \emph{linearizability} for concurrent data structures,
-giving rise to additional consistency models~\cite{ZhChWa13, RaMeBrKoSi93, La78,AhNeBuKoHu95}, 
-inspiring extensive research on model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
+first introduced by Eswaran et al.~\cite{EsGrKoTr76},
+%, which can be viewed as a relaxtion of \emph{conflict serializability} 
+%and \emph{Strict serializability} (SSR)~\cite{Pa79}. 
+%Herlihy and Wing~\cite{HeWe87,HeWi90} defined the similar 
+motivating the similar notion of \emph{linearizability} for concurrent data structures. 
+%,
+%giving rise to additional consistency models~\cite{ZhChWa13, RaMeBrKoSi93, La78,AhNeBuKoHu95}, 
+%inspiring extensive research on model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
 %
-The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is \texttt{NP}-complete~\cite{Pa79}, a result that was later extended~\cite{BiEn19} to 
-other consistency models. Likewise, membership for linearizability is \texttt{NP}-complete in general~\cite{GiKo97} --- a result that was later 
-extended to \textit{collections}~\cite{EmEn18}. The \emph{correctness problem} --- whether \emph{all} executions satisfy the linearizability criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations. 
+The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is \texttt{NP}-complete~\cite{Pa79}, a result that was later 
+%extended~\cite{BiEn19} to 
+%other consistency models. Likewise, membership for 
+linearizability~\cite{GiKo97} (and  
+%is \texttt{NP}-complete in general~\cite{GiKo97} --- a result that was later 
+extended to \textit{collections}~\cite{EmEn18}). The \emph{correctness problem} --- whether \emph{all} executions satisfy the linearizability criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations to real-world programs. 
 %Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
 %\todo{original}
