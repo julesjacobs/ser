@@ -100,7 +100,7 @@ Our \toolname{} syntax is defined as follows:
 
 Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
 %
-Furthermore, we denote that our syntax and semantics can both be extended to include \textit{arithmetic operations} in a straightforward manner, however, we omit these for simplicity. 
+Furthermore, we note that our syntax and semantics can both be extended to include \textit{arithmetic operations} however, we omit these for simplicity. 
     
     
 \subsection{Network System}    
@@ -120,9 +120,9 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 
 \item $\mathit{req} \subseteq \mathit{REQ} \times  L$ maps each request to its corresponding local state --- this represents externally spawning a packet matching the request type
 
-\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps a final local state to the corresponding final response --- this corresponds to a packet exiting the network and returning the computation to the user
+\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps a final local state to the corresponding response (this represents a packet exiting the network and returning the computation)
 
-\item $\delta \subseteq  (L \times G) \times ( L \times G)$ defines atomic execution steps that update both global and local state --- this corresponds to a single packet doing a single hop in the network
+\item $\delta \subseteq  (L \times G) \times ( L \times G)$ defines atomic execution steps that update both global and local state (this represents a packet doing a single hop in the network)
 %(and the corresponding SER expressions); as based on SER's small-step semantics
 \end{itemize}
 

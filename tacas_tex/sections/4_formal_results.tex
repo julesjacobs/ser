@@ -176,7 +176,7 @@ i.e., each transition is a request/response pair.  Its language
 	\item 
 	\textbf{Interleaving Petri Net.}
 %	
-Next, we translate the NS into a Petri Net. The \textit{non-sink places} of the PN represent either (i) global state assignments; and (ii) local states of an in-flight packet. The \textit{sink} places represent request/response pairs of terminating packets.
+Next, we translate the NS into a Petri Net \(N_{\mathrm{int}}(\mathcal S)\). The \textit{non-sink places} of the PN represent either (i) global state assignments; and (ii) local states of an in-flight packet. The \textit{sink} places represent request/response pairs of terminating packets.
 %
 We define the \textit{transitions} between states to correspond to the \(\delta\),\(req\), and \(resp\) mappings of the NS, and with the transitions of the request being able to fire without any input tokens (in order to correspond to initializing arbitrary external requests).
 %
@@ -333,31 +333,22 @@ An extensive empirical evaluation of these optimizations appears later on in sub
 \medskip
 \noindent
 \textbf{(1) Bidirectional pruning.}  
-This optimization concerns the step in which a Petri net reachability problem is solved.
-In this model-checking phase, it is possible that only a subset of the places and transitions are relevant.
-Hence, before any heavy symbolic reasoning takes place, we identify places that are necessarily always empty on any potential path from the start state to an end state, and remove them from the Petri net.
-%
-Formally, let $N=(P,T,\Pre,\Post,M_0)$ be a Petri net, and $S\subseteq\mathbb{N}^P$ a target set. 
-%
-%By convention, we assume that $P$ and $T$ are disjoint.
-%
-In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; symmetrically, in the backward pass, we traverse backward from any place that can influence a target constraint, and identify an over-approximation of the places and transitions which may fire along a transition sequence ending at an end state.
-In bidirectional pruning, we iteratively remove non-forwards-reachable and
-non-backwards-relevant places and transitions, to a fixed point.
-% This pruning can be quite effective: in the best
-% case, we can discover that the target set is not reachable without needing to
-% invoke the solver.
-We include in Appendix~\ref{appendix:BidirectionalProof}
-an example depicting this in optimization (see Fig.~\ref{fig:bidirectional_pruning}), as well as a proof of Theorem~\ref{thm:bidirectional-pruning}:
+When solving Petri net reachability, many places and transitions might be irrelevant to the specific target set.  
+	We prune them before symbolic reasoning by combining forward and backward passes:  
+	the forward pass over-approximates the places reachable from $M_0$; and symmetrically,   
+	the backward pass traverses in reverse from any place that can influence a target constraint (hence over-approximating the places that can contribute to it).
+	We iteratively remove non-forwards-reachable and
+	non-backwards-relevant places and transitions, to a fixed point.  
+	Appendix~\ref{appendix:BidirectionalProof} illustrates this (Fig.~\ref{fig:bidirectional_pruning}) and proves soundness (Theorem~\ref{thm:bidirectional-pruning}):
+
+
 \guy{check with mark (M0 projected on P or P'?)}
 
 \begin{theorem}[Bidirectional Pruning Soundness]
 	\label{thm:bidirectional-pruning}
-	Let $N = (P, T, Pre, Post, M_0)$ be a Petri net and $S$ a target set of markings.
-	%
-	Let $N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr)$ be the net after applying the bidirectional pruning algorithm (for some \(P \subseteq P', T \subseteq T'\)).
-	%
-	Then $S$ is reachable from $N$ iff it is reachable from $N'$.
+	Let $N = (P, T, Pre, Post, M_0)$ be a Petri net and $S$ a target set.  
+	Let $N' = (P',T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'},\,M_0|_{P'})$ be the pruned net.  
+	Then $S$ is reachable from $N$ iff it is reachable from from $N'$.
 \end{theorem}
 %
 %We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{thm:bidirectional-pruning} in Appendix~\ref{appendix:BidirectionalProof}.
@@ -368,24 +359,19 @@ an example depicting this in optimization (see Fig.~\ref{fig:bidirectional_pruni
 % \noindent\textit{\textbf{Intuition.}}
 % Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify over-approximations on transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
 
-
 \medskip
 \noindent
 \textbf{(2) Semilinear set pruning.}  
-Recall that a semilinear set is $S=\bigcup_{i=1}^m L_i$, with
-\[
-\displaystyle L_i=\Big\{\,b_i+\sum_{p\in P_i}n_p p \;\Big\vert\; n_p\in\mathbb N\Big\}.
-\]
-When manipulating semilinear sets, we may end up with redundant representations, in the form of either
-redundant period vectors $p \in P_i$ or whole redundant components $L_i$.
-%
-We prune semilinear sets while building them to remove such redundancies:
-\begin{itemize}
-	\item For each $P_i$, we greedily remove any $p \in P_i$ which is already a
-	nonnegative linear combination of $P_i \setminus \{p\}$.
-	\item When $L_i \subseteq L_j$ for $i \neq j$, we remove the redundant $L_i$.
-\end{itemize}
-Keeping semilinear sets compact reduces unnecessary blow-ups in the size of the formulas that get passed to the solver which, in turn, is important to keep solver invocations tractable.
+A semilinear set $S=\bigcup_{i=1}^m L_i$ with 
+	$L_i=\{\,b_i+\sum_{p\in P_i}n_p p \mid n_p\in\mathbb N\}$ may contain redundant 
+	period vectors or components.  
+	We prune during construction:
+	(1) remove any $p\in P_i$ expressible as a nonnegative combination of $P_i\setminus\{p\}$, 
+	and (2) drop $L_i$ when $L_i\subseteq L_j$.  
+	This keeps formulas compact and solver calls tractable.
+
+
+
 
 % it is common for some inequalities or disjuncts to add no new coverage beyond what other constraints already guarantee.  The redundant‐constraint elimination pass inspects each linear inequality and each disjunct in a disjunctive normal form, testing whether it is implied by the rest.  Any constraint or disjunct found redundant is dropped, ensuring that subsequent intersection, union, and projection operations work on the smallest necessary formula.  This streamlines the logic formula and prevents unnecessary size blow‐ups during solver invocations.
 
@@ -398,34 +384,21 @@ Keeping semilinear sets compact reduces unnecessary blow-ups in the size of the 
 
 \medskip
 \noindent
-\textbf{(3) Generating fewer constraints.}
+\textbf{(3) Generating fewer constraints.}  
 When computing the Parikh Image of a regular expression as a semilinear set,
-most regex operations can be implemented without an exponential blow-up.
-However, Kleene star is a notable exception: in the general case, the
-semilinear set $S^\ast$ has an exponentially larger representation than $S$
-itself.  Therefore, we implement optimizations specifically to reduce the size
-of $S^\ast$ when possible.
-%
-Let $S$ be the semilinear set $\bigcup_{i=1}^m L_i$, as above.
-In the general case, the Kleene star $S^\ast$ is given as a semilinear set by
-\[
-S^\ast=\bigcup_{I \subseteq \{1,...,m\}} \Big\{
-\sum_{i \in I} b_i
-+ \sum_{p \in \bigcup_{i \in I} P_i\cup \{b_i\}} n_p p \;\Big\vert\; n_p \in \mathbb N \Big\}.
-\]
-As the index set $I$ runs over all subsets of $\{1,...,m\}$, this has $2^m$
-many components! This can be intractable, especially when there are nested
-Kleene stars. However, in a typical case, we may not need that many, and hence we
-implement the following special-case optimizations:
-\begin{itemize}
-	\item If any component $L_i$ of $S$ has no period vectors, $L_i = \{b_i\}$, then we can pull it out separately, compute the Kleene star of the rest, and then add $b_i$ as a period vector to every linear component of the result.
-	
-	\item Likewise, if any component $L_i$ of $S$ has a zero \emph{base} vector,
-	$L_i = \{ \sum_{p \in P_i} n_p p \mid n_p \in \mathbb N\}$,
-	we can pull it out separately, compute the Kleene star of the rest and add each $p \in P_i$ as a \textit{period} vector to every linear component of the result.
-\end{itemize}
-These optimizations reduce the number of components generated from a Kleene star by
-half for every component on which they apply (i.e., a reduction exponential in the number of such components).
+	most regex operations can be implemented without an exponential blow-up.
+	However, Kleene star is a notable exception: in the general case, it can cause and exponential blow up: for $S=\bigcup_{i=1}^m L_i$,  the Kleene star $S^\ast$ is given as a semilinear set by: 
+	\[
+	S^\ast=\bigcup_{I \subseteq \{1,...,m\}} 
+	\Big\{\sum_{i \in I} b_i + \sum_{p \in \bigcup_{i \in I} P_i\cup \{b_i\}} n_p p\Big\}.
+	\]
+	This yields $2^m$ components. To mitigate:
+	(i) if $L_i=\{b_i\}$ (period-less component), factor it out, star the rest, then add $b_i$ as a period;  
+	(ii) if $L_i=\{\sum_{p\in P_i}n_pp\}$ (zero base), likewise star the rest and add each $p\in P_i$.  
+	Each such case halves the component count, giving exponential savings.
+
+
+
 
 % Let $\mathrm{comp}(S)=\{L_1,\dots,L_m\}$ 
 % be the multiset of linear components of the semilinear set 
@@ -477,26 +450,46 @@ half for every component on which they apply (i.e., a reduction exponential in t
 \noindent
 \textbf{(4) Strategic Kleene elimination order.}  
 The size of the generated semilinear set is not only impacted by how the
-semilinear set operations are implemented, but also by what specific regular
-expression is given as input: a single regular language may be represented by a
-number of equivalent regexes, each of different complexity.
-%
-In particular, as Kleene star can cause a large blow-up in the semilinear set size,
-we are especially sensitive to the \emph{star height} of the generated regex.
-%
-We use Kleene's algorithm to convert an NFA $\mathcal A=(Q,\Sigma,\delta,q_0,F)$ to a regex, which works by repeated state elimination, choosing one state at a time.
-Naively, when eliminating states in an arbitrary order, Kleene's algorithm may generate regexes with a much greater star height than necessary---a problem
-when converting to semilinear sets.
-%
-Therefore, we heuristically optimize the state elimination order to end up with a smaller regex. Formally, we pick the next state:
-\[
-q^* = 
-\arg\min_{q\in Q'}\bigl(|\delta_{\mathrm{in}}(q)|+|\delta_{\mathrm{out}}(q)|\bigr)
-\]
-where \(Q'\subseteq Q\) are the states remaining to be eliminated, choosing to
-eliminate states with a smaller total degree first.
-%
-This empirically keeps the resulting regexes small.
+	semilinear set operations are implemented, but also by what specific regular
+	expression is given as input: a single regular language may be represented by a
+	number of equivalent regexes, each of different complexity.
+	%
+	In particular, as Kleene star can cause a large blow-up in the semilinear set size,
+	we are especially sensitive to the \emph{star height} of the generated regex.
+	%
+	Naive Kleene elimination may introduce many nested stars.  
+	We reduce this by strategically choosing the next state to eliminate by:
+	\[
+	q^*=\arg\min_{q\in Q'}\bigl(|\delta_{\mathrm{in}}(q)|+|\delta_{\mathrm{out}}(q)|\bigr),
+	\]
+	eliminating lower-degree states first.  
+	This heuristic empirically yields smaller regexes and more compact semilinear sets.
+
+
+%\medskip
+%\noindent
+%\textbf{(4) Strategic Kleene elimination order.}  
+%The size of the generated semilinear set is not only impacted by how the
+%semilinear set operations are implemented, but also by what specific regular
+%expression is given as input: a single regular language may be represented by a
+%number of equivalent regexes, each of different complexity.
+%%
+%In particular, as Kleene star can cause a large blow-up in the semilinear set size,
+%we are especially sensitive to the \emph{star height} of the generated regex.
+%%
+%We use Kleene's algorithm to convert an NFA $\mathcal A=(Q,\Sigma,\delta,q_0,F)$ to a regex, which works by repeated state elimination, choosing one state at a time.
+%Naively, when eliminating states in an arbitrary order, Kleene's algorithm may generate regexes with a much greater star height than necessary---a problem
+%when converting to semilinear sets.
+%%
+%Therefore, we heuristically optimize the state elimination order to end up with a smaller regex. Formally, we pick the next state:
+%\[
+%q^* = 
+%\arg\min_{q\in Q'}\bigl(|\delta_{\mathrm{in}}(q)|+|\delta_{\mathrm{out}}(q)|\bigr)
+%\]
+%where \(Q'\subseteq Q\) are the states remaining to be eliminated, choosing to
+%eliminate states with a smaller total degree first.
+%%
+%This empirically keeps the resulting regexes small.
 
 % \medskip
 % \noindent\textit{\textbf{Intuition.}}
