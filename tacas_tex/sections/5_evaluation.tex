@@ -26,7 +26,7 @@ Our code, benchmarks, and full experimental results are publicly available~\cite
 We ran \toolname{} on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
 For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
 %
-Within the time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see Table~\ref{tab:benchmarks-all}).
+Within the time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see Table~\ref{tab:stats-summary} and Table~\ref{tab:benchmarks-all} in Appendix~\ref{appendix:full_results}).
 %
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 
@@ -161,7 +161,9 @@ We also observe a clear runtime split based on serializability. For serializable
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/big_table_summary_only_networking_part.tex}
-	\caption{Overview of the benchmark containing networking and system protocols. For our full benchmarks ee Appendix~\ref{appendix:full_results}.}
+	\caption{Overview of the benchmark containing networking and system protocols. 
+%	For our full benchmarks see Appendix~\ref{appendix:full_results}.
+}
 \label{tab:networking-benchmarks}
 \end{table}
 
@@ -172,6 +174,7 @@ We also observe a clear runtime split based on serializability. For serializable
 %Next of our four optimizations, and analyzed their effect on the overall runtime and space resources.
 %
 %All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
+
 
 \subsubsection{Runtime Optimization}
 
@@ -193,16 +196,30 @@ However, when comparing the combinations, it seems that there are instances in w
 For example, there are instances such as \texttt{a3.ser} and \texttt{a7.ser}, in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}])
 affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks without this optimization.
 
-
-\subsubsection{Space Optimization}
-
+\subsubsection{Space Optimization.}
 Our optimizations also reduce the space complexity of the two main components --- the Petri Net and the semilinear set.
 
-\smallskip
 \noindent
-\textbf{Petri Net size reduction.}
+(1) \textbf{Petri Net.} Bidirectional pruning (Fig.~\ref{fig:petri_size_reduction}) 
+eliminating the average number of places \textit{by roughly half} --- from $23.91$ down to $12.79$. This optimization proved even more effective on transitions, \textit{eliminating about two-thirds}: from $37.3$ down to $12.61$. 
+%Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct.  
+%\\
+
+\noindent
+(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (excluding pruning) was disabled. The redundant-constraint elimination and the fewer-constraint generation drastically reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on. 
 %
-With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct. 
+For fairness, we measured only benchmarks completed under all configurations, excluding cases where semilinear sets exploded beyond $2^{30}$ components and timed out. Thus, our reported improvements actually \textit{understate} the true impact of these optimizations on memory. Such blowups, especially common in state-machine benchmarks with NS loops, render even simple programs infeasible without optimizations.
+	
+	
+%\subsubsection{Space Optimization}
+%
+%Our optimizations also reduce the space complexity of the two main components --- the Petri Net and the semilinear set.
+%
+%\smallskip
+%\noindent
+%\textbf{Petri Net size reduction.}
+%%
+%With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct. 
 %of our reachability query. 
 %These results are summarized in Fig.~\ref{fig:petri_size_reduction}.
 
@@ -229,24 +246,24 @@ With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction
 
 
 
-\smallskip
-\noindent
-\textbf{Semilinear set size reduction.}
+%\smallskip
+%\noindent
+%\textbf{Semilinear set size reduction.}
+%%
+%Finally, our last experiment batch analyzed the size reduction among the semilinear sets.
+%%
+%Towards this end, we ran all our benchmarks with all optimizations to serve as a baseline. 
+%%
+%Then, we analyzed the effect of the three semilinear-related optimizations, i.e., all but the bidirectional pruning. For each of these three optimizations, we ran the benchmarks with all optimizations \textit{except} the one checked.
+%%
+%%Table~\ref{tab:semilinear-size-reduction} include a summary of the results, when comparing the semilinear set size.
+%%
+%Specifically, we compare both the average and the maximal (i) number of components; and (ii) period vectors per each component, as summarized in Table~\ref{tab:semilinear-size-reduction}.
+%%
+%The redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, as well as the average number of components to be $223$ times more compact, when compared to the baseline.
+%%
+%To ensure a fair comparison, we only measured benchmarks that were completed under every configuration, deliberately excluding any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth and the resulting timeouts are especially pervasive among our state-machine benchmarks due to loops in their NS, rendering even simple programs infeasible without optimizations.
 %
-Finally, our last experiment batch analyzed the size reduction among the semilinear sets.
-%
-Towards this end, we ran all our benchmarks with all optimizations to serve as a baseline. 
-%
-Then, we analyzed the effect of the three semilinear-related optimizations, i.e., all but the bidirectional pruning. For each of these three optimizations, we ran the benchmarks with all optimizations \textit{except} the one checked.
-%
-%Table~\ref{tab:semilinear-size-reduction} include a summary of the results, when comparing the semilinear set size.
-%
-Specifically, we compare both the average and the maximal (i) number of components; and (ii) period vectors per each component, as summarized in Table~\ref{tab:semilinear-size-reduction}.
-%
-The redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, as well as the average number of components to be $223$ times more compact, when compared to the baseline.
-%
-To ensure a fair comparison, we only measured benchmarks that were completed under every configuration, deliberately excluding any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth and the resulting timeouts are especially pervasive among our state-machine benchmarks due to loops in their NS, rendering even simple programs infeasible without optimizations.
-
 %In fact, for both these optimizations are even more effective as, in order to conduct a fair comparison, we analyzed only benchmarks that terminated in all combinations, an hence we do not include cases in which these two optimizations rendered the original semilinear set intractable, due to having over $2^{30}$ components (!), hence timing-out and being excluded from the analysis.
 %%
 %This occurs pervasively in our state-machine benchmarks which have loops in their network systems --- and hence even simple programs of this category cannot be analyzed with respect to serializability.
