@@ -57,6 +57,14 @@ Our \toolname{} syntax is defined as follows:
 \begin{aligned}
 	\mathbf{Expression}\quad e ::= &\ 0 \mid 1 \mid 2 \mid \dots            && \text{numeric const.}\\
 	&\mid \nondet                            && \text{nondet.\ value (0/1)}\\
+%	&\mid x := e
+%	&&\text{write to local variable}\\
+%	&\mid x
+%	&&\text{read from local variable}\\
+%	&\mid X := e
+%	&&\text{write to global variable}\\
+%	&\mid X
+%	&&\text{read from global variable}\\
 	&\mid x := e \mid x                      && \text{write/read local var}\\
 	&\mid X := e \mid X                      && \text{write/read global var}\\
 	&\mid e_1 == e_2                         && \text{equality test}\\
