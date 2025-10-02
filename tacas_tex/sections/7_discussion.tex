@@ -1,20 +1,20 @@
+
+
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Conclusion}
+%\subsection{Conclusion}
 
-We present the first implemented tool that verifies serializability for unbounded concurrent systems and generates proof certificates.
-Our approach bridges theory and practice by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
-%
-Key contributions include: (1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude, and (4) demonstrating feasibility on SDN-inspired benchmarks.
 
 %
 
 
 
 
-\subsection{Limitations}
-
+%\subsection{Limitations}
+%\smallskip
+%\noindent
+\textbf{Limitations.}
 While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
 First, the underlying Petri Net reachability problem has \texttt{Ackermann}-complete complexity, causing our tool to time out on some complex benchmarks. %despite optimizations.
 Second, our current implementation relies on \texttt{SMPT}, which may fail to find proofs even when they exist, limiting completeness.
@@ -22,12 +22,23 @@ Third, our network system model assumes a simple request/response pattern and ca
 %Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
 These limitations suggest important directions for future research.
 
-\subsection{Future Work}
-
-\paragraph{Scalability.}
-
+%\subsection{Future Work}
+\smallskip
+\noindent
+\textbf{Future Work.}
+To improve \textit{scalability}, we are developing \textit{polyhedral reductions}~\cite{AmBeDa21}, a form of structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri Net and $E$ allows reconstruction of $N_1$’s state space. This would allow verification on the reduced net, with proofs lifted back to the original.
+%
+We also plan to \textit{extend our framework to richer communication patterns.} Beyond the current independent-client model, stronger settings include inter-client communication ---
+%or Lamport’s \textit{happens-before}~\cite{La78}, while weaker ones restrict post-response communication or allow only summaries. Addressing these 
+which requires 
+%decentralized or streaming certification under communication constraints, 
+broadening the framework to afford distributed-system guarantees.
+%\todo{old}
+%
+%\paragraph{Scalability.}
+%
 %Our evaluation shows that some benchmarks still time out.
-To improve scalability, we are developing both theory and implementation of \textit{polyhedral reductions}~\cite{AmBeDa21} --- structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri Net and $E$ is a formula enabling reconstruction of $N_1$'s state space from $N_2$'s. This would let us verify the reduced net and lift proofs back to the original net.
+%To improve \textit{scalability}, we are developing both theory and implementation of \textit{polyhedral reductions}~\cite{AmBeDa21} --- that are structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri Net and $E$ is a formula enabling reconstruction of $N_1$'s state space from $N_2$'s. This would let us verify the reduced net and lift proofs back to the original net.
 %
 %\guy{Nicolas are you sure about the next sentence? Do you have an explanation or a "negative proof"?}
 %
@@ -38,11 +49,12 @@ To improve scalability, we are developing both theory and implementation of \tex
 %\todo{Limitations?}
 %Examples we cannot solve, future work that would help
 %To conclude..
-
-
-
-\paragraph{Extensions to diverse communication models.}
-Currently, clients act independently: each issues a request, receives a response, then verification is centralized. Stronger models allow inter-client communication or partial orderings (Lamport’s \textit{happens-before}~\cite{La78}); weaker ones forbid post-response communication or permit only limited summaries. Addressing such settings will require decentralized certification or streaming proofs under communication constraints. Extending our framework along these axes would capture a broader class of practical distributed-system guarantees.
+%
+%
+%
+%In another axis, we aim to \textit{extend our framework to more diverse communication patterns.}
+%\paragraph{Extensions to diverse communication models.}
+%Currently, clients act independently: each issues a request, receives a response, then verification is centralized. Stronger models allow inter-client communication or partial orderings (Lamport’s \textit{happens-before}~\cite{La78}); weaker ones forbid post-response communication or permit only limited summaries. Addressing such settings will require decentralized certification or streaming proofs under communication constraints. Extending our framework along these axes would capture a broader class of practical distributed-system guarantees.
 
 
 %\paragraph{Extensions to diverse communication models.}
@@ -63,3 +75,15 @@ Currently, clients act independently: each issues a request, receives a response
 %    \item \todo{Weaker: the clients cannot communicate with each other afterwards to determine whether what they got was serializable, or they can only communicate in a limited way}
 %    \item \todo{Infinite / unbounded executions}
 %\end{itemize}
+
+
+
+\smallskip
+\noindent
+\textbf{Conclusion.}
+We present the first implemented tool that verifies serializability for unbounded concurrent systems and generates proof certificates.
+Our approach bridges theory and practice, with the following key contributions:
+% by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
+%
+%Key contributions include: 
+(1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude, and (4) demonstrating feasibility on various benchmarks inspired by real-world systems.

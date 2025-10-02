@@ -175,7 +175,7 @@ extended to \textit{collections}~\cite{EmEn18}). The \emph{correctness problem} 
 \textbf{Model checking and runtime verification.}
 %
 Runtime checks for serializability and conflict/view‐serializability were proposed by Wang and Stoller~\cite{WaSt06a,WaSt06b}.  
-TLA logic~\cite{La94} can express serializability via final‐state equivalence (and conflict‐serializability~\cite{CoOlPnTuZu07}), but TLA‐based approaches~\cite{SoVaVi20,Ho24} remain restricted to bounded systems due to finite‐state tools (\texttt{TLC}, \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}).  
+TLA logic~\cite{La94} can express various serializability forms~\cite{CoOlPnTuZu07}), however, such approaches~\cite{SoVaVi20,Ho24} remain restricted to bounded systems due to finite‐state tools (\texttt{TLC}, \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}).  
 Heuristic or enumeration model checkers include \texttt{Line-up}~\cite{BuDeMuTa10} (build on \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{LinTSO}~\cite{BuGoMuYa12}, \texttt{Violat} and its schema precursor~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, and PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}.  
 Recent work includes \texttt{RELINCHE} for bounded linearizability~\cite{GoKoVa25}, \texttt{CDSSpec}~\cite{OuDe17} (for \texttt{C/C++11}), \texttt{Lincheck}~\cite{KoDeSoTsAl23}, and SAT‐based approaches~\cite{BuAlMa07}.  
 Symbolic testing~\cite{EmEnHa15} can expose violations of observational refinement~\cite{FiOhRiYa10,BoEmCoHa15}.  
@@ -290,8 +290,8 @@ By contrast, our method covers unbounded threads and uniquely produces serializa
 \textbf{Static analysis.}
 Static methods prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded systems~\cite{BeLeMaRaSa08,Va09,Va10}, but usually rely on heuristics or annotated linearization points.  
 	Lian and Feng~\cite{LiFe13} propose a logic for non‐fixed points.  
-	Other approaches also depend on linearization points~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}.  
-	However, annotation‐based analyses may be inconclusive, as failures can stem from incorrect annotations rather than true violations~\cite{BoEmCoHa15}.
+%	Other approaches also depend on linearization points~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}.  
+	However, annotation‐based analyses~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16} may be inconclusive, as failures can stem from incorrect annotations rather than true violations~\cite{BoEmCoHa15}.
 
 \smallskip
 \noindent
@@ -639,3 +639,5 @@ Other strategies include testing~\cite{WiGo93,PrGr12,PrGr13,EmEn17,Lo17}, theore
 %%
 %We refer the reader to a survey by Esparza and Nielsen~\cite{EsNi94} (recently republished in~\cite{EsNi24}) for a comprehensive summary on additional decidability results pertaining to Petri Nets.
 
+
+\vspace{-1.5pt}
