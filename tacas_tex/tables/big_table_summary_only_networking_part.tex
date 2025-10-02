@@ -5,28 +5,28 @@
 	\setlength{\tabcolsep}{5pt}
 	\renewcommand{\arraystretch}{0.9}
 	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}%
-			p{2cm}     % Benchmark
+			p{2.5cm}     % Benchmark
 			c          % Serializable
 			c c c c c c % Features
-			r r        % Cert, Total
+			c       % Cert, Total
 		}
 		\toprule
 		\textbf{Benchmark}
 		& \textbf{Serializable}
 		& \multicolumn{6}{c}{\textbf{Features}}
-		& \multicolumn{2}{c}{\textbf{Runtime (ms)}} \\
-		\cmidrule(lr){1-1} \cmidrule(lr){2-2} \cmidrule(lr){3-8} \cmidrule(lr){9-10}
+		& \textbf{Runtime} \\
+		\cmidrule(lr){1-1} \cmidrule(lr){2-2} \cmidrule(lr){3-8} \cmidrule(lr){9-9}
 		& 
-		& If & While & \texttt{?} & Arith & Yield & Multi-req
-		& Cert. & Total \\
+		& If & While & \texttt{?} & Arith & Yield & Multi-req & (ms)
+		\\
 		\midrule
-		\texttt{banking (1)}          & \xmark      & \cmark & \cmark &        & \cmark & \cmark & \cmark & 59{,}312 & 74{,}539 \\
-		\texttt{banking (2)}          & \greencmark & \cmark & \cmark &        & \cmark & \cmark & \cmark & \texttt{TIMEOUT} & \texttt{TIMEOUT} \\
-		\texttt{routing (1)}      & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 20{,}557 & 20{,}954 \\
-		\texttt{monitor (1)}       & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 6{,}859  & 7{,}047 \\
-		\texttt{monitor (2)}       & \greencmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 3{,}047  & 12{,}324 \\
-		\texttt{firewall (1)}& \xmark      & \cmark &        & \cmark & \cmark & \cmark &       & 8{,}193  & 8{,}285 \\
-		\texttt{firewall (2)}& \greencmark & \cmark &        & \cmark & \cmark &       &       & 6{,}886  & 252{,}752 \\
+		\texttt{banking (g1)}          & \xmark      & \cmark & \cmark &        & \cmark & \cmark & \cmark &  74{,}539 \\
+		\texttt{banking (g2)}          & \greencmark & \cmark & \cmark &        & \cmark & \cmark & \cmark & \texttt{TIMEOUT} \\
+		\texttt{routing (g3)}      & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark &  20{,}954 \\
+		\texttt{monitor (g4)}       & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark &  7{,}047 \\
+		\texttt{monitor (g5)}       & \greencmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark &  12{,}324 \\
+		\texttt{firewall (g6)}& \xmark      & \cmark &        & \cmark & \cmark & \cmark &       &  8{,}285 \\
+		\texttt{firewall (g7)}& \greencmark & \cmark &        & \cmark & \cmark &       &       & 252{,}752 \\
 		\midrule
 		\bottomrule
 	\end{tabular*}
