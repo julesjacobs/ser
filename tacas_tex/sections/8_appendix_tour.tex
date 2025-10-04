@@ -13,9 +13,9 @@ The first examples are relatively basic, while the last examples have higher com
 %
 Each thread is spawned any number of times (and at any point in time) by a \textit{request} from the user, marked {\color{ForestGreen}$\blacklozenge_\text{req}$}. The request executes, and eventually return a \textit{response}  {\color{red}$\blacklozenge_\text{resp}$}.
 %
-For example, in the previous three examples, there is a single request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
+For example, in the three examples presented in \Cref{sec:introduction} (Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and~\ref{lst:MotivatingExample3Ser}), there is a single request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
 % 
-We analyze serializability through the lens of such ({\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$}) pairs. For example, the programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also produce ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}). We later formulate this via our network system framework. 
+We analyze serializability through the lens of such ({\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$}) pairs. For example, the programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} produce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also produce ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}), as formulated (\Cref{sec:problem-definition}) via our network system framework. 
 %
 We depict global variables with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
 %
@@ -27,12 +27,12 @@ The ``\texttt{?}'' symbol depicts a nondeterministic choice between ``0'' and ``
 
 %\subsubsection{Example 1}
 
-We start with a basic example, describing a single request {\color{ForestGreen}$\blacklozenge_\text{A}$}, a single local variable (``x'') per each request; and a single global variable (FLAG) shared among all in-flight requests. 
+We start with a basic example, describing a single request {\color{ForestGreen}$\blacklozenge_\text{A}$}, a single local variable (\texttt{x}) per each request; and a single global variable (\texttt{FLAG}) shared among all in-flight requests. 
 %
-In Listing~\ref{lst:BasicSer} an in-flight request assigns to x the value of FLAG (hence, initially, [$x:=0$]). Then, the request non-deterministically chooses whether to yield or to flip the value of $x$. Subsequently, FLAG is assigned 1 and the value of x is returned as the response to request {\color{ForestGreen}$\blacklozenge_\text{A}$}. 
+In Listing~\ref{lst:BasicSer} an in-flight request assigns to \texttt{x} the value of \texttt{FLAG} (hence, initially, \texttt{[x:=0]}). Then, the request non-deterministically chooses whether to yield or to flip the value of \texttt{x}. Subsequently, \texttt{FLAG} is assigned 1 and the value of \texttt{x} is returned as the response to request {\color{ForestGreen}$\blacklozenge_\text{A}$}. 
 %
 Note that the presence of the \texttt{else} branch renders the program serializable, as intuitively, 
-for any interleaving that modifies \(x\) via the \texttt{if} branch, there exists a corresponding serial execution in which the \texttt{else} branch is taken, yielding an equivalent outcome.
+for any interleaving that modifies \texttt{x} via the \texttt{if} branch, there exists a corresponding serial execution in which the \texttt{else} branch is taken, yielding an equivalent outcome.
 %
 However, this changes in  Listing~\ref{lst:BasicNonSer},
 %
@@ -72,11 +72,11 @@ However, this changes in  Listing~\ref{lst:BasicNonSer},
 %\end{wrapfigure}
 %
 %
-in which there is no ``else'' branch --- an update that makes the program non-serializable.
+in which there is no \texttt{else} branch --- an update that makes the program non-serializable.
 %
-Now, any serial execution will have \textit{at most one} pair of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} (this is in fact the first request, returning the original zero-initialized value of FLAG).
+Now, any serial execution will have \textit{at most one} pair of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} (this is in fact the first request, returning the original zero-initialized value of \texttt{FLAG}).
 %
-As the first request also assigns $[FLAG:=1]$ before exiting, any subsequent request in a serial run will assign $[x:=1]$ and hence return only responses of {\color{red}$\blacklozenge_1$}. 
+As the first request also assigns \texttt{FLAG:=1]} before exiting, any subsequent request in a serial run will assign \texttt{[x:=1]} and hence return only responses of {\color{red}$\blacklozenge_1$}. 
 %, and $(i-1)$ pairs of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_1$}.
 %
 %
@@ -89,7 +89,7 @@ As the first request also assigns $[FLAG:=1]$ before exiting, any subsequent req
 %Differently put, for any serial execution with i requests --- we have exactly one (first) request/response pair {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$}, and $(i-1)$ pairs of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_1$}.
 %
 %\noindent
-However, given that the first request can also \textit{yield}, it is possible for another request to concurrently run the program after the first request yields and before it returns. This, in turn, will allow two requests to have $[x=0]$, and hence, for example, we can attain \textit{multiple} {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} pairs. Thus, Listing~\ref{lst:BasicNonSer} is not serializable.
+However, given that the first request can also \texttt{yield}, it is possible for another request to concurrently run the program after the first request yields and before it returns. This, in turn, will allow two requests to have \texttt{[x=0]}, and hence, for example, we can attain \textit{multiple} {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} pairs. Thus, Listing~\ref{lst:BasicNonSer} is not serializable.
 %\noindent
 %\begin{minipage}[t]{0.30\textwidth}
 %	\begin{lstlisting}[caption={Serializable},
@@ -162,13 +162,13 @@ request A:
 \subsection{Example 2}
 
 %\subsubsection{Example 2}
-The following program pairs have a single global variable (X), and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments X by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements X by 1. Both programs have loops that guarantee that X will always be between 0 to 3, otherwise the while loop will yield ad infinitum. Both requests return the value of X after updating it.
+The following program pairs have a single global variable (\texttt{X}), and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments \texttt{X} by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements \texttt{X} by 1. Both programs have loops that guarantee that \texttt{X} will always be between 0 to 3, otherwise the while loop will yield ad infinitum. Both requests return the value of \texttt{X} after updating it.
 %
-In the first case, Listing~\ref{lst:FredSer} presents a serializable program, due to the absence of any yield between the increment/decrement of X and its return. Equivalently, in each of the requests, the update of X and the returned value can be thought of as \textit{a single atomic execution}.
+In the first case, Listing~\ref{lst:FredSer} presents a serializable program, due to the absence of any yield between the increment/decrement of \texttt{X} and its return. Equivalently, in each of the requests, the update of \texttt{X} and the returned value can be thought of as \textit{a single atomic execution}.
 %
-However, in Listing~\ref{lst:FredNonSer}, we add an additional \texttt{yield} (and a local variable ``y''), occurring in each of the requests, between the update of X and its return.
+However, in Listing~\ref{lst:FredNonSer}, we add an additional \texttt{yield} (and a local variable \texttt{y}), occurring in each of the requests, between the update of X and its return.
 %
-This change allows requests of the same type to update X to the same value ---  resulting in outputs such as
+This change allows requests of the same type to update \texttt{X} to the same value ---  resulting in outputs such as
 $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{1}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{3}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}}\}$ which cannot be attained in any serial execution.
 
 %
@@ -233,12 +233,12 @@ request decr:
 %\todo{continue}	
 %example - 6
 
-The next example (see Listing~\ref{lst:ComplexWhileNonSer}) has a global variable $X$ and a local variable $i$ per each in-flight request. The {\color{ForestGreen}$\blacklozenge_\text{flip}$} request flips $X$ (initialized to 0); the {\color{ForestGreen}$\blacklozenge_\text{main}$} request attempts to decrement $i$ five times.
+The next example (see Listing~\ref{lst:ComplexWhileNonSer}) has a global variable \texttt{X} and a local variable \texttt{i} per each in-flight request. The {\color{ForestGreen}$\blacklozenge_\text{flip}$} request flips \texttt{X} (initialized to 0); the {\color{ForestGreen}$\blacklozenge_\text{main}$} request attempts to decrement \texttt{i} five times.
 %
 %It is straightforward to observe that the program in Listing~\ref{lst:ComplexWhileSer} is trivially serializable, as there are no yields.
 %
 Any serial execution does not output any instance of the single response {\color{red}$\blacklozenge_1$}, 
-as any serial execution will have a single request in-flight, with $X$ either 0 or 1. Thus, exactly one of the while loops will run indefinitely, prohibiting any {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} pairs.
+as any serial execution will have a single request in-flight, with \texttt{X} either 0 or 1. Thus, exactly one of the while loops will run indefinitely, prohibiting any {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} pairs.
 %
 %Specifically, in any serial execution of requests, the local i variable is either 0 or 1, and hence --- serial execution do no produce any request/response pairs.
 %
@@ -246,7 +246,7 @@ To show that the program is not serializable, we show that an interleaving \emph
 %
 %However, some interleavings can allow the program to output a response {\color{red}$\blacklozenge_1$}. 
 %
-Specifically, given at least $i=5$ interleavings of in-flight {\color{ForestGreen}$\blacklozenge_\text{flip}$} requests, it is possible for a {\color{ForestGreen}$\blacklozenge_\text{main}$} request to terminate and bypass all while loops, something that cannot occur in any serial execution.
+Specifically, given at least \texttt{[i=5]} interleavings of in-flight {\color{ForestGreen}$\blacklozenge_\text{flip}$} requests, it is possible for a {\color{ForestGreen}$\blacklozenge_\text{main}$} request to terminate and bypass all while loops, something that cannot occur in any serial execution.
 %
 %Here is some text that will flow around the code listing. You can introduce the snippet and then let the text wrap naturally alongside it.
 
@@ -325,24 +325,22 @@ request main:
 %\subsubsection{Example 4: Banking System}
 
 
-We illustrate a simple banking system inspired by Chandy and Lamport’s distributed snapshot algorithm~\cite{ChLa85}.  The system manages a client’s funds across multiple accounts; we use two accounts, \(A\) and \(B\), but the same pattern extends to any number of accounts.  Each request {\color{ForestGreen}$\blacklozenge_\text{interest}$} applies an arbitrary rate \(t\%\) to every account—we set \(t=100\%\) for simplicity.
+We illustrate a simple banking system inspired by Chandy and Lamport’s distributed snapshot algorithm~\cite{ChLa85}.  The system manages a client’s funds across multiple accounts; we use two accounts, \texttt{A} and \texttt{B}, but the same pattern extends to any number of accounts.  Each request {\color{ForestGreen}$\blacklozenge_\text{interest}$} applies an arbitrary rate \texttt{t\%} to every account—we set \texttt{[t=100\%]} for simplicity.
 %
-Each {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request moves \$50 from \(A\) to \(B\), and each {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request increases every balance by \(t\%\).  Both requests return the combined total \(A + B\).
+Each {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request moves \texttt{\$50} from \texttt{A} to \texttt{B}, and each {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request increases every balance by \texttt{t\%}.  Both requests return the combined total \texttt{[A + B]}.
 %
 In every serial execution with one {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request, and any number of {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} requests, the total balance satisfies the invariant
-$
-(A_{\text{after}} + B_{\text{after}})
-= (1 + t\%) \,\bigl(A_{\text{before}} + B_{\text{before}}\bigr)
-$,
+\texttt{[A$_{\text{after}}$ + B$_{\text{after}}$ = (1 + t\%) \,$\bigl($A$_{\text{before}}$ + B$_{\text{before}}\bigr)$]}
+.
 %
 %
 %\[
 %(A_{\text{after}} + B_{\text{after}})
 %= (1 + t\%) \,\bigl(A_{\text{before}} + B_{\text{before}}\bigr),
 %\]
-.  Although the individual balances of \(A\) and \(B\) depend on the chosen serial order, the combined sum always reflects exactly one application of the interest rate.
+Although the individual balances of \texttt{A} and \texttt{B} depend on the chosen serial order, the combined sum always reflects exactly one application of the interest rate.
 %
-However, non-serial interleavings can violate this invariant.  For instance, if a {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request deducts \$50 from \(A\) (yielding \([50,50]\)) and then yields, then an {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request may double both balances to \([100,100]\) before the transfer resumes --- resulting in \([100,150]\) and a missing \$50.  By contrast, any correct serial ordering of these two operations yields \(A + B = (100+50)\times2 = 300\), with final states \([150,150]\) or \([100,200]\) depending on which request runs first.
+However, non-serial interleavings can violate this invariant.  For instance, if a {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request deducts \texttt{\$50} from \texttt{A} (yielding \texttt{[50,50]}) and then yields, then an {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request may double both balances to \texttt{[100,100]} before the transfer resumes --- resulting in \texttt{[100,150]} and a missing \$50.  By contrast, any correct serial ordering of these two operations yields \texttt{[A + B = (100+50)$\times$2 = 300]}, with final states \texttt{[150,150]} or \texttt{[100,200]} depending on which request runs first.
 %
 %
 % original
@@ -352,7 +350,7 @@ However, non-serial interleavings can violate this invariant.  For instance, if 
 %%
 %Both requests return the final sum of the client funds in both the accounts.  
 %%
-Listing~\ref{lst:BankSer} has a serial version of this banking system (without \texttt{yield}), and Listing~\ref{lst:BankNonSer} includes yields between the adjustment of accounts $A$ and $B$ (we note that this also represents real-world systems in which the account can be sharded and partitioned across different nodes).
+Listing~\ref{lst:BankSer} has a serial version of this banking system (without \texttt{yield}), and Listing~\ref{lst:BankNonSer} includes yields between the adjustment of accounts \texttt{A} and \texttt{B} (we note that this also represents real-world systems in which the account can be sharded and partitioned across different nodes).
 %
 
 
@@ -419,9 +417,9 @@ request interest:
 %\newpage
 \subsection{Example 5}
 
-The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness in routing policies in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., P4). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adjust its routing policy as dictated by the updates.
+The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness in routing policies in software‐defined networking (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., \texttt{P4}~\cite{BoDaGiIzMcReScTaVaVaWa14}). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adjust its routing policy as dictated by the updates.
 %
-An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered 0 through 3), with the two middle nodes --- node 1 (labeled WEST) and node 2 (labeled EAST), serving as ingress points from where traffic nondeterministically enters the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or an \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
+An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered \texttt{0} through \texttt{3}), with the two middle nodes --- node \texttt{1} (labeled \texttt{WEST}) and node \texttt{2} (labeled \texttt{EAST}), serving as ingress points from where traffic nondeterministically enters the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or an \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
 %
 %
 %// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
@@ -449,7 +447,7 @@ An instance of a simple network with two competing policies is shown in Fig.~\re
 %
 This SDN-controlled routing policy is realized in the pseudo-code in Listing~\ref{lst:BgpNonSerializable}.
 %
-The program includes a single global variable $B$, indicating whether the current routing policy is \textcolor{NavyBlue}{blue} ($[B=1]$) or \textcolor{darkorange}{orange} ($[B=0]$).
+The program includes a single global variable \texttt{B}, indicating whether the current routing policy is \textcolor{NavyBlue}{blue} (\texttt{[B=1]}) or \textcolor{darkorange}{orange} (\texttt{[B=0]}).
 %
 The program has three types of requests:
 %\begin{itemize}
@@ -458,16 +456,16 @@ The program has three types of requests:
 	(i)
 	{\color{ForestGreen}$\blacklozenge_\text{policy update}$}:
 %	\textit{policy update}:
- represents a controller  update, which nondeterministically decides whether to update the policy (i.e., flip the value of  variable $B$) or not;
+ represents a controller  update, which nondeterministically decides whether to update the policy (i.e., flip the value of  variable \texttt{B}) or not;
 %	
 %		\item
 (ii)
 	{\color{ForestGreen}$\blacklozenge_\text{route\_west}$}:
-	 a request representing a packet entering the network from the \textit{WEST} node; and 
+	 a request representing a packet entering the network from the \texttt{WEST} node; and 
 %	
 %		\item
 (iii)
-{\color{ForestGreen}$\blacklozenge_\text{route\_east}$}: a request representing a packet entering the network from the EAST node.
+{\color{ForestGreen}$\blacklozenge_\text{route\_east}$}: a request representing a packet entering the network from the \texttt{EAST} node.
 	%
 %\end{itemize}
 %
@@ -527,24 +525,24 @@ Dually, routing cycles also occur in the case of {\color{ForestGreen}$\blackloze
 
 The next program captures serializability through the lens of the \textit{snapshot isolation} consistency model, which is used in various real-world database systems, including \texttt{PostgreSQL}~\cite{postgresql-transaction-iso} and \texttt{CockroachDB}~\cite{cockroachdb-si-docs}, and has been linked to real‐world anomalies (e.g., duplicate‐key errors in the latter~\cite{cockroach-issue-14099}).
 %
-The depicted program has two nodes (represented by the global variables $N_1$ and $N_2$) which monitor ongoing traffic in the network, and are originally both active, as indicated by their initial values [$N_1=1,N_2=1$].
+The depicted program has two nodes (represented by the global variables \texttt{N$_1$} and \texttt{N$_2$}) which monitor ongoing traffic in the network, and are originally both active, as indicated by their initial values \texttt{[N$_1$=1,N$_2$=1]}.
 %
 The {\color{ForestGreen}$\blacklozenge_\text{main}$} request takes a snapshot of the system, i.e., locally records the current activation status of each of the two nodes.
 %
-Then, in the first request, and in any future ones in which both nodes are active, each in-flight request non-deterministically decides which of the two nodes to deactivate, i.e. set [$N_i:=0$], for maintaining overall energy efficiency.
+Then, in the first request, and in any future ones in which both nodes are active, each in-flight request non-deterministically decides which of the two nodes to deactivate, i.e. set \texttt{[N$_i$:=0]}, for maintaining overall energy efficiency.
 %
 The {\color{ForestGreen}$\blacklozenge_\text{main}$} request eventually returns the current sum of active nodes in the system.
 %
-In order for the system to emulate multiple iterations, our setting also includes two additional requests, {\color{ForestGreen}$\blacklozenge_\text{activate\_n1}$},{\color{ForestGreen}$\blacklozenge_\text{activate\_n2}$} which activate nodes $N_1$ and $N_2$, respectively.
+In order for the system to emulate multiple iterations, our setting also includes two additional requests, {\color{ForestGreen}$\blacklozenge_\text{activate\_n1}$},{\color{ForestGreen}$\blacklozenge_\text{activate\_n2}$} which activate nodes \texttt{N$_1$} and \texttt{N$_2$}, respectively.
 %
-We note that the program is not serializable due to the yield operation that appears immediately after the recorded snapshot of the node activation status. One such example of a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests each record two active monitor nodes and yield; Then, having each request turn off the complement node. As a result of each request operating based on its isolated snapshot of the global state, both monitor nodes can be turned off and we can attain a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for [$N_1+N_2=0+0=0$]).
+We note that the program is not serializable due to the yield operation that appears immediately after the recorded snapshot of the node activation status. One such example of a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests each record two active monitor nodes and yield; Then, having each request turn off the complement node. As a result of each request operating based on its isolated snapshot of the global state, both monitor nodes can be turned off and we can attain a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for \texttt{[N$_1$+N$_2$=0+0=0]}).
 %
 We note that in any serializable execution, no two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests can record both monitors as active, and hence, a response of {\color{red}$\blacklozenge_0$} is unattainable via serializable executions.
 
 
 
 
-\begin{minipage}[htbp]{1.0\textwidth}
+\begin{minipage}[htbp]{1.2\textwidth}
 	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable)},numbers=none]
 // initialize both monitors to be active
 N_1_ACTIVE := 1

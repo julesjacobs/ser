@@ -6,7 +6,7 @@
 %
 The set \(V\) is a finite set of numeric constants; booleans use $0/1$. We respectively denote with \(VARS\) and \(vars\) the (finite) sets of global and local variables. $\rho:{vars}\to V$, and $g:{VARS}\to V$ respectively map a local or global variable to its current value in \(V\).
 %
-Configurations of both programs and expression are denoted as $\cfg{e}{\rho}{g}$, with \(e\) being a valid \toolname{} expression/program. 
+Configurations of both programs and expressions are denoted as $\cfg{e}{\rho}{g}$, with \(e\) being a valid \toolname{} expression/program. 
 %
 Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep)$, and may comprise of a sequence of expression steps.
 %
@@ -25,13 +25,13 @@ Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep
 	\and
 	\inferrule*[right=GLOBAL-READ]{g(X)=v}{\cfg{X}{\rho}{g} \step \cfg{v}{\rho}{g}}\\
 	
-	\inferrule*[right=LOCAL-ASSIGN-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{x := e}{\rho}{g} \step \cfg{x := e'}{\rho'}{g'}}
+	\inferrule*[right=LOCAL-WRITE-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{x := e}{\rho}{g} \step \cfg{x := e'}{\rho'}{g'}}
 	\and
-	\inferrule*[right=LOCAL-ASSIGN-DONE]{ }{\cfg{x := v}{\rho}{g} \step \cfg{v}{\update{\rho}{x}{v}}{g}}
+	\inferrule*[right=LOCAL-WRITE-DONE]{ }{\cfg{x := v}{\rho}{g} \step \cfg{v}{\update{\rho}{x}{v}}{g}}
 	
-	\inferrule*[right=GLOBAL-ASSIGN-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{X := e}{\rho}{g} \step \cfg{X := e'}{\rho'}{g'}}
+	\inferrule*[right=GLOBAL-WRITE-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{X := e}{\rho}{g} \step \cfg{X := e'}{\rho'}{g'}}
 	\and
-	\inferrule*[right=GLOBAL-ASSIGN-DONE]{ }{\cfg{X := v}{\rho}{g} \step \cfg{v}{\rho}{\update{g}{X}{v}}}
+	\inferrule*[right=GLOBAL-WRITE-DONE]{ }{\cfg{X := v}{\rho}{g} \step \cfg{v}{\rho}{\update{g}{X}{v}}}
 	
 	\inferrule*[right=EQ-L]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 == e_2}{\rho}{g} \step \cfg{e_1' == e_2}{\rho'}{g'}}
 	\and
