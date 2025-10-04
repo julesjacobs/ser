@@ -333,7 +333,7 @@ Specifically, another advantage is the natural translation from  \toolname{} pro
 %
 %\smallskip
 %\noindent
-Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\); (ii) an initial global state \(g_0\); (iii) local variables (\(vars\)); (iv) global variables (\(VARS\)); (v) mappings \(\rho\) and (vi) \(g\) from local/global variables to (vii) a finite set of values \(V\), we define the following NS $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
+Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\); (ii) an initial global state \(g_0\); (iii) local variables (\(vars\)); (iv) global variables (\(VARS\)); (v) mappings \(\rho\) and (vi) \(g\) from local/global variables to (vii) a finite set of values \(V\); and given the small steps semantics ($\pstep$ defined in App.~\ref{appendix:ser-semantics}), we construct the following NS $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
 
 \[
 \begin{aligned}
@@ -345,7 +345,6 @@ Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\);
 	resp \;&=\; \{\, (\ell',r') \mid \exists v\!\in\!V.\ \ell'=(v,\rho')\!\in\!L,\ r'=v\!\in\!RESP \,\},\\[0.3ex]
 	\delta \;&=\; \bigl\{\, ((e,\rho),g)\!\to\!((e',\rho'),g') \ \bigm|\ (e,\rho),(e',\rho')\!\in\!L,\ g,g'\!\in\!G,\ 
 	\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'} \,\bigr\}.
-	(\pstep \text{in App.}~\ref{appendix:ser-semantics})
 \end{aligned}
 \]
 
