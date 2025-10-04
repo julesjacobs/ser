@@ -208,7 +208,7 @@ eliminates the average number of places \textit{by roughly half} --- from $23.91
 %\\
 
 \noindent
-(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (excluding pruning) was disabled. The redundant-constraint elimination and the fewer-constraint generation \textit{drastically} reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$ smaller, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on. 
+(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (excluding pruning) was disabled. The redundant-constraint elimination ([\texttt{\textbf{\text{B}\textcolor{red}{-}\text{G}\text{S}}}]) and the fewer-constraint generation elimination ([\texttt{\textbf{\text{B}\text{R}\textcolor{red}{-}\text{S}}}]) \textit{drastically} reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$ smaller, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on ([\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]). 
 %
 For fairness, we measured only benchmarks completed under all configurations, excluding cases where semilinear sets exploded beyond $2^{30}$ components and timed out. Thus, our reported improvements actually \textit{understate} the true impact of these optimizations on memory. Such blowups, %especially common in state-machine benchmarks with NS loops, 
 render even simple programs infeasible without these optimizations.
@@ -278,7 +278,7 @@ render even simple programs infeasible without these optimizations.
 	\begin{minipage}[htbp]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
-		\captionof{figure}{Solved instances (\texttt{T.O.} $500$ sec).}
+		\captionof{figure}{Solved instances (\texttt{TIMEOUT} $500$ s).}
 		\label{fig:timeout_cumulative_solved_log}
 	\end{minipage}\hfill
 	\begin{minipage}[htbp]{0.48\textwidth}
@@ -296,9 +296,10 @@ render even simple programs infeasible without these optimizations.
 	\begin{minipage}[t]{0.48\linewidth}
 	\centering
 	\input{tables/average_and_mean_values_of_big_table_simplified_compact.tex}
-	\caption{Average and median runtime for generating certificates and the total time (also with validation).}
+	\caption{Runtime for generated certificates (\texttt{total} also includes validation).}
 	%			Values are rounded to the nearest integer, to reduce clutter. 
 	%The \textit{total} column also includes the time for validation.}
+	% NOTE - this excludes the 2 non-terminating runs (artifact also includes TIMEOUTs I think)
 	\label{tab:stats-summary}
 	\end{minipage}\hfill
 	\begin{minipage}[t]{0.48\linewidth}
