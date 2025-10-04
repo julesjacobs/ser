@@ -26,7 +26,7 @@ Our code, benchmarks, and full experimental results are publicly available~\cite
 We ran \toolname{} on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
 For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
 %
-Within the time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see Table~\ref{tab:stats-summary} and Table~\ref{tab:benchmarks-all} in Appendix~\ref{appendix:full_results}).
+Within the time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see summary in Table~\ref{tab:stats-summary} and the full results in Table~\ref{tab:benchmarks-all} of the appendix).
 %
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 
@@ -278,7 +278,7 @@ render even simple programs infeasible without these optimizations.
 	\begin{minipage}[htbp]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
-		\captionof{figure}{Solved instances (T.O. $500$ sec).}
+		\captionof{figure}{Solved instances (\texttt{T.O.} $500$ sec).}
 		\label{fig:timeout_cumulative_solved_log}
 	\end{minipage}\hfill
 	\begin{minipage}[htbp]{0.48\textwidth}
@@ -291,14 +291,31 @@ render even simple programs infeasible without these optimizations.
 	\end{minipage}
 \end{center}
 
-
 \begin{table}[!htbp]
 	\centering
-	% Load the tabular from the external file:
-	\input{tables/semilinear_size_reduction.tex}
-	\caption{Semilinear set size reduction via optimizations.}
+	\begin{minipage}[t]{0.48\linewidth}
+	\centering
+	\input{tables/average_and_mean_values_of_big_table_simplified_compact.tex}
+	\caption{Average and median runtime for generating certificates and the total time (also with validation).}
+	%			Values are rounded to the nearest integer, to reduce clutter. 
+	%The \textit{total} column also includes the time for validation.}
+	\label{tab:stats-summary}
+	\end{minipage}\hfill
+	\begin{minipage}[t]{0.48\linewidth}
+	\centering
+	\input{tables/semilinear_size_reduction_compact.tex}
+	\caption{Semilinear set size reduction via optimizations (baseline is [\texttt{\text{B}\text{R}\text{G}\text{S}}]).}
 	\label{tab:semilinear-size-reduction}
+\end{minipage}
 \end{table}
+
+%\begin{table}[!htbp]
+%	\centering
+%	% Load the tabular from the external file:
+%	\input{tables/semilinear_size_reduction.tex}
+%	\caption{Semilinear set size reduction via optimizations.}
+%	\label{tab:semilinear-size-reduction}
+%\end{table}
 
 %\todo{Limitations?}
 %Examples we cannot solve, future work that would help

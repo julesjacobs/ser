@@ -44,7 +44,9 @@ Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep
 	\inferrule*[right=SEQ-STEP]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 ; e_2}{\rho}{g} \step \cfg{e_1' ; e_2}{\rho'}{g'}}
 	\and
 	\inferrule*[right=SEQ-DONE]{ }{\cfg{v ; e_2}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
+	\end{mathpar}
 	
+	\begin{mathpar}
 	\inferrule*[right=IF-GUARD]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{\ifkw(e_1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{\ifkw(e_1')\{e_2\}\elsekw\{e_3\}}{\rho'}{g'}}
 	\and
 	\inferrule*[right=IF-T]{ }{\cfg{\ifkw(1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{e_2}{\rho}{g}}

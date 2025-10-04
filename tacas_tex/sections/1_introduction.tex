@@ -1,7 +1,7 @@
 \section{Introduction}
 \label{sec:introduction}
 
-In the domain of concurrent systems, from databases to software-defined networks (SDNs), a cornerstone correctness criterion is \emph{serializability}: every concurrent execution must produce outcomes equivalent to some serial ordering of requests. Violations of serializability can lead to subtle anomalies, such as lost updates in databases or routing cycles in SDNs.
+In the domain of concurrent systems, from databases to software-defined networks (SDNs)~\cite{KrRaVePaRoAzUh14,XiWeFoNiXi15}, a cornerstone correctness criterion is \emph{serializability}: every concurrent execution must produce outcomes equivalent to some serial ordering of requests. Violations of serializability can lead to subtle anomalies, such as lost updates in databases or routing cycles in SDNs.
 While we can check serializability for a fixed number of requests with known execution traces (e.g., by enumerating all interleavings), the problem is undecidable for general programs, requiring techniques such as runtime verification or incomplete bounded model checking~\cite{WaSt06a,WaSt06b,FlFrYi08,FaMa08,SiMaWaGu11a,SiMaWaGu11b,Pa79,AlMcPe96,BiEn19}.
 
 However, Bouajjani et al.~\cite{BoEmEnHa13} have shown (as a special case of bounded-barrier linearizability) that for programs with bounded-size state, this problem is decidable even for an \emph{unbounded} number of in-flight requests, each performing an \emph{unbounded} number of steps. The purpose of this paper is to make this theoretical decidability result a reality by designing the first decision procedure, and putting forth practical algorithms that either prove serializability (with a proof certificate) or prove non-serializability (with a counter-example trace).
