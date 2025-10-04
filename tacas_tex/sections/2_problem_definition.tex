@@ -9,7 +9,7 @@
 \label{subsec:background}
 
 \textbf{Petri Nets.} 
-A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with places $P$, transitions $T$, input/output maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and initial marking (token distribution) $M_0\in\mathbb N^P$.  
+A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with places $P$, transitions $T$, input/output maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and an initial marking (token distribution) $M_0\in\mathbb N^P$.  
 A transition $t$ is \textit{enabled} at marking $M \in \mathbb N^P$ if $M\ge \mathsf{pre}(t)$ coordinate-wise, i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
 %
 If an enabled transition \(t\) \textit{fires} (denoted $M\xrightarrow{t}M'$), it produces the marking $M' = M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
@@ -22,14 +22,14 @@ The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$,
 %
 Specifically, we focus on reachability of a formula $F$, encoding a combination of linear constraints; it is \sat\ if some $M\in R(N)$ satisfies $F$ (marked $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
 %
-Surprisingly, even for the \textit{unbounded} setting, where places can hold unbounded many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although Ackermann-complete~\cite{CzWo22,Le22}.   
+Surprisingly, even for the \textit{unbounded} setting, where places can hold arbitrarily-many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although Ackermann-complete~\cite{CzWo22,Le22}.   
 
 
 
 \medskip
 \noindent
 \textbf{Verdict proofs.} 
-If $F$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models F$ is a proof, verifiable by simulation of the Petri net.  
+If $F$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models F$ serves as a proof, and is verifiable by simulation of the Petri net.  
 If $F$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ such that:  
 (i) $M_0\models C$, (ii) $M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
 
@@ -152,7 +152,7 @@ Our \toolname{} syntax is defined as follows:
 
 Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
 %
-Furthermore, we note that our syntax and semantics can both be extended to include \textit{arithmetic operations} however, we omit these for simplicity. 
+Furthermore, we note that our syntax and semantics can both be extended to include \textit{arithmetic operations}; however, we omit these for simplicity. 
     
     
 \subsection{Network System}    
@@ -194,7 +194,7 @@ The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozeng
 \textbf{States.}
 A (global) \emph{network state} is a triple $(g,\mathcal{P},Z)$ where
 $g \in G$ is the current global network state,
-$\mathcal{P} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (threads, i.e., triplets of SER expressions, local thread states, and the original request strings),
+$\mathcal{P} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (i.e., local assignments of each thread in the current timestep, and the original request string that spawned it),
 and $Z \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
 %
 The initial global state is $(g_0, \varnothing, \varnothing)$.
@@ -210,7 +210,7 @@ The initial global state is $(g_0, \varnothing, \varnothing)$.
 \textbf{Transition rules.}
 A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{P}, Z)\) by either
 (1) introducing a new request, (2) processing a request step via \(\delta\), or
-(3) consuming a request to produce its response. When no more steps are possible,
+(3) consuming a local state to produce its response. When no more steps are possible,
 the result set \(Z\) is the final multiset of request/response pairs that arose during the run.
 
 
@@ -256,9 +256,12 @@ the result set \(Z\) is the final multiset of request/response pairs that arose 
 An \textit{interleaving run} is a complete execution 
 \((g_0,\varnothing,\varnothing)\!\to^*\!(g_n,\varnothing,Z)\):
 \[
-(g_0,\varnothing,\varnothing) \;\to\; (g_1,\mathcal{P}_1,Z_1) \;\to\; \cdots \;\to\; (g_{n-1},\mathcal{P}_{n-1},Z_{n-1}) \;\to\; (g_n,\varnothing,Z).
+(g_0,\varnothing,\varnothing) \;\to\; (g_1,\mathcal{P}_1,Z_1) \;\to\; \cdots \;\to\; (g_{n-1},\mathcal{P}_{n-1},Z_{n-1}) \;\to\; (g_n,\mathcal{P}_{n},Z_{n}).
+\quad
+(\text{with } \mathcal{P}_{n}=\varnothing,Z_n=Z)
+ %\varnothing,Z
 \]
-It is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request, and $\mathcal{P}_n=\varnothing$.
+It is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request.
 	%
 	Intuitively, serial runs have at most one request in flight at any time.
 %	,
@@ -341,6 +344,7 @@ Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\);
 	resp \;&=\; \{\, (\ell',r') \mid \exists v\!\in\!V.\ \ell'=(v,\rho')\!\in\!L,\ r'=v\!\in\!RESP \,\},\\[0.3ex]
 	\delta \;&=\; \bigl\{\, ((e,\rho),g)\!\to\!((e',\rho'),g') \ \bigm|\ (e,\rho),(e',\rho')\!\in\!L,\ g,g'\!\in\!G,\ 
 	\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'} \,\bigr\}.
+	(\pstep \text{in App.}~\ref{appendix:ser-semantics})
 \end{aligned}
 \]
 
@@ -437,7 +441,7 @@ The initial global state is defined as $g_0 = [\texttt{X=0}]$.
 We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$), coupled with all reachable \toolname{} programs (continuations of a program at a point of execution).
 %~\footnote{
 %These are continuations of a \toolname{} program at a point of execution. Concretely, this can mean either (i) the suffix of the program when it is first initialized (the part that has not yet executed); or (ii) the continuation of the program after a \(\yieldkw\) statement, where execution may later resume.}.
-For example, the reachable programs for Listing~\ref{lst:MotivatingExample2NonSer} are depicted in Fig.~\ref{fig:code2ExampleNS}. 
+For example, the reachable programs for Listing~\ref{lst:MotivatingExample2NonSer} are depicted as code snippets in Fig.~\ref{fig:code2ExampleNS}. 
 
 
 \item 
@@ -447,7 +451,7 @@ The set of requests is $REQ = \{{\color{ForestGreen}\blacklozenge_\text{main}}\}
 The set of responses is $RESP = \{{\color{red}\blacklozenge_0},{\color{red}\blacklozenge_1}\}$.
 
 \item
-The function \(\delta\) is presented in the bottom part of Fig.~\ref{fig:code2ExampleNS}.
+The function \(\delta\) is presented in Fig.~\ref{fig:code2ExampleNSSecondPart} (Appendix~\ref{appendix:MoreNsExamples}).
 
 
 \end{itemize}
@@ -619,7 +623,17 @@ return y
 	  
 	\end{tikzpicture}
 	
-	\caption{Network system for the program in Listing~\ref{lst:MotivatingExample2NonSer}. Local states consist of local variable assignments and a remaining program text. Edges in the NS are labeled with their corresponding global state transition(s). Requests and responses are diamonds. For the explicit schemes of \(\delta\), \(req\), and \(resp\) see Appendix~\ref{appendix:delta-req-resp-examples}.}
+	\caption{Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
+		Local states include local variable assignments and the remaining program; edges are labeled with global state transitions. 
+		Requests and responses are shown as diamonds. 
+		From left to right: a \texttt{main} request spawns a thread with \texttt{[y=0]} and the full program; after yielding, $\delta$ advances to a step with global \texttt{[X=1]} and local \texttt{[y=0]} plus the remaining three expressions, etc.}
+
+%		Network system for the program in Listing~\ref{lst:MotivatingExample2NonSer}. Local states consist of local variable assignments and a remaining program. Edges in the NS are labeled with their corresponding global state transition(s). Requests and responses are diamonds. 
+	%
+%	From left to right: a \texttt{main} request spawns a thread with \texttt{[y=0]} and the full program; after yielding, the $\delta$ transitions to a step in which  (globally) \texttt{[X=1]} and (locally) \texttt{[y=0]} with the remaining three expressions, etc.
+	%	
+%	For the explicit schemes of \(\delta\), \(req\), and \(resp\) see Appendix~\ref{appendix:delta-req-resp-examples}.
+%}
 \label{fig:code2ExampleNS}
 \end{figure}
 

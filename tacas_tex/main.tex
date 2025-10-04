@@ -80,6 +80,8 @@
 
 \usepackage{bussproofs}
 \usepackage{gensymb}
+\usepackage[dvipsnames]{xcolor} % adds many named colors
+\usepackage[svgnames]{xcolor}
 
 % Define darkorange via RGB or HTML:
 \definecolor{darkorange}{RGB}{255,140,0}
@@ -250,7 +252,7 @@
 	%
 	Our verifier operates by translating network system programs into Petri nets, and curtails the search space by employing various optimizations, such as Petri net pruning, semilinear-set compression, and Presburger-formula manipulation.
 	%
-	We extensively evaluate our toolchain, and demonstrate that, despite the theoretical harndess of the problem, it can successfully run on various real-world programs, including stateful firewalls, BGP routers, online shopping backends, and more.
+	We extensively evaluate our toolchain and demonstrate that, despite the theoretical harndess of the problem, it can successfully run on various real-world programs, including stateful firewalls, BGP routers, online shopping backends, and more.
 \end{abstract}
 
 % \keywords{programming languages, static analysis, verification}
@@ -273,15 +275,14 @@
 
 \newpage
 \input{sections/8_appendix_tour}
+\input{sections/8_appendix_toy_petri_net.tex}
 \input{sections/8_appendix_ser_semantics}
 \input{sections/8_appendix_more_NS_examples}
-\input{sections/8_appendix_delta_req_resp_example}
 \input{sections/8_appendix_NS_to_PN_formulation}
 \input{sections/8_appendix_serializable_program_proof_example}
 \input{sections/8_appendix_non_serializable_execution_counterexample}
 \input{sections/8_appendix_bidirectional_optimization_proof.tex}
 \input{sections/8_appendix_invariant_example}
-\input{sections/8_appendix_toy_petri_net.tex}
 \input{sections/8_appendix_full_results_table.tex}
 \input{sections/8_appendix_SMPT.tex}
 

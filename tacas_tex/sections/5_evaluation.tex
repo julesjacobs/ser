@@ -36,7 +36,9 @@ The \textit{median} total runtime was $2{,}080$ ms across all benchmarks, and $2
 %
 The \textit{average} total runtime was $52{,}857.55$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing on solely serializable (non-serializable) benchmarks.
 %
-We also observe a clear runtime split based on serializability. For serializable benchmarks, certificate validation takes much longer than proof generation. In non-serializable cases, the opposite holds: counterexample generation dominates the runtime. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network to confirm its feasibility.
+We also observe a clear runtime split based on serializability: 
+%For serializable benchmarks, certificate validation takes much longer than proof generation. 
+among non-serializable benchmarks, counterexample generation is much longer than validation, and dominates the runtime; whereas the opposite holds in non-serializable benchmarks. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network to confirm its feasibility.
 %
 %We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
 %
@@ -161,7 +163,7 @@ We also observe a clear runtime split based on serializability. For serializable
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/big_table_summary_only_networking_part.tex}
-	\caption{Overview of the benchmark containing networking and system protocols. 
+	\caption{Overview of benchmarks from the network and system protocols category. 
 %	For our full benchmarks see Appendix~\ref{appendix:full_results}.
 }
 \label{tab:networking-benchmarks}
@@ -176,7 +178,7 @@ We also observe a clear runtime split based on serializability. For serializable
 %All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
 
 
-\subsubsection{Runtime Optimization}
+\subsubsection{Runtime Optimization.}
 
 We ran all benchmarks with each of the following six optimization combinations: 
 (i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidirectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
@@ -193,22 +195,23 @@ We also note that the two remaining optimizations, [\texttt{\textbf{\text{-}\tex
 %
 However, when comparing the combinations, it seems that there are instances in which each of these optimizations still \textit{strictly} improves runtime.
 %
-For example, there are instances such as \texttt{a3.ser} and \texttt{a7.ser}, in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}])
+For example, there are instances (see \texttt{a3.ser} and \texttt{a7.ser} in Appendix~\ref{appendix:full_results}), in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}])
 affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks without this optimization.
 
 \subsubsection{Space Optimization.}
-Our optimizations also reduce the space complexity of the two main components --- the Petri Net and the semilinear set.
+Our optimizations also reduce the space complexity of the two main components --- the Petri net and the semilinear set.
 
 \noindent
-(1) \textbf{Petri Net.} Bidirectional pruning (Fig.~\ref{fig:petri_size_reduction}) 
-eliminating the average number of places \textit{by roughly half} --- from $23.91$ down to $12.79$. This optimization proved even more effective on transitions, \textit{eliminating about two-thirds}: from $37.3$ down to $12.61$. 
+(1) \textbf{Petri net.} Bidirectional pruning (Fig.~\ref{fig:petri_size_reduction}) 
+eliminates the average number of places \textit{by roughly half} --- from $23.91$ down to $12.79$. This optimization proved even more effective on transitions, \textit{eliminating about two-thirds}: from $37.3$ down to $12.61$. 
 %Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct.  
 %\\
 
 \noindent
-(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (excluding pruning) was disabled. The redundant-constraint elimination and the fewer-constraint generation drastically reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on. 
+(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (excluding pruning) was disabled. The redundant-constraint elimination and the fewer-constraint generation \textit{drastically} reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$ smaller, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on. 
 %
-For fairness, we measured only benchmarks completed under all configurations, excluding cases where semilinear sets exploded beyond $2^{30}$ components and timed out. Thus, our reported improvements actually \textit{understate} the true impact of these optimizations on memory. Such blowups, especially common in state-machine benchmarks with NS loops, render even simple programs infeasible without optimizations.
+For fairness, we measured only benchmarks completed under all configurations, excluding cases where semilinear sets exploded beyond $2^{30}$ components and timed out. Thus, our reported improvements actually \textit{understate} the true impact of these optimizations on memory. Such blowups, %especially common in state-machine benchmarks with NS loops, 
+render even simple programs infeasible without these optimizations.
 	
 	
 %\subsubsection{Space Optimization}

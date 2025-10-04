@@ -134,28 +134,28 @@ However, given that the first request can also \textit{yield}, it is possible fo
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
 		label={lst:BasicSer},numbers=none]
-	request A: 
-		x := FLAG
-		if (?):
-			yield
-		else:
-			x := 1 - x
-		FLAG := 1
-		return x
+request A: 
+    x := FLAG
+    if (?):
+        yield
+    else:
+        x := 1 - x
+    FLAG := 1
+    return x
 	\end{lstlisting}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable},
 	label={lst:BasicNonSer},numbers=none]
-			request A: 
-			    x := FLAG 
-			    if (?): 
-			        yield
-			    // no else
-			
-			    FLAG := 1 
-			    return x
+request A: 
+    x := FLAG 
+    if (?): 
+        yield
+    // no else
+	
+    FLAG := 1 
+    return x
 		\end{lstlisting}
 \end{minipage}%
 
@@ -189,42 +189,42 @@ $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\tex
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
 		label={lst:FredSer},numbers=none]
-			request incr: 
-			    while (X == 3):
-			        yield
-			        
-			        
-			    X := X + 1
-				  return X		
-			
-			request decr: 
-			    while (X == 0): 
-			        yield
-			        
-			        
-			    X := X - 1
-				  return X
+request incr: 
+    while (X == 3):
+        yield
+
+
+    X := X + 1
+    return X		
+
+request decr: 
+    while (X == 0): 
+        yield
+
+
+    X := X - 1
+    return X
 		\end{lstlisting}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable},
 		label={lst:FredNonSer},numbers=none]
-			request incr:
-			    while (X == 3):
-			        yield
-			    y := X
-			    yield
-			    X := y + 1
-		      return X		
-			
-			request decr: 
-			    while (X == 0):
-			        yield
-			    y := X
-			    yield
-			    X := y - 1
-		      return X
+request incr:
+    while (X == 3):
+        yield
+    y := X
+    yield
+    X := y + 1
+    return X		
+
+request decr: 
+    while (X == 0):
+        yield
+    y := X
+    yield
+    X := y - 1
+    return X
 		\end{lstlisting}
 \end{minipage}
 	
@@ -360,42 +360,42 @@ Listing~\ref{lst:BankSer} has a serial version of this banking system (without \
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Serializable},
 		label={lst:BankSer},numbers=none]
-	    A := 100, B := 50
-	    
-	    request transfer: 
-	        // transfer 50$
-	        A := A - 50
-	        // no yield
-	        B := B + 50
-	        return A + B
-				
-	    request interest: 
-	        // add a 100% interest
-	        A := A + A
-	        // no yield
-	        B := B + B
-	        return A + B      
+A := 100, B := 50
+
+request transfer: 
+    // transfer 50$
+    A := A - 50
+    // no yield
+    B := B + 50
+    return A + B
+	
+request interest: 
+    // add a 100% interest
+    A := A + A
+    // no yield
+    B := B + B
+    return A + B      
 			\end{lstlisting}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
 	\begin{lstlisting}[caption={Not serializable},
 		label={lst:BankNonSer},numbers=none]
-	    A := 100, B := 50
-			
-	    request transfer: 
-	        // transfer 50$
-	        A := A - 50
-	        yield
-	        B := B + 50
-	        return A + B
+A := 100, B := 50
 	
-	    request interest: 
-	        // add a 100% interest
-	        A := A + A
-	        yield
-	        B := B + B
-	        return A + B
+request transfer: 
+    // transfer 50$
+    A := A - 50
+    yield
+    B := B + 50
+    return A + B
+
+request interest: 
+    // add a 100% interest
+    A := A + A
+    yield
+    B := B + B
+    return A + B
       		\end{lstlisting}
 \end{minipage}
 	
@@ -544,33 +544,33 @@ We note that in any serializable execution, no two {\color{ForestGreen}$\blacklo
 
 
 
-\begin{minipage}[t]{1.0\textwidth}
+\begin{minipage}[htbp]{1.0\textwidth}
 	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable)},numbers=none]
-		// initialize both monitors to be active
-		N_1_ACTIVE := 1
-		N_2_ACTIVE := 1
-		
-		request main:
-		// take snapshot
-		n_1_active_snapshot := N_1_ACTIVE
-		n_2_active_snapshot := N_2_ACTIVE
-		yield
-		
-		if (n_1_active_snapshot == 1) and (n_2_active_snapshot == 1):
-		// if both nodes active --- choose which one to deactivate 
-		if (?): 
-		N_1_ACTIVE := 0
-		else:
-		N_2_ACTIVE := 0
-		
-		return N_1_ACTIVE + N_2_ACTIVE  // total active nodes
-		
-		
-		request activate_n1:
-		N_1_ACTIVE := 1
-		
-		request activate_n2:
-		N_2_ACTIVE := 1
+// initialize both monitors to be active
+N_1_ACTIVE := 1
+N_2_ACTIVE := 1
+
+request main:
+    // take snapshot
+    n_1_active_snapshot := N_1_ACTIVE
+    n_2_active_snapshot := N_2_ACTIVE
+    yield
+
+    if (n_1_active_snapshot == 1) and (n_2_active_snapshot == 1):
+        // if both nodes active --- choose which one to deactivate 
+        if (?): 
+            N_1_ACTIVE := 0
+        else:
+            N_2_ACTIVE := 0
+
+    return N_1_ACTIVE + N_2_ACTIVE  // total active nodes
+
+
+request activate_n1:
+    N_1_ACTIVE := 1
+
+request activate_n2:
+    N_2_ACTIVE := 1
 		
 		
 	\end{lstlisting}

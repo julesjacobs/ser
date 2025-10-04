@@ -1,10 +1,10 @@
 \section{Introduction}
 \label{sec:introduction}
 
-For concurrent systems, from databases to software-defined networks (SDNs), a cornerstone correctness criterion is \emph{serializability}: every concurrent execution must produce outcomes equivalent to some serial ordering of requests. Violations of serializability can lead to subtle anomalies, such as lost updates in databases or routing cycles in SDNs.
-While we can check serializability for a fixed number of requests with known execution traces by enumerating all interleavings, the problem is undecidable for general programs, requiring techniques such as runtime verification or incomplete bounded model checking~\cite{WaSt06a,WaSt06b,FlFrYi08,FaMa08,SiMaWaGu11a,SiMaWaGu11b,Pa79,AlMcPe96,BiEn19}.
+In the domain of concurrent systems, from databases to software-defined networks (SDNs), a cornerstone correctness criterion is \emph{serializability}: every concurrent execution must produce outcomes equivalent to some serial ordering of requests. Violations of serializability can lead to subtle anomalies, such as lost updates in databases or routing cycles in SDNs.
+While we can check serializability for a fixed number of requests with known execution traces (e.g., by enumerating all interleavings), the problem is undecidable for general programs, requiring techniques such as runtime verification or incomplete bounded model checking~\cite{WaSt06a,WaSt06b,FlFrYi08,FaMa08,SiMaWaGu11a,SiMaWaGu11b,Pa79,AlMcPe96,BiEn19}.
 
-However, Bouajjani et al.~\cite{BoEmEnHa13} have shown (as a special case of bounded-barrier linearizability) that for programs with bounded-size state, this problem is decidable even for an \emph{unbounded} number of in-flight requests, each performing an \emph{unbounded} number of steps. The purpose of this paper is to make this theoretical decidability result a reality by designing practical algorithms that either prove serializability (with a proof certificate) or prove non-serializability (with a counter-example trace).
+However, Bouajjani et al.~\cite{BoEmEnHa13} have shown (as a special case of bounded-barrier linearizability) that for programs with bounded-size state, this problem is decidable even for an \emph{unbounded} number of in-flight requests, each performing an \emph{unbounded} number of steps. The purpose of this paper is to make this theoretical decidability result a reality by designing the first decision procedure, and putting forth practical algorithms that either prove serializability (with a proof certificate) or prove non-serializability (with a counter-example trace).
 % 
 We illustrate the problem by example:
 
@@ -88,7 +88,7 @@ For a tour of additional examples, see Appendix~\ref{appendix:tour}.
 Formally, we define the \textbf{observable execution} of a \toolname{} program as a multiset of (request, response) pairs. The \textbf{observable behavior} of a \toolname{} program is the set of all possible observable executions that can occur such that the requests are executed concurrently to obtain their paired responses.
 A program is \textbf{serializable} if every observable behavior is achievable serially (without interleavings). That is, a \toolname{} program is serializable if its semantics does not change when all yield statements are removed.
 %
-\emph{This paper aims to design and develop the \toolname{} language and decision procedure for this problem.} In particular, \toolname{} can prove serializability \textbf{automatically} without requiring any manual proof by the user.
+\emph{This paper aims to present the \toolname{} language and decision procedure for this problem.} In particular, \toolname{} is the first toolchain to \textbf{automatically} prove serializability without requiring manual work by the user.
 
 %\vspace{-.5em}
 \smallskip
@@ -96,7 +96,7 @@ A program is \textbf{serializable} if every observable behavior is achievable se
 \textbf{Challenges.}
 To our knowledge, no prior implementation exists that can automatically generate proof certificates for this class of concurrent systems.
 Why not?
-Our decision procedure builds on Bouajjani et al.'s reduction from serializability to Petri Net (PN) reachability~\cite{BoEmEnHa13}. However, since PN reachability is Ackermann-complete~\cite{CzWo22}, a naive implementation would fail on all but the simplest programs. 
+Our decision procedure builds on Bouajjani et al.'s reduction from serializability to Petri Net (PN) reachability~\cite{BoEmEnHa13}. However, since PN reachability is \texttt{Ackermann}-complete~\cite{CzWo22}, a naive implementation would fail on all but the simplest programs. 
 
 %\vspace{-.5em}
 \smallskip
@@ -105,15 +105,15 @@ Our decision procedure builds on Bouajjani et al.'s reduction from serializabili
 To address this, we first introduce the abstraction of \textit{network systems} (NS) --- abstract concurrent programs where users send \textit{requests} that manipulate local and shared state before returning \textit{responses}. \toolname{} programs are compiled into NS, on which our decision procedure operates via reduction to Petri net reachability and semilinear set analysis.
 %
 %As a backend solver, we use SMPT~\cite{AmDa23}, which is a state-of-the-art tool for Petri net reachability.
-We note that while our approach is sound (never incorrectly claims serializability), the underlying reachability query may time out on complex instances, limiting completeness in practice (this is unavoidable, given the Ackermann-completeness of the problem).
+We note that while our approach is sound (never incorrectly claims serializability), the underlying reachability query may time out on complex instances, limiting completeness in practice (this is unavoidable, given the \texttt{Ackermann}-completeness of the problem).
 %
-Towards this end, we developed multiple techniques to make the approach practical, including Petri Net pruning, semilinear set compression, and additional manipulations with Presburger formulas.
+Towards this end, we developed multiple optimizations to make the approach practical, including Petri Net pruning, semilinear set compression, and additional manipulations with Presburger formulas.
 As we demonstrate, these optimizations reduce the search space by orders of magnitude, enabling us to scale to non-trivial programs.
 %
 Finally, 
-we extensively evaluated our \toolname{} toolchain on various programs with features such as loops, branching, locks, and nondeterminism; as well as SDN-inspired examples such as stateful firewalls, BGP routing, and online shopping systems.
+we extensively evaluated our \toolname{} toolchain on various programs, covering a broad spectrum of features such as loops, branching, locks, and nondeterminism; as well as SDN-inspired examples such as stateful firewalls, BGP routers, and online shopping systems.
 %
-To our knowledge, this leads to the first \emph{implemented} decision procedure that: (i) automatically \textit{proves} serializability for unbounded executions; (ii) generates \textit{proof certificates}; and (iii) handles \textit{non-trivial programs}.
+To our knowledge, this leads to the first \emph{implemented} decision procedure that: (i) automatically \textit{proves} serializability for \textit{unbounded} executions; (ii) generates \textit{proof certificates}; and (iii) handles \textit{non-trivial programs}.
 
 
 \smallskip

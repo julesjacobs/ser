@@ -106,7 +106,7 @@
 
 \smallskip
 \noindent
-\textbf{Theoretical Results.}
+\textbf{Theoretical results.}
 Serializability (or \emph{atomicity}) was
 first introduced by Eswaran et al.~\cite{EsGrKoTr76},
 %, which can be viewed as a relaxtion of \emph{conflict serializability} 
@@ -117,12 +117,14 @@ motivating the similar notion of \emph{linearizability} for concurrent data stru
 %giving rise to additional consistency models~\cite{ZhChWa13, RaMeBrKoSi93, La78,AhNeBuKoHu95}, 
 %inspiring extensive research on model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
 %
-The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is \texttt{NP}-complete~\cite{Pa79}, a result that was later 
+The \emph{membership problem} --- deciding if a specific interleaving is serializable --- is \texttt{NP}-complete~\cite{Pa79}, a result that was later extended to
 %extended~\cite{BiEn19} to 
 %other consistency models. Likewise, membership for 
-linearizability~\cite{GiKo97} (and  
+linearizability~\cite{GiKo97}. 
+%(and  
 %is \texttt{NP}-complete in general~\cite{GiKo97} --- a result that was later 
-extended to \textit{collections}~\cite{EmEn18}). The \emph{correctness problem} --- whether \emph{all} executions satisfy the linearizability criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations to real-world programs. 
+%extended to \textit{collections}~\cite{EmEn18}).
+The \emph{correctness problem} --- whether \emph{all} executions satisfy the linearizability criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations to real-world programs. 
 %Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
 %\todo{original}
@@ -175,12 +177,12 @@ extended to \textit{collections}~\cite{EmEn18}). The \emph{correctness problem} 
 \textbf{Model checking and runtime verification.}
 %
 Runtime checks for serializability and conflict/view‐serializability were proposed by Wang and Stoller~\cite{WaSt06a,WaSt06b}.  
-TLA logic~\cite{La94} can express various serializability forms~\cite{CoOlPnTuZu07}), however, such approaches~\cite{SoVaVi20,Ho24} remain restricted to bounded systems due to finite‐state tools (\texttt{TLC}, \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}).  
-Heuristic or enumeration model checkers include \texttt{Line-up}~\cite{BuDeMuTa10} (build on \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{LinTSO}~\cite{BuGoMuYa12}, \texttt{Violat} and its schema precursor~\cite{EmEn19,EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, and PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}.  
+TLA logic~\cite{La94} can express various serializability forms~\cite{CoOlPnTuZu07}, however, such approaches~\cite{SoVaVi20,Ho24} remain restricted to bounded systems due to finite‐state tools (\texttt{TLC}, \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}).  
+Heuristic or enumeration model checkers include \texttt{Line-up}~\cite{BuDeMuTa10} (build on \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{LinTSO}~\cite{BuGoMuYa12}, \texttt{Violat}~\cite{EmEn19} and its schema precursor~\cite{EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, and PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}.  
 Recent work includes \texttt{RELINCHE} for bounded linearizability~\cite{GoKoVa25}, \texttt{CDSSpec}~\cite{OuDe17} (for \texttt{C/C++11}), \texttt{Lincheck}~\cite{KoDeSoTsAl23}, and SAT‐based approaches~\cite{BuAlMa07}.  
 Symbolic testing~\cite{EmEnHa15} can expose violations of observational refinement~\cite{FiOhRiYa10,BoEmCoHa15}.  
 Other checkers, e.g. \texttt{SPIN}/\texttt{PARGLIDER}~\cite{Fl04,VeYaYo09,Ho97,VeYa08}, depend on explicit linearization points, which are difficult to determine~\cite{VeYaYo09}.  
-Overall, existing methods are incomplete, bounded, or assume prior knowledge.  
+Overall, existing methods are typically incomplete, bounded, or assume prior knowledge.  
 By contrast, our method covers unbounded threads and uniquely produces serializability certificates.
 
 
@@ -296,7 +298,7 @@ Static methods prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08
 \smallskip
 \noindent
 \textbf{Manual proofs and specific data types.}
-Tasiran~\cite{Ta08} proved serializability for \texttt{Bartok-STM}, while Colvin et al.~\cite{CoGrLuMo06} used I/O automata for list‐set linerizability.  
+Tasiran~\cite{Ta08} proves serializability for \texttt{Bartok-STM}, while Colvin et al.~\cite{CoGrLuMo06} use I/O automata for list‐set linerizability.  
 	Simplifications exist for specific data structures~\cite{BoEmEnMu17,FeEnMoRiSh18}.
 %	, and verification has been pursued with~\cite{CoGrLuMo06} or without~\cite{DoGrLuMo04} proof assistants.  
 	Other notable linerizability results include Wing and Gong's~\cite{WiGo93} on unbounded FIFO/priority queues, Chakraborty et al.~\cite{ChHeSeVa15} on queues, and Cerný et al.’s \texttt{CoLT} for linked heaps (which is complete only under bounded threads~\cite{CeRaZuChAl10}).  
