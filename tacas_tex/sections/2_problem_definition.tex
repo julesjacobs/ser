@@ -8,21 +8,21 @@
 \subsection{Background}
 \label{subsec:background}
 
-\textbf{Petri Nets.} 
+\textbf{Petri nets.} 
 A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with places $P$, transitions $T$, input/output maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and an initial marking (token distribution) $M_0\in\mathbb N^P$.  
 A transition $t$ is \textit{enabled} at marking $M \in \mathbb N^P$ if $M\ge \mathsf{pre}(t)$ coordinate-wise, i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
 %
-If an enabled transition \(t\) \textit{fires} (denoted $M\xrightarrow{t}M'$), it produces the marking $M' = M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
+If an enabled transition \(t\) \textit{fires}, it produces the marking $M'$ (denoted $M\xrightarrow{t}M'$), with $M'= M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
 %
 This can extend naturally to a sequence of firings $\sigma = t_1\cdots t_k$ (denoted $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ with $M=M_0$, $M'=M_k$, and $M_i \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$. 
 % 
-We define the reachable set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all markings reachable from the initial state $M_0$.
+We define the set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all markings reachable from the initial state $M_0$.
 % 
 The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
 %
 Specifically, we focus on reachability of a formula $F$, encoding a combination of linear constraints; it is \sat\ if some $M\in R(N)$ satisfies $F$ (marked $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
 %
-Surprisingly, even for the \textit{unbounded} setting, where places can hold arbitrarily-many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although Ackermann-complete~\cite{CzWo22,Le22}.   
+Surprisingly, even for the \textit{unbounded} setting, where places can hold arbitrarily-many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although \texttt{Ackermann}-complete~\cite{CzWo22,Le22}.   
 
 
 
@@ -30,7 +30,7 @@ Surprisingly, even for the \textit{unbounded} setting, where places can hold arb
 \noindent
 \textbf{Verdict proofs.} 
 If $F$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models F$ serves as a proof, and is verifiable by simulation of the Petri net.  
-If $F$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ such that:  
+If $F$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ proving non-reachability: 
 (i) $M_0\models C$, (ii) $M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
 
 \medskip
@@ -170,9 +170,9 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 
 \item $g_0 \in G$ is the \textit{initial global state} of the network system
 
-\item $\mathit{req} \subseteq \mathit{REQ} \times  L$ maps each request to its corresponding local state --- this represents externally spawning a packet matching the request type
+\item $\mathit{req} \subseteq \mathit{REQ} \times  L$ maps each request to its corresponding (initial) local state --- this represents externally spawning a packet matching the request type
 
-\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps a final local state to the corresponding response (this represents a packet exiting the network and returning the computation)
+\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps a (final) local state to its corresponding response (this represents a packet exiting the network and returning the computation)
 
 \item $\delta \subseteq  (L \times G) \times ( L \times G)$ defines atomic execution steps that update both global and local state (this represents a packet doing a single hop in the network)
 %(and the corresponding SER expressions); as based on SER's small-step semantics
@@ -263,12 +263,12 @@ An \textit{interleaving run} is a complete execution
 \]
 It is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} one request.
 	%
-	Intuitively, serial runs have at most one request in flight at any time.
+	Intuitively, serial runs have at most one in-flight request at a time.
 %	,
 %	whereas \emph{interleaved} runs may have multiple requests in flight at once.
 	%
 	
-	For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to respectively represent the sets of all multisets of request/response pairs, for interleaving and serializable runs :
+	For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to respectively represent the (infinite) sets of all request/response multisets, for interleaving and serializable runs :
 %
 \[
 \mathrm{Int}(\mathcal{N})
@@ -282,7 +282,7 @@ It is said to be \textit{serial} if each $\mathcal{P}_i$ has \textit{at most} on
 \;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,Z) \,\bigr\}.
 \]
 
-A network system is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs attained by an interleaving execution can also be attained serially.
+A network system is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs obtained by an interleaving execution can also be obtained serially.
 
 
 %
@@ -333,16 +333,16 @@ Specifically, another advantage is the natural translation from  \toolname{} pro
 %
 %\smallskip
 %\noindent
-Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\); (ii) an initial global state \(g_0\); (iii) local variables (\(vars\)); (iv) global variables (\(VARS\)); (v) mappings \(\rho\) and (vi) \(g\) from local/global variables to (vii) a finite set of values \(V\); and given the small steps semantics ($\pstep$ defined in App.~\ref{appendix:ser-semantics}), we construct the following NS $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
+Given a \toolname{} program \(P_0\) with: (i) an initial local state \(\rho_0\); (ii) an initial global state \(g_0\); (iii) local variables (\texttt{vars}); (iv) global variables (\texttt{VARS}); (v) mappings \(\rho\) and (vi) \(g\) from local/global variables to (vii) a finite set of values \texttt{V}; and given the small steps semantics ($\pstep$ defined in App.~\ref{appendix:ser-semantics}), we construct the following NS $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
 
 \[
 \begin{aligned}
-	G \;&=\; \{\, g : \text{VARS}\!\to\! V \,\},\\[0.3ex]
-	L \;&=\; \bigl\{\, (e,\rho)\ \bigm|\ \rho:\text{vars}\!\to\! V,\ \exists\,name_i\{e_i\}\!\in\! P_0,\ \exists k\!\ge\!0\ \text{s.t.} \\[-0.2ex]
-	&\qquad\quad\qquad\quad e \text{ is the suffix of } e_i \text{ up to the next } \yieldkw \text{ or termination} \,\bigr\},\\[0.3ex]
-	REQ \;&=\; \{\, name_i \mid name_i\{e_i\}\!\in\! P_0 \,\},\quad RESP \;=\; V,\\[0.3ex]
+	G \;&=\; \{\, g : \texttt{VARS}\!\to\! \texttt{V} \,\},\\[0.3ex]
+	L \;&=\; \bigl\{\, (e,\rho)\ \bigm|\ \rho:\texttt{vars}\!\to\! \texttt{V},\ \exists\,name_i\{e_i\}\!\in\! P_0,\ \exists k\!\ge\!0\ \text{s.t.} \\[-0.2ex]
+	&\qquad\quad\qquad\quad e \text{ is the suffix of } e_i \text{ starting from } \yieldkw \text{ or initialization} \,\bigr\},\\[0.3ex]
+	REQ \;&=\; \{\, name_i \mid name_i\{e_i\}\!\in\! P_0 \,\},\quad RESP \;=\; \texttt{V},\\[0.3ex]
 	req \;&=\; \{\, (r,\ell) \mid r=name_i\!\in\!REQ,\ \ell=(e_i,\rho_0)\!\in\!L \,\},\\[0.3ex]
-	resp \;&=\; \{\, (\ell',r') \mid \exists v\!\in\!V.\ \ell'=(v,\rho')\!\in\!L,\ r'=v\!\in\!RESP \,\},\\[0.3ex]
+	resp \;&=\; \{\, (\ell',r') \mid \exists \texttt{v}\!\in\!\texttt{V}.\ \ell'=(v,\rho')\!\in\!L,\ r'=\texttt{v}\!\in\!RESP \,\},\\[0.3ex]
 	\delta \;&=\; \bigl\{\, ((e,\rho),g)\!\to\!((e',\rho'),g') \ \bigm|\ (e,\rho),(e',\rho')\!\in\!L,\ g,g'\!\in\!G,\ 
 	\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'} \,\bigr\}.
 \end{aligned}
@@ -460,7 +460,7 @@ The function \(\delta\) is presented in Fig.~\ref{fig:code2ExampleNSSecondPart} 
 We depict in Fig.~\ref{fig:code2ExampleNS} the explicit network system that
 serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
 %
-We note that we depicted only part of the states that are \textit{reachable}, in our finite-state setting.
+We note that, for simplicity, we depict only \textit{reachable} states.
 %
 \end{tcolorbox}
 

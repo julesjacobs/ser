@@ -10,7 +10,7 @@
 
 
 \noindent
-\textbf{Experimental Setup.}
+\textbf{Experimental setup.}
 All experiments ran on a Lenovo ThinkPad P16s, with 16 AMD cores and 64 GB of RAM, running on a Linux Ubuntu 24.04.2 operating system.
 %
 %We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
@@ -31,10 +31,10 @@ Within the time limit, \toolname{} solved 26 of the 27 serializable benchmarks a
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 
 %
-The \textit{median} total runtime was $2{,}080$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+The \textit{median} total runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when focusing on solely serializable (non-serializable) benchmarks.
 %, as reported in Table~\ref{tab:stats-summary}.
 %
-The \textit{average} total runtime was $52{,}857.55$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing on solely serializable (non-serializable) benchmarks.
 %
 We also observe a clear runtime split based on serializability: 
 %For serializable benchmarks, certificate validation takes much longer than proof generation. 
@@ -163,7 +163,7 @@ among non-serializable benchmarks, counterexample generation is much longer than
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/big_table_summary_only_networking_part.tex}
-	\caption{Overview of benchmarks from the network and system protocols category. 
+	\caption{Overview of benchmarks from the \textit{network and system protocols} category. 
 %	For our full benchmarks see Appendix~\ref{appendix:full_results}.
 }
 \label{tab:networking-benchmarks}
@@ -178,7 +178,7 @@ among non-serializable benchmarks, counterexample generation is much longer than
 %All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
 
 
-\subsubsection{Runtime Optimization.}
+\subsubsection{Runtime optimization.}
 
 We ran all benchmarks with each of the following six optimization combinations: 
 (i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidirectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
@@ -198,7 +198,7 @@ However, when comparing the combinations, it seems that there are instances in w
 For example, there are instances (see \texttt{a3.ser} and \texttt{a7.ser} in Appendix~\ref{appendix:full_results}), in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}])
 affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks without this optimization.
 
-\subsubsection{Space Optimization.}
+\subsubsection{Space optimization.}
 Our optimizations also reduce the space complexity of the two main components --- the Petri net and the semilinear set.
 
 \noindent

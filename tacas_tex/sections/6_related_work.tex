@@ -111,8 +111,7 @@ Serializability (or \emph{atomicity}) was
 first introduced by Eswaran et al.~\cite{EsGrKoTr76},
 %, which can be viewed as a relaxtion of \emph{conflict serializability} 
 %and \emph{Strict serializability} (SSR)~\cite{Pa79}. 
-%Herlihy and Wing~\cite{HeWe87,HeWi90} defined the similar 
-motivating the similar notion of \emph{linearizability} for concurrent data structures. 
+later motivating Herlihy and Wing's~\cite{HeWe87,HeWi90} similar notion of \emph{linearizability} for concurrent data structures. 
 %,
 %giving rise to additional consistency models~\cite{ZhChWa13, RaMeBrKoSi93, La78,AhNeBuKoHu95}, 
 %inspiring extensive research on model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
@@ -124,7 +123,7 @@ linearizability~\cite{GiKo97}.
 %(and  
 %is \texttt{NP}-complete in general~\cite{GiKo97} --- a result that was later 
 %extended to \textit{collections}~\cite{EmEn18}).
-The \emph{correctness problem} --- whether \emph{all} executions satisfy the linearizability criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs (and hence, for serializability). Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations to real-world programs. 
+The \emph{correctness problem} --- whether \emph{all} executions satisfy the criterion --- is \texttt{EXPSPACE} when threads are bounded~\cite{AlMcPe96} and undecidable otherwise~\cite{BoEmEnHa13}, though decidable for finite-barrier programs, which pertain to our setting. Bouajjani et al.~\cite{BoEmEnHa18} further show that unbounded-thread linearizability for certain ADTs reduces to VASS coverability in \texttt{EXPSPACE}~\cite{Ra78}. Our tool is, to our knowledge, the first to implement Bouajjani et al.’s serializability algorithm~\cite{BoEmEnHa13}, adapting it to distributed transactions, extending it with a proof certificate mechanism, and scaling it with various optimizations to multiple, real-world programs. 
 %Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
 %\todo{original}
@@ -178,8 +177,8 @@ The \emph{correctness problem} --- whether \emph{all} executions satisfy the lin
 %
 Runtime checks for serializability and conflict/view‐serializability were proposed by Wang and Stoller~\cite{WaSt06a,WaSt06b}.  
 TLA logic~\cite{La94} can express various serializability forms~\cite{CoOlPnTuZu07}, however, such approaches~\cite{SoVaVi20,Ho24} remain restricted to bounded systems due to finite‐state tools (\texttt{TLC}, \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}).  
-Heuristic or enumeration model checkers include \texttt{Line-up}~\cite{BuDeMuTa10} (build on \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{LinTSO}~\cite{BuGoMuYa12}, \texttt{Violat}~\cite{EmEn19} and its schema precursor~\cite{EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, and PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}.  
-Recent work includes \texttt{RELINCHE} for bounded linearizability~\cite{GoKoVa25}, \texttt{CDSSpec}~\cite{OuDe17} (for \texttt{C/C++11}), \texttt{Lincheck}~\cite{KoDeSoTsAl23}, and SAT‐based approaches~\cite{BuAlMa07}.  
+Heuristic or enumeration model checkers include \texttt{Line-up}~\cite{BuDeMuTa10} (built upon \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{LinTSO}~\cite{BuGoMuYa12}, \texttt{Violat}~\cite{EmEn19} and its schema precursor~\cite{EmEn18}, bridge‐predicate methods~\cite{BuNeSe11,BuSe09}, and PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}.  
+Recent work includes \texttt{RELINCHE} for bounded linearizability~\cite{GoKoVa25}, \texttt{CDSSpec}~\cite{OuDe17} (for \texttt{C/C++11}), \texttt{Lincheck}~\cite{KoDeSoTsAl23}, and \texttt{SAT}‐based approaches~\cite{BuAlMa07}.  
 Symbolic testing~\cite{EmEnHa15} can expose violations of observational refinement~\cite{FiOhRiYa10,BoEmCoHa15}.  
 Other checkers, e.g. \texttt{SPIN}/\texttt{PARGLIDER}~\cite{Fl04,VeYaYo09,Ho97,VeYa08}, depend on explicit linearization points, which are difficult to determine~\cite{VeYaYo09}.  
 Overall, existing methods are typically incomplete, bounded, or assume prior knowledge.  
