@@ -3,7 +3,7 @@
 \label{appendix:ns-serializable}
 
 
-Now, we observe again the adjusted program with locks (as previously described in Listing~\ref{lst:MotivatingExample3Ser}), of which we depicted figures of the corresponding network system (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and the interleaving Petri net (Fig.~\ref{fig:code3ExamplePN}) in Appendix~\ref{appendix:MoreNsExamples}.
+Now, we observe again the adjusted program with locks (as previously described in Listing~\ref{lst:MotivatingExample3Ser}), of which we depicted figures of the corresponding Network System (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and the interleaving Petri net (Fig.~\ref{fig:code3ExamplePN}) in Appendix~\ref{appendix:MoreNsExamples}.
 %
 In this case, serializability corresponds to the Petri net being unable to reach a marking satisfying the same semilinear formula as in the non-serializable case described in the main text (subsec.~\ref{subsec:SerToNsTranslation}):
 
@@ -25,9 +25,9 @@ P_1 = 0 \wedge
 %\]
 
 
-In addition, although the target set is the same as in the previous example, however, the Petri net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, \texttt{X} and \texttt{L}, and the initial global state corresponds to the place encoding the initial assignment \textcolor{blue}{[X=0, L=0]}, etc.
+In addition, although the target set is the same as in the previous example, the Petri net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, \texttt{X} and \texttt{L}, and the initial global state corresponds to the place encoding the initial assignment \textcolor{blue}{[X=0, L=0]}, etc.
 %
-Furthermore, unlike the case in Listing~\ref{lst:MotivatingExample2NonSer} (covered in subsec.~\ref{subsec:SerToNsTranslation}, this target set of markings (encoding request/response pairs of non-serial executions) is \textit{unreachable}, as witnessed by the inductive invariant:
+Furthermore, unlike the case in Listing~\ref{lst:MotivatingExample2NonSer} (covered in subsec.~\ref{subsec:SerToNsTranslation}), this target set of markings (encoding request/response pairs of non-serial executions) is \textit{unreachable}, as witnessed by the inductive invariant:
 
 
 \[
@@ -54,7 +54,7 @@ Furthermore, unlike the case in Listing~\ref{lst:MotivatingExample2NonSer} (cove
 \]
 
 
-We then revert and project it on request/response pairs of the network system.
+We then revert and project it on request/response pairs of the Network System.
 %
 We get the following inductive invariants for each of the two (reachable) global states:
 
@@ -95,7 +95,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	=0
 	\]
 	
-	indicating that  (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) cannot be attained from the global state
+	indicating that  (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) cannot be obtained from the global state
 	\textcolor{blue}{[L=0,X=0]}.
 	
 	\medskip\noindent
@@ -158,41 +158,41 @@ We get the following inductive invariants for each of the two (reachable) global
 	Define the predicate
 	\[
 	\begin{aligned}
-		I(P_{1},\dots,P_{8})
+		I(P_{1},\dots,\textcolor{red}{P_{8}})
 		:={}&
-		(P_{1},\textcolor{black}{P_{2}},\textcolor{black}{P_{3}},P_{4},P_{5},P_{6},\textcolor{black}{P_{7}},\textcolor{black}{P_{8}})
+		(P_{1},\textcolor{blue}{P_{2}},\textcolor{blue}{P_{3}},P_{4},P_{5},P_{6},\textcolor{red}{P_{7}},\textcolor{red}{P_{8}})
 		\;\mapsto\;\\
 		&\quad
 		\exists\,e_{0},\dots,e_{5}\ge0.\;
 		\Bigl(
-		e_{2}-e_{1}+\textcolor{black}{P_{3}}-1=0\;\land\;
+		e_{2}-e_{1}+\textcolor{blue}{P_{3}}-1=0\;\land\;
 		e_{2}+P_{1}-e_{5}=0\;\land\;
 		P_{5}-e_{1}+e_{4}=0\;\land\\
 		&\qquad\quad
-		-\,e_{4}+\textcolor{black}{P_{7}}=0\;\land\;
+		-\,e_{4}+\textcolor{red}{P_{7}}=0\;\land\;
 		P_{6}+e_{3}-e_{0}=0\;\land\;
-		\textcolor{black}{P_{8}}-e_{3}=0\;\land\\
+		\textcolor{red}{P_{8}}-e_{3}=0\;\land\\
 		&\qquad\quad
 		-\,e_{2}+e_{1}+e_{0}+P_{4}=0\;\land\;
-		-\,e_{2}+e_{1}+\textcolor{black}{P_{2}}=0
+		-\,e_{2}+e_{1}+\textcolor{blue}{P_{2}}=0
 		\Bigr)
 		\;\land\;
-		\bigl(P_{4}-1\ge0\;\lor\;\textcolor{black}{P_{3}}-1\ge0\bigr).
+		\bigl(P_{4}-1\ge0\;\lor\;\textcolor{blue}{P_{3}}-1\ge0\bigr).
 	\end{aligned}
 	\]
 	
 	
 	\medskip\noindent
 	\textbf{(1) Initialization.}
-	The initial marking has $P_{3}=1$ and $P_{1}=P_{2}=P_{4}=P_{5}=P_{6}=P_{7}=P_{8}=0$.
+	The initial marking has $\textcolor{blue}{P_{3}}=1$ and $P_{1}=\textcolor{blue}{P_{2}}=P_{4}=P_{5}=P_{6}=\textcolor{red}{P_{7}}=\textcolor{red}{P_{8}}=0$.
 	Choose $e_{0}=\cdots=e_{5}=0$.  Then
 	\[
 	e_{i}\ge0,\quad
-	e_{2}-e_{1}+P_{3}-1=0-0+1-1=0,\;\dots,\;-e_{2}+e_{1}+P_{2}=0,
+	e_{2}-e_{1}+\textcolor{blue}{P_{3}}-1=0-0+1-1=0,\;\dots,\;-e_{2}+e_{1}+P_{2}=0,
 	\]
 	and 
 	\[
-	P_{4}-1\ge0\;\lor\;P_{3}-1\ge0
+	P_{4}-1\ge0\;\lor\;\textcolor{blue}{P_{3}}-1\ge0
 	\;=\;-1\ge0\;\lor\;0\ge0
 	\;=\;\texttt{FALSE}\;\lor\;\texttt{TRUE}
 	\;=\;\texttt{TRUE}.
@@ -205,7 +205,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	\[
 	I(M)\;\Longrightarrow\;I\bigl(t_{k}(M)\bigr).
 	\]
-	In each case the same $(e_{0},\dots,e_{5})$ can be adjusted (per the SMT certificate) to show the eight equalities and the disjunction remain valid. See our accompanying artifact~\cite{ArtifactRepository} for generating a full proof in the standard \texttt{SMT-LIB} format.
+	In each case, the same $(e_{0},\dots,e_{5})$ can be adjusted (per the \texttt{SMT} certificate) to show the eight equalities and the disjunction remain valid. See our accompanying artifact~\cite{ArtifactRepository} for generating a full proof in the standard \texttt{SMT-LIB} format.
 	
 	\medskip\noindent
 	\textbf{(3) Refutation of the property.}
@@ -213,65 +213,64 @@ We get the following inductive invariants for each of the two (reachable) global
 	\[
 	\phi(P):\quad
 	P_{1}=0,\;
-	P_{2}\ge0,\;
-	P_{3}\ge0,\;
+	\textcolor{blue}{P_{2}}\ge0,\;
+	\textcolor{blue}{P_{3}}\ge0,\;
 	P_{4}=0,\;
 	P_{5}=0,\;
 	P_{6}=0,\;
-	P_{7}\ge0,\;
-	P_{8}\ge1.
+	\textcolor{red}{P_{7}}\ge0,\;
+	\textcolor{red}{P_{8}}\ge1.
 	\] 
 	
 	\noindent
 	From
 	\[
-	e_{2}-e_{1}+P_{3}-1=0
+	e_{2}-e_{1}+\textcolor{blue}{P_{3}}-1=0
 	\quad\text{and}\quad
-	-e_{2}+e_{1}+P_{2}=0
+	-e_{2}+e_{1}+\textcolor{blue}{P_{2}}=0
 	\]
 	we get
 	\[
-	P_{2}=1-P_{3}.
+	\textcolor{blue}{P_{2}}=1-\textcolor{blue}{P_{3}}.
 	\]
 	From
 	\[
-	P_{8}-e_{3}=0
+	\textcolor{red}{P_{8}}-e_{3}=0
 	\quad\text{and}\quad
 	P_{6}+e_{3}-e_{0}=0
 	\]
 	and from the assumption that $P_6=0$, we get
 	\[
-	e_{0}=e_{3}=P_{8}
-	\].
+	e_{0}=e_{3}=\textcolor{red}{P_{8}}.
+	\]
 	
 	
 	\noindent
 	Similarly, the invariant equalities 
-	$(-\,e_{2}+e_{1}+e_{0}+P_{4}=0)$ and $(	-\,e_{2}+e_{1}+\textcolor{black}{P_{2}}=0)$
+	$(-\,e_{2}+e_{1}+e_{0}+P_{4}=0)$ and $(	-\,e_{2}+e_{1}+\textcolor{blue}{P_{2}}=0)$
 	induce
 	\[
-	P_{2}=P_{4}+e_{0}=P_{4}+P_{8},
+	\textcolor{blue}{P_{2}}=P_{4}+e_{0}=P_{4}+\textcolor{red}{P_{8}},
 	\]
-	thus
+	thus, and as we also assume that $P_4=0$, then:
 	\[
-	P_{8}=P_2-P4=(1-P_{3})-P_{4}=1-P_{3}-0=1-P_3.
+	\textcolor{red}{P_{8}}=\textcolor{blue}{P_2}-P4=(1-\textcolor{blue}{P_{3}})-P_{4}=1-\textcolor{blue}{P_{3}}-0=1-\textcolor{blue}{P_{3}}
 	\]
-	as we also assume that $P_4=0$.
 	
 	
 	
 	
+%	\medskip
 	\noindent
-	But $\phi$ also gives $P_{3}\ge0$ and $P_{8}\ge1$, hence $P_{3}=0$.  
-	Furthermore, as our invariant includes a conjunction with $\bigl(P_{4}-1\ge0\;\lor\;\textcolor{black}{P_{3}}-1\ge0\bigr)$. As we assume by negation that the semilinear set is reachable, then $P_4=0$; and in order for both the invariant and the property to hold, then necessarily $P_3 \ge 1$, in contradiction with $P_3=0$.
+	However, $\phi$ also induces $\textcolor{blue}{P_{3}}\ge0$ and $\textcolor{red}{P_{8}}\ge1$, and hence $\textcolor{blue}{P_{3}}=0$.  
+	Furthermore, as our invariant includes a conjunction with $\bigl(P_{4}-1\ge0\;\lor\;\textcolor{blue}{P_{3}}-1\ge0\bigr)$, then it necessarily holds that \(P_{4}\ge1\). This contradicts \(P_{4}=0\) as required for the semilinear set to be reachable.
 	%
-	Thus $I\land\phi$ is unsatisfiable, i.e., 
+	Thus, $I\land\phi$ is unsatisfiable, i.e., 
 	%\[
 	$
-	I(P)\;\Longrightarrow\;\neg\phi(P)$
-	.
+	I(P)\;\Longrightarrow\;\neg\phi(P)$.
 	%\]
-	This completes the proof that $I$ is an inductive invariant refuting the given property $\phi$.
+	This completes the proof that $I$ is an inductive invariant refuting property $\phi$.
 \end{proof}
 
 

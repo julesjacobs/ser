@@ -1,10 +1,10 @@
-\section{SER small-step semantics}
+\section{SER Small-Step Semantics}
 \label{appendix:ser-semantics}
 
 %
 %\subsection{Semantics}
 %
-The set \(V\) is a finite set of numeric constants; booleans use $0/1$. We respectively denote with \(VARS\) and \(vars\) the (finite) sets of global and local variables. $\rho:{vars}\to V$, and $g:{VARS}\to V$ respectively map a local or global variable to its current value in \(V\).
+The set \(\texttt{V}\) is a finite set of numeric constants; booleans use $0/1$. We respectively denote with \(\texttt{VARS}\) and \(\texttt{vars}\) the (finite) sets of global and local variables. $\rho:{\texttt{vars}}\to \texttt{V}$, and $g:{\texttt{VARS}}\to \texttt{V}$ respectively map a local or global variable to its current value in \(\texttt{V}\).
 %
 Configurations of both programs and expressions are denoted as $\cfg{e}{\rho}{g}$, with \(e\) being a valid \toolname{} expression/program. 
 %
@@ -21,32 +21,32 @@ Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep
 	\and
 	\inferrule*[right=ND-1]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{1}{\rho}{g}}\\
 	
-	\inferrule*[right=LOCAL-READ]{\rho(x)=v}{\cfg{x}{\rho}{g} \step \cfg{v}{\rho}{g}}
+	\inferrule*[right=LOCAL-READ]{\rho(x)=v\quad v\in{\texttt{V}}}{\cfg{x}{\rho}{g} \step \cfg{v}{\rho}{g}}
 	\and
-	\inferrule*[right=GLOBAL-READ]{g(X)=v}{\cfg{X}{\rho}{g} \step \cfg{v}{\rho}{g}}\\
+	\inferrule*[right=GLOBAL-READ]{g(X)=v \quad v\in{\texttt{V}}}{\cfg{X}{\rho}{g} \step \cfg{v}{\rho}{g}}\\
 	
 	\inferrule*[right=LOCAL-WRITE-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{x := e}{\rho}{g} \step \cfg{x := e'}{\rho'}{g'}}
 	\and
-	\inferrule*[right=LOCAL-WRITE-DONE]{ }{\cfg{x := v}{\rho}{g} \step \cfg{v}{\update{\rho}{x}{v}}{g}}
+	\inferrule*[right=LOCAL-WRITE-DONE]{v\in{\texttt{V}}}{\cfg{x := v}{\rho}{g} \step \cfg{v}{\update{\rho}{x}{v}}{g}}
 	
 	\inferrule*[right=GLOBAL-WRITE-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{X := e}{\rho}{g} \step \cfg{X := e'}{\rho'}{g'}}
 	\and
-	\inferrule*[right=GLOBAL-WRITE-DONE]{ }{\cfg{X := v}{\rho}{g} \step \cfg{v}{\rho}{\update{g}{X}{v}}}
+	\inferrule*[right=GLOBAL-WRITE-DONE]{v\in{\texttt{V}}}{\cfg{X := v}{\rho}{g} \step \cfg{v}{\rho}{\update{g}{X}{v}}}
 	
 	\inferrule*[right=EQ-L]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 == e_2}{\rho}{g} \step \cfg{e_1' == e_2}{\rho'}{g'}}
 	\and
 	\inferrule*[right=EQ-R]{\cfg{e_2}{\rho}{g} \step \cfg{e_2'}{\rho'}{g'}}{\cfg{v_1 == e_2}{\rho}{g} \step \cfg{v_1 == e_2'}{\rho'}{g'}}
 	\and
-	\inferrule*[right=EQ-T]{v_1=v_2}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{1}{\rho}{g}}
+	\inferrule*[right=EQ-T]{v_1=v_2\quad v_1, v_2\in{\texttt{V}}}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{1}{\rho}{g}}
 	\and
-	\inferrule*[right=EQ-F]{v_1\neq v_2}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{0}{\rho}{g}}
-	
-	\inferrule*[right=SEQ-STEP]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 ; e_2}{\rho}{g} \step \cfg{e_1' ; e_2}{\rho'}{g'}}
-	\and
-	\inferrule*[right=SEQ-DONE]{ }{\cfg{v ; e_2}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
+	\inferrule*[right=EQ-F]{v_1\neq v_2 \quad v_1, v_2\in{\texttt{V}}}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{0}{\rho}{g}}
 	\end{mathpar}
 	
 	\begin{mathpar}
+	\inferrule*[right=SEQ-STEP]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 ; e_2}{\rho}{g} \step \cfg{e_1' ; e_2}{\rho'}{g'}}
+	\and
+	\inferrule*[right=SEQ-DONE]{v\in{\texttt{V}}}{\cfg{v ; e_2}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
+
 	\inferrule*[right=IF-GUARD]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{\ifkw(e_1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{\ifkw(e_1')\{e_2\}\elsekw\{e_3\}}{\rho'}{g'}}
 	\and
 	\inferrule*[right=IF-T]{ }{\cfg{\ifkw(1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
@@ -64,7 +64,7 @@ Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep
 	\\
 	\inferrule*[right=START]{\cfg{e_i}{\rho}{g}\pstep \cfg{e'_i}{\rho'}{g'} \quad i\in\{1,\dots,n\}}{\langle \requestkw\ name_i\{e_i\}, \rho, g \rangle \pstep  \cfg{e'_i}{\rho'}{g'} }
 	\and
-	\inferrule*[right=TERMINATE]{\cfg{e}{\rho}{g} \step \cfg{v}{\rho'}{g'} \quad v\in{V}}{\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'}}	
+	\inferrule*[right=TERMINATE]{\cfg{e}{\rho}{g} \step \cfg{v}{\rho'}{g'} \quad v\in{\texttt{V}}}{\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'}}	
 \end{mathpar}
 
 

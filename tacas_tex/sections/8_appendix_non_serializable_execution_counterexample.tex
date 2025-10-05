@@ -1,7 +1,11 @@
 
 \section{Non-Serializable Execution Counterexample}
 \label{appendix:non-serializable-execution-example}
+Continuing the running example presented in subsec.~\ref{subsec:SerToNsTranslation}, we denote in Table~\ref{tab:PetriNetFiringCounterexample} a firing sequence of the Petri net (Fig.~\ref{fig:code2ExamplePN}) resulting in the marking \(M^*\):
 
+\[
+M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
+\]
 %\medskip
 %\noindent
 %\textbf{Serializable NFA Extraction.}
@@ -63,14 +67,14 @@
 			& {\color{blue}[X=0]}                   
 			& --                          
 			& --                                    \\
-			1 & $t_1$ 
+			1 & $\textcolor{ForestGreen}{t_1}$ 
 			& {\color{blue}$P_3$(1)}                  
 			& $P_1$(1)                                
 			& --                                    
 			& {\color{blue}[X=0]}                   
 			& {\color{ForestGreen}$\blacklozenge_\text{main}$} 
 			& --                                    \\
-			2 & $t_1$ 
+			2 & $\textcolor{ForestGreen}{t_1}$ 
 			& {\color{blue}$P_3$(1)}                  
 			& $P_1$(2)                                
 			& --                                    
@@ -98,7 +102,7 @@
 			&                                   {\color{blue}[X=0]}     
 			&                                    {\color{black}$\blacklozenge_\text{after yield}$}, {\color{black}$\blacklozenge_\text{until yield}$}   
 			& --                                    \\
-			6 & $t_6$                     
+			6 & $\textcolor{red}{t_6}$                     
 			& {\color{blue}$P_3$(1)}                  
 			& $P_4$(1)                                
 			& {\color{red}$P_7$(1)}                    
@@ -112,7 +116,7 @@
 			&                                   {\color{blue}[X=0]}    
 			&                                    {\color{black}$\blacklozenge_\text{after yield}$}      
 			&                                   {\color{red}$\blacklozenge_1$}        \\
-			8 & $t_7$                     
+			8 & $\textcolor{red}{t_7}$                     
 			& {\color{blue}$P_3$(1)}                                  
 			& --                                    
 			& {\color{red}$P_7$(1),\color{red}$P_8$(1)}    
@@ -122,7 +126,7 @@
 			\bottomrule
 		\end{tabular}
 	}
-	\caption{The firing sequence reaching marking $M^*$ which is in our target semilinear set. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens on place $P_i$. The initial marking has a single token in place $P_3$ encoding $g_0$.}
+	\caption{The firing sequence reaching marking $M^*$ which is in our target semilinear set. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens on place $P_i$. The initial marking has a single token in place $\textcolor{blue}{P_3}$ encoding $g_0$ ($\textcolor{blue}{\texttt{[X=0]}}$).}
 	\label{tab:PetriNetFiringCounterexample}
 \end{table}
 

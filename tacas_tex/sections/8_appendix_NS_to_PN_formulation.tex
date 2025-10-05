@@ -1,19 +1,19 @@
 \clearpage
-\section{Translating NS to PN}
+\section{Translating Network Systems to Petri Nets}
 \label{appendix:NS-to-PN-formulation}
 
 
-We denote with \(\mathbf0\) a zero vector of dimension \(|P|\), and with \(\mathbf1_{p}\) a \(|P|\)-sized vector that has 0 in every coordinate except when corresponding to \(p \in P\).
+We denote with \(\mathbf0\) a zero vector of dimension \(|P|\), and with \(\mathbf1_{p}\) a \(|P|\)-sized indicator vector that has 0 in every coordinate except the one corresponding to place \(p \in P\), which has 1. 
 % 
-Pre/post maps $\mathsf{pre},\mathsf{post}:T\to\{0,1\}^{|P|}$ assign to each transition $t$ a binary vector over $P$ whose $1$-entries mark the places from which tokens are removed (for $\mathsf{pre}(t)$) and to which tokens are added (for $\mathsf{post}(t)$) when $t$ fires.
-A transition $t$ is enabled at $M$ iff $\mathsf{pre}(t)\le M$ (componentwise); firing yields
+Pre/post maps $\mathsf{pre},\mathsf{post}:T\to\{0,1\}^{|P|}$ assign to each transition $t$ a binary vector over $P$ whose $1$-entries mark the places from which tokens are consumed (for $\mathsf{pre}(t)$) and to which tokens are produced (for $\mathsf{post}(t)$) when $t$ fires.
+A transition $t$ is enabled at $M$ iff $\mathsf{pre}(t)\le M$ (component-wise); firing yields
 \(
-M\xrightarrow{t}M' \quad\text{where}\quad M' = M-\mathsf{pre}(t)+\mathsf{post}(t).
+M\xrightarrow{t}M' \quad\text{where}\quad M' = M-\mathsf{pre}(t)+\mathsf{post}(t)
 \).	
 
 \medskip
 \textit{Construction.}
-We build the Petri Net:
+We generate the Petri net:
 \[
 N_{\mathrm{int}}(\mathcal S)
 = (P,\,T,\,\mathsf{pre},\,\mathsf{post},\,M_0),
@@ -77,7 +77,7 @@ for
 %	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in \mathit{REQ}, {\color{red}\blacklozenge_{\mathit{resp}}}\in \mathit{RESP}\},
 %	\]
 
-with \(G\) being the global states, \(L\) being the local states (in the case of a \toolname-derived NS this is the coupling of the local variables and the remaining \toolname{} program to execute), \(\mathit{REQ}\) denotes the request labels; and \(\mathit{RESP}\) denotes the response labels.
+with \(G\) being the set of global states, \(L\) being the set of local states (in the case of a \toolname-derived NS, this is the coupling of the local variable assignments of an in-flight request and the remaining \toolname{} program to execute), \(\mathit{REQ}\) denotes the request labels; and \(\mathit{RESP}\) denotes the response labels.
 
 \medskip
 Transitions are partitioned as:
@@ -106,7 +106,7 @@ where
 
 %\smallskip
 %Given a local state \(\ell\) which resulted from a request \({\color{ForestGreen}\blacklozenge_{\mathit{req}}}\) (either directly or downstream due to program execution) --- the transitions are:
-Their pre/post vectors are:
+Their \(\mathsf{pre}\) and \(\mathsf{post}\) mappings are:
 \[
 \begin{alignedat}{3}
 	\mathsf{pre}\bigl(t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}\bigr)
@@ -129,7 +129,7 @@ Their pre/post vectors are:
 \end{alignedat}
 \]
 
-Where for the last two cases, \({\color{ForestGreen}\blacklozenge_{\mathit{req}}}\) concerns requests that eventually gave rise to a local state \(\ell \in L\) that originated downstream (during execution).
+Where for the last two cases, \({\color{ForestGreen}\blacklozenge_{\mathit{req}}}\) concerns requests that eventually give rise to a local state \(\ell \in L\) that originated downstream (during execution).
 
 \medskip
 The initial marking is a single token on the place representing the initial global state $g_0$ of the NS:
@@ -142,7 +142,8 @@ M_0(p) = 0 \text{ for all }p\neq p_{g_0},
 
 
 
-Define the projection \(\pi\) to be markings solely on all places representing completed request/response pairs (with the exception of a single token on a state in \(P_G\)).
+Define the projection \(\pi\) to solely include the markings of places representing completed request/response pairs.
+% (with the exception of a single token on a state in \(P_G\)).
 %\[
 %\pi \;:\;\mathbb N^P \;\longrightarrow\;\mathbb N^{P_R}
 %\quad\bigl(\pi(M)\bigr)(p_{({{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}})})\;=\;M(p_{({{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}})})\text{ for }p_{({{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}})}\in P_{REQ,RESP}.
