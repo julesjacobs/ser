@@ -51,7 +51,7 @@ Given a network system \(\mathcal S= (G, L, \mathit{REQ},  \mathit{RESP}, g_0, \
 %	\Bigr\}.
 %	\]
 %
-Finally, we define each transition to correspond to a request/response pair:
+We define each transition to correspond to a request/response pair:
 \(
 \delta^A \subseteq Q \times \Sigma \times Q,
 \quad q \xrightarrow{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} q'
@@ -70,7 +70,7 @@ Finally, we define each transition to correspond to a request/response pair:
 %\;\Longleftrightarrow\;
 %\begin{array}{l}
 iff $\mathcal S$ is in global state $q$ and issues a request
-$	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon \textit{full serial execution} it receives response $	{\color{red}\blacklozenge_{\mathit{resp}}}$
+$	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon some \textit{full serial execution} it receives response $	{\color{red}\blacklozenge_{\mathit{resp}}}$
 	and transitions to global state  $q'$.
 %\end{array}
 %\]
@@ -92,13 +92,13 @@ $	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon \textit{full ser
 %
 %	
 	Its language
-	\(L(\mathcal A_{\mathrm{ser}})\subseteq\Sigma^*\) is exactly the set of serial
+	\(L(\mathcal A_{\mathrm{ser}}(\mathcal S))\subseteq\Sigma^*\) is exactly the set of serial
 	request/response traces.
-	Hence, by definition it holds that applying the Parikh Image affords the set of all multisets of request/response pairs obtained by serial executions:
+	Hence, by definition it holds that applying the Parikh Image gives the set of all multisets of request/response pairs obtained by serial executions:
 	\(
 	\mathsf{Ser}(\mathcal S)
 	\;=\;
-	\mathsf{Parikh}\bigl(L(\mathcal A_{\mathrm{ser}})\bigr)
+	\mathsf{Parikh}\bigl(L(\mathcal A_{\mathrm{ser}}(\mathcal S))\bigr)
 	\;\subseteq\;\mathbb N^{\Sigma}.
 	\)
 %	Finally,
@@ -110,7 +110,7 @@ $	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon \textit{full ser
 	
 %	\smallskip
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
-	\textbf{Example.} In the case of the toy (non-serializable) program presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS depicted in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the corresponding Serial NFA (depicted in Fig.~\ref{fig:code2ExampleNFA}).
+	\textbf{Example.} In the case of the (non-serializable) toy  program presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS depicted in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the corresponding Serial NFA (depicted in Fig.~\ref{fig:code2ExampleNFA}).
 	Due to the aforementioned construction, a string of request/response pairs is accepted by the NFA iff there exists a serial execution of the NS that induces it.
 %
 %	As the states encode the global variable values, and the edges encode request/response pairs for all serial executions, the  
@@ -198,7 +198,7 @@ Specifically, in this case --- serial executions can only produce request/respon
 	
 	
 	\item 
-	\textbf{Interleaving Petri Net.}
+	\textbf{Interleaving Petri net.}
 %	
 Next, we translate the NS into a Petri Net \(N_{\mathrm{int}}(\mathcal S)\). The \textit{non-sink places} of the PN represent either (i) global state assignments; or (ii) local states of in-flight packets. The \textit{sink} places represent request/response pairs of terminating packets.
 %
@@ -242,7 +242,7 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 	
 	\item \textbf{Non-serializable set.}  
 	Let
-	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., all (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs that \textit{cannot} be attained via a serial execution.
+	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., all multisets of (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs that \textit{cannot} be attained via a serial execution.
 	
 	\begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
@@ -323,10 +323,10 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 
 \medskip
 \noindent
-\textbf{Complexity Analysis.}
+\textbf{Complexity analysis.}
 The core algorithm reduces serializability checking to Petri net reachability with semilinear target sets. 
 Since the serial executions form a regular language (step 1), their Parikh Image is effectively semilinear by Parikh's theorem, with size exponential in the NFA.
-The interleaving Petri net (step 2) has $O(|G| + |L| + |\mathit{REQ}| \times |\mathit{RESP}|)$ places and $O(|\mathit{REQ}| + |\delta| + |\mathit{RESP}|)$ transitions.
+The interleaving Petri net (step 2) has $O(|G| + (|\mathit{REQ}| \times |L|) + (|\mathit{REQ}| \times |\mathit{RESP}|))$ places and $O(|\mathit{REQ}|\times (1+ |\delta| + |\mathit{RESP}|))$ transitions.
 The reachability query (step 3) asks whether the Petri net can reach the complement of a semilinear set, which is decidable but Ackermann-complete~\cite{CzWo22}.
 Without optimizations, even simple examples can generate Petri nets with hundreds of places and exponentially-sized semilinear constraints, making the approach impractical.
 Our optimizations (Section~\ref{sec:optimizations}) dramatically reduce both the Petri net size and the semilinear set complexity, as we elborate next.
@@ -414,14 +414,14 @@ A semilinear set $S=\bigcup_{i=1}^m L_i$ with
 \textbf{(3) Generating fewer constraints.}  
 When computing the Parikh Image of a regular expression as a semilinear set,
 	most regex operations can be implemented without an exponential blow-up.
-	However, Kleene star is a notable exception: in the general case, it can cause and exponential blow up: for $S=\bigcup_{i=1}^m L_i$,  the Kleene star $S^\ast$ is given as a semilinear set by: 
+	However, Kleene star is a notable exception: in the general case, it can cause an exponential blow up: for $S=\bigcup_{i=1}^m L_i$,  the Kleene star $S^\ast$ is given as a semilinear set by: 
 	\[
 	S^\ast=\bigcup_{I \subseteq \{1,...,m\}} 
 	\Big\{\sum_{i \in I} b_i + \sum_{p \in \bigcup_{i \in I} P_i\cup \{b_i\}} n_p p\Big\}.
 	\]
 	This yields $2^m$ components. To mitigate:
 	(i) if $L_i=\{b_i\}$ (period-less component), factor it out, star the rest, then add $b_i$ as a period;  
-	(ii) if $L_i=\{\sum_{p\in P_i}n_pp\}$ (zero base), likewise star the rest and add each $p\in P_i$.  
+	(ii) if $L_i=\{\sum_{p\in P_i}n_pp\}$ (zero base), likewise star the rest and add each $p\in P_i$ as a period vector to the resulting set.  
 	Each such case halves the component count, and circumvents exponential blow-ups.
 
 
@@ -475,7 +475,10 @@ When computing the Parikh Image of a regular expression as a semilinear set,
 
 \medskip
 \noindent
-\textbf{(4) Strategic Kleene elimination order.}  
+\textbf{(4) Strategic Kleene elimination order.} 
+%
+We use \textit{Kleene's algorithm}~\cite{Kl56} to translate the serializability NFA into a regex.
+% 
 The size of the generated semilinear set is not only impacted by how the
 	semilinear set operations are implemented, but also by what specific regular
 	expression is given as input: a single regular language may be represented by a

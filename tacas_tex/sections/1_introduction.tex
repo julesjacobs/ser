@@ -13,7 +13,7 @@ We illustrate the problem by example:
 \noindent
 \begin{minipage}[t]{0.55\textwidth}
 	\begin{minipage}[t]{\textwidth}
-		\begin{lstlisting}[caption={Without yield (serializable)},
+		\begin{lstlisting}[caption={Without yielding (serializable)},
 			label={lst:MotivatingExample1Ser}]
   // request handler           
   request main: 
@@ -25,7 +25,7 @@ We illustrate the problem by example:
 	\end{minipage}
 	\vspace{1em}
 	\begin{minipage}[t]{\textwidth}
-		\begin{lstlisting}[caption={With yield (not serializable)},
+		\begin{lstlisting}[caption={With yielding (not serializable)},
 			label={lst:MotivatingExample2NonSer}]
   request main: 
       X := 1 
@@ -38,7 +38,7 @@ We illustrate the problem by example:
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.35\textwidth}
-	\begin{lstlisting}[caption={With yield and lock (serializable)},
+	\begin{lstlisting}[caption={With yielding and a spin-lock (serializable)},
 		label={lst:MotivatingExample3Ser}]
   request main: 
       // lock

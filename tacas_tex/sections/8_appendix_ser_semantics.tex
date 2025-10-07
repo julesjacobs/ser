@@ -6,16 +6,16 @@
 %
 The set \(\texttt{V}\) is a finite set of numeric constants; booleans use $0/1$. We respectively denote with \(\texttt{VARS}\) and \(\texttt{vars}\) the (finite) sets of global and local variables. $\rho:{\texttt{vars}}\to \texttt{V}$, and $g:{\texttt{VARS}}\to \texttt{V}$ respectively map a local or global variable to its current value in \(\texttt{V}\).
 %
-Configurations of both programs and expressions are denoted as $\cfg{e}{\rho}{g}$, with \(e\) being a valid \toolname{} expression/program. 
+Configurations are denoted as $\cfg{e}{\rho}{g}$, with \(e\) being a valid \toolname{} expression. 
 %
-Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep)$, and may comprise of a sequence of expression steps.
+Small steps are denoted $(\step)$, while big steps are denoted $(\pstep)$, and may comprise of a sequence of small steps (also denoted $\step^{*}$).
 %
 %program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
 %
 %We denote with \(\ell_0\) the initial local state of every packet.
 
 \smallskip
-\noindent\textit{Expression step} $(\step)$.
+\noindent\textit{Small step} $(\step)$.
 \begin{mathpar}
 	\inferrule*[right=ND-0]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{0}{\rho}{g}}
 	\and
@@ -58,13 +58,13 @@ Expression steps are denoted $(\step)$, while program steps are denoted $(\pstep
 		\cfg{\ifkw(e_1)\{\,e_2 ; \whilekw(e_1)\{e_2\}\,\}\elsekw\{0\}}{\rho}{g}}
 \end{mathpar}
 
-\noindent\textit{Program step} $(\pstep)$ and scheduling.
+\noindent\textit{Big step} $(\pstep)$ and scheduling.
 \begin{mathpar}
-	\inferrule*[right=YIELD]{\cfg{e}{\rho}{g} \step \cfg{\yieldkw \cdot e'}{\rho'}{g'}}{\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'}}
+	\inferrule*[right=YIELD]{\cfg{e}{\rho}{g} \step^{*} \cfg{\yieldkw \cdot e'}{\rho'}{g'}}{\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'}}
 	\\
-	\inferrule*[right=START]{\cfg{e_i}{\rho}{g}\pstep \cfg{e'_i}{\rho'}{g'} \quad i\in\{1,\dots,n\}}{\langle \requestkw\ name_i\{e_i\}, \rho, g \rangle \pstep  \cfg{e'_i}{\rho'}{g'} }
-	\and
-	\inferrule*[right=TERMINATE]{\cfg{e}{\rho}{g} \step \cfg{v}{\rho'}{g'} \quad v\in{\texttt{V}}}{\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'}}	
+%	\inferrule*[right=START]{\cfg{e_i}{\rho}{g}\pstep \cfg{e'_i}{\rho'}{g'} \quad name_i\{e_i\}\in P_0}{\langle \requestkw\ name_i\{e_i\}, \rho, g \rangle \pstep  \cfg{e'_i}{\rho'}{g'} }
+%	\and
+	\inferrule*[right=TERMINATE]{\cfg{e}{\rho}{g} \step^{*} \cfg{v}{\rho'}{g'} \quad v\in{\texttt{V}}}{\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'}}	
 \end{mathpar}
 
 
