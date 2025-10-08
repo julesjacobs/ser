@@ -88,19 +88,20 @@ By convention, we assume that $P$ and $T$ are disjoint.
 \end{definition}
 
 \begin{definition}[Pruned Net]
-	The \emph{pruned} subnet is
-	\[
-	N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr)
-	\]
-	where
-	\[
-	P' = X^*_P \;\cap\; Y^*_P,
-	\quad
-	T' = \{\,t\in T \mid
-	\forall p:\;\Pre(p,t)>0\implies p\in P',\;
-	\forall p:\;\Post(p,t)>0\implies p\in P'
-	\}.
-	\]
+  Let
+  \begin{align*}
+    P' &= X^*_P \;\cap\; Y^*_P,
+    \\
+    T' &= \{\,t\in T \mid
+    \forall p:\;\Pre(p,t)>0\implies p\in P',\;
+    \forall p:\;\Post(p,t)>0\implies p\in P'
+    \}.
+  \end{align*}
+  If $M_0(p) > 0$ for any $p \not\in P'$, the pruned subnet is undefined.
+  Otherwise, the pruned subnet is
+  \[
+  N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr)
+  \]
 \end{definition}
 
 \subsection{Invariant and Correctness}
@@ -124,8 +125,7 @@ Intuitively, $P'$ contains an over-approximation of all places reachable by a fi
 
 \begin{theorem}[Pruning Invariant]
 	\label{thm:invariant}
-	If a place $p$ is witnessable, then $p\in P'$.  Equivalently, the
-	pruned net $N'$ \emph{over-approximates} the set of witnessable places.
+	If a place $p$ is witnessable, then $p\in P'$.
 \end{theorem}
 
 \begin{proof}
@@ -152,6 +152,16 @@ Intuitively, $P'$ contains an over-approximation of all places reachable by a fi
 	\paragraph{Conclusion.}
 	Combining (1) and (2) yields $p\in X^*_P\cap Y^*_P = P'$, as desired.
 \end{proof}
+
+\begin{corollary}
+  If $M_0(p) > 0$ for any $p \not\in P'$ (\textit{i.e.}, if the pruned net is undefined), then $S$ is not reachable from $M_0$.
+\end{corollary}
+
+\begin{corollary}[Bidirectional Pruning Soundness]
+	Let $N = (P, T, Pre, Post, M_0)$ be a Petri net and $S$ a target set.  
+	Let $N' = (P',T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'},\,M_0|_{P'})$ be the pruned net.  
+	Then $S$ is reachable from $N$ iff it is reachable from $N'$.
+\end{corollary}
 
 \medskip
 \noindent
