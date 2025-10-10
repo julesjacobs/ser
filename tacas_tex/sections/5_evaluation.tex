@@ -11,21 +11,33 @@
 
 \noindent
 \textbf{Experimental setup.}
-We ran on a Lenovo ThinkPad P16s (16 AMD cores, 64 GB RAM, Ubuntu 24.04.2).
+All experiments ran on a Lenovo ThinkPad P16s, with 16 AMD cores and 64 GB of RAM, running on a Linux Ubuntu 24.04.2 operating system.
 %
 %We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
 %
-We use \texttt{SMPT}~\cite{AmDa23} (built on \texttt{Z3}~\cite{DeBj08}) as the PN model checker; exact versions/commits are in the artifact manifest. Code, benchmarks, and full results are public~\cite{ArtifactRepository}.
+We use \texttt{SMPT}~\cite{AmDa23} (built upon \texttt{Z3}~\cite{DeBj08}) as our backend Petri net model checker.
+ %
+Our code, benchmarks, and full experimental results are publicly available~\cite{ArtifactRepository}.
 
 
 
 \subsection{Runtime Results}
-We ran \toolname{} on 47 benchmarks (27 serializable, 20 non-serializable), measuring solver time and end-to-end time (including certificate or counterexample validation). Experiments ran on 16 cores with all optimizations and a 500s timeout. Within time, \toolname{} solved 26/27 serializable and 19/20 non-serializable cases (summary in Table~\ref{tab:stats-summary}; full results in Table~\ref{tab:benchmarks-all}).
+We ran \toolname{} on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
+For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
+%
+Within the time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see summary in Table~\ref{tab:stats-summary} and the full results in Table~\ref{tab:benchmarks-all} of the appendix).
 %
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 
 %
-Median total runtime was $1{,}909$ ms overall; $2{,}238.5$ ms for serializable and $830$ ms for non-serializable. Averages were $32{,}898.38$ ms overall; $25{,}530.69$ ms (serializable) and $42{,}980.47$ ms (non-serializable). Runtime splits by outcome: non-serializable cases spend time in counterexample generation, while serializable cases spend time in certificate validation (counterexample validation is just polynomial-time simulation).
+The \textit{median} total runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+%, as reported in Table~\ref{tab:stats-summary}.
+%
+The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+%
+We also observe a clear runtime split based on serializability: 
+%For serializable benchmarks, certificate validation takes much longer than proof generation. 
+among non-serializable benchmarks, counterexample generation is much longer than validation, and dominates the runtime; whereas the opposite holds in non-serializable benchmarks. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network to confirm its feasibility.
 %
 %We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
 %
@@ -311,3 +323,5 @@ render even simple programs infeasible without these optimizations.
 %\newpage
 
 \vspace{-5pt}
+
+

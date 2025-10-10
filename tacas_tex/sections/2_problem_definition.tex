@@ -8,25 +8,41 @@
 \subsection{Background}
 \label{subsec:background}
 
-\textbf{Petri nets.}
-A Petri net $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ has places $P$, transitions $T$, incidence maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and initial marking $M_0$.
-A transition $t$ is enabled at $M$ if $M\ge \mathsf{pre}(t)$; firing yields $M' = M - \mathsf{pre}(t) + \mathsf{post}(t)$, written $M\xrightarrow{t}M'$.
-For a sequence $\sigma$, write $M\xrightarrow{\sigma}M'$; let $R(N)=\{M\mid \exists\sigma.\ M_0\xrightarrow{\sigma}M\}$.
-We ask reachability of a linear-constraint formula $F$: \sat{} if some $M\in R(N)$ satisfies $F$ (denoted $M\models F$), else \unsat{} (toy example in Appendix~\ref{appendix:toyPN}).
-Reachability is decidable even for \textit{unbounded} nets, but \texttt{Ackermann}-complete~\cite{Ma81,Ko82,La92,CzWo22,Le22}.
+\textbf{Petri nets.} 
+A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with a set of places $P$, a set of transitions $T$, input/output maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and an initial marking (token distribution) $M_0\in\mathbb N^P$.  
+A transition $t$ is \textit{enabled} at marking $M \in \mathbb N^P$ if $M\ge \mathsf{pre}(t)$ coordinate-wise, i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
+%
+If an enabled transition \(t\) \textit{fires}, it produces the marking $M'$ (denoted $M\xrightarrow{t}M'$), with $M'= M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
+%
+This can extend naturally to a sequence of firings $\sigma = t_1\cdots t_k$ (denoted $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ with $M=M_0$, $M'=M_k$, and $M_i \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$. 
+% 
+We define the set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all markings reachable from the initial state $M_0$.
+% 
+The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
+%
+Specifically, we focus on reachability of a formula $F$, encoding a combination of linear constraints; it is \sat\ if some $M\in R(N)$ satisfies $F$ (marked $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
+%
+Surprisingly, even for the \textit{unbounded} setting, where places can hold arbitrarily many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although \texttt{Ackermann}-complete~\cite{CzWo22,Le22}.   
 
 
 
 \medskip
 \noindent
-\textbf{Verdict proofs.}
-If $F$ is reachable, a firing sequence $\sigma$ with $M_0\xrightarrow{\sigma}M\models F$ serves as a simulation-checkable proof. If $F$ is unreachable, an inductive Presburger certificate $C$ exists~\cite{Le09} with (i) $M_0\models C$, (ii) $M\models C\land M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
+\textbf{Verdict proofs.} 
+If $F$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models F$ serves as a proof, and is verifiable by simulation of the Petri net.  
+If $F$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ proving non-reachability: 
+(i) $M_0\models C$, (ii) $M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
 
 \medskip
 \noindent
 \textbf{Semilinear sets and Parikh’s theorem.}
-A set $S\subseteq\mathbb N^k$ is \emph{semilinear} if $S=\bigcup_{i=1}^m\{\mathbf b_i+\sum_{j}n_j\mathbf p_{i,j}\}$ for vectors $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$; these are exactly the sets definable in Presburger arithmetic~\cite{Pr29}.
-By Parikh’s theorem~\cite{Parikh66}, the Parikh image of any CFL is semilinear: for $w\in L\subseteq\Sigma^*$, $\Parikh(w)$ counts symbol occurrences.
+A set $S\subseteq\mathbb N^k$ is \textit{semilinear} if 
+$S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\mathbb N\}$ 
+for some $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$. 
+Such sets coincide with those definable in \textit{Presburger arithmetic}~\cite{Pr29}. 
+By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh Image} of any CFL is semilinear. 
+For $\Sigma=\{a_1,\dots,a_k\}$ and $w\in L\subseteq\Sigma^*$, 
+$\mathsf{Parikh}(w)=\{\,a_i^{|w|_{a_i}}\mid a_i\in\Sigma\,\}$ denotes the multiset of symbols occurring in $w$.
 
 %\medskip
 %\noindent
@@ -42,8 +58,8 @@ By Parikh’s theorem~\cite{Parikh66}, the Parikh image of any CFL is semilinear
 
 \medskip
 \noindent
-\textbf{Deciding serializability in unbounded systems.}
-Bouajjani et al.~\cite{BoEmEnHa13} reduce serializability to Petri-net reachability as a special case of bounded-barrier linearizability.
+\textbf{Deciding serializability in unbounded systems.} 
+Bouajjani et al.~\cite{BoEmEnHa13} have proved that serializability in unbounded systems reduces to Petri net reachability, as a special case of \textit{bounded-barrier linearizability}.
 
 
 \subsection{The SER Language}
@@ -72,7 +88,7 @@ Our \toolname{} syntax is defined as follows:
 	&\mid \yieldkw                           && \text{yield to scheduler}
 	\\[0.8em]
 	\mathbf{Program}\quad P_0 ::= &\ \requestkw\ name_1\{e_1\}\;\dots\;\requestkw\ name_n\{e_n\}
-	&& \text{handlers}; name_i\{e_i\}\in P_0
+	&& \text{handlers set; denote } name_i\{e_i\}\in P_0
 \end{aligned}
 \]
 
@@ -149,13 +165,15 @@ Our \toolname{} syntax is defined as follows:
 
 %Given such a \(P_0\), we write \(name_i\{e_i\}\in P_0\).
 %
-Our semantics is standard and fully formalized in Appendix~\ref{appendix:ser-semantics}. Arithmetic extensions are supported in the tool~\cite{ArtifactRepository} but omitted here for brevity.
+Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
+%
+Furthermore, our syntax and semantics can also be extended with \textit{arithmetic operations} (as implemented in our tool~\cite{ArtifactRepository}), but we omit them for simplicity.
 %
 %Furthermore, we note that our syntax and semantics can both be extended to include \textit{arithmetic operations} (as in our implementation~\cite{ArtifactRepository}); however, we omit these for simplicity. 
     
     
 \subsection{Network System}    
-We now present our abstract network system (NS) model, motivated by SDN. Spawning a request corresponds to sending a \emph{packet}; local variables map to packet headers, and global variables to switch state shared by all requests. We use \emph{request} for a concurrent computation unit.
+We now present our abstract network system (NS) setting, which is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
 %
 We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
@@ -163,9 +181,9 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 
 \item $L$ is a set of \textit{local packet states} (e.g., a packet header value)
 
-\item $\mathit{REQ}$ is a finite set of \textit{request labels} (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
+\item $\mathit{REQ}$ is a finite set of\textit{ request strings} (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 
-\item $\mathit{RESP}$ is a finite set of \textit{response labels} (each marked {\color{red}$\blacklozenge_\text{resp}$})
+\item $\mathit{RESP}$ is a finite set of \textit{response strings} (each marked {\color{red}$\blacklozenge_\text{resp}$})
 
 \item $g_0 \in G$ is the \textit{initial global state} of the network system
 
@@ -183,13 +201,20 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 \smallskip
 \noindent
 \textbf{Request and response.}
-A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{req}}\in\mathit{REQ}$ initiates a handler execution; a \emph{response} ${\color{red}\blacklozenge_\text{resp}}\in\mathit{RESP}$ is its returned value. The pair $({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})$ captures one execution’s I/O behavior.
+A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{r}} \in \mathit{REQ}$ represents the initiation of a concurrent computation unit. Each request has an associated handler expression from the program syntax that defines its behavior.
+A \emph{response} ${\color{red}\blacklozenge_\text{s}} \in \mathit{RESP}$ represents the value returned by a request after its execution terminates.
+The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozenge_\text{s}}) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single request execution.
 
 
 \smallskip
 \noindent
 \textbf{States.}
-A global \emph{network state} is $(g,\mathcal{R},\mathcal{Z})$ with $g\in G$ the global state, $\mathcal{R}\in\mathrm{Multiset}(L\times\mathit{REQ})$ the in-flight requests, and $\mathcal{Z}\in\mathrm{Multiset}(\mathit{REQ}\times\mathit{RESP})$ the completed pairs. The initial state is $(g_0,\varnothing,\varnothing)$. We write $\uplus$ for multiset union.
+A (global) \emph{network state} is a triple $(g,\mathcal{R},\mathcal{Z})$ where
+$g \in G$ is the current global network state,
+$\mathcal{R} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (i.e., local assignments of each thread in the current timestep, and the original request string that spawned it),
+and $\mathcal{Z} \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
+%
+The initial global state is $(g_0, \varnothing, \varnothing)$.
 
 
 
@@ -200,7 +225,10 @@ A global \emph{network state} is $(g,\mathcal{R},\mathcal{Z})$ with $g\in G$ the
 \smallskip
 \noindent
 \textbf{Transition rules.}
-A transition $\longrightarrow$ either (1) spawns a request, (2) advances one request via $\delta$, or (3) returns a response; when no steps remain, $\mathcal{Z}$ is the final multiset of request/response pairs.
+A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{R}, \mathcal{Z})\) by either
+(1) introducing a new request, (2) processing a request step via \(\delta\), or
+(3) consuming a local state to produce its response. When no more steps are possible,
+the result set \(\mathcal{Z}\) is the final multiset of request/response pairs that arose during the run.
 
 
 
@@ -220,37 +248,58 @@ A transition $\longrightarrow$ either (1) spawns a request, (2) advances one req
 %\noindent\textbf{Transition rules.}
 \[
 \text{(New Request)}\quad
-\infer{({\color{ForestGreen}\blacklozenge_\text{req}},\ell)\in\mathit{req}}
-{(g,\mathcal{R},\mathcal{Z}) \rightarrow (g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{req}})\},\; \mathcal{Z})}
+\infer{({\color{ForestGreen}\blacklozenge_\text{r}},\ell)\in\mathit{req}}
+{(g,\mathcal{R},\mathcal{Z}) \rightarrow (g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; \mathcal{Z})}
 \]
 \[
 \text{(Processing Step)}\quad
 \infer{((\ell, g),(\ell', g'))\in\delta}
-{(g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{req}})\},\; \mathcal{Z})
+{(g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; \mathcal{Z})
 	\rightarrow
-	(g',\; \mathcal{R}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{req}})\},\; \mathcal{Z})}
+	(g',\; \mathcal{R}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\; \mathcal{Z})}
 \]
 \[
 \text{(Response)}\quad
-\infer{(\ell,{\color{red}\blacklozenge_\text{resp}})\in\mathit{resp}}
-{(g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{req}})\},\; \mathcal{Z})
+\infer{(\ell,{\color{red}\blacklozenge_\text{s}})\in\mathit{resp}}
+{(g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; \mathcal{Z})
 	\rightarrow
-	(g,\; \mathcal{R},\; \mathcal{Z} \uplus \{({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})\})}
+	(g,\; \mathcal{R},\; \mathcal{Z} \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
 \]
 
 
 \smallskip
 \noindent
 \textbf{Serializability.}
-An \emph{interleaving run} is a complete execution $(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})$.
-It is \emph{serial} if every intermediate $\mathcal{R}_i$ contains at most one request. Let
+An \textit{interleaving run} is a complete execution 
+\((g_0,\varnothing,\varnothing)\!\to^*\!(g_n,\varnothing,\mathcal{Z})\):
 \[
-\mathrm{Int}(\mathcal{N})=\{\,\mathcal{Z}\mid \exists\text{ interleaved run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\},
+(g_0,\varnothing,\varnothing) \;\to\; (g_1,\mathcal{R}_1,\mathcal{Z}_1) \;\to\; \cdots \;\to\; (g_{n-1},\mathcal{R}_{n-1},\mathcal{Z}_{n-1}) \;\to\; (g_n,\mathcal{R}_{n},\mathcal{Z}_{n}).
+\quad
+(\text{with } \mathcal{R}_{n}=\varnothing,\mathcal{Z}_n=\mathcal{Z})
+ %\varnothing,Z
 \]
+It is said to be \textit{serial} if each $\mathcal{R}_i$ has \textit{at most} one request.
+	%
+	Intuitively, serial runs have at most one in-flight request at a time.
+%	,
+%	whereas \emph{interleaved} runs may have multiple requests in flight at once.
+	%
+	
+	For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to respectively represent the (infinite) sets of all request/response multisets, for interleaving and serializable runs :
+%
 \[
-\mathrm{Ser}(\mathcal{N})=\{\,\mathcal{Z}\mid \exists\text{ serial run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\}.
+\mathrm{Int}(\mathcal{N})
+= \bigl\{\, \mathcal{Z} \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{\textit{interleaved} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}
 \]
-The system is \emph{serializable} if $\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})$.
+%
+\[
+\mathrm{Ser}(\mathcal{N})
+= \bigl\{\, \mathcal{Z} \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}.
+\]
+
+A network system is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs obtained by an interleaving execution can also be obtained serially.
 
 
 %
@@ -295,7 +344,7 @@ The system is \emph{serializable} if $\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\ma
 %
 The NS abstraction not only captures concurrent behaviors in software-defined networks but also enables a natural translation from \toolname{} programs. 
 Given a \toolname{} program \(P_0\) with local variables (\texttt{vars}), global variables (\texttt{VARS}), and mappings \(\rho,g\) from these to a finite value set \texttt{V}, we define the initial local/global states $\rho_0$ and $g_0$ assigning $0$ to all local and global variables, respectively. 
-Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:ser-semantics}), we construct the NS $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
+Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:ser-semantics}), we  construct the NS $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
 
 %\todo{old}
 %The NS abstraction is useful beyond its capability to capture concurrent behaviors in software-defined networks.
@@ -316,12 +365,12 @@ Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:
 \begin{aligned}
 	G \;&=\; \{\, g : \texttt{VARS}\!\to\! \texttt{V} \,\},\\[0.3ex]
 	L \;&=\; \bigl\{\, (e,\rho)\ \bigm|\ \rho:\texttt{vars}\!\to\! \texttt{V},\ \exists\,name_i\{e_i\}\!\in\! P_0\ \text{s.t.} \\[-0.2ex]
-	&\qquad\quad\qquad\quad e \text{ is a suffix of } e_i \text{ that starts at the program start or immediately after a } \yieldkw \text{ statement} \,\bigr\},\\[0.3ex]
+	&\qquad\quad\qquad\quad e \text{ is a suffix of } e_i \text{ starting from } \yieldkw \text{ or initialization} \,\bigr\},\\[0.3ex]
 	REQ \;&=\; \{\, name_i \mid name_i\{e_i\}\!\in\! P_0 \,\},\quad RESP \;=\; \texttt{V},\\[0.3ex]
 	req \;&=\; \{\, (r,\ell) \mid r=name_i\!\in\!REQ,\ name_i\{e_i\}\!\in\! P_0,\ \ell=(e_i,\rho_0)\!\in\!L\},\\[0.3ex]
-	resp \;&=\; \{\, (\ell',r') \mid \exists v\!\in\!\texttt{V}.\ \ell'=(v,\rho')\!\in\!L,\ r'=v\!\in\!RESP \,\},\\[0.3ex]
-\delta \;&=\; \bigl\{\, ((e,\rho),g)\!\to\!((e',\rho'),g') \ \bigm|\ (e,\rho)\!\in\!L,\ (e',\rho')\!\in\!L,\ g,g'\!\in\!G,\ 
-\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'} \,\bigr\}.
+	resp \;&=\; \{\, (\ell',r') \mid \exists \texttt{v}\!\in\!\texttt{V}.\ \ell'=(v,\rho')\!\in\!L,\ r'=\texttt{v}\!\in\!RESP \,\},\\[0.3ex]
+	\delta \;&=\; \bigl\{\, ((e,\rho),g)\!\to\!((e',\rho'),g') \ \bigm|\ ((e,\rho),(e',\rho'))\!\in\!L,\ g,g'\!\in\!G,\ 
+	\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'} \,\bigr\}.
 \end{aligned}
 \]
 
@@ -405,27 +454,39 @@ Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:
 %
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 \textbf{Example.}
-For Listing~\ref{lst:MotivatingExample2NonSer}, the NS is:
+Recall the code snippet from the simple, non-serializable example presented in Listing~\ref{lst:MotivatingExample2NonSer}. We can represent its NS with the following mapping:
 
 \begin{itemize}
-\item $G=\{[\texttt{X=0}],[\texttt{X=1}]\}$.
+\item 
+The set $G$ is defined as $G=\{[\texttt{X=0}], [\texttt{X=1}]\}$.
 
-\item Initial global state $g_0=[\texttt{X=0}]$.
+\item 
+The initial global state is defined as $g_0 = [\texttt{X=0}]$.
 
-\item $L$ contains pairs of local states (e.g., $[\texttt{y=0}]$, $[\texttt{y=1}]$) and reachable \toolname{} continuations. Fig.~\ref{fig:code2ExampleNS} shows the reachable continuations.
+\item 
+We define $L$ as all pairs of local states (assignments such as $[\texttt{y=0}], [\texttt{y=1}]$), coupled with all reachable \toolname{} programs (continuations of a program at a point of execution).
+%~\footnote{
+%These are continuations of a \toolname{} program at a point of execution. Concretely, this can mean either (i) the suffix of the program when it is first initialized (the part that has not yet executed); or (ii) the continuation of the program after a \(\yieldkw\) statement, where execution may later resume.}.
+For example, the reachable programs for Listing~\ref{lst:MotivatingExample2NonSer} are depicted as code snippets in Fig.~\ref{fig:code2ExampleNS}. 
 
 
-\item $REQ=\{{\color{ForestGreen}\blacklozenge_\text{main}}\}$.
+\item 
+The set of requests is $REQ = \{{\color{ForestGreen}\blacklozenge_\text{main}}\}$.
 
-\item $RESP=\{{\color{red}\blacklozenge_0},{\color{red}\blacklozenge_1}\}$.
+\item 
+The set of responses is $RESP = \{{\color{red}\blacklozenge_0},{\color{red}\blacklozenge_1}\}$.
 
-\item $\delta$ is given in Fig.~\ref{fig:code2ExampleNSSecondPart} (Appendix~\ref{appendix:MoreNsExamples}).
+\item
+The function \(\delta\) is presented in Fig.~\ref{fig:code2ExampleNSSecondPart} (Appendix~\ref{appendix:MoreNsExamples}).
 
 
 \end{itemize}
 
 
-Fig.~\ref{fig:code2ExampleNS} shows the NS from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}); only \emph{reachable} states are shown.
+We depict in Fig.~\ref{fig:code2ExampleNS} the explicit network system that
+serves as a mapping from requests ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to responses ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
+%
+We note that, for simplicity, we depict only \textit{reachable} states.
 %
 \end{tcolorbox}
 
@@ -587,8 +648,10 @@ return y
 	  \draw[->] (state4) -- (resp1);
 	  
 	\end{tikzpicture}
-\caption{Network system for Listing~\ref{lst:MotivatingExample2NonSer}.
-Local states show local assignments (yellow) and remaining code; edges show global-state transitions (blue). Requests/responses are green/red diamonds. Shapes (diamonds vs. rectangles) aid grayscale printing.}
+	\caption{The Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
+		Local states show the variable assignments (\textcolor{orange}{yellow}) and the remaining code; edges indicate transitions of global states  (\textcolor{blue}{blue}). 
+		Requests and responses appear as \textcolor{ForestGreen}{green} and \textcolor{red}{red} diamonds, respectively. 
+		From left to right: a \texttt{main} request starts with \texttt{[y=0]} and the full program; after yielding, $\delta$ steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, then updates \texttt{y} from the global value, returning it as the final response.}
 %	\caption{The Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
 %		Local states include (\textcolor{orange}{yellow}) local variable assignments and the remaining program; edges are labeled with (\textcolor{blue}{blue}) global state transitions. 
 %		Requests and responses are shown as \textcolor{ForestGreen}{green} and \textcolor{red}{red} diamonds, respectively. 
@@ -602,3 +665,5 @@ Local states show local assignments (yellow) and remaining code; edges show glob
 %}
 \label{fig:code2ExampleNS}
 \end{figure}
+
+
