@@ -1,5 +1,5 @@
 %\newpage
-\vspace{-3.5pt}
+\vspace{-3.0pt}
 \section{Problem Definition}
 \label{sec:problem-definition}
 %\guy{Can someone check Sections 3-4-5? Especially the formulations}
@@ -20,7 +20,7 @@ We define the set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma}
 % 
 The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
 %
-Specifically, we focus on reachability of linear-constraint formula $F$; it is \sat\ if some marking $M\in R(N)$ satisfies $F$ (denoted $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
+Specifically, we focus on reachability of a linear-constraint formula $F$; it is \sat\ if some marking $M\in R(N)$ satisfies $F$ (denoted $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
 %
 Surprisingly, even for the \textit{unbounded} setting, where places can hold arbitrarily many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although \texttt{Ackermann}-complete~\cite{CzWo22,Le22}.   
 
@@ -88,7 +88,7 @@ Our \toolname{} syntax is defined as follows:
 	&\mid \yieldkw                           && \text{yield to scheduler}
 	\\[0.8em]
 	\mathbf{Program}\quad P_0 ::= &\ \requestkw\ name_1\{e_1\}\;\dots\;\requestkw\ name_n\{e_n\}
-	&& \text{handlers; denote } name_i\{e_i\}\in P_0
+	&& \text{set of handlers} 
 \end{aligned}
 \]
 
@@ -165,7 +165,12 @@ Our \toolname{} syntax is defined as follows:
 
 %Given such a \(P_0\), we write \(name_i\{e_i\}\in P_0\).
 %
-Our semantics is standard and fully formalized in Appendix~\ref{appendix:ser-semantics}. Furthermore, arithmetic extensions are supported in the tool~\cite{ArtifactRepository} but omitted here for brevity.
+
+Given a program \(P_0\), we write \(name_i\{e_i\}\in P_0\) for each of the handlers \(name_i\{e_i\}\).
+%
+Our semantics is standard and fully formalized in Appendix~\ref{appendix:ser-semantics}. 
+ %
+ In addition, arithmetic extensions are supported in the tool~\cite{ArtifactRepository} but omitted here for brevity.
 %Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
 %
 %Furthermore, our syntax and semantics can also be extended with \textit{arithmetic operations} (as implemented in our tool~\cite{ArtifactRepository}), but we omit them for simplicity.
@@ -270,12 +275,14 @@ A transition $\longrightarrow$ either (1) spawns a request; (2) advances one req
 \smallskip
 \noindent
 \textbf{Serializability.}
-An \textit{interleaving run} is a complete execution 
+An \textit{interleaved run} is a complete execution 
 \((g_0,\varnothing,\varnothing)\!\to^*\!(g_n,\varnothing,\mathcal{Z})\):
 \[
-(g_0,\varnothing,\varnothing) \;\to\; (g_1,\mathcal{R}_1,\mathcal{Z}_1) \;\to\; \cdots \;\to\; (g_{n-1},\mathcal{R}_{n-1},\mathcal{Z}_{n-1}) \;\to\; (g_n,\mathcal{R}_{n},\mathcal{Z}_{n}).
+(g_0,\varnothing,\varnothing) \;\to\; (g_1,\mathcal{R}_1,\mathcal{Z}_1) \;\to\; \cdots \;\to\; 
+%(g_{n-1},\mathcal{R}_{n-1},\mathcal{Z}_{n-1}) \;\to\; 
+(g_n,\mathcal{R}_{n},\mathcal{Z}_{n}),
 \quad
-(\text{with } \mathcal{R}_{n}=\varnothing,\mathcal{Z}_n=\mathcal{Z})
+\text{with } \mathcal{R}_{n}=\varnothing,\mathcal{Z}_n=\mathcal{Z}.
  %\varnothing,Z
 \]
 It is \textit{serial} if each $\mathcal{R}_i$ has \textit{at most} one request.
@@ -285,7 +292,7 @@ It is \textit{serial} if each $\mathcal{R}_i$ has \textit{at most} one request.
 %	whereas \emph{interleaved} runs may have multiple requests in flight at once.
 	%
 	%
-	Let \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\)  respectively denote the (infinite) sets of request/response multisets, for interleaving and serial runs :
+	Let \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\)  respectively denote the (infinite) sets of request/response multisets, for interleaved and serial runs:
 %
 \[
 \mathrm{Int}(\mathcal{N})=\{\,\mathcal{Z}\mid \exists\text{ \textit{interleaved} run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\},
@@ -306,7 +313,7 @@ It is \textit{serial} if each $\mathcal{R}_i$ has \textit{at most} one request.
 %\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}.
 %\]
 
-An NS $\mathcal{N}$ is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs obtained by an interleaving execution can also be obtained serially.
+An NS $\mathcal{N}$ is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs obtained by an interleaved execution can also be obtained serially.
 
 
 %
