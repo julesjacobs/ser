@@ -113,17 +113,17 @@ Their \(\mathsf{pre}\) and \(\mathsf{post}\) mappings are:
 	&= \mathbf0, &
 	\mathsf{post}\bigl(t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}\bigr)
 	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}}, 
-	&&\text{for each }({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req},\\
+	&&\text{for }({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)\in\mathit{req},\\
 	\mathsf{pre}\bigl(t_{((\ell,g),(\ell',g'))}\bigr)
 	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}} + \mathbf1_{p_g}, &
 	\mathsf{post}\bigl(t_{((\ell,g),(\ell',g'))}\bigr)
 	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell')}} + \mathbf1_{p_{g'}}, 
-	&&\text{for each }((\ell,g),(\ell',g'))\in\delta,\\
+	&&\text{for }{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ}}, ((\ell,g),(\ell',g'))\in\delta,\\
 	\mathsf{pre}\bigl(t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})}\bigr)
 	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}}, &
 	\mathsf{post}\bigl(t_{(\ell,{\color{red}\blacklozenge_{\mathit{resp}}})}\bigr)
 	&= \mathbf1_{p_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}})}}, 
-	&&\text{for each }{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{req},(\ell,\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}
+	&&\text{for }{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}\in\mathit{REQ},(\ell,\color{red}\blacklozenge_{\mathit{resp}}})\in\mathit{resp}
 	%\ %(\ell\text{ the matching local state).
 		%		}
 \end{alignedat}

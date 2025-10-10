@@ -1,4 +1,4 @@
-\section{Formal results}
+\section{Formal Results}
 \label{sec:formal-results}
 
 %\begin{itemize}
@@ -51,7 +51,7 @@ Given a network system \(\mathcal S= (G, L, \mathit{REQ},  \mathit{RESP}, g_0, \
 %	\Bigr\}.
 %	\]
 %
-We define each transition to correspond to a request/response pair:
+We let each transition correspond to a request/response pair:
 \(
 \delta^A \subseteq Q \times \Sigma \times Q,
 \quad q \xrightarrow{{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}} q'
@@ -94,7 +94,7 @@ $	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon some \textit{ful
 	Its language
 	\(L(\mathcal A_{\mathrm{ser}}(\mathcal S))\subseteq\Sigma^*\) is exactly the set of serial
 	request/response traces.
-	Hence, by definition it holds that applying the Parikh Image gives the set of all multisets of request/response pairs obtained by serial executions:
+	Hence, by definition it holds that applying the Parikh image gives the set of all multisets of request/response pairs obtained by serial executions:
 	\(
 	\mathsf{Ser}(\mathcal S)
 	\;=\;
@@ -110,13 +110,17 @@ $	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon some \textit{ful
 	
 %	\smallskip
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
-	\textbf{Example.} In the case of the (non-serializable) toy  program presented in Listing~\ref{lst:MotivatingExample2NonSer}, the NS depicted in Fig.~\ref{fig:code2ExampleNS} allows us to also extract the corresponding Serial NFA (depicted in Fig.~\ref{fig:code2ExampleNFA}).
-	Due to the aforementioned construction, a string of request/response pairs is accepted by the NFA iff there exists a serial execution of the NS that induces it.
+	\textbf{Example.} For Listing~\ref{lst:MotivatingExample2NonSer}, the NS in Fig.~\ref{fig:code2ExampleNS} gives rise to the Serial NFA in Fig.~\ref{fig:code2ExampleNFA}.
+	%
+	A trace of request/response pairs is accepted by the NFA iff some serial execution of the program induces it.
+	%	
+Here, serial runs produce only ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}), and the only reachable global state is [\texttt{X=0}].
+%	Due to the aforementioned construction, a string of request/response pairs is accepted by the NFA iff there exists a serial execution of the NS that induces it.
 %
 %	As the states encode the global variable values, and the edges encode request/response pairs for all serial executions, the  
-Specifically, in this case --- serial executions can only produce request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, is [\texttt{X=0}]. 
+%Specifically, in this case --- serial executions can only produce request/response pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$/{\color{red}$\blacklozenge_1$}}). Furthermore, the only global state reachable in serial executions, is [\texttt{X=0}]. 
 	%
-	Intuitively, this corresponds to [\texttt{X=0}] being the initial global state, as well as the system's global state after every single packet exits the network in a serial execution.
+%	Intuitively, this corresponds to [\texttt{X=0}] being the initial global state, as well as the system's global state after every single packet exits the network in a serial execution.
 	\end{tcolorbox}
 	%
 	\begin{figure}[!htbp]
@@ -256,7 +260,7 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 	\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} \ge 0 \wedge \textcolor{red}{P_8} \ge 1.
 	\]
 	
-	This set encodes all reachable markings with no tokens on $P_1,P_4,P_5,P_6$, at least one token on $\textcolor{red}{P_8}$ (i.e., {\color{red}$\blacklozenge_0$}), and any tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3},\textcolor{red}{P_7}$. 
+	This set requires no tokens on $P_1,P_4,P_5,P_6$, at least one token on $\textcolor{red}{P_8}$ (i.e., {\color{red}$\blacklozenge_0$}), and any tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3},\textcolor{red}{P_7}$. 
 	%
 %	Note that \(\textcolor{red}{P_8} \ge 1\) requires at least one {\color{red}$\blacklozenge_0$}, as expected (see \Cref{sec:introduction}).
 	\end{tcolorbox} 
@@ -265,7 +269,7 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 %	\item \textbf{Reachability encoding.}  
 	
 	
-	\item \textbf{Decision \& validation.}  
+	\item \textbf{Decision \& validation.}
 	We ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that
 	\[
 	M_0 \xrightarrow{}^{*} M
@@ -275,13 +279,16 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 	
 	\begin{itemize}
 		\item [\sat]: yields a counterexample interleaving \(M\) with
-		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\), which is automatically embedded into the NS semantics.
+		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\), validated by simulation of the NS.
 %		We validate a reachable trace and embed it into the NS semantics, yielding a valid interleaving that produces request/response pairs unattainable under any serial execution.
 		
 		\item [\unsat]: yields an inductive invariant of
-		\(N_{\mathrm{int}}\), which back-translates to an NS-level proof of
-		serializability 
-		for \(\mathcal S\)
+		\(N_{\mathrm{int}}\), back-translated to an NS-level proof of serializability 
+%		(Appendix~\ref{appendix:ns-serializable}).
+%		
+%		which back-translates to an NS-level proof of
+%		serializability 
+%		for \(\mathcal S\)
 		%
 %		back-translated to a validated by synthesizing an inductive invariant over the interleaving PN, thereby proving that the corresponding semilinear set cannot be realized by any interleaving 
 (see example in Appendix~\ref{appendix:ns-serializable}).
@@ -325,11 +332,11 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 \noindent
 \textbf{Complexity analysis.}
 The core algorithm reduces serializability checking to Petri net reachability with semilinear target sets. 
-Since the serial executions form a regular language (step 1), their Parikh Image is effectively semilinear by Parikh's theorem, with size exponential in the NFA.
+Since the serial executions form a regular language (step 1), their Parikh image is effectively semilinear by Parikh's theorem, with size exponential in the NFA.
 The interleaving Petri net (step 2) has $O(|G| + (|\mathit{REQ}| \times |L|) + (|\mathit{REQ}| \times |\mathit{RESP}|))$ places and $O(|\mathit{REQ}|\times (1+ |\delta| + |\mathit{RESP}|))$ transitions.
-The reachability query (step 3) asks whether the Petri net can reach the complement of a semilinear set, which is decidable but Ackermann-complete~\cite{CzWo22}.
+The reachability query (step 3) asks whether the Petri net can reach the complement of a semilinear set, which is decidable but \texttt{Ackermann}-complete~\cite{CzWo22}.
 Without optimizations, even simple examples can generate Petri nets with hundreds of places and exponentially-sized semilinear constraints, making the approach impractical.
-Our optimizations (Section~\ref{sec:optimizations}) dramatically reduce both the Petri net size and the semilinear set complexity, as we elborate next.
+Our optimizations (see subsec.~\ref{sec:optimizations}) dramatically reduce both the Petri net size and the semilinear set complexity, as we elaborate next.
 
 
 %\guy{should we add/prove the following?}
@@ -412,7 +419,7 @@ A semilinear set $S=\bigcup_{i=1}^m L_i$ with
 \medskip
 \noindent
 \textbf{(3) Generating fewer constraints.}  
-When computing the Parikh Image of a regular expression as a semilinear set,
+When computing the Parikh image of a regular expression as a semilinear set,
 	most regex operations can be implemented without an exponential blow-up.
 	However, Kleene star is a notable exception: in the general case, it can cause an exponential blow up: for $S=\bigcup_{i=1}^m L_i$,  the Kleene star $S^\ast$ is given as a semilinear set by: 
 	\[

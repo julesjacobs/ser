@@ -20,7 +20,7 @@ We define the set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma}
 % 
 The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
 %
-Specifically, we focus on reachability of a formula $F$, encoding a combination of linear constraints; it is \sat\ if some $M\in R(N)$ satisfies $F$ (marked $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
+Specifically, we focus on reachability of linear-constraint formula $F$; it is \sat\ if some marking $M\in R(N)$ satisfies $F$ (denoted $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
 %
 Surprisingly, even for the \textit{unbounded} setting, where places can hold arbitrarily many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although \texttt{Ackermann}-complete~\cite{CzWo22,Le22}.   
 
@@ -40,9 +40,9 @@ A set $S\subseteq\mathbb N^k$ is \textit{semilinear} if
 $S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\mathbb N\}$ 
 for some $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$. 
 Such sets coincide with those definable in \textit{Presburger arithmetic}~\cite{Pr29}. 
-By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh Image} of any CFL is semilinear. 
-For $\Sigma=\{a_1,\dots,a_k\}$ and $w\in L\subseteq\Sigma^*$, 
-$\mathsf{Parikh}(w)=\{\,a_i^{|w|_{a_i}}\mid a_i\in\Sigma\,\}$ denotes the multiset of symbols occurring in $w$.
+By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh image} of any CFL is semilinear. 
+For $\Sigma=\{a_1,\dots,a_k\}$ and  $w\in L\subseteq\Sigma^*$,  the multiset
+$\mathsf{Parikh}(w)=\{\,a_i^{|w|_{a_i}}\mid a_i\in\Sigma\,\}$ counts symbol occurrences in $w$.
 
 %\medskip
 %\noindent
@@ -88,7 +88,7 @@ Our \toolname{} syntax is defined as follows:
 	&\mid \yieldkw                           && \text{yield to scheduler}
 	\\[0.8em]
 	\mathbf{Program}\quad P_0 ::= &\ \requestkw\ name_1\{e_1\}\;\dots\;\requestkw\ name_n\{e_n\}
-	&& \text{handlers set; denote } name_i\{e_i\}\in P_0
+	&& \text{handlers; denote } name_i\{e_i\}\in P_0
 \end{aligned}
 \]
 
@@ -165,15 +165,16 @@ Our \toolname{} syntax is defined as follows:
 
 %Given such a \(P_0\), we write \(name_i\{e_i\}\in P_0\).
 %
-Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
+Our semantics is standard and fully formalized in Appendix~\ref{appendix:ser-semantics}. Furthermore, arithmetic extensions are supported in the tool~\cite{ArtifactRepository} but omitted here for brevity.
+%Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
 %
-Furthermore, our syntax and semantics can also be extended with \textit{arithmetic operations} (as implemented in our tool~\cite{ArtifactRepository}), but we omit them for simplicity.
+%Furthermore, our syntax and semantics can also be extended with \textit{arithmetic operations} (as implemented in our tool~\cite{ArtifactRepository}), but we omit them for simplicity.
 %
 %Furthermore, we note that our syntax and semantics can both be extended to include \textit{arithmetic operations} (as in our implementation~\cite{ArtifactRepository}); however, we omit these for simplicity. 
     
     
 \subsection{Network System}    
-We now present our abstract network system (NS) setting, which is motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
+We now present our abstract network system (NS) model, motivated by software-defined networking. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
 %
 We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
@@ -181,9 +182,9 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 
 \item $L$ is a set of \textit{local packet states} (e.g., a packet header value)
 
-\item $\mathit{REQ}$ is a finite set of\textit{ request strings} (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
+\item $\mathit{REQ}$ is a finite set of \textit{request labels} (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 
-\item $\mathit{RESP}$ is a finite set of \textit{response strings} (each marked {\color{red}$\blacklozenge_\text{resp}$})
+\item $\mathit{RESP}$ is a finite set of \textit{response labels} (each marked {\color{red}$\blacklozenge_\text{resp}$})
 
 \item $g_0 \in G$ is the \textit{initial global state} of the network system
 
@@ -198,21 +199,22 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 %\todo{new start}
 %We refer to our transition rules in Fig.~\ref{fig:code2ExampleNS}.
 
-\smallskip
+%\smallskip
 \noindent
 \textbf{Request and response.}
-A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{r}} \in \mathit{REQ}$ represents the initiation of a concurrent computation unit. Each request has an associated handler expression from the program syntax that defines its behavior.
-A \emph{response} ${\color{red}\blacklozenge_\text{s}} \in \mathit{RESP}$ represents the value returned by a request after its execution terminates.
-The pair $({\color{ForestGreen}\blacklozenge_\text{r}}, {\color{red}\blacklozenge_\text{s}}) \in \mathit{REQ} \times \mathit{RESP}$ captures the complete input-output behavior of a single request execution.
+A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{req}}\in\mathit{REQ}$ initiates a handler execution, running a concurrent computation; a \emph{response} ${\color{red}\blacklozenge_\text{resp}}\in\mathit{RESP}$ is its returned value. The pair $({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})$ captures one execution’s input/output behavior.
+
 
 
 \smallskip
 \noindent
 \textbf{States.}
-A (global) \emph{network state} is a triple $(g,\mathcal{R},\mathcal{Z})$ where
-$g \in G$ is the current global network state,
-$\mathcal{R} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (i.e., local assignments of each thread in the current timestep, and the original request string that spawned it),
+A \emph{network state} is a triple $(g,\mathcal{R},\mathcal{Z})$ where
+$g \in G$ is the global network state,
+$\mathcal{R} \in \mathrm{Multiset}(L \times \mathit{REQ})$ is a multiset of in-flight requests (i.e., local assignments of each thread in the current timestep, and the original request label that spawned it),
 and $\mathcal{Z} \in \mathrm{Multiset}(\mathit{REQ} \times \mathit{RESP})$ is a multiset of completed request/response pairs.
+%
+We write $\uplus$ for multiset union.
 %
 The initial global state is $(g_0, \varnothing, \varnothing)$.
 
@@ -225,10 +227,8 @@ The initial global state is $(g_0, \varnothing, \varnothing)$.
 \smallskip
 \noindent
 \textbf{Transition rules.}
-A transition \(\longrightarrow\) modifies the triple \((g,\mathcal{R}, \mathcal{Z})\) by either
-(1) introducing a new request, (2) processing a request step via \(\delta\), or
-(3) consuming a local state to produce its response. When no more steps are possible,
-the result set \(\mathcal{Z}\) is the final multiset of request/response pairs that arose during the run.
+A transition $\longrightarrow$ either (1) spawns a request; (2) advances one request via $\delta$; or (3) returns a response. When no further steps remain, $\mathcal{Z}$ is the final multiset of request/response pairs that arose during the NS run.
+
 
 
 
@@ -248,22 +248,22 @@ the result set \(\mathcal{Z}\) is the final multiset of request/response pairs t
 %\noindent\textbf{Transition rules.}
 \[
 \text{(New Request)}\quad
-\infer{({\color{ForestGreen}\blacklozenge_\text{r}},\ell)\in\mathit{req}}
-{(g,\mathcal{R},\mathcal{Z}) \rightarrow (g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; \mathcal{Z})}
+\infer{({\color{ForestGreen}\blacklozenge_\text{req}},\ell)\in\mathit{req}}
+{(g,\mathcal{R},\mathcal{Z}) \rightarrow (g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{req}})\},\; \mathcal{Z})}
 \]
 \[
 \text{(Processing Step)}\quad
 \infer{((\ell, g),(\ell', g'))\in\delta}
-{(g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; \mathcal{Z})
+{(g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{req}})\},\; \mathcal{Z})
 	\rightarrow
-	(g',\; \mathcal{R}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{r}})\},\; \mathcal{Z})}
+	(g',\; \mathcal{R}\uplus\{(\ell',{\color{ForestGreen}\blacklozenge_\text{req}})\},\; \mathcal{Z})}
 \]
 \[
 \text{(Response)}\quad
-\infer{(\ell,{\color{red}\blacklozenge_\text{s}})\in\mathit{resp}}
-{(g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{r}})\},\; \mathcal{Z})
+\infer{(\ell,{\color{red}\blacklozenge_\text{resp}})\in\mathit{resp}}
+{(g,\; \mathcal{R}\uplus\{(\ell,{\color{ForestGreen}\blacklozenge_\text{req}})\},\; \mathcal{Z})
 	\rightarrow
-	(g,\; \mathcal{R},\; \mathcal{Z} \uplus \{({\color{ForestGreen}\blacklozenge_\text{r}},{\color{red}\blacklozenge_\text{s}})\})}
+	(g,\; \mathcal{R},\; \mathcal{Z} \uplus \{({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})\})}
 \]
 
 
@@ -278,28 +278,35 @@ An \textit{interleaving run} is a complete execution
 (\text{with } \mathcal{R}_{n}=\varnothing,\mathcal{Z}_n=\mathcal{Z})
  %\varnothing,Z
 \]
-It is said to be \textit{serial} if each $\mathcal{R}_i$ has \textit{at most} one request.
+It is \textit{serial} if each $\mathcal{R}_i$ has \textit{at most} one request.
 	%
 	Intuitively, serial runs have at most one in-flight request at a time.
 %	,
 %	whereas \emph{interleaved} runs may have multiple requests in flight at once.
 	%
-	
-	For a network system \(\mathcal{N}\), we define \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\) to respectively represent the (infinite) sets of all request/response multisets, for interleaving and serializable runs :
+	%
+	Let \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\)  respectively denote the (infinite) sets of request/response multisets, for interleaving and serial runs :
 %
 \[
-\mathrm{Int}(\mathcal{N})
-= \bigl\{\, \mathcal{Z} \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{\textit{interleaved} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}
+\mathrm{Int}(\mathcal{N})=\{\,\mathcal{Z}\mid \exists\text{ \textit{interleaved} run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\},
 \]
-%
 \[
-\mathrm{Ser}(\mathcal{N})
-= \bigl\{\, \mathcal{Z} \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
-\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}.
+\mathrm{Ser}(\mathcal{N})=\{\,\mathcal{Z}\mid \exists\text{ \textit{serial} run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\}.
 \]
+%\todo{old}
+%\[
+%\mathrm{Int}(\mathcal{N})
+%= \bigl\{\, \mathcal{Z} \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+%\;\big|\; \exists\ \text{\textit{interleaved} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}
+%\]
+%%
+%\[
+%\mathrm{Ser}(\mathcal{N})
+%= \bigl\{\, \mathcal{Z} \in \mathrm{Multiset}(\mathit{REQ}\times \mathit{RESP})
+%\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}.
+%\]
 
-A network system is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs obtained by an interleaving execution can also be obtained serially.
+An NS $\mathcal{N}$ is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs obtained by an interleaving execution can also be obtained serially.
 
 
 %
@@ -344,7 +351,7 @@ A network system is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{S
 %
 The NS abstraction not only captures concurrent behaviors in software-defined networks but also enables a natural translation from \toolname{} programs. 
 Given a \toolname{} program \(P_0\) with local variables (\texttt{vars}), global variables (\texttt{VARS}), and mappings \(\rho,g\) from these to a finite value set \texttt{V}, we define the initial local/global states $\rho_0$ and $g_0$ assigning $0$ to all local and global variables, respectively. 
-Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:ser-semantics}), we  construct the NS $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
+Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:ser-semantics}), we construct the NS $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
 
 %\todo{old}
 %The NS abstraction is useful beyond its capability to capture concurrent behaviors in software-defined networks.
@@ -365,10 +372,10 @@ Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:
 \begin{aligned}
 	G \;&=\; \{\, g : \texttt{VARS}\!\to\! \texttt{V} \,\},\\[0.3ex]
 	L \;&=\; \bigl\{\, (e,\rho)\ \bigm|\ \rho:\texttt{vars}\!\to\! \texttt{V},\ \exists\,name_i\{e_i\}\!\in\! P_0\ \text{s.t.} \\[-0.2ex]
-	&\qquad\quad\qquad\quad e \text{ is a suffix of } e_i \text{ starting from } \yieldkw \text{ or initialization} \,\bigr\},\\[0.3ex]
+	&\qquad\quad\qquad\quad e=e_i \text{ or } e \text{ is a suffix of } e_i \text{ starting from a } \yieldkw \text{ statement}\,\bigr\},\\[0.3ex]
 	REQ \;&=\; \{\, name_i \mid name_i\{e_i\}\!\in\! P_0 \,\},\quad RESP \;=\; \texttt{V},\\[0.3ex]
 	req \;&=\; \{\, (r,\ell) \mid r=name_i\!\in\!REQ,\ name_i\{e_i\}\!\in\! P_0,\ \ell=(e_i,\rho_0)\!\in\!L\},\\[0.3ex]
-	resp \;&=\; \{\, (\ell',r') \mid \exists \texttt{v}\!\in\!\texttt{V}.\ \ell'=(v,\rho')\!\in\!L,\ r'=\texttt{v}\!\in\!RESP \,\},\\[0.3ex]
+	resp \;&=\; \{\, (\ell',r') \mid \exists v\!\in\!\texttt{V}.\ \ell'=(v,\rho')\!\in\!L,\ r'=v\!\in\!RESP \,\},\\[0.3ex]
 	\delta \;&=\; \bigl\{\, ((e,\rho),g)\!\to\!((e',\rho'),g') \ \bigm|\ ((e,\rho),(e',\rho'))\!\in\!L,\ g,g'\!\in\!G,\ 
 	\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'} \,\bigr\}.
 \end{aligned}
@@ -454,8 +461,8 @@ Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:
 %
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 \textbf{Example.}
-Recall the code snippet from the simple, non-serializable example presented in Listing~\ref{lst:MotivatingExample2NonSer}. We can represent its NS with the following mapping:
-
+For the non-serializable example in Listing~\ref{lst:MotivatingExample2NonSer}, the NS is:
+%
 \begin{itemize}
 \item 
 The set $G$ is defined as $G=\{[\texttt{X=0}], [\texttt{X=1}]\}$.

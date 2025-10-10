@@ -60,7 +60,7 @@ Small steps are denoted $(\step)$, while big steps are denoted $(\pstep)$, and m
 
 \noindent\textit{Big step} $(\pstep)$ and scheduling.
 \begin{mathpar}
-	\inferrule*[right=YIELD]{\cfg{e}{\rho}{g} \step^{*} \cfg{\yieldkw \cdot e'}{\rho'}{g'}}{\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'}}
+	\inferrule*[right=YIELD]{\cfg{e}{\rho}{g} \step^{*} \cfg{\yieldkw ; e'}{\rho'}{g'}}{\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'}}
 	\\
 %	\inferrule*[right=START]{\cfg{e_i}{\rho}{g}\pstep \cfg{e'_i}{\rho'}{g'} \quad name_i\{e_i\}\in P_0}{\langle \requestkw\ name_i\{e_i\}, \rho, g \rangle \pstep  \cfg{e'_i}{\rho'}{g'} }
 %	\and
