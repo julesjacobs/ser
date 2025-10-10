@@ -200,7 +200,7 @@ Specifically, in this case --- serial executions can only produce request/respon
 	\item 
 	\textbf{Interleaving Petri net.}
 %	
-Next, we translate the NS into a Petri Net \(N_{\mathrm{int}}(\mathcal S)\). The \textit{non-sink places} of the PN represent either (i) global state assignments; or (ii) local states of in-flight packets. The \textit{sink} places represent request/response pairs of terminating packets.
+Next, we translate the NS into a Petri net \(N_{\mathrm{int}}(\mathcal S)\). The \textit{non-sink places} of the PN represent either (i) global state assignments; or (ii) local states of in-flight packets. The \textit{sink} places represent request/response pairs of terminating packets.
 %
 We define the \textit{transitions} between states to correspond to the \(\delta\),\(req\), and \(resp\) mappings of the NS, and with the transitions of the request being able to fire without any input tokens (in order to correspond to initializing arbitrarily-many requests externally).
 %
