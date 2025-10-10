@@ -15,24 +15,13 @@
 %\smallskip
 %\noindent
 \textbf{Limitations.}
-While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
-First, the underlying Petri net reachability problem has \texttt{Ackermann}-complete complexity~\cite{CzWo22}, causing our tool to time out on some complex benchmarks. %despite optimizations.
-Second, our current implementation relies on \texttt{SMPT}~\cite{AmDa23}, which may fail to find proofs even when they exist, limiting completeness.
-Third, our network system model assumes a simple request/response pattern and cannot model more complex interactions, such as streaming, callbacks, or partial responses.
-%Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
-These limitations suggest important directions for future research.
+Petri-net reachability is \texttt{Ackermann}-complete~\cite{CzWo22}, so some complex benchmarks time out despite optimizations. Our current backend (\texttt{SMPT}~\cite{AmDa23}) may also miss existing proofs. Finally, the NS model assumes request/response interactions and does not cover streaming, callbacks, or partial responses.
 
 %\subsection{Future Work}
 \smallskip
 \noindent
 \textbf{Future Work.}
-To improve scalability, we are developing \textit{polyhedral reductions}~\cite{AmBeDa21}, a form of structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstruction of $N_1$’s state space. This would allow verification on the reduced net, with proofs lifted back to the original.
-%
-We also plan to \textit{extend our framework to richer communication patterns.} Beyond the current independent-client model, stronger settings include inter-client communication ---
-%or Lamport’s \textit{happens-before}~\cite{La78}, while weaker ones restrict post-response communication or allow only summaries. Addressing these 
-which requires 
-%decentralized or streaming certification under communication constraints, 
-broadening the framework to afford distributed-system guarantees.
+We are developing polyhedral reductions~\cite{AmBeDa21,Be87,BeLeDa20} to verify reduced nets and lift proofs to the original. We also plan to support richer communication models beyond independent clients.
 %\todo{old}
 %
 %\paragraph{Scalability.}
@@ -81,10 +70,4 @@ broadening the framework to afford distributed-system guarantees.
 \smallskip
 \noindent
 \textbf{Conclusion.}
-We present the first implemented tool that verifies serializability for unbounded concurrent systems and generates proof certificates.
-Our approach bridges theory and practice, with the following key contributions:
-% by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
-%
-%Key contributions include: 
-(1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude; and (4) demonstrating feasibility on various benchmarks inspired by real-world systems.
-
+We presented the first implemented tool that verifies serializability for unbounded concurrent systems and generates proof certificates, bridging theory and practice with a decision procedure, key optimizations, and an evaluation on diverse, realistic benchmarks.
