@@ -70,8 +70,7 @@ We let each transition correspond to a request/response pair:
 %\;\Longleftrightarrow\;
 %\begin{array}{l}
 iff $\mathcal S$ is in global state $q$ and issues a request
-$	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon some \textit{full serial execution} it receives response $	{\color{red}\blacklozenge_{\mathit{resp}}}$
-	and transitions to global state  $q'$.
+$	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon some \textit{full serial execution} it eventually transitions to global state  $q'$ and returns response $	{\color{red}\blacklozenge_{\mathit{resp}}}$.
 %\end{array}
 %\]
 %
@@ -217,7 +216,8 @@ This construction (which is fully formalized in Appendix~\ref{appendix:NS-to-PN-
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
 %	\textit{Notation.}
-In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings. The places \textcolor{blue}{ $P_2$} and \textcolor{blue}{$P_3$} represent the global states \textcolor{blue}{[X=1]} and \textcolor{blue}{[X=0]}, respectively, while the places $P_1$, $P_4$, $P_5$, and $P_6$ capture the local states of in-flight requests—that is, the remaining program code coupled with the assignments to each request’s local variables. Similarly, places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} correspond to {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$}, respectively, encoding terminated responses. Each token either models an active request, a completed request/response pair, or --- when residing in a global-state place --- the current global state. Finally, transitions implement the network system’s mappings ($\delta/req/resp$): they advance the program by one step, spawn a new request (e.g., transition $\textcolor{ForestGreen}{t_1}$, producing {\color{ForestGreen}$\blacklozenge_{\mathrm{main}}$}), or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{red}{t_7}$).
+In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings. The places \textcolor{blue}{ $P_2$} and \textcolor{blue}{$P_3$} represent the global states \textcolor{blue}{[X=1]} and \textcolor{blue}{[X=0]}, respectively, while the places $P_1$, $P_4$, $P_5$, and $P_6$ capture the local states of in-flight requests—that is, the remaining program code coupled with the assignments to each request’s local variables. Similarly, places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} respectively correspond to responses {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$}. Each token either models an active request, a completed request/response pair, or --- when residing in a global-state place --- the current global state. Finally, transitions implement the network system’s mappings ($\delta/req/resp$): they either spawn a new request (e.g., transition $\textcolor{ForestGreen}{t_1}$, producing {\color{ForestGreen}$\blacklozenge_{\mathrm{main}}$} based on $req$), advance the program by one step (e.g., \(t_2,t_3\), based on $\delta$),
+or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{red}{t_7}$, based on $resp$).
 \end{tcolorbox}
 
 %Finally, the NS gives rise to the PN in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings.
@@ -246,21 +246,21 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 	
 	\item \textbf{Non-serializable set.}  
 	Let
-	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., all multisets of (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs that \textit{cannot} be attained via a serial execution.
+	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., all multisets of (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs that \textit{cannot} be attained via a serial execution of NS $\mathcal S$.
 	
 	\begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
-	Regarding the aforementioned program, we automatically generate the following reachability query\footnote{If not for the equality constraints, the problem would have been considered a \textit{coverability} query, which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN}, encoding a target semilinear set by imposing the following constraints on the token distribution:
+	Regarding the aforementioned program, we automatically generate the following reachability query\footnote{If not for the equality constraints, the problem would have been considered a Petri net \textit{coverability} query, which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN}, encoding a target semilinear set by imposing the following constraints on the token distribution:
 	%
 	%Regarding the aforementioned program, we automatically generate the following reachability query~\footnote{If not the equality constraints, the problem would have been considered a \textit{coverability} query which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN} we encode a target semilinear set with the following constraints on the token distribution:
 	%
 	\[
-	P_1 = 0 \wedge 
+	F: \quad P_1 = 0 \wedge 
 	\textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 	\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} \ge 0 \wedge \textcolor{red}{P_8} \ge 1.
 	\]
 	
-	This set requires no tokens on $P_1,P_4,P_5,P_6$, at least one token on $\textcolor{red}{P_8}$ (i.e., {\color{red}$\blacklozenge_0$}), and any tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3},\textcolor{red}{P_7}$. 
+	This set requires no tokens on $P_1,P_4,P_5,P_6$, at least one token on $\textcolor{red}{P_8}$ (i.e., {\color{red}$\blacklozenge_0$}), and any number of tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3},\textcolor{red}{P_7}$. 
 	%
 %	Note that \(\textcolor{red}{P_8} \ge 1\) requires at least one {\color{red}$\blacklozenge_0$}, as expected (see \Cref{sec:introduction}).
 	\end{tcolorbox} 
@@ -270,7 +270,7 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 	
 	
 	\item \textbf{Decision \& validation.}
-	We ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that
+	We ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that \(M \models F\), i.e.,
 	\[
 	M_0 \xrightarrow{}^{*} M
 	\quad\wedge\quad
@@ -291,7 +291,7 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 %		for \(\mathcal S\)
 		%
 %		back-translated to a validated by synthesizing an inductive invariant over the interleaving PN, thereby proving that the corresponding semilinear set cannot be realized by any interleaving 
-(see example in Appendix~\ref{appendix:ns-serializable}).
+(see an example in Appendix~\ref{appendix:ns-serializable}).
 	\end{itemize}
 
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
@@ -306,7 +306,7 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 	%
 %	As the target set encodes request/response pairs that are \textit{unattainable} via serial executions, and as the PN encodes all possible interleavings, this firing sequence also corresponds as a counterexample demonstrating the program is non-serializable. 
 	%
-	Specifically, the reachable marking encodes the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ which, indeed, can only be induced by a non-serial execution (see~\Cref{sec:introduction}).
+	Specifically, this reachable marking encodes the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ which, indeed, can only be induced by a non-serial execution (see~\Cref{sec:introduction}).
 \end{tcolorbox} 
 %\item \textbf{Validation.}  
 %
@@ -331,7 +331,7 @@ In our running example, the NS gives rise to the PN in Fig.~\ref{fig:code2Exampl
 \medskip
 \noindent
 \textbf{Complexity analysis.}
-The core algorithm reduces serializability checking to Petri net reachability with semilinear target sets. 
+The core algorithm reduces serializability checking to Petri net reachability with target semilinear sets. 
 Since the serial executions form a regular language (step 1), their Parikh image is effectively semilinear by Parikh's theorem, with size exponential in the NFA.
 The interleaving Petri net (step 2) has $O(|G| + (|\mathit{REQ}| \times |L|) + (|\mathit{REQ}| \times |\mathit{RESP}|))$ places and $O(|\mathit{REQ}|\times (1+ |\delta| + |\mathit{RESP}|))$ transitions.
 The reachability query (step 3) asks whether the Petri net can reach the complement of a semilinear set, which is decidable but \texttt{Ackermann}-complete~\cite{CzWo22}.
@@ -400,7 +400,7 @@ A semilinear set $S=\bigcup_{i=1}^m L_i$ with
 	$L_i=\{\,b_i+\sum_{p\in P_i}n_p p \mid n_p\in\mathbb N\}$ may contain redundant 
 	period vectors or components.  
 	Thus, during construction, we:
-	(1) remove any $p\in P_i$ expressible as a nonnegative combination of $P_i\setminus\{p\}$; 
+	(1) remove any period vector $p\in P_i$ expressible as a nonnegative combination of $P_i\setminus\{p\}$; 
 	and (2) drop $L_i$ when $L_i\subseteq L_j$ (for \(i \neq j\)).  
 	This pruning keeps formulas compact and solver calls tractable.
 
@@ -420,13 +420,13 @@ A semilinear set $S=\bigcup_{i=1}^m L_i$ with
 \noindent
 \textbf{(3) Generating fewer constraints.}  
 When computing the Parikh image of a regular expression as a semilinear set,
-	most regex operations can be implemented without an exponential blow-up.
+	most regex operations can be implemented without a blow-up.
 	However, Kleene star is a notable exception: in the general case, it can cause an exponential blow up: for $S=\bigcup_{i=1}^m L_i$,  the Kleene star $S^\ast$ is given as a semilinear set by: 
 	\[
 	S^\ast=\bigcup_{I \subseteq \{1,...,m\}} 
 	\Big\{\sum_{i \in I} b_i + \sum_{p \in \bigcup_{i \in I} P_i\cup \{b_i\}} n_p p\Big\}.
 	\]
-	This yields $2^m$ components. To mitigate:
+	This yields $2^m$ components. To mitigate this:
 	(i) if $L_i=\{b_i\}$ (period-less component), factor it out, star the rest, then add $b_i$ as a period;  
 	(ii) if $L_i=\{\sum_{p\in P_i}n_pp\}$ (zero base), likewise star the rest and add each $p\in P_i$ as a period vector to the resulting set.  
 	Each such case halves the component count, and circumvents exponential blow-ups.
@@ -487,7 +487,7 @@ When computing the Parikh image of a regular expression as a semilinear set,
 We use \textit{Kleene's algorithm}~\cite{Kl56} to translate the serializability NFA into a regex.
 % 
 The size of the generated semilinear set is not only impacted by how the
-	semilinear set operations are implemented, but also by what specific regular
+	semilinear set operations are implemented, but also by what \textit{specific} regular
 	expression is given as input: a single regular language may be represented by a
 	number of equivalent regexes, each of different complexity.
 	%
@@ -495,7 +495,7 @@ The size of the generated semilinear set is not only impacted by how the
 	we are especially sensitive to the \emph{star height} of the generated regex.
 	%
 	Naive Kleene elimination may introduce many nested stars.  
-	We reduce this by strategically choosing the next state to eliminate by:
+	We reduce this by strategically choosing the next state to eliminate as:
 	\[
 	q^*=\arg\min_{q\in Q'}\bigl(|\delta^A_{\mathrm{in}}(q)|+|\delta^A_{\mathrm{out}}(q)|\bigr),
 	\]

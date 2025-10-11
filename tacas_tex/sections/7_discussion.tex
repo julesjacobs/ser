@@ -26,7 +26,7 @@ These limitations suggest important directions for future research.
 %\smallskip
 %\noindent
 %\textbf{Future Work.}
-To improve scalability, we are adapting \textit{polyhedral reductions}~\cite{AmBeDa21}, a form of structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstruction of $N_1$’s state space. This would allow verification on the reduced net, with proofs lifted back to the original.
+To improve scalability, we are adapting \textit{polyhedral reductions}~\cite{AmBeDa21}, a form of structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstruction of $N_1$’s state space. This would allow verification on the reduced net, with proofs lifted back to the original one.
 %
 We also plan to \textit{extend our framework to richer communication patterns.} Beyond the current independent-client model, stronger settings include inter-client communication ---
 %or Lamport’s \textit{happens-before}~\cite{La78}, while weaker ones restrict post-response communication or allow only summaries. Addressing these 

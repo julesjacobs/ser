@@ -13,15 +13,15 @@ The first examples are relatively basic, while the last examples have higher com
 %
 Each thread is spawned any number of times (and at any point in time) by a \textit{request} from the user, marked {\color{ForestGreen}$\blacklozenge_\text{req}$}. The request executes, and eventually returns a \textit{response}  {\color{red}$\blacklozenge_\text{resp}$}.
 %
-For example, in the three examples presented in \Cref{sec:introduction} (Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and~\ref{lst:MotivatingExample3Ser}), there is a single request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
+For instance, in the three examples presented in \Cref{sec:introduction} (Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and~\ref{lst:MotivatingExample3Ser}), there is a single request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
 % 
-We analyze serializability through the lens of such ({\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$}) pairs. For example, the programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} induce only pairs of the type ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also induce ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}), as formulated by our Network System framework (see \Cref{sec:problem-definition}). 
+We analyze serializability through the lens of such {\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$} pairs. Specifically, the programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} only induce pairs of the type {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}, while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also induce {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}, as formulated by our Network System framework (see \Cref{sec:problem-definition}). 
 %
 We depict global variables with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
 %
 Unless explicitly stated otherwise, all global and local variables are initialized as 0.
 %
-The ``\texttt{?}'' symbol depicts a nondeterministic choice between ``0'' and ``1''. All other constructs (\texttt{while}, \texttt{yield}, and \texttt{if}) have their standard interpretation, and are based on the \toolname{} semantics covered in Appendix~\ref{appendix:ser-semantics}.
+The symbol \texttt{?} depicts a nondeterministic choice between 0 and 1. All other constructs (\texttt{while}, \texttt{yield}, and \texttt{if}) have their standard interpretation, and are based on the \toolname{} semantics covered in Appendix~\ref{appendix:ser-semantics}.
 
 \subsection{Example 1}
 
@@ -89,7 +89,7 @@ As the first request also assigns \texttt{[FLAG:=1]} before exiting, any subsequ
 %Differently put, for any serial execution with i requests --- we have exactly one (first) request/response pair {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$}, and $(i-1)$ pairs of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_1$}.
 %
 %\noindent
-However, given that the first request can also \texttt{yield}, it is possible for another request to concurrently run the program after the first request yields and before it returns. This, in turn, will allow more than one request to assign \texttt{[x=0]}, and hence, for example, we can attain \textit{multiple} {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} pairs. Thus, Listing~\ref{lst:BasicNonSer} is not serializable.
+However, given that the first request can also \texttt{yield}, it is possible for another request to concurrently run the program after the first request yields and before it resumes. This, in turn, will allow more than one request to assign \texttt{[x:=0]}, and hence, for example, we can attain \textit{multiple} {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} pairs. Thus, Listing~\ref{lst:BasicNonSer} is not serializable.
 %\noindent
 %\begin{minipage}[t]{0.30\textwidth}
 %	\begin{lstlisting}[caption={Serializable},
@@ -162,7 +162,7 @@ request A:
 \subsection{Example 2}
 
 %\subsubsection{Example 2}
-The following program pairs have a single global variable (\texttt{X}), and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments \texttt{X} by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements \texttt{X} by 1. Both programs have loops that guarantee that \texttt{X} will always be between 0 to 3, otherwise the while loop will yield ad infinitum. Both requests return the value of \texttt{X} after updating it.
+The following program pairs have a single global variable (\texttt{X}), and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments \texttt{X} by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements \texttt{X} by 1. Both programs have loops that guarantee that \texttt{X} will always be between 0 to 3, otherwise the \texttt{while} loop will yield ad infinitum. Both requests return the value of \texttt{X} after updating it.
 %
 In the first case, Listing~\ref{lst:FredSer} presents a serializable program, due to the absence of any \texttt{yield} between the increment/decrement of \texttt{X} and its return. Equivalently, in each of the requests, the update of \texttt{X} and the returned value can be thought of as \textit{a single atomic execution}.
 %
@@ -237,12 +237,12 @@ The next example (see Listing~\ref{lst:ComplexWhileNonSer}) has a global variabl
 %
 %It is straightforward to observe that the program in Listing~\ref{lst:ComplexWhileSer} is trivially serializable, as there are no yields.
 %
-Any serial execution does not output any instance of the single response {\color{red}$\blacklozenge_1$}, 
-as any serial execution will have a single request in-flight, with \texttt{X} being either 0 or 1. Thus, exactly one of the \texttt{while} loops will run indefinitely, prohibiting any {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} pairs.
+Any serial execution cannot induce a response {\color{red}$\blacklozenge_1$}, 
+as it will have a single request in-flight, with \texttt{X} being either 0 or 1. Thus, exactly one of the \texttt{while} loops will run indefinitely, prohibiting any {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$} pairs.
 %
 %Specifically, in any serial execution of requests, the local i variable is either 0 or 1, and hence --- serial execution do no produce any request/response pairs.
 %
-To show that the program is not serializable, we show that an interleaving \emph{can} result in a non-empty set of outputs. 
+To prove that the program is not serializable, we show that an interleaving \emph{can} result in a non-empty set of outputs. 
 %
 %However, some interleavings can allow the program to output a response {\color{red}$\blacklozenge_1$}. 
 %
@@ -417,7 +417,7 @@ request interest:
 %\newpage
 \subsection{Example 5}
 
-The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness in routing policies in software‐defined networks (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., \texttt{P4}~\cite{BoDaGiIzMcReScTaVaVaWa14}). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adjust its routing policy as dictated by the updates.
+The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness of routing policies in software‐defined networks (SDN). In SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., \texttt{P4}~\cite{BoDaGiIzMcReScTaVaVaWa14}). At runtime, a centralized controller node can adjust the global network control policy. The controller can also periodically send control packets to each switch, causing it to adjust its routing policy as dictated by the updates.
 %
 An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered \texttt{0} through \texttt{3}), with the two middle nodes --- node \texttt{1} (labeled \texttt{WEST}) and node \texttt{2} (labeled \texttt{EAST}), serving as ingress points from where traffic nondeterministically enters the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or an \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
 %
@@ -514,7 +514,7 @@ Each of the routing requests represents a single packet entering the network. Th
 %
 The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_west}$} requests is the sum \texttt{[current+current+visited\_east]}, an identifier encoding all possible \texttt{(current\_switch, visited\_east)} pairs.
 %
-The program is not serializable, as witnessed by an interleaving that can give rise to a final return value of \texttt{[current+current+visited\_east=1]} (due to \texttt{[current=0]} and \texttt{[visited\_east=1]}). This represents a routing cycle in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet ({\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when a request has already been spawned based on the previous policy, subsequently yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting in a routing cycle.
+The program is not serializable, as witnessed by an interleaving that can give rise to a final return value of \texttt{[current+current+visited\_east=1]} (due to \texttt{[current=0]} and \texttt{[visited\_east=1]}). This represents a \textit{routing cycle} in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet ({\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when a request has already been spawned based on the previous policy, subsequently yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting in a routing cycle.
 %
 More formally, this is conveyed by return values that represent these cycles and are obtained only via non-serial executions. For example, legal, acyclic routes of this request have either a return value of 0 (in the case of [\texttt{current=0}, \texttt{visited\_east=0}]) or 7 (in the case of [\texttt{current=3}, \texttt{visited\_east=1}]).
 Dually, routing cycles could also occur in the case of {\color{ForestGreen}$\blacklozenge_\text{route\_east}$} interleavings.
@@ -525,11 +525,11 @@ Dually, routing cycles could also occur in the case of {\color{ForestGreen}$\bla
 
 The next program captures serializability through the lens of the \textit{snapshot isolation} consistency model, which is used in various real-world database systems, including \texttt{PostgreSQL}~\cite{postgresql-transaction-iso} and \texttt{CockroachDB}~\cite{cockroachdb-si-docs}, and has been linked to real‐world anomalies (e.g., duplicate‐key errors in the latter~\cite{cockroach-issue-14099}).
 %
-The depicted program has two nodes (represented by the global variables \texttt{N$_1$} and \texttt{N$_2$}) which monitor ongoing traffic in the network, and are originally both active, as indicated by their initial values \texttt{[N$_1$=1,N$_2$=1]}.
+The depicted program has two nodes (represented by the global variables \texttt{N$_1$} and \texttt{N$_2$}) which monitor ongoing traffic in the network, and are originally both active, as indicated by their initial values: \texttt{[N$_1$=1]}, \texttt{[N$_2$=1]}.
 %
 The {\color{ForestGreen}$\blacklozenge_\text{main}$} request takes a snapshot of the system, i.e., locally records the current activation status of each of the two nodes.
 %
-Then, in the first request, and in any future ones in which both nodes are active, each in-flight request non-deterministically decides which of the two nodes to deactivate, i.e. set \texttt{[N$_i$:=0]}, for maintaining overall energy efficiency.
+Then, in the first request, and in any future ones in which both nodes are active, each in-flight request non-deterministically decides which of the two nodes to deactivate, i.e., set \texttt{[N$_i$:=0]}, for maintaining overall energy efficiency.
 %
 The {\color{ForestGreen}$\blacklozenge_\text{main}$} request eventually returns the current sum of active nodes in the system.
 %
@@ -537,7 +537,7 @@ In order for the system to emulate multiple iterations, our setting also include
 %
 We note that the program is not serializable due to the \texttt{yield} operation that appears immediately after the recorded snapshot of the node activation status. One such example of a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests are both in-flight, and each of them records two active monitor nodes and then executes \texttt{yield}; Then, each request might turn off a complement monitor node. As a result of each request operating based on its isolated snapshot of the global state, both monitor nodes can be turned off --- inducing a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for \texttt{[N$_1$+N$_2$=0+0=0]}).
 %
-We note that in any serial execution, no two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests can record both monitors as active, and hence, a response of {\color{red}$\blacklozenge_0$} cannot be obtained by serial executions.
+We note that in any serial execution, no two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests can simultaneously record both monitors as active, and hence, a response of {\color{red}$\blacklozenge_0$} cannot be obtained by serial executions.
 
 
 

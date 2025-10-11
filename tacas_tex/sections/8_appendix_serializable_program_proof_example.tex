@@ -3,7 +3,7 @@
 \label{appendix:ns-serializable}
 
 
-Now, we observe again the adjusted program with locks (as previously described in Listing~\ref{lst:MotivatingExample3Ser}), of which we depicted figures of the corresponding Network System (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and the interleaving Petri net (Fig.~\ref{fig:code3ExamplePN}) in Appendix~\ref{appendix:MoreNsExamples}.
+Now, we observe again the adjusted program with a spin-lock (as previously described in Listing~\ref{lst:MotivatingExample3Ser}), of which we depicted figures of the corresponding Network System (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and the interleaving Petri net (Fig.~\ref{fig:code3ExamplePN}) in Appendix~\ref{appendix:MoreNsExamples}.
 %
 In this case, serializability corresponds to the Petri net being unable to reach a marking satisfying the same semilinear formula as in the non-serializable case described in the main text (subsec.~\ref{subsec:SerToNsTranslation}):
 
@@ -25,7 +25,7 @@ P_1 = 0 \wedge
 %\]
 
 
-In addition, although the target set is the same as in the previous example, the Petri net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For example, now each place in the PN that encodes a global state accounts for two global variables, \texttt{X} and \texttt{L}, and the initial global state corresponds to the place encoding the initial assignment \textcolor{blue}{[X=0, L=0]}, etc.
+In addition, although the target set is the same as in the previous example, the Petri net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For instance, now each place in the PN that encodes a global state accounts for two global variables, \texttt{X} and \texttt{L}, and the initial global state corresponds to the place encoding the initial assignment \textcolor{blue}{[X=0, L=0]}, etc.
 %
 Furthermore, unlike the case in Listing~\ref{lst:MotivatingExample2NonSer} (covered in subsec.~\ref{subsec:SerToNsTranslation}), this target set of markings (encoding request/response pairs of non-serial executions) is \textit{unreachable}, as witnessed by the inductive invariant:
 
@@ -109,7 +109,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	\;\mapsto\;
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
-	which is unsatisfiable. Hence, no completed request/response pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) can be produced from this state via \textit{any} execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the lock is acquired (\textcolor{blue}{[L=1]}) 
+	which is unsatisfiable. Hence, no completed request/response pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) can be produced from this state via \textit{any} execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the lock is acquired (\textcolor{blue}{[L=1]}).
 	%	\guy{Mark/Jules is this part correct?}
 	
 	\medskip

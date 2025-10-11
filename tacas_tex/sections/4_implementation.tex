@@ -120,9 +120,9 @@ We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly
 %
 \toolname{} implements an end-to-end serializability checker for a given input program. If the program is serializable, we return a proof thereof; otherwise, if it is not serializable, a counterexample is given to the user for an interleaving that can result in request/response pairs that are unattainable in any serial execution.
 %
-Our workflow translates the decidability problem to an equivalent Petri net reachability question (for an unbounded number of tokens), in which (i) the Petri net represents all possible interleavings of the problem; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all request/response pairs that \textit{cannot} be obtained by any serial execution.
+Our workflow translates the decidability problem to an equivalent Petri net reachability question (for an unbounded number of tokens), in which (i) the Petri net represents all possible interleavings of the program; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all request/response pairs that \textit{cannot} be obtained by any serial execution.
 %
-As Petri net reachability is Ackermann-complete~\cite{CzWo22}, we added various optimizations to expedite the search process, both at the PN level and the property-encoding level.
+As Petri net reachability is \texttt{Ackermann}-complete~\cite{CzWo22}, we added various optimizations to expedite the search process, both at the PN level and the property-encoding level.
 %
 The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and includes:
  
@@ -130,24 +130,24 @@ The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and
 \begin{enumerate}
 	\item \textbf{Input \& parsing.} 
 	Our framework receives either a \texttt{SER} program with the syntax described in~\Cref{sec:problem-definition}; or a \texttt{JSON} file directly encoding a network system. In the case of the former, an additional step takes place, parsing the input %(using the \texttt{parser.rs} module) 
-	to an expression tree that is translated to an equivalent NS.
+	to an expression tree that is translated to the equivalent NS.
 %	, represented as a struct in the \texttt{ns.rs} module. 
 	
 	\item \textbf{Petri net conversion.} The NS is then translated into a Petri net 
 %	(see the \texttt{petri.rs} module) 
-which represents the interleavings. 
+which represents all possible interleavings. 
 %	.as depicted, for example, in subsec.~\ref{subsec:ns-not-serializable}.
 %	Each place represents a state (either global or local) or a response. Each token represents a single in-flight request or a terminated response. 
 The PN is encoded in the de facto standard \texttt{NET} format, to support off-the-shelf PN model checkers. 
 	
 	\item \textbf{Semilinear conversion.} 
 %	This includes a set of modules (\texttt{kleene.rs}, \texttt{semilinear.rs}, and \texttt{presburger.rs}) which 
-These modules generate a semilinear set encoding all non-serializable outputs, via translation of the serialized NFA (e.g., Fig.~\ref{fig:code2ExampleNFA}) to a regex, which is then projected (via the Parikh Image) and complemented. 
+We generate a semilinear set encoding all non-serializable outputs, via translation of the serialized NFA (e.g., Fig.~\ref{fig:code2ExampleNFA}) to a regex, which is then projected (via the Parikh image) and complemented. 
 %	This conversion is done by the following pipeline: (1) the NS is translated to an NFA encoding all possible request/response pairs of the input program; (2) This NFA is translated to a regex (via Kleene's Theorem) and then projected (via the Parikh Image) to a semilinear set. The (finite) encoding of the semilinear set symbolically represents all outputs attained via serializable executions of the program, running for an unbounded number of steps; (3) finally, we complement the semilinear set to encode all outputs unattainable via serial executions. 
 	At the end of the pipeline, an \texttt{XML}-formatted output encodes a reachability query that encapsulates constraints over the PN token count.
 	
 	
-	\item \textbf{Reachability engine.} The PN and the reachability query are fed to a  PN model checker, which combines \textit{Bounded Model Checking} (BMC)~\cite{BiCiClZh99} in search of a counterexample; and \textit{state equation reasoning}~\cite{Mu77} in order to prove non-reachability. 
+	\item \textbf{Reachability engine.} The PN and the reachability query are fed to a  PN model checker, which combines \textit{bounded model checking} (BMC)~\cite{BiCiClZh99} in search of a counterexample; and \textit{state equation reasoning}~\cite{Mu77} in order to prove non-reachability. 
 %	This engine is implemented in the \texttt{reachability.rs} and \texttt{reachability\_with\_proofs.rs}  modules.
 	%
 	In order to expedite the search, ``large'' (PN, query) pairs are replaced with multiple pruned PNs (generated by the reachability engine), each coupled with a sub-query encoding a separate disjunct. 
@@ -163,7 +163,7 @@ The disjuncts are solved on the fly, until reaching \texttt{SAT}, in which case,
 	%, and hence, implying serializability. 
 	
 	
-	\item \textbf{Instrumentation \& logging.} Throughout the pipeline, intermediate representations and performance metrics are recorded.  
+	\item \textbf{Instrumentation \& logging.} Throughout the pipeline, we record various intermediate representations and performance metrics.  
 %	input size and performance metrics (number of places, transitions, constraint complexity, timings) 
 %
 %The logger outputs 
@@ -228,10 +228,10 @@ The disjuncts are solved on the fly, until reaching \texttt{SAT}, in which case,
 To the best of our knowledge, ours is the first and only tool to: (i) statically check serializability on \textit{unbounded} programs; and (ii) \textit{prove serializability holds}.
 %
 Thus, and due to lack of standard benchmarks for evaluating serializability, we 
-assembled a suite of dozens of benchmarks (accompanying our artifact~\cite{ArtifactRepository}).
+assembled a suite of dozens of benchmarks (as part of our accompanying artifact~\cite{ArtifactRepository}).
 These include both serializable and non-serializable instances encoded in both \texttt{SER} and \texttt{JSON} formats, and covering a broad range of features, including arithmetic, locks, loops, non-determinism, and more (see an overview of all our benchmarks in Table~\ref{tab:benchmarks-all} of Appendix~\ref{appendix:full_results}).
 %
-We note that although the benchmarks themselves are not the main part of the paper, we believe they have merit on their own, due to their relevance to various real-world systems of interest.
+We note that although the benchmarks themselves are not the main part of the paper, we believe that they have merit on their own, due to their relevance to various real-world systems of interest.
 %
 Specifically, we wish to note our suite of benchmarks encoding \textit{networking \& system protocols} (see Table~\ref{tab:networking-benchmarks}), which include stateful firewalls, BGP routing programs, network monitors, and more --- 
 %highlighting the serializability challenges inherent in real-world distributed programs.

@@ -21,19 +21,19 @@ Our code, benchmarks, and full experimental results are publicly available~\cite
 
 
 
-\subsection{Runtime Results}
+\subsection{Results}
 We ran \toolname{} on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
 For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
 %
-Within the time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see summary in Table~\ref{tab:stats-summary} and the full results in Table~\ref{tab:benchmarks-all} of the appendix).
+Within this time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see summary in Table~\ref{tab:stats-summary} and the full results in Table~\ref{tab:benchmarks-all} of the appendix).
 %
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 
 %
-The \textit{median} total runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+The \textit{median} total runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when  solely focusing on serializable (non-serializable) benchmarks.
 %, as reported in Table~\ref{tab:stats-summary}.
 %
-The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing on solely serializable (non-serializable) benchmarks.
+The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when solely focusing on serializable (non-serializable) benchmarks.
 %
 We also observe a clear runtime split based on serializability: 
 %For serializable benchmarks, certificate validation takes much longer than proof generation. 
@@ -162,7 +162,7 @@ among non-serializable benchmarks, counterexample generation is much longer than
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/big_table_summary_only_networking_part.tex}
-	\caption{Overview of benchmarks from the \textit{network and system protocols} category. 
+	\caption{Overview of benchmarks from the \textit{network \(\&\) system protocols} category. 
 %	For our full benchmarks see Appendix~\ref{appendix:full_results}.
 }
 \label{tab:networking-benchmarks}
@@ -179,7 +179,7 @@ among non-serializable benchmarks, counterexample generation is much longer than
 
 \subsubsection{Runtime optimization.}
 
-We ran all benchmarks with each of the following six optimization combinations: 
+We ran all benchmarks with each of the following six optimization configurations: 
 (i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidirectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
 (v) with strategic Kleene elimination (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
 and finally, (vi) with all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
@@ -192,7 +192,7 @@ We also note that the best single-optimization configurations with regard to run
 %
 We also note that the two remaining optimizations, [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not significantly) than without the optimizations when counting overall timeouts.
 %
-However, when comparing the combinations, it seems that there are instances in which each of these optimizations still \textit{strictly} improves runtime.
+However, when analyzing these configurations, it seems that there are instances in which each of these optimizations still \textit{strictly} improves runtime.
 %
 For example, there are instances (see \texttt{a3.ser} and \texttt{a7.ser} in Appendix~\ref{appendix:full_results}), in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}])
 affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks without this optimization.
@@ -277,7 +277,7 @@ render even simple programs infeasible without these optimizations.
 	\begin{minipage}[htbp]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
-		\captionof{figure}{Solved instances (\texttt{TIMEOUT} $500$ s).}
+		\captionof{figure}{Solved instances (\texttt{TIMEOUT} $150$ s).}
 		\label{fig:timeout_cumulative_solved_log}
 	\end{minipage}\hfill
 	\begin{minipage}[htbp]{0.48\textwidth}

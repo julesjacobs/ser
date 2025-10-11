@@ -163,9 +163,10 @@ Intuitively, $P'$ contains an over-approximation of all places reachable by a fi
 	Then $S$ is reachable from $N$ iff it is reachable from $N'$.
 \end{corollary}
 
-\medskip
-\noindent
-\textbf{Termination and Complexity}
+%\medskip
+%\noindent
+%\textbf{Termination and Complexity}
+\subsection{Termination and Complexity}
 
 \begin{lemma}
 	Each iteration of $\mathcal{F}$ and $\mathcal{B}$ strictly increases
@@ -179,9 +180,9 @@ Intuitively, $P'$ contains an over-approximation of all places reachable by a fi
 \end{proof}
 
 \noindent
-Therefore the bidirectional pruning converges in polynomial time, and preserves an over-approximation of the
-places and transitions that \emph{may} appear in some execution from
-$M_0$ into $S$.
+Therefore, the bidirectional pruning converges in polynomial time, and preserves an over-approximation of the
+places and transitions that \emph{may} appear in some firing sequence from
+$M_0$, as part of a marking ending in the target semilinear set $S$.
 
 
 %\newpage

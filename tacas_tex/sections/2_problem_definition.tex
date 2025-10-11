@@ -31,7 +31,7 @@ Surprisingly, even for the \textit{unbounded} setting, where places can hold arb
 \textbf{Verdict proofs.} 
 If $F$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models F$ serves as a proof, and is verifiable by simulation of the Petri net.  
 If $F$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ proving non-reachability: 
-(i) $M_0\models C$, (ii) $M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
+(i) $M_0\models C$, (ii) $\forall t\in T \quad M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
 
 \medskip
 \noindent
@@ -207,7 +207,7 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 %\smallskip
 \noindent
 \textbf{Request and response.}
-A \emph{request} ${\color{ForestGreen}\blacklozenge_\text{req}}\in\mathit{REQ}$ initiates a handler execution, running a concurrent computation; a \emph{response} ${\color{red}\blacklozenge_\text{resp}}\in\mathit{RESP}$ is its returned value. The pair $({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})$ captures one execution’s input/output behavior.
+A \emph{request} label ${\color{ForestGreen}\blacklozenge_\text{req}}\in\mathit{REQ}$ spawns a request (i.e., a packet/thread) on which a concurrent computation is executed; a \emph{response} ${\color{red}\blacklozenge_\text{resp}}\in\mathit{RESP}$ is its returned value. The pair $({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})$ captures one execution’s input/output behavior.
 
 
 
@@ -665,7 +665,7 @@ return y
 	\caption{The Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
 		Local states show the variable assignments (\textcolor{orange}{yellow}) and the remaining code; edges indicate transitions of global states  (\textcolor{blue}{blue}). 
 		Requests and responses appear as \textcolor{ForestGreen}{green} and \textcolor{red}{red} diamonds, respectively. 
-		From left to right: a \texttt{main} request starts with \texttt{[y=0]} and the full program; after yielding, $\delta$ steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, then updates \texttt{y} from the global value, returning it as the final response.}
+		From left to right:  \texttt{main} spawns a request with \texttt{[y=0]} and the full program; after yielding, $\delta$ steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, then updates \texttt{y} based on the global value, returning it as the final response (either {\color{red}$\blacklozenge_0$} or {\color{red}$\blacklozenge_1$}).}
 %	\caption{The Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
 %		Local states include (\textcolor{orange}{yellow}) local variable assignments and the remaining program; edges are labeled with (\textcolor{blue}{blue}) global state transitions. 
 %		Requests and responses are shown as \textcolor{ForestGreen}{green} and \textcolor{red}{red} diamonds, respectively. 
