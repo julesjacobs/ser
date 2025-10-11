@@ -93,7 +93,7 @@ $	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon some \textit{ful
 	Its language
 	\(L(\mathcal A_{\mathrm{ser}}(\mathcal S))\subseteq\Sigma^*\) is exactly the set of serial
 	request/response traces.
-	Hence, by definition it holds that applying the Parikh image gives the set of all multisets of request/response pairs obtained by serial executions:
+	Hence, by definition, it holds that applying the Parikh image gives the set of all multisets of request/response pairs obtained by serial executions:
 	\(
 	\mathsf{Ser}(\mathcal S)
 	\;=\;
@@ -203,9 +203,9 @@ Here, serial runs produce only ({\color{ForestGreen}$\blacklozenge_\text{main}$/
 	\item 
 	\textbf{Interleaving Petri net.}
 %	
-Next, we translate the NS into a Petri net \(N_{\mathrm{int}}(\mathcal S)\). The \textit{non-sink places} of the PN represent either (i) global state assignments; or (ii) local states of in-flight packets. The \textit{sink} places represent request/response pairs of terminating packets.
+Next, we translate the NS into a Petri net \(N_{\mathrm{int}}(\mathcal S)\). The \textit{non-sink places} of the PN represent either (i) global state assignments, or (ii) local states of in-flight packets. The \textit{sink} places represent request/response pairs of terminating packets.
 %
-We define the \textit{transitions} between states to correspond to the \(\delta\),\(req\), and \(resp\) mappings of the NS, and with the transitions of the request being able to fire without any input tokens (in order to correspond to initializing arbitrarily-many requests externally).
+We define the \textit{transitions} between states to correspond to the \(\delta\),\(req\), and \(resp\) mappings of the NS, and with the transitions of the request being able to fire without any input tokens (in order to correspond to initializing arbitrarily many requests externally).
 %
 Finally, we define the initial marking \(M_0\) to correspond to a single token in the initial global state \(g_0\).
 %
@@ -371,8 +371,8 @@ When solving Petri net reachability, many places and transitions might be irrele
 	We prune them before symbolic reasoning by combining forward and backward passes:  
 	the forward pass over-approximates the places reachable from $M_0$; and symmetrically,   
 	the backward pass traverses in reverse from any place that can influence a target constraint (hence over-approximating the places that can contribute to it).
-	We iteratively remove non-forwards-reachable and
-	non-backwards-relevant places and transitions, to a fixed point.  
+	We iteratively remove non-forward-reachable and
+	non-backward-relevant places and transitions, to a fixed point.  
 	Appendix~\ref{appendix:BidirectionalProof} illustrates this (Fig.~\ref{fig:bidirectional_pruning}) and proves soundness (Theorem~\ref{thm:bidirectional-pruning}):
 
 
@@ -429,7 +429,7 @@ When computing the Parikh image of a regular expression as a semilinear set,
 	This yields $2^m$ components. To mitigate this:
 	(i) if $L_i=\{b_i\}$ (period-less component), factor it out, star the rest, then add $b_i$ as a period;  
 	(ii) if $L_i=\{\sum_{p\in P_i}n_pp\}$ (zero base), likewise star the rest and add each $p\in P_i$ as a period vector to the resulting set.  
-	Each such case halves the component count, and circumvents exponential blow-ups.
+	Each such case halves the component count and circumvents exponential blow-ups.
 
 
 

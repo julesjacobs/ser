@@ -4,7 +4,7 @@
 In the domain of concurrent systems, from databases to software-defined networks (SDNs)~\cite{KrRaVePaRoAzUh14,XiWeFoNiXi15}, a cornerstone correctness criterion is \emph{serializability}: every concurrent execution must produce outcomes equivalent to some serial ordering of requests. Violations of serializability can lead to subtle anomalies, such as lost updates in databases or routing cycles in SDNs.
 While we can check serializability for a fixed number of requests with known execution traces (e.g., by enumerating all interleavings), the problem is undecidable for general programs, requiring techniques such as runtime verification or incomplete bounded model checking~\cite{WaSt06a,WaSt06b,FlFrYi08,FaMa08,SiMaWaGu11a,SiMaWaGu11b,Pa79,AlMcPe96,BiEn19}.
 
-However, Bouajjani et al.~\cite{BoEmEnHa13} have shown (as a special case of bounded-barrier linearizability) that for programs with bounded-size state, this problem is decidable even for an \emph{unbounded} number of in-flight requests, each performing an \emph{unbounded} number of steps. The purpose of this paper is to make this theoretical decidability result a reality by designing the first decision procedure, and putting forth practical algorithms that either prove serializability (with a proof certificate) or prove non-serializability (with a counterexample trace).
+However, Bouajjani et al.~\cite{BoEmEnHa13} have shown (as a special case of bounded-barrier linearizability) that for programs with bounded-size state, this problem is decidable even for an \emph{unbounded} number of in-flight requests, each performing an \emph{unbounded} number of steps. The purpose of this paper is to make this theoretical decidability result a reality by designing the first decision procedure and putting forth practical algorithms that either prove serializability (with a proof certificate) or prove non-serializability (with a counterexample trace).
 % 
 We illustrate the problem by example:
 
@@ -129,7 +129,7 @@ We introduce in  \Cref{sec:problem-definition} our \toolname{} language and the 
     In \Cref{sec:formal-results} we present the core decision procedure with proof certificates, and our various optimizations.
     %
 %    presents techniques for semilinear set reductions and Petri-net reductions.
-    The implementation of the \toolname{} toolchain is covered in \Cref{sec:implementation}, and its extensive evluation is presented in \Cref{sec:evaluation}. 
+    The implementation of the \toolname{} toolchain is covered in \Cref{sec:implementation}, and its extensive evaluation is presented in \Cref{sec:evaluation}. 
 %    
 We discuss related work in \Cref{sec:related-work} and conclude in \Cref{sec:discussion}.
 %

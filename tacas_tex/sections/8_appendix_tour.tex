@@ -19,7 +19,7 @@ We analyze serializability through the lens of such {\color{ForestGreen}$\blackl
 %
 We depict global variables with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
 %
-Unless explicitly stated otherwise, all global and local variables are initialized as 0.
+Unless explicitly stated otherwise, all global and local variables are initialized to 0.
 %
 The symbol \texttt{?} depicts a nondeterministic choice between 0 and 1. All other constructs (\texttt{while}, \texttt{yield}, and \texttt{if}) have their standard interpretation, and are based on the \toolname{} semantics covered in Appendix~\ref{appendix:ser-semantics}.
 
@@ -233,7 +233,7 @@ request decr:
 %\todo{continue}	
 %example - 6
 
-The next example (see Listing~\ref{lst:ComplexWhileNonSer}) has a global variable \texttt{X} and a local variable \texttt{i} per each in-flight request. The {\color{ForestGreen}$\blacklozenge_\text{flip}$} request flips \texttt{X} (initialized to 0); the {\color{ForestGreen}$\blacklozenge_\text{main}$} request attempts to decrement \texttt{i} five times.
+The next example (see Listing~\ref{lst:ComplexWhileNonSer}) has a global variable \texttt{X} and, for each in-flight request, a local variable \texttt{i}. The {\color{ForestGreen}$\blacklozenge_\text{flip}$} request flips \texttt{X} (initialized to 0); the {\color{ForestGreen}$\blacklozenge_\text{main}$} request attempts to decrement \texttt{i} five times.
 %
 %It is straightforward to observe that the program in Listing~\ref{lst:ComplexWhileSer} is trivially serializable, as there are no yields.
 %
@@ -510,7 +510,7 @@ The program has three types of requests:
 \end{center}
 
 
-Each of the routing requests represents a single packet entering the network. The request includes a local \texttt{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value, and updated to emulate the chosen routing path. There is also a \texttt{visited\_east} variable (or a \texttt{visited\_west} variable, depending on the request in question).
+Each of the routing requests represents a single packet entering the network. The request includes a local \texttt{current} variable representing the index of the current node visited. This variable is initialized as the ingress node value and is updated to emulate the chosen routing path. There is also a \texttt{visited\_east} variable (or a \texttt{visited\_west} variable, depending on the request in question).
 %
 The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_west}$} requests is the sum \texttt{[current+current+visited\_east]}, an identifier encoding all possible \texttt{(current\_switch, visited\_east)} pairs.
 %

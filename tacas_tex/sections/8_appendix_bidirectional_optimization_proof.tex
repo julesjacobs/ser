@@ -106,7 +106,7 @@ By convention, we assume that $P$ and $T$ are disjoint.
 
 \subsection{Invariant and Correctness}
 
-Intuitively, $P'$ contains an over-approximation of all places reachable by a firing sequences starting with marking $M_0$ and ending with a marking in $S$.
+Intuitively, $P'$ contains an over-approximation of all places reachable by a firing sequence starting with marking $M_0$ and ending with a marking in $S$.
 
 \begin{definition}[Witnessable Place]
 	A place $p\in P$ is \emph{witnessable} if there exist firing
@@ -171,8 +171,8 @@ Intuitively, $P'$ contains an over-approximation of all places reachable by a fi
 \begin{lemma}
 	Each iteration of $\mathcal{F}$ and $\mathcal{B}$ strictly increases
 	the set of included elements (unless already at the fixed point), and
-	the total number of elements is finite.  Hence both reach their
-	fixed-points in at most $|P|+|T|$ iterations each.
+	the total number of elements is finite.  Hence, both reach their
+	fixed points in at most $|P|+|T|$ iterations each.
 \end{lemma}
 
 \begin{proof}
@@ -180,7 +180,7 @@ Intuitively, $P'$ contains an over-approximation of all places reachable by a fi
 \end{proof}
 
 \noindent
-Therefore, the bidirectional pruning converges in polynomial time, and preserves an over-approximation of the
+Therefore, the bidirectional pruning converges in polynomial time and preserves an over-approximation of the
 places and transitions that \emph{may} appear in some firing sequence from
 $M_0$, as part of a marking ending in the target semilinear set $S$.
 
