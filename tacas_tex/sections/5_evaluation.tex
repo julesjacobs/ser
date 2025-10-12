@@ -37,7 +37,7 @@ The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, a
 %
 We also observe a clear runtime split based on serializability: 
 %For serializable benchmarks, certificate validation takes much longer than proof generation. 
-among non-serializable benchmarks, counterexample generation is much longer than validation, and dominates the runtime; whereas the opposite holds in non-serializable benchmarks. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network to confirm its feasibility.
+among non-serializable benchmarks, counterexample generation is much longer than validation, and dominates the overall runtime; whereas the opposite holds among serializable benchmarks. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network system to confirm its feasibility.
 %
 %We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
 %

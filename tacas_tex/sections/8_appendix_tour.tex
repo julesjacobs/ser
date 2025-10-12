@@ -15,7 +15,7 @@ Each thread is spawned any number of times (and at any point in time) by a \text
 %
 For instance, in the three examples presented in \Cref{sec:introduction} (Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and~\ref{lst:MotivatingExample3Ser}), there is a single request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
 % 
-We analyze serializability through the lens of such {\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$} pairs. Specifically, the programs in Listings~\ref{lst:MotivatingExample1Ser}, and~\ref{lst:MotivatingExample3Ser} only induce pairs of the type {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}, while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also induce {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}, as formulated by our Network System framework (see \Cref{sec:problem-definition}). 
+We analyze serializability through the lens of such {\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$} pairs. Specifically, the programs in Listings~\ref{lst:MotivatingExample1Ser} and~\ref{lst:MotivatingExample3Ser} only induce pairs of the type {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}, while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also induce {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}, as formulated by our Network System framework (see \Cref{sec:problem-definition}). 
 %
 We depict global variables with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
 %
@@ -76,7 +76,7 @@ in which there is no \texttt{else} branch --- an update that makes the program n
 %
 Now, any serial execution will have \textit{at most one} pair of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_0$} (this is in fact the first request, returning the original zero-initialized value of \texttt{FLAG}).
 %
-As the first request also assigns \texttt{[FLAG:=1]} before exiting, any subsequent request in a serial run will assign \texttt{[x:=1]} and hence, will return only responses of {\color{red}$\blacklozenge_1$}. 
+As the first request also assigns \texttt{[FLAG:=1]} before terminating, any subsequent request in a serial run will assign \texttt{[x:=1]} and hence, will return only responses of {\color{red}$\blacklozenge_1$}. 
 %, and $(i-1)$ pairs of {\color{ForestGreen}$\blacklozenge_\text{A}$}/{\color{red}$\blacklozenge_1$}.
 %
 %
@@ -166,7 +166,7 @@ The following program pairs have a single global variable (\texttt{X}), and two 
 %
 In the first case, Listing~\ref{lst:FredSer} presents a serializable program, due to the absence of any \texttt{yield} between the increment/decrement of \texttt{X} and its return. Equivalently, in each of the requests, the update of \texttt{X} and the returned value can be thought of as \textit{a single atomic execution}.
 %
-However, in Listing~\ref{lst:FredNonSer}, we add an additional \texttt{yield} (and a local variable \texttt{y}), occurring in each of the requests, between the update of X and its return.
+However, in Listing~\ref{lst:FredNonSer}, we add an additional \texttt{yield} (and a local variable \texttt{y}), occurring in each of the requests, between the update of \texttt{X} and its return.
 %
 This change allows requests of the same type to update \texttt{X} to the same value ---  resulting in outputs such as
 $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{1}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{3}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}}\}$ which cannot be obtained in any serial execution.
@@ -325,9 +325,10 @@ request main:
 %\subsubsection{Example 4: Banking System}
 
 
-We illustrate a simple banking system inspired by Chandy and Lamport’s distributed snapshot algorithm~\cite{ChLa85}.  The system manages a client’s funds across multiple accounts; we use two accounts, \texttt{A} and \texttt{B}, but the same pattern extends to any number of accounts.  Each request {\color{ForestGreen}$\blacklozenge_\text{interest}$} applies an arbitrary rate \texttt{t\%} to every account—we set \texttt{[t=100\%]} for simplicity.
+We illustrate a simple banking system inspired by Chandy and Lamport’s distributed snapshot algorithm~\cite{ChLa85}.  The system manages a client’s funds across multiple accounts; we use two accounts, \texttt{A} and \texttt{B}, but the same pattern extends to any number of accounts.  
 %
-Each {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request moves \texttt{\$50} from \texttt{A} to \texttt{B}, and each {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request increases every balance by \texttt{t\%}.  Both requests return the combined total \texttt{[A + B]}.
+Each {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} request transfers \texttt{\$50} from \texttt{A} to \texttt{B}, and each {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request adds an interest rate of \texttt{t\%} to each account (we set \texttt{[t=100\%]} for simplicity).
+Both requests return the combined total \texttt{[A + B]}.
 %
 In every serial execution with one {\color{ForestGreen}$\blacklozenge_{\mathit{interest}}$} request, and any number of {\color{ForestGreen}$\blacklozenge_{\mathit{transfer}}$} requests, the total balance satisfies the invariant
 \texttt{[A$_{\text{after}}$ + B$_{\text{after}}$ = (1 + t\%) \,$\bigl($A$_{\text{before}}$ + B$_{\text{before}}\bigr)$]}
@@ -454,7 +455,7 @@ The program has three types of requests:
 %	
 %	\item
 	(i)
-	{\color{ForestGreen}$\blacklozenge_\text{policy update}$}:
+	{\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}:
 %	\textit{policy update}:
  represents a controller  update, which nondeterministically decides whether to update the policy (i.e., flip the value of  variable \texttt{B}) or not;
 %	
@@ -535,7 +536,7 @@ The {\color{ForestGreen}$\blacklozenge_\text{main}$} request eventually returns 
 %
 In order for the system to emulate multiple iterations, our setting also includes two additional requests, {\color{ForestGreen}$\blacklozenge_\text{activate\_n1}$},{\color{ForestGreen}$\blacklozenge_\text{activate\_n2}$} which activate nodes \texttt{N$_1$} and \texttt{N$_2$}, respectively.
 %
-We note that the program is not serializable due to the \texttt{yield} operation that appears immediately after the recorded snapshot of the node activation status. One such example of a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests are both in-flight, and each of them records two active monitor nodes and then executes \texttt{yield}; Then, each request might turn off a complement monitor node. As a result of each request operating based on its isolated snapshot of the global state, both monitor nodes can be turned off --- inducing a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for \texttt{[N$_1$+N$_2$=0+0=0]}).
+We note that the program is not serializable due to the \texttt{yield} statement that appears immediately after the recorded snapshot of the node activation status. One such example of a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests are both in-flight, and each of them records two active monitor nodes and then executes \texttt{yield}; Then, each request might turn off a complement monitor node. As a result of each request operating based on its isolated snapshot of the global state, both monitor nodes can be turned off --- inducing a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for \texttt{[N$_1$+N$_2$=0+0=0]}).
 %
 We note that in any serial execution, no two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests can simultaneously record both monitors as active, and hence, a response of {\color{red}$\blacklozenge_0$} cannot be obtained by serial executions.
 

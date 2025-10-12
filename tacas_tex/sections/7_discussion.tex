@@ -28,11 +28,11 @@ These limitations suggest important directions for future research.
 %\textbf{Future Work.}
 To improve scalability, we are adapting \textit{polyhedral reductions}~\cite{AmBeDa21}, a form of structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstruction of $N_1$’s state space. This would allow verification on the reduced net, with proofs lifted back to the original one.
 %
-We also plan to \textit{extend our framework to richer communication patterns.} Beyond the current independent-client model, stronger settings include inter-client communication ---
+We also plan to \textit{extend our framework to richer communication patterns}, beyond the current independent-client model. Stronger settings include inter-client communication ---
 %or Lamport’s \textit{happens-before}~\cite{La78}, while weaker ones restrict post-response communication or allow only summaries. Addressing these 
 which requires 
 %decentralized or streaming certification under communication constraints, 
-broadening the framework to afford distributed-system guarantees.
+broadening our framework to afford distributed-system guarantees.
 %\todo{old}
 %
 %\paragraph{Scalability.}
@@ -81,7 +81,7 @@ broadening the framework to afford distributed-system guarantees.
 %\smallskip
 %\noindent
 %\textbf{Conclusion.}
-We present the first implemented tool that verifies serializability for unbounded concurrent systems and generates proof certificates.
+We present the first end-to-end toolchain that automatically verifies serializability for unbounded concurrent systems and generates proof certificates thereof.
 Our approach bridges theory and practice, with the following key contributions:
 % by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
 %

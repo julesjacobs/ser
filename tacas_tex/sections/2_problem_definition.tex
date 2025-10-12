@@ -20,7 +20,7 @@ We define the set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma}
 % 
 The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
 %
-Specifically, we focus on reachability of a linear-constraint formula $F$; it is \sat\ if some marking $M\in R(N)$ satisfies $F$ (denoted $M \models F$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
+Specifically, we focus on reachability of a linear-constraint formula $\mathcal {F}$; it is \sat\ if some marking $M\in R(N)$ satisfies $\mathcal {F}$ (denoted $M \models \mathcal {F}$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
 %
 Surprisingly, even for the \textit{unbounded} setting, where places can hold arbitrarily many tokens, this problem is decidable~\cite{Ma81,Ko82,La92}, although \texttt{Ackermann}-complete~\cite{CzWo22,Le22}.   
 
@@ -29,9 +29,9 @@ Surprisingly, even for the \textit{unbounded} setting, where places can hold arb
 \medskip
 \noindent
 \textbf{Verdict proofs.} 
-If $F$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models F$ serves as a proof, and is verifiable by simulation of the Petri net.  
-If $F$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ proving non-reachability: 
-(i) $M_0\models C$, (ii) $\forall t\in T \quad M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg F$.
+If $\mathcal {F}$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models \mathcal {F}$ serves as a proof, and is verifiable by simulation of the Petri net.  
+If $\mathcal {F}$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ proving non-reachability: 
+(i) $M_0\models C$, (ii) $\forall t\in T \quad M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg \mathcal {F}$.
 
 \medskip
 \noindent
@@ -41,7 +41,7 @@ $S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\
 for some $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$. 
 Such sets coincide with those definable in \textit{Presburger arithmetic}~\cite{Pr29}. 
 By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh image} of any CFL is semilinear. 
-For $\Sigma=\{a_1,\dots,a_k\}$ and  $w\in L\subseteq\Sigma^*$,  the multiset
+For $\Sigma=\{a_1,\dots,a_k\}$ and the word $w\in L\subseteq\Sigma^*$,  the multiset
 $\mathsf{Parikh}(w)=\{\,a_i^{|w|_{a_i}}\mid a_i\in\Sigma\,\}$ counts symbol occurrences in $w$.
 
 %\medskip
@@ -468,7 +468,7 @@ Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:
 %
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 \textbf{Example.}
-For the non-serializable example in Listing~\ref{lst:MotivatingExample2NonSer}, the NS is:
+We construct the NS for the non-serializable example in Listing~\ref{lst:MotivatingExample2NonSer}:
 %
 \begin{itemize}
 \item 
@@ -662,7 +662,7 @@ return y
 	  \draw[->] (state4) -- (resp1);
 	  
 	\end{tikzpicture}
-	\caption{The Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
+	\caption{The network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
 		Local states show the variable assignments (\textcolor{orange}{yellow}) and the remaining code; edges indicate transitions of global states  (\textcolor{blue}{blue}). 
 		Requests and responses appear as \textcolor{ForestGreen}{green} and \textcolor{red}{red} diamonds, respectively. 
 		From left to right:  \texttt{main} spawns a request with \texttt{[y=0]} and the full program; after yielding, $\delta$ steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, then updates \texttt{y} based on the global value, returning it as the final response (either {\color{red}$\blacklozenge_0$} or {\color{red}$\blacklozenge_1$}).}

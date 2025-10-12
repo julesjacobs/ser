@@ -5,9 +5,11 @@
 
 Now, we observe again the adjusted program with a spin-lock (as previously described in Listing~\ref{lst:MotivatingExample3Ser}), of which we depicted figures of the corresponding Network System (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and the interleaving Petri net (Fig.~\ref{fig:code3ExamplePN}) in Appendix~\ref{appendix:MoreNsExamples}.
 %
-In this case, serializability corresponds to the Petri net being unable to reach a marking satisfying the same semilinear formula as in the non-serializable case described in the main text (subsec.~\ref{subsec:SerToNsTranslation}):
+In this case, serializability corresponds to the Petri net being unable to reach a marking satisfying the same semilinear formula \(\mathcal {F}\) as in the non-serializable case described in the main text (subsec.~\ref{subsec:SerToNsTranslation}):
 
 \[
+\mathcal {F}:
+\quad
 P_1 = 0 \wedge 
 \textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 \wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} \ge 0 \wedge \textcolor{red}{P_8} \ge 1.
@@ -108,7 +110,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	\;\mapsto\;
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
-	which is unsatisfiable. Hence, no completed request/response pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) can be produced from this state via \textit{any} execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the lock is acquired (\textcolor{blue}{[L=1]}).
+	which is unsatisfiable. Hence, no completed request/response pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) can be produced from this state via \textit{any} execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the spin-lock is acquired (\textcolor{blue}{[L=1]}).
 	%	\guy{Mark/Jules is this part correct?}
 	
 	\medskip
@@ -204,13 +206,13 @@ We get the following inductive invariants for each of the two (reachable) global
 	\[
 	I(M)\;\Longrightarrow\;I\bigl(t_{k}(M)\bigr).
 	\]
-	In each case, the same $(e_{0},\dots,e_{5})$ can be adjusted (per the \texttt{SMT} certificate) to show the eight equalities and the disjunction remain valid. See our accompanying artifact~\cite{ArtifactRepository} for generating a full proof in the standard \texttt{SMT-LIB} format.
+	In each case, the same $(e_{0},\dots,e_{5})$ can be adjusted (per the \texttt{SMT} certificate) to show that the eight equalities and the disjunction remain valid. See our accompanying artifact~\cite{ArtifactRepository} for generating a full proof in the standard \texttt{SMT-LIB} format~\cite{BaStTi10}.
 	
 	\medskip\noindent
 	\textbf{(3) Refutation of the property.}
-	Suppose by contradiction that there exists a marking $P$ for which both $I(P)$ and $\phi(P)$ hold:
+	Suppose by contradiction that there exists a marking $P$ for which both $I(P)$ and $\mathcal {F}(P)$ hold:
 	\[
-	\phi(P):\quad
+	\mathcal {F}(P):\quad
 	P_{1}=0,\;
 	\textcolor{blue}{P_{2}}\ge0,\;
 	\textcolor{blue}{P_{3}}\ge0,\;
@@ -261,15 +263,15 @@ We get the following inductive invariants for each of the two (reachable) global
 	
 %	\medskip
 	\noindent
-	However, $\phi$ also induces $\textcolor{blue}{P_{3}}\ge0$ and $\textcolor{red}{P_{8}}\ge1$, and hence $\textcolor{blue}{P_{3}}=0$.  
+	However, $\mathcal {F}(P)$ also induces $\textcolor{blue}{P_{3}}\ge0$ and $\textcolor{red}{P_{8}}\ge1$, and hence $\textcolor{blue}{P_{3}}=0$.  
 	Furthermore, as our invariant includes a conjunction with $\bigl(P_{4}-1\ge0\;\lor\;\textcolor{blue}{P_{3}}-1\ge0\bigr)$, then it necessarily holds that \(P_{4}\ge1\). This contradicts \(P_{4}=0\) as required for the semilinear set to be reachable.
 	%
-	Thus, $I\land\phi$ is unsatisfiable, i.e., 
+	Thus, $I\land\mathcal {F}$ is unsatisfiable, i.e., 
 	%\[
 	$
-	I(P)\;\Longrightarrow\;\neg\phi(P)$.
+	I(P)\;\Longrightarrow\;\neg\mathcal {F}(P)$.
 	%\]
-	This completes the proof that $I$ is an inductive invariant refuting property $\phi$.
+	This completes the proof that $I$ is an inductive invariant refuting property $\mathcal {F}$.
 \end{proof}
 
 

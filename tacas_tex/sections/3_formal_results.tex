@@ -236,7 +236,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.7\textwidth]{plots/code_2_PN_with_annotation.png}
-	\caption{The PN encoding interleaving executions of the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
+	\caption{The PN encoding interleaved executions of the program in Listing~\ref{lst:MotivatingExample2NonSer}.}
 	\label{fig:code2ExamplePN}
 \end{figure}
 
@@ -250,17 +250,17 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 	
 	\begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
-	Regarding the aforementioned program, we automatically generate the following reachability query\footnote{If not for the equality constraints, the problem would have been considered a Petri net \textit{coverability} query, which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN}, encoding a target semilinear set by imposing the following constraints on the token distribution:
+	Regarding the aforementioned program, we automatically generate the following reachability query\footnote{If not for the equality constraints, the problem would have been considered a Petri net \textit{coverability} query, which is easier~\cite{Ra78}.} for the Petri net in Fig.~\ref{fig:code2ExamplePN}, encoding a target semilinear set by imposing the following constraints on the token distribution:
 	%
 	%Regarding the aforementioned program, we automatically generate the following reachability query~\footnote{If not the equality constraints, the problem would have been considered a \textit{coverability} query which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN} we encode a target semilinear set with the following constraints on the token distribution:
 	%
 	\[
-	F: \quad P_1 = 0 \wedge 
+	\mathcal {F}: \quad P_1 = 0 \wedge 
 	\textcolor{blue}{P_2} \ge 0 \wedge \textcolor{blue}{P_3} \ge 0  \wedge P_4 = 0
 	\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} \ge 0 \wedge \textcolor{red}{P_8} \ge 1.
 	\]
 	
-	This set requires no tokens on $P_1,P_4,P_5,P_6$, at least one token on $\textcolor{red}{P_8}$ (i.e., {\color{red}$\blacklozenge_0$}), and any number of tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3},\textcolor{red}{P_7}$. 
+	This set requires no tokens on $P_1,P_4,P_5,P_6$, at least one token on $\textcolor{red}{P_8}$ (i.e., a response {\color{red}$\blacklozenge_0$}), and any number of tokens on $\textcolor{blue}{P_2},\textcolor{blue}{P_3},\textcolor{red}{P_7}$. 
 	%
 %	Note that \(\textcolor{red}{P_8} \ge 1\) requires at least one {\color{red}$\blacklozenge_0$}, as expected (see \Cref{sec:introduction}).
 	\end{tcolorbox} 
@@ -270,7 +270,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 	
 	
 	\item \textbf{Decision \& validation.}
-	We ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that \(M \models F\), i.e.,
+	We ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that \(M \models \mathcal {F}\), i.e.,
 	\[
 	M_0 \xrightarrow{}^{*} M
 	\quad\wedge\quad
@@ -296,7 +296,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
-	In our running example, the target semilinear set is, in fact, reachable. For instance, it includes the following marking:
+	In our running example, the target semilinear set \(\mathcal {F}\) is, in fact, reachable. For instance, it includes the following marking:
 	
 	\[
 	M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
@@ -336,7 +336,7 @@ Since the serial executions form a regular language (step 1), their Parikh image
 The interleaving Petri net (step 2) has $O(|G| + (|\mathit{REQ}| \times |L|) + (|\mathit{REQ}| \times |\mathit{RESP}|))$ places and $O(|\mathit{REQ}|\times (1+ |\delta| + |\mathit{RESP}|))$ transitions.
 The reachability query (step 3) asks whether the Petri net can reach the complement of a semilinear set, which is decidable but \texttt{Ackermann}-complete~\cite{CzWo22}.
 Without optimizations, even simple examples can generate Petri nets with hundreds of places and exponentially-sized semilinear constraints, making the approach impractical.
-Our optimizations (see subsec.~\ref{sec:optimizations}) dramatically reduce both the Petri net size and the semilinear set complexity, as we elaborate next.
+Our optimizations (see subsec.~\ref{sec:optimizations}) \textit{drastically} reduce both the Petri net size and the semilinear set complexity, as we elaborate next.
 
 
 %\guy{should we add/prove the following?}
@@ -420,13 +420,13 @@ A semilinear set $S=\bigcup_{i=1}^m L_i$ with
 \noindent
 \textbf{(3) Generating fewer constraints.}  
 When computing the Parikh image of a regular expression as a semilinear set,
-	most regex operations can be implemented without a blow-up.
-	However, Kleene star is a notable exception: in the general case, it can cause an exponential blow up: for $S=\bigcup_{i=1}^m L_i$,  the Kleene star $S^\ast$ is given as a semilinear set by: 
+	most regex operations can be implemented without an exponential blow-up.
+	However, the Kleene star is a notable exception. Given $S=\bigcup_{i=1}^m L_i$,  the Kleene closure $S^\ast$ can be expressed as a semilinear set by: 
 	\[
 	S^\ast=\bigcup_{I \subseteq \{1,...,m\}} 
-	\Big\{\sum_{i \in I} b_i + \sum_{p \in \bigcup_{i \in I} P_i\cup \{b_i\}} n_p p\Big\}.
+	\Big\{\sum_{i \in I} b_i + \sum_{p \in \bigcup_{i \in I} (P_i\cup \{b_i\})} n_p p\Big\},
 	\]
-	This yields $2^m$ components. To mitigate this:
+	yielding $2^m$ components. To mitigate this:
 	(i) if $L_i=\{b_i\}$ (period-less component), factor it out, star the rest, then add $b_i$ as a period;  
 	(ii) if $L_i=\{\sum_{p\in P_i}n_pp\}$ (zero base), likewise star the rest and add each $p\in P_i$ as a period vector to the resulting set.  
 	Each such case halves the component count and circumvents exponential blow-ups.
@@ -495,12 +495,15 @@ The size of the generated semilinear set is not only impacted by how the
 	we are especially sensitive to the \emph{star height} of the generated regex.
 	%
 	Naive Kleene elimination may introduce many nested stars.  
-	We reduce this by strategically choosing the next state to eliminate as:
+	We reduce this by strategically choosing to eliminate lower-degree states first:
 	\[
-	q^*=\arg\min_{q\in Q'}\bigl(|\delta^A_{\mathrm{in}}(q)|+|\delta^A_{\mathrm{out}}(q)|\bigr),
+	q^*=\arg\min_{q\in Q}\bigl(|\delta^A_{\mathrm{in}}(q)|+|\delta^A_{\mathrm{out}}(q)|\bigr),
 	\]
-	eliminating lower-degree states first.  
-	This heuristic empirically yields smaller regexes and more compact semilinear sets, as our evaluation demonstrates later.
+	 
+	
+	\smallskip
+	\noindent
+	As we later demonstrate (in~\Cref{sec:evaluation}), our optimizations expedite the search procedure and make the representations significantly more compact. This, in turn, enables deciding serializability for instances that are otherwise intractable.
 
 
 %\medskip
