@@ -30,7 +30,7 @@ Within this time limit, \toolname{} solved 26 of the 27 serializable benchmarks 
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 
 %
-The \textit{median} total runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.50$ ms ($830$ ms) when  solely focusing on serializable (non-serializable) benchmarks.
+The \textit{median} total runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.5$ ms ($830$ ms) when  solely focusing on serializable (non-serializable) benchmarks.
 %, as reported in Table~\ref{tab:stats-summary}.
 %
 The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when solely focusing on serializable (non-serializable) benchmarks.
@@ -184,7 +184,7 @@ We ran all benchmarks with each of the following six optimization configurations
 (v) with strategic Kleene elimination (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
 and finally, (vi) with all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
 %
-The results of the aggregated runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log} and show that over $19\%$ more benchmarks are solved when using all optimizations compared to running without any optimization.
+The results of the aggregated runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log} and show that over $28\%$ more benchmarks are solved when using all optimizations compared to running without any optimization.
 %
 Not surprisingly, the best configuration is the one with all optimizations on. 
 %
@@ -210,7 +210,7 @@ eliminates the average number of places \textit{by roughly half} --- from $23.91
 (2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (excluding pruning) was disabled. The redundant-constraint elimination ([\texttt{\textbf{\text{B}\textcolor{red}{-}\text{G}\text{S}}}]) and the fewer-constraint generation elimination ([\texttt{\textbf{\text{B}\text{R}\textcolor{red}{-}\text{S}}}]) \textit{drastically} reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$ smaller, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on ([\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]). 
 %
 For fairness, we measured only benchmarks completed under all configurations, excluding cases where semilinear sets exploded beyond $2^{30}$ components and timed out. Thus, our reported improvements actually \textit{understate} the true impact of these optimizations on memory. Such blowups, %especially common in state-machine benchmarks with NS loops, 
-render even simple programs infeasible without these optimizations.
+render even simple programs intractable without these optimizations.
 	
 	
 %\subsubsection{Space Optimization}

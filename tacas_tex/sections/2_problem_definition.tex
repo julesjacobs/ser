@@ -14,7 +14,7 @@ A transition $t$ is \textit{enabled} at marking $M \in \mathbb N^P$ if $M\ge \ma
 %
 If an enabled transition \(t\) \textit{fires}, it produces the marking $M'$ (denoted $M\xrightarrow{t}M'$), with $M'= M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
 %
-This can extend naturally to a sequence of firings $\sigma = t_1\cdots t_k$ (denoted $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ with $M=M_0$, $M'=M_k$, and $M_i \xrightarrow{t_{i+1}} M_{i+1}$ for all $i$. 
+This can extend naturally to a sequence of firings $\sigma = t_1\cdots t_k$ (denoted $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ with $M=M_0$, $M'=M_k$, and $M_i \xrightarrow{t_{i}} M_{i+1}$ for all $i$. 
 % 
 We define the set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all markings reachable from the initial state $M_0$.
 % 
@@ -185,7 +185,7 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 \begin{itemize}
 \item $G$ is a set of \textit{global network states} (e.g., the values of variables on a switch)
 
-\item $L$ is a set of \textit{local packet states} (e.g., a packet header value)
+\item $L$ is a set of \textit{local packet states} (e.g., packet header values)
 
 \item $\mathit{REQ}$ is a finite set of \textit{request labels} (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
 
@@ -207,7 +207,7 @@ We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \math
 %\smallskip
 \noindent
 \textbf{Request and response.}
-A \emph{request} label ${\color{ForestGreen}\blacklozenge_\text{req}}\in\mathit{REQ}$ spawns a request (i.e., a packet/thread) on which a concurrent computation is executed; a \emph{response} ${\color{red}\blacklozenge_\text{resp}}\in\mathit{RESP}$ is its returned value. The pair $({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})$ captures one execution’s input/output behavior.
+A \emph{request} label ${\color{ForestGreen}\blacklozenge_\text{req}}\in\mathit{REQ}$ spawns a request (i.e., a packet/thread) on which a concurrent computation is executed; a \emph{response} label ${\color{red}\blacklozenge_\text{resp}}\in\mathit{RESP}$ is its returned value. The pair $({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})$ captures one execution’s input/output behavior.
 
 
 
