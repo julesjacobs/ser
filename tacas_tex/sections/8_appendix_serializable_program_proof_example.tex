@@ -27,7 +27,7 @@ P_1 = 0 \wedge
 %\]
 
 
-In addition, although the target set is the same as in the previous example, the Petri net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated program. For instance, now each place in the PN that encodes a global state accounts for two global variables, \texttt{X} and \texttt{L}, and the initial global state corresponds to the place encoding the initial assignment \textcolor{blue}{[X=0, L=0]}, etc.
+In addition, although the target set is the same as in the previous example, the Petri net places $(P_1,\ldots,P_8)$ encode different states that correspond to the updated network system. For instance, now each place in the PN that encodes a global state accounts for two global variables, \texttt{X} and \texttt{L}, and the initial global state corresponds to the place encoding the initial assignment \textcolor{blue}{[X=0, L=0]}, etc.
 %
 Furthermore, unlike the case in Listing~\ref{lst:MotivatingExample2NonSer} (covered in subsec.~\ref{subsec:SerToNsTranslation}), this target set of markings (encoding request/response pairs of non-serial executions) is \textit{unreachable}, as witnessed by the inductive invariant:
 
@@ -56,7 +56,7 @@ Furthermore, unlike the case in Listing~\ref{lst:MotivatingExample2NonSer} (cove
 \]
 
 
-We then revert and project it on the request/response pairs of the Network System.
+We then revert and project it on the request/response pairs of the network system.
 %
 We get the following inductive invariants for each of the two (reachable) global states:
 
@@ -110,7 +110,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	\;\mapsto\;
 	\exists\,e_{0},\dots,e_{5}.\;\bot,
 	\]
-	which is unsatisfiable. Hence, no completed request/response pair, and in particular no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) can be produced from this state via \textit{any} execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the spin-lock is acquired (\textcolor{blue}{[L=1]}).
+	which is unsatisfiable. Hence, no completed request/response pair, and in particular, no (\(\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$}\)) pair can be produced from this state via \textit{any} execution. Intuitively, this aligns with the fact that there cannot be any output generated via an interleaving, given that the spin-lock is acquired (\textcolor{blue}{[L=1]}).
 	%	\guy{Mark/Jules is this part correct?}
 	
 	\medskip
@@ -121,7 +121,7 @@ We get the following inductive invariants for each of the two (reachable) global
 	can occur. Consequently, the only possible pairs are
 	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
 	$,
-	all of which lie within the NFA’s language for serial executions.
+	all of which lie within the NFA’s language for serial executions (Fig.~\ref{fig:code3ExampleNFA}).
 	Hence, the program is serializable. Moreover, as proven in subsection~\ref{appendix:subsec:InductiveInvariantExample},
 	these invariants are inductive: they hold in the initial state and are preserved under every transition.
 \end{proof}

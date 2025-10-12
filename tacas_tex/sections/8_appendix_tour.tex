@@ -13,7 +13,7 @@ The first examples are relatively basic, while the last examples have higher com
 %
 Each thread is spawned any number of times (and at any point in time) by a \textit{request} from the user, marked {\color{ForestGreen}$\blacklozenge_\text{req}$}. The request executes, and eventually returns a \textit{response}  {\color{red}$\blacklozenge_\text{resp}$}.
 %
-For instance, in the three examples presented in \Cref{sec:introduction} (Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and~\ref{lst:MotivatingExample3Ser}), there is a single request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
+For instance, in the three examples presented in \Cref{sec:introduction} (Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and~\ref{lst:MotivatingExample3Ser}), there is a single type of request {\color{ForestGreen}$\blacklozenge_\text{main}$} and (up to) two types of responses {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}.
 % 
 We analyze serializability through the lens of such {\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$} pairs. Specifically, the programs in Listings~\ref{lst:MotivatingExample1Ser} and~\ref{lst:MotivatingExample3Ser} only induce pairs of the type {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}, while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also induce {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}, as formulated by our Network System framework (see \Cref{sec:problem-definition}). 
 %
@@ -351,7 +351,7 @@ However, non-serial interleavings can violate this invariant.  For instance, if 
 %%
 %Both requests return the final sum of the client funds in both the accounts.  
 %%
-Listing~\ref{lst:BankSer} has a serial version of this banking system (without \texttt{yield}), and Listing~\ref{lst:BankNonSer} includes \texttt{yield} expressions between the adjustment of accounts \texttt{A} and \texttt{B} (we note that this also represents real-world systems in which the account can be sharded and partitioned across different nodes).
+Listing~\ref{lst:BankSer} has a serial version of this banking system (without \texttt{yield}), and Listing~\ref{lst:BankNonSer} includes \texttt{yield} statements between the adjustment of accounts \texttt{A} and \texttt{B} (we note that this is motivated by real-world systems in which accounts can be sharded and partitioned across different nodes).
 %
 
 
@@ -362,7 +362,7 @@ Listing~\ref{lst:BankSer} has a serial version of this banking system (without \
 A := 100, B := 50
 
 request transfer: 
-    // transfer 50$
+    // transfer $50
     A := A - 50
     // no yield
     B := B + 50
@@ -383,7 +383,7 @@ request interest:
 A := 100, B := 50
 	
 request transfer: 
-    // transfer 50$
+    // transfer $50
     A := A - 50
     yield
     B := B + 50
@@ -515,9 +515,9 @@ Each of the routing requests represents a single packet entering the network. Th
 %
 The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_west}$} requests is the sum \texttt{[current+current+visited\_east]}, an identifier encoding all possible \texttt{(current\_switch, visited\_east)} pairs.
 %
-The program is not serializable, as witnessed by an interleaving that can give rise to a final return value of \texttt{[current+current+visited\_east=1]} (due to \texttt{[current=0]} and \texttt{[visited\_east=1]}). This represents a \textit{routing cycle} in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet ({\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when a request has already been spawned based on the previous policy, subsequently yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting in a routing cycle.
+The program is not serializable, as witnessed by an interleaving that can give rise to a final return value of \texttt{[current+current+visited\_east=1]} (due to \texttt{[current=0]} and \texttt{[visited\_east=1]}). This represents a \textit{routing cycle} in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet ({\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when a request has already been spawned and began routing based on the previous policy, subsequently yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting in a routing cycle.
 %
-More formally, this is conveyed by return values that represent these cycles and are obtained only via non-serial executions. For example, legal, acyclic routes of this request have either a return value of 0 (in the case of [\texttt{current=0}, \texttt{visited\_east=0}]) or 7 (in the case of [\texttt{current=3}, \texttt{visited\_east=1}]).
+More formally, this is conveyed by response values that represent these cycles and are obtained only via non-serial executions. For example, legal, acyclic routes of this request have either a return value of 0 (in the case of [\texttt{current=0}, \texttt{visited\_east=0}]) or 7 (in the case of [\texttt{current=3}, \texttt{visited\_east=1}]).
 Dually, routing cycles could also occur in the case of {\color{ForestGreen}$\blacklozenge_\text{route\_east}$} interleavings.
 
 
@@ -534,7 +534,7 @@ Then, in the first request, and in any future ones in which both nodes are activ
 %
 The {\color{ForestGreen}$\blacklozenge_\text{main}$} request eventually returns the current sum of active nodes in the system.
 %
-In order for the system to emulate multiple iterations, our setting also includes two additional requests, {\color{ForestGreen}$\blacklozenge_\text{activate\_n1}$},{\color{ForestGreen}$\blacklozenge_\text{activate\_n2}$} which activate nodes \texttt{N$_1$} and \texttt{N$_2$}, respectively.
+In order for the system to emulate multiple iterations, our setting also includes two additional requests, {\color{ForestGreen}$\blacklozenge_\text{activate\_n1}$} and {\color{ForestGreen}$\blacklozenge_\text{activate\_n2}$}, which activate nodes \texttt{N$_1$} and \texttt{N$_2$}, respectively.
 %
 We note that the program is not serializable due to the \texttt{yield} statement that appears immediately after the recorded snapshot of the node activation status. One such example of a non-serializable behavior occurs when two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests are both in-flight, and each of them records two active monitor nodes and then executes \texttt{yield}; Then, each request might turn off a complement monitor node. As a result of each request operating based on its isolated snapshot of the global state, both monitor nodes can be turned off --- inducing a request with {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$} (for \texttt{[N$_1$+N$_2$=0+0=0]}).
 %

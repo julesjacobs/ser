@@ -82,7 +82,8 @@ By convention, we assume that $P$ and $T$ are disjoint.
 	~\cup~
 	\{\,p\in P \mid \exists t\in Y\cap T,\ \Pre(p,t)>0\}.
 	\]
-	Iterate $Y_{i+1} = \mathcal{B}(Y_i)$ until a least fixed-point
+	Starting from $Y_0$, defined as the set of all places that are not constrained to zero in the target set $S$ and also have a token in $M_0$;
+	iterate $Y_{i+1} = \mathcal{B}(Y_i)$ until a least fixed-point
 	$Y^*=\bigcup_i Y_i$ is reached.  Call $Y^*_P = Y^*\cap P$ the set of
 	backward-relevant places.
 \end{definition}
@@ -97,7 +98,7 @@ By convention, we assume that $P$ and $T$ are disjoint.
     \forall p:\;\Post(p,t)>0\implies p\in P'
     \}.
   \end{align*}
-  If $M_0(p) > 0$ for any $p \not\in P'$, the pruned subnet is undefined.
+  If $M_0(p) > 0$ for any $p \not\in P'$, then the pruned subnet is undefined.
   Otherwise, the pruned subnet is
   \[
   N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr)
@@ -106,7 +107,7 @@ By convention, we assume that $P$ and $T$ are disjoint.
 
 \subsection{Invariant and Correctness}
 
-Intuitively, $P'$ contains an over-approximation of all places reachable by a firing sequence starting with marking $M_0$ and ending with a marking in $S$.
+Intuitively, $P'$ contains an over-approximation of all the places reachable by a firing sequence starting with marking $M_0$ and ending with a marking in $S$.
 
 \begin{definition}[Witnessable Place]
 	A place $p\in P$ is \emph{witnessable} if there exist firing
@@ -213,20 +214,20 @@ $M_0$, as part of a marking ending in the target semilinear set $S$.
 	\begin{subfigure}[b]{0.30\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_c_updated.pdf}
-		\caption{Step 3: first backward pass.}
+		\caption{Step 2: first backward pass.}
 		\label{fig:step:c}
 	\end{subfigure}\hfill
 	\begin{subfigure}[b]{0.23\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_d_updated_2.pdf}
-		\caption{Step 4: second forward pass.}
+		\caption{Step 3: second forward pass.}
 		\label{fig:step:d}
 	\end{subfigure}\hfill
 	% <-- three-arg form: [vpos][total height][inner vpos]
 	\begin{subfigure}[b][\subfigheight][b]{0.23\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{plots/bidirectional_pruning_step_e_updated_2.pdf}
-		\caption{Step 6: final Petri net.}
+		\caption{Step 4: final Petri net.}
 		\label{fig:step:e}
 	\end{subfigure}
 	
