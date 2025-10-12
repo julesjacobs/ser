@@ -1,68 +1,62 @@
+% ---- Document Class ----
 \documentclass[a4paper]{llncs}
 
-\usepackage{alltt}
-\usepackage{amssymb}
-\usepackage{caption}
-\usepackage{paralist}
-\usepackage{nicefrac}
-\usepackage{booktabs}
-\usepackage{xspace}
+% ---- Essential Packages ----
+\usepackage[T1]{fontenc} % Recommended for font encoding
 \usepackage{amsmath}
-\usepackage{marvosym}
-\usepackage{wasysym}
-\usepackage{verbatim}
-\usepackage{float}
-\usepackage{hyperref}
-\usepackage{multirow}
-\usepackage{cite}
-%\usepackage{natbib}
-\usepackage[capitalize]{cleveref}
-\usepackage[per-mode=symbol,detect-all]{siunitx}
-\usepackage{graphics}
 \usepackage{amssymb}
-\usepackage{enumitem}
-\usepackage[table]{xcolor}
-\usepackage{booktabs}
-\usepackage{colortbl}
-\usepackage{ifthen}
-\usepackage{mathdots}
-\usepackage{arydshln}
-\usepackage[outline]{contour}
 \usepackage{graphicx}
+\usepackage{hyperref}
+
+% ---- Formatting & Layout ----
+\usepackage{alltt}
+\usepackage{paralist}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{arydshln}
 \usepackage{wrapfig}
-
-
-
-\usepackage{mathpartir}
-\usepackage{url}
-\usepackage{listings}
-\usepackage{svg}
+\usepackage[export]{adjustbox}
+\usepackage{enumitem}
 \usepackage{float}
 \usepackage{caption}
 \usepackage{subcaption}
-\usepackage{graphicx}
-\usepackage{amsmath}
-\usepackage{multirow} 
-\usepackage{tikz}
-\usepackage{listings}
-\usepackage{xcolor}
-\usepackage{booktabs} 
-\usepackage{arydshln}
-\usepackage[table]{xcolor}
-\usepackage[dvipsnames]{xcolor}  
-\usepackage{siunitx}
-\usepackage{multirow}
-\usepackage{pifont}
-\usepackage{calc} 
-%\newcommand{\cmark}{\textcolor{green}{\ding{51}}}
-\usepackage{wrapfig}             % for wrapfigure
-\usepackage[export]{adjustbox}   % for trim/clip keys on includegraphics
-\usepackage[T1]{fontenc}
-\usepackage{tcolorbox}     
-\usepackage{stmaryrd}      % for colored boxes
-%\usepackage{courier}      % Uses Courier, has bold
+\usepackage{tcolorbox}
+\usepackage{nicefrac}
 
-%\usepackage{cleveref}
+% ---- Colors ----
+\usepackage[table,dvipsnames,svgnames]{xcolor}
+
+% ---- Code Listings ----
+\usepackage{listings}
+\usepackage{verbatim}
+
+% ---- Citations & References ----
+\usepackage{cite}
+\usepackage[capitalize]{cleveref} % Should be loaded after hyperref for best results
+
+% ---- Math & Symbols ----
+\usepackage{mathtools}
+\usepackage{mathpartir}
+\let\Bbbk\relax % prevent double definition with amssymb
+\usepackage{wasysym}
+\usepackage{pifont}
+\usepackage{stmaryrd}
+\usepackage{bussproofs}
+\usepackage{gensymb}
+\usepackage[per-mode=symbol,detect-all]{siunitx}
+
+% ---- Other Utilities ----
+\usepackage{xspace}
+\usepackage{url}
+\usepackage{svg}
+\usepackage{ifthen}
+\usepackage{etoolbox} % For patching commands
+\usepackage[outline]{contour}
+
+% ---- TikZ Graphics ----
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,positioning,arrows}
 
 \newcommand{\cmark}{\checkmark}
 %\definecolor{brightbrown}{RGB}{245,237,205}%{205,133,63}
