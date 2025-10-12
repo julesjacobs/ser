@@ -292,13 +292,13 @@ It is \textit{serial} if each $\mathcal{R}_i$ has \textit{at most} one request.
 %	whereas \emph{interleaved} runs may have multiple requests in flight at once.
 	%
 	%
-	Let \(\mathrm{Int}(\mathcal{N})\) and \(\mathrm{Ser}(\mathcal{N})\)  respectively denote the (infinite) sets of request/response multisets, for interleaved and serial runs:
+	Given NS \(\mathcal{S}\), let \(\mathsf{Int}(\mathcal{S})\) and \(\mathsf{Ser}(\mathcal{S})\)  respectively denote the (infinite) sets of request/response multisets, for interleaved and serial runs of \(\mathcal{S}\):
 %
 \[
-\mathrm{Int}(\mathcal{N})=\{\,\mathcal{Z}\mid \exists\text{ \textit{interleaved} run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\},
+\mathsf{Int}(\mathcal{S})=\{\,\mathcal{Z}\mid \exists\text{ \textit{interleaved} run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\},
 \]
 \[
-\mathrm{Ser}(\mathcal{N})=\{\,\mathcal{Z}\mid \exists\text{ \textit{serial} run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\}.
+\mathsf{Ser}(\mathcal{S})=\{\,\mathcal{Z}\mid \exists\text{ \textit{serial} run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\}\subseteq \mathsf{Int}(\mathcal{S}).
 \]
 %\todo{old}
 %\[
@@ -313,7 +313,7 @@ It is \textit{serial} if each $\mathcal{R}_i$ has \textit{at most} one request.
 %\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}.
 %\]
 
-An NS $\mathcal{N}$ is \emph{serializable} if \(\mathrm{Int}(\mathcal{N})=\mathrm{Ser}(\mathcal{N})\), i.e., every multiset of request/response pairs obtained by an interleaved execution can also be obtained serially.
+An NS $\mathcal{S}$ is \emph{serializable} if \(\mathsf{Int}(\mathcal{S})=\mathsf{Ser}(\mathcal{S})\), i.e., every multiset of request/response pairs obtained by an interleaved execution can also be obtained serially.
 
 
 %

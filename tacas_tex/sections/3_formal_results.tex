@@ -270,20 +270,20 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 	
 	
 	\item \textbf{Decision \& validation.}
-	We ask whether there exists a marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that \(M \models \mathcal {F}\), i.e.,
+	We ask whether there \textit{exists} a reachable marking \(M\) of \(N_{\mathrm{int}}(\mathcal S)\) such that \(M \models \mathcal {F}\). As \(\mathcal {F}\) encodes \(\mathsf{NonSer}(\mathcal S)\), this is equivalent to a marking \(M\) such that \(	M_0 \xrightarrow{}^{*} M\) and
 	\[
-	M_0 \xrightarrow{}^{*} M
+	\pi(M) \in \mathsf{Int}(\mathcal S)
 	\quad\wedge\quad
 	\pi(M)\in \mathsf{NonSer}(\mathcal S).
 	\]
 	
 	\begin{itemize}
 		\item [\sat]: yields a counterexample interleaving \(M\) with
-		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\), validated by simulation of the NS.
+		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\), validated by simulation of the network system \(\mathcal S\).
 %		We validate a reachable trace and embed it into the NS semantics, yielding a valid interleaving that produces request/response pairs unattainable under any serial execution.
 		
 		\item [\unsat]: yields an inductive invariant of
-		\(N_{\mathrm{int}}\), back-translated to an NS-level proof of serializability 
+		\(N_{\mathrm{int}}(\mathcal S)\), back-translated to an NS-level proof of serializability 
 %		(Appendix~\ref{appendix:ns-serializable}).
 %		
 %		which back-translates to an NS-level proof of
@@ -302,11 +302,11 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 	M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
 	\]
 	
-	which is reachable by the PN in Fig.~\ref{fig:code2ExamplePN}. The full firing sequence leading to marking $M^*$ is denoted in Table~\ref{tab:PetriNetFiringCounterexample} (in Appendix~\ref{appendix:non-serializable-execution-example}).
+	which is reachable by the PN in Fig.~\ref{fig:code2ExamplePN}. The full firing sequence leading to marking $M^*$ is given in Table~\ref{tab:PetriNetFiringCounterexample} (in Appendix~\ref{appendix:non-serializable-execution-example}).
 	%
 %	As the target set encodes request/response pairs that are \textit{unattainable} via serial executions, and as the PN encodes all possible interleavings, this firing sequence also corresponds as a counterexample demonstrating the program is non-serializable. 
 	%
-	Specifically, this reachable marking encodes the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ which, indeed, can only be induced by a non-serial execution (see~\Cref{sec:introduction}).
+	Specifically, this reachable marking encodes the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ which, indeed, can only be induced by a non-serial execution of Listing~\ref{lst:MotivatingExample2NonSer}.
 \end{tcolorbox} 
 %\item \textbf{Validation.}  
 %
