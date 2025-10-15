@@ -9,7 +9,7 @@
 \label{subsec:background}
 
 \textbf{Petri nets.} 
-A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with a set of places $P$, a set of transitions $T$, input/output maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and an initial marking (token distribution) $M_0\in\mathbb N^P$.  
+A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with a set of places $P$, a set of transitions $T$, incidence maps $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and an initial marking (token distribution) $M_0\in\mathbb N^P$.  
 A transition $t$ is \textit{enabled} at marking $M \in \mathbb N^P$ if $M\ge \mathsf{pre}(t)$ coordinate-wise, i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
 %
 If an enabled transition \(t\) \textit{fires}, it produces the marking $M'$ (denoted $M\xrightarrow{t}M'$), with $M'= M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
