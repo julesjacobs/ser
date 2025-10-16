@@ -5,7 +5,7 @@
 
 We denote with \(\mathbf0\) a zero vector of dimension \(|P|\), and with \(\mathbf1_{p}\) a \(|P|\)-sized indicator vector that has 0 in every coordinate except the one corresponding to place \(p \in P\), which has 1. 
 % 
-The incidence maps $\mathsf{pre},\mathsf{post}:T\to\{0,1\}^{|P|}$ assign to each transition $t$ a binary vector over $P$ whose $1$-entries mark the places from which tokens are consumed (for $\mathsf{pre}(t)$) and to which tokens are produced (for $\mathsf{post}(t)$) when $t$ fires.
+The flow functions $\mathsf{pre},\mathsf{post}:T\to\{0,1\}^{|P|}$ assign to each transition $t$ a binary vector over $P$ whose $1$-entries mark the places from which tokens are consumed (for $\mathsf{pre}(t)$) and to which tokens are produced (for $\mathsf{post}(t)$) when $t$ fires.
 A transition $t$ is enabled at $M$ iff $\mathsf{pre}(t)\le M$ (component-wise); firing yields
 \(
 M\xrightarrow{t}M' \quad\text{where}\quad M' = M-\mathsf{pre}(t)+\mathsf{post}(t)
@@ -106,7 +106,7 @@ where
 
 %\smallskip
 %Given a local state \(\ell\) which resulted from a request \({\color{ForestGreen}\blacklozenge_{\mathit{req}}}\) (either directly or downstream due to program execution) --- the transitions are:
-Their \(\mathsf{pre}\) and \(\mathsf{post}\) incidence maps are:
+Their \(\mathsf{pre}\) and \(\mathsf{post}\) flow functions are:
 \[
 \begin{alignedat}{3}
 	\mathsf{pre}\bigl(t_{({\color{ForestGreen}\blacklozenge_{\mathit{req}}},\ell)}\bigr)

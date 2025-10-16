@@ -180,7 +180,7 @@ among non-serializable benchmarks, counterexample generation is much longer than
 \subsubsection{Runtime optimization.}
 
 We ran all benchmarks with each of the following six optimization configurations: 
-(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidirectional pruning (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
+(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidirectional slicing (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
 (v) with strategic Kleene elimination (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
 and finally, (vi) with all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
 %
@@ -201,7 +201,7 @@ affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks with
 Our optimizations also reduce the space complexity of the two main components --- the Petri net and the semilinear set.
 
 \noindent
-(1) \textbf{Petri net.} Bidirectional pruning (Fig.~\ref{fig:petri_size_reduction}) 
+(1) \textbf{Petri net.} Bidirectional slicing (Fig.~\ref{fig:petri_size_reduction}) 
 eliminates the average number of places \textit{by roughly half} --- from $23.91$ down to $12.79$. This optimization proved even more effective on transitions, \textit{eliminating about two-thirds}: from $37.3$ down to $12.61$. 
 %Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct.  
 %\\
@@ -283,7 +283,7 @@ render even simple programs intractable without these optimizations.
 	\begin{minipage}[htbp]{0.48\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
-		\captionof{figure}{PN size reduction via pruning.}
+		\captionof{figure}{PN size reduction via slicing.}
 			%(timeout 150 seconds)
 			%.}
 		\label{fig:petri_size_reduction}

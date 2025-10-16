@@ -366,9 +366,9 @@ An extensive empirical evaluation of these optimizations appears later on in sub
 
 \medskip
 \noindent
-\textbf{(1) Bidirectional pruning.}  
+\textbf{(1) Bidirectional slicinig.}  
 When solving Petri net reachability, many places and transitions might be irrelevant to the specific target set~\cite{Ra12}.  
-	We prune them before symbolic reasoning by combining forward and backward passes:  
+	We slice them before symbolic reasoning by combining forward and backward passes:  
 	the forward pass over-approximates the places reachable from $M_0$; and symmetrically,   
 	the backward pass traverses in reverse from any place that can influence a target constraint (hence over-approximating the places that can contribute to it).
 	We iteratively remove non-forward-reachable and
@@ -378,10 +378,10 @@ When solving Petri net reachability, many places and transitions might be irrele
 
 %\guy{check with mark (M0 projected on P or P'?)}
 
-\begin{theorem}[Bidirectional Pruning Soundness]
+\begin{theorem}[Bidirectional Slicing Soundness]
 	\label{thm:bidirectional-pruning}
-	Let $N = (P, T, Pre, Post, M_0)$ be a Petri net and $S$ a target set.  
-	Let $N' = (P',T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'},\,M_0|_{P'})$ be the pruned net.  
+	Let $N = (P, T, \Pre, \Post, M_0)$ be a Petri net and $S$ a target set.  
+	Let $N' = (P',T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'},\,M_0|_{P'})$ be the sliced net.  
 	Then $S$ is reachable from $N$ iff it is reachable from $N'$.
 \end{theorem}
 %

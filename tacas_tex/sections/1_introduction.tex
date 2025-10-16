@@ -108,7 +108,7 @@ To address this, we first introduce the abstraction of \textit{network systems} 
 %As a backend solver, we use SMPT~\cite{AmDa23}, which is a state-of-the-art tool for Petri net reachability.
 We note that while our approach is sound (never incorrectly claims serializability), the underlying reachability query may time out on complex instances, limiting completeness in practice (this is unavoidable, given the \texttt{Ackermann}-hardness of the problem).
 %
-Towards this end, we developed multiple optimizations to make the approach practical, including Petri net pruning, semilinear set compression, and additional manipulations with Presburger formulas.
+Towards this end, we developed multiple optimizations to make the approach practical, including Petri net slicing, semilinear set compression, and additional manipulations with Presburger formulas.
 As we demonstrate, these optimizations reduce the search space by \textit{orders of magnitude}, enabling us to scale to non-trivial programs.
 %
 Finally, 
