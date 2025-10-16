@@ -122,7 +122,7 @@ We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly
 %
 Our workflow translates the decidability problem to an equivalent Petri net reachability question (for an unbounded number of tokens), in which (i) the Petri net represents all possible interleavings of the program; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all request/response pairs that \textit{cannot} be obtained by any serial execution.
 %
-As Petri net reachability is \texttt{Ackermann}-complete~\cite{CzWo22}, we added various optimizations to expedite the search process, both at the PN level and the property-encoding level.
+As Petri net reachability is \texttt{Ackermann}-complete~\cite{CzWo22,Le22}, we added various optimizations to expedite the search process, both at the PN level and the property-encoding level.
 %
 The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and includes:
  

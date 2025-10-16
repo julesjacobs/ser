@@ -16,7 +16,7 @@
 %\noindent
 %\textbf{Limitations.}
 While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
-First, the underlying Petri net reachability problem has \texttt{Ackermann}-complete complexity~\cite{CzWo22}, causing our tool to time out on some complex benchmarks. %despite optimizations.
+First, the underlying Petri net reachability problem has \texttt{Ackermann}-complete complexity~\cite{CzWo22,Le22}, causing our tool to time out on some complex benchmarks. %despite optimizations.
 Second, our current implementation relies on \texttt{SMPT}~\cite{AmDa23}, which may fail to find proofs even when they exist, limiting completeness.
 Third, our network system model assumes a simple request/response pattern and cannot model more complex interactions, such as streaming, callbacks, or partial responses.
 %Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.

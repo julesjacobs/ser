@@ -101,7 +101,7 @@ By convention, we assume that $P$ and $T$ are disjoint.
   If $M_0(p) > 0$ for any $p \not\in P'$, then the sliced subnet is undefined.
   Otherwise, the sliced subnet is
   \[
-  N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr)
+  N' = \bigl(P',\,T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'}, M_0|_{P'}\bigr).
   \]
 \end{definition}
 
@@ -146,7 +146,7 @@ Intuitively, $P'$ contains an over-approximation of all the places reachable by 
 	\textbf{(2) Backward-relevance.}
 	Again, since $p$ is witnessable, there is a suffix
 	$\sigma_2\in T^*$ from $M$ to $M'\in S$ with $M(p)>0$.  Working
-	backward from $S$, every place that can contribute to satisfying
+	backward from $S$, every place that can contribute to satisfying the
 	semilinear constraints appears in the backward fixed-point $Y^*_P$.
 	Thus $p\in Y^*_P$.
 	
@@ -159,7 +159,7 @@ Intuitively, $P'$ contains an over-approximation of all the places reachable by 
 \end{corollary}
 
 \begin{corollary}[Bidirectional Slicing Soundness]
-	Let $N = (P, T, Pre, Post, M_0)$ be a Petri net and $S$ a target set.  
+	Let $N = (P, T, \Pre, \Post, M_0)$ be a Petri net and $S$ a target set.  
 	Let $N' = (P',T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'},\,M_0|_{P'})$ be the sliced net.  
 	Then $S$ is reachable from $N$ iff it is reachable from $N'$.
 \end{corollary}
@@ -231,7 +231,7 @@ $M_0$, as part of a marking ending in the target semilinear set $S$.
 		\label{fig:step:e}
 	\end{subfigure}
 	
-	\caption{A Petri net after three rounds of bidirectional slicing: two forward passes and one backward pass. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
+	\caption{A Petri net during three rounds of bidirectional slicing: two forward passes and one backward pass. Black dots represent initial token markings; green places represent places that are allowed to be reachable in our constraints (i.e., aren't fixed to zero tokens in the final marking). Dashed shapes represent places and transitions that are identified as removable in the current iteration, and will be removed after it ends.}
 	\label{fig:bidirectional_pruning}
 \end{figure}
 

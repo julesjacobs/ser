@@ -37,7 +37,7 @@ The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, a
 %
 We also observe a clear runtime split based on serializability: 
 %For serializable benchmarks, certificate validation takes much longer than proof generation. 
-among non-serializable benchmarks, counterexample generation is much longer than validation, and dominates the overall runtime; whereas the opposite holds among serializable benchmarks. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network system to confirm its feasibility.
+among non-serializable benchmarks, counterexample generation takes much longer than validation, and dominates the overall runtime; whereas among serializable benchmarks the validation time dominates the overall runtime. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network system to confirm its feasibility.
 %
 %We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
 %
@@ -188,7 +188,7 @@ The results of the aggregated runtimes are presented in Fig.~\ref{fig:timeout_cu
 %
 Not surprisingly, the best configuration is the one with all optimizations on. 
 %
-We also note that the best single-optimization configurations with regard to runtime are [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}] and [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}], solving over $74\%$ and $72\%$ of the benchmarks respectively. 
+Furthermore, the best single-optimization configurations with regard to runtime are [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}] and [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}], solving over $74\%$ and $72\%$ of the benchmarks respectively. 
 %
 We also note that the two remaining optimizations, [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not significantly) than without the optimizations when counting overall timeouts.
 %

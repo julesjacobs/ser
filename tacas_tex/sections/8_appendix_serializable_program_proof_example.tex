@@ -3,7 +3,7 @@
 \label{appendix:ns-serializable}
 
 
-Now, we observe again the adjusted program with a spin-lock (as previously described in Listing~\ref{lst:MotivatingExample3Ser}), of which we depicted figures of the corresponding Network System (Fig.~\ref{fig:code3ExampleNS}), Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and the interleaving Petri net (Fig.~\ref{fig:code3ExamplePN}) in Appendix~\ref{appendix:MoreNsExamples}.
+Now, we observe again the adjusted program with a spin-lock (as previously described in Listing~\ref{lst:MotivatingExample3Ser}), of which we depicted figures of the corresponding Network System (Fig.~\ref{fig:code3ExampleNS}), the Serializability NFA (Fig.~\ref{fig:code3ExampleNFA}), and the Interleaving Petri net (Fig.~\ref{fig:code3ExamplePN}) in Appendix~\ref{appendix:MoreNsExamples}.
 %
 In this case, serializability corresponds to the Petri net being unable to reach a marking satisfying the same semilinear formula \(\mathcal {F}\) as in the non-serializable case described in the main text (subsec.~\ref{subsec:SerToNsTranslation}):
 
@@ -115,10 +115,9 @@ We get the following inductive invariants for each of the two (reachable) global
 	
 	\medskip
 	\noindent\textbf{Conclusion.}
-	In every reachable state, no request/response pair of the form
-	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$})
+	In every reachable state, no request/response pair of type	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{0}$})
 	$
-	can occur. Consequently, the only possible pairs are
+	can occur. Consequently, the only possible pairs are of type
 	($	\text{\color{ForestGreen}$\blacklozenge_{\text{main}}$}/\text{\color{red}$\blacklozenge_{1}$})
 	$,
 	all of which lie within the NFA’s language for serial executions (Fig.~\ref{fig:code3ExampleNFA}).
