@@ -20,19 +20,53 @@ First, the underlying Petri net reachability problem has \texttt{Ackermann}-comp
 Second, our current implementation relies on \texttt{SMPT}~\cite{AmDa23}, which may fail to find proofs even when they exist, limiting completeness.
 Third, our network system model assumes a simple request/response pattern and cannot model more complex interactions, such as streaming, callbacks, or partial responses.
 %Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
+%
+Finally, \toolname{} targets finite-state programs: each request must have finite local state and the program must induce finite global state (with an unbounded number of requests). Thus, applying \toolname{} to real systems requires that executions generate only a finite \textit{reachable} state space, in order for the NS construction to terminate.
+%
+This setting is akin to model checkers such as \texttt{PRISM}~\cite{KwNoPa02} and \texttt{STORM}~\cite{DeJuKaVo17}.
+%
+%
 These limitations suggest important directions for future research.
 
 \subsection{Future Work}
 %\smallskip
 %\noindent
-%\textbf{Future Work.}
+\textbf{Additional optimizations.}
 To improve scalability, we are adapting \textit{polyhedral reductions}~\cite{AmBeDa21,amat2022polyhedral}, a form of structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstruction of $N_1$’s state space. This would allow verification on the reduced net, with proofs lifted back to the original one.
 %
-We also plan to \textit{extend our framework to richer communication patterns}, beyond the current independent-client model. Stronger settings include inter-client communication ---
-%or Lamport’s \textit{happens-before}~\cite{La78}, while weaker ones restrict post-response communication or allow only summaries. Addressing these 
+Moreover, we believe a further avenue for optimization lies in using \textit{approximations} to decide serializability. Our approach already leverages this idea via the underlying model checker, which employs the \textit{state equation} abstraction~\cite{Mu77} to over-approximate the reachable state space. We expect that additional approximation-based techniques could yield further scalability gains.
+%
+Finally, other potential optimizations involve short-circuiting steps in our algorithmic pipeline. For instance, we currently generate the reachability query $\mathcal{F}$ in three stages: (i) translating the serial NFA into a regular expression via Kleene’s theorem; (ii) translating the regular expression into a semilinear set using Parikh’s construction; and (iii) complementing the resulting semilinear set.
+%
+However, there are techniques (e.g., Verma et al.~\cite{VeSeSc05}) that \textit{directly} compute the Parikh image of an automaton. We did not adopt this approach because, although their construction is linear in size, it relies heavily on Boolean logic, which we found \texttt{ISL} (the standard integer set library) handles poorly in practice.
+%
+ 
+ 
+\medskip
+\noindent
+\textbf{Proof assistants.}
+%
+Another natural next step is to formalize certificate checking in a proof assistant (e.g., \texttt{Rocq}~\cite{Rocq}). This would entail (i) developing a verifier for the PN invariants we use; and (ii) proving theorems that connect invariant validity to serializability.
+%
+Specifically, this would likely require extending existing tactics such as \texttt{LIA} (Linear Integer Arithmetic), which currently does not support full Presburger arithmetic, as required by our logic.
+
+ 
+%\todo{fix}
+\medskip
+\noindent
+\textbf{Complex communication settings.}
+%
+within the SDN domain, we plan to \textit{extend our framework to richer communication patterns}, beyond the current independent-client model. Stronger settings include inter-client communication ---
 which requires 
-%decentralized or streaming certification under communication constraints, 
 broadening our framework to afford distributed-system guarantees.
+
+%
+%Moreover, our support for arithmetic operations enables modeling commutative updates, covering a subset of PCM-style workloads.
+%
+%or Lamport’s \textit{happens-before}~\cite{La78}, while weaker ones restrict post-response communication or allow only summaries. Addressing these 
+
+%decentralized or streaming certification under communication constraints, 
+
 %\todo{old}
 %
 %\paragraph{Scalability.}
@@ -75,6 +109,18 @@ broadening our framework to afford distributed-system guarantees.
 %    \item \todo{Weaker: the clients cannot communicate with each other afterwards to determine whether what they got was serializable, or they can only communicate in a limited way}
 %    \item \todo{Infinite / unbounded executions}
 %\end{itemize}
+
+
+
+\subsection{Applicability to Real-World Programs}
+Real-world SDN programs typically satisfy our finite-reachable-state requirement due to bounded end-host buffers and limited switch memory. Moreover, \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can translate \toolname{} based on the following high-level translation:
+mapping packets to requests, registers to global variables, packet header fields to local variables, and packet forwarding to yielding. 
+%--- we can use \toolname{} to express high-level \texttt{P4} programs encoding SDN policies. 
+%
+This translation motivated us to evaluate our toolchain on \textit{stateful firewall} programs~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
+%
+Furthermore, we believe our framework to transcends beyond SDNs. Specifically, our Network System model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see subsec.~\ref{app:snapshot-isolation-example} in the appendix) that is motivated by a real bug~\cite{cockroach-issue-14099} in \texttt{CockroachDB}~\cite{cockroachdb-si-docs}.
+
 
 
 \subsection{Conclusion}

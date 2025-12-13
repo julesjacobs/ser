@@ -229,6 +229,9 @@ To the best of our knowledge, ours is the first and only tool to: (i) statically
 %
 Thus, due to a lack of standard benchmarks for evaluating serializability, we 
 assembled a suite of dozens of benchmarks (as part of our accompanying artifact~\cite{ArtifactRepository}).
+% additional part (from rebuttal to R4) - END
+Since automatically generating a syntactically-valid $\toolname$ program typically does not yield programs representative of real-world applications or recognizable concurrency patterns, we curated what we believe is the first benchmark suite for serializability in this setting, aiming to connect the programs to practical, real-world analogues.
+% additional part (from rebuttal to R4) - END
 These include both serializable and non-serializable instances encoded in both \texttt{SER} and \texttt{JSON} formats, and covering a broad range of features, including arithmetic, locks, loops, non-determinism, and more (see an overview of all our benchmarks in Table~\ref{tab:benchmarks-all} of Appendix~\ref{appendix:full_results}).
 %
 We note that although the benchmarks themselves are not the main part of the paper, we believe that they have merit on their own, due to their relevance to various real-world systems of interest.

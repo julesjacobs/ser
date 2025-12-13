@@ -662,10 +662,15 @@ return y
 	  \draw[->] (state4) -- (resp1);
 	  
 	\end{tikzpicture}
-	\caption{The network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
-		Local states show the variable assignments (\textcolor{orange}{yellow}) and the remaining code; edges indicate transitions of global states  (\textcolor{blue}{blue}). 
-		Requests and responses appear as \textcolor{ForestGreen}{green} and \textcolor{red}{red} diamonds, respectively. 
-		From left to right:  ${\color{ForestGreen}\blacklozenge_{\text{main}}}$ spawns a request with \texttt{[y=0]} and the full program; after yielding, $\delta$ steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, then updates \texttt{y} based on the global value, returning it as the final response (either {\color{red}$\blacklozenge_0$} or {\color{red}$\blacklozenge_1$}).}
+	\caption{
+	The network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
+		Local states show the variable assignments (yellow rectangles \fcolorbox{black}{brightyellow}{\rule{0pt}{7pt}\rule{7pt}{0pt}}) and the remaining code; edges indicate transitions of global states  (blue rectangles \fcolorbox{black}{blue!10}{\rule{0pt}{7pt}\rule{7pt}{0pt}}). 
+		Requests and responses appear as
+		{\color{ForestGreen!20}$\blacklozenge$} (green) and
+		{\color{RedViolet!20}$\blacklozenge$} (red) diamonds, respectively.
+		From left to right:  ${\color{ForestGreen}\blacklozenge_{\text{main}}}$ spawns a request with \texttt{[y=0]} and the full program; after yielding, $\delta$ steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, then updates \texttt{y} based on the global value, returning it as the final response (either {\color{red}$\blacklozenge_0$} or {\color{red}$\blacklozenge_1$}).
+		}
+		%
 %	\caption{The Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 
 %		Local states include (\textcolor{orange}{yellow}) local variable assignments and the remaining program; edges are labeled with (\textcolor{blue}{blue}) global state transitions. 
 %		Requests and responses are shown as \textcolor{ForestGreen}{green} and \textcolor{red}{red} diamonds, respectively. 

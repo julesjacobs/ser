@@ -523,6 +523,7 @@ Dually, routing cycles could also occur in the case of {\color{ForestGreen}$\bla
 
 
 \subsection{Example 6}
+\label{app:snapshot-isolation-example}
 
 
 The next program captures serializability through the lens of the \textit{snapshot isolation} consistency model, which is used in various real-world database systems, including \texttt{PostgreSQL}~\cite{postgresql-transaction-iso} and \texttt{CockroachDB}~\cite{cockroachdb-si-docs}, and has been linked to real‐world anomalies (e.g., duplicate‐key errors in the latter~\cite{cockroach-issue-14099}).
