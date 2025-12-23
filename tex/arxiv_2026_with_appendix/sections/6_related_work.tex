@@ -296,16 +296,16 @@ Static methods prove linearizability for bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08
 
 \medskip
 \noindent
-\textbf{Manual proofs and specific data types.}
+\textbf{Manual proofs and additional approaches.}
 Tasiran~\cite{Ta08} proves serializability for \texttt{Bartok-STM}, while Colvin et al.~\cite{CoGrLuMo06} use I/O automata for list‐set linearizability.  
 	Simplifications exist for specific data structures~\cite{BoEmEnMu17,FeEnMoRiSh18}.
 %	, and verification has been pursued with~\cite{CoGrLuMo06} or without~\cite{DoGrLuMo04} proof assistants.  
 	Other notable linearizability results include Wing and Gong's~\cite{WiGo93} on unbounded FIFO/priority queues, Chakraborty et al.~\cite{ChHeSeVa15} on queues, and Cerný et al.’s \texttt{CoLT} for linked heaps (which is complete only under bounded threads~\cite{CeRaZuChAl10}).  
 	Bouajjani et al.~\cite{BoEnWa17} introduce a recursive priority‐queue violation detector, akin to their stack/queue methods~\cite{BoEmEnHa18}.
-
-\medskip
-\noindent
-\textbf{Further approaches.}
+%
+%\medskip
+%\noindent
+%\textbf{Further approaches.}
 Other strategies include testing~\cite{WiGo93,PrGr12,PrGr13,EmEn17,Lo17}, theorem proving~\cite{CoDoGr05,DeScWe11}, and the use of additional verification frameworks~\cite{BoEmEnMu17,FeEnMoRiSh18,EnKo24}.
 
 

@@ -26,7 +26,7 @@ Finally, \toolname{} targets finite-state programs: each request must have finit
 This setting is akin to model checkers such as \texttt{PRISM}~\cite{KwNoPa02} and \texttt{STORM}~\cite{DeJuKaVo17}.
 %
 %
-These limitations suggest important directions for future research.
+%These limitations suggest important directions for future research.
 
 \subsection{Future Work}
 %\smallskip
@@ -56,7 +56,7 @@ Specifically, this would likely require extending existing tactics such as \text
 \noindent
 \textbf{Complex communication settings.}
 %
-within the SDN domain, we plan to \textit{extend our framework to richer communication patterns}, beyond the current independent-client model. Stronger settings include inter-client communication ---
+within the SDN domain, we plan to \textit{extend our framework to richer communication patterns}, beyond the current independent-client model. These include inter-client communication ---
 which requires 
 broadening our framework to afford distributed-system guarantees.
 
@@ -119,7 +119,8 @@ mapping packets to requests, registers to global variables, packet header fields
 %
 This translation motivated us to evaluate our toolchain on \textit{stateful firewall} programs~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
 %
-Furthermore, we believe our framework to transcends beyond SDNs. Specifically, our Network System model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see subsec.~\ref{app:snapshot-isolation-example} in the appendix) that is motivated by a real bug~\cite{cockroach-issue-14099} in \texttt{CockroachDB}~\cite{cockroachdb-si-docs}.
+Furthermore, we believe our framework to transcends beyond SDNs. Specifically, our Network System model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see subsec.~\ref{app:snapshot-isolation-example} in the appendix). 
+%that is motivated by a real bug~\cite{cockroach-issue-14099} in \texttt{CockroachDB}~\cite{cockroachdb-si-docs}.
 
 
 

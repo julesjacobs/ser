@@ -2,29 +2,34 @@
 
 \section{Implementation}
 \label{sec:implementation}
-\begin{wraptable}[11]{r}{0.32\textwidth}
-	\vspace{-1.5em} 
-	\centering
-	\begin{tabular}{@{} l S[table-format=5.0] @{}}
-		\toprule
-		\textbf{Module}                & {\textbf{LoC}} \\
-		\midrule
-		Input \& Parsing               &  1723          \\
-		Model Construction             &  5561          \\
-		Petri--Net Conversion           &   843          \\
-		Reachability          &  2628          \\
-		Proof Checking                 &  3240          \\
-		Utilities                      &  2160          \\
-		Testing \& Evaluation          &  2118          \\
-		\midrule
-		\textbf{Total}                 & \textbf{18273} \\
-		\bottomrule
-	\end{tabular}
-	\caption{Lines of Code}
-	\label{tab:loc_summary2}
-\end{wraptable}
+
+%\begin{wraptable}[11]{r}{0.32\textwidth}
+%	\vspace{-1.5em} 
+%	\centering
+%	\begin{tabular}{@{} l S[table-format=5.0] @{}}
+%		\toprule
+%		\textbf{Module}                & {\textbf{LoC}} \\
+%		\midrule
+%		Input \& Parsing               &  1723          \\
+%		Model Construction             &  5561          \\
+%		Petri--Net Conversion           &   843          \\
+%		Reachability          &  2628          \\
+%		Proof Checking                 &  3240          \\
+%		Utilities                      &  2160          \\
+%		Testing \& Evaluation          &  2118          \\
+%		\midrule
+%		\textbf{Total}                 & \textbf{18273} \\
+%		\bottomrule
+%	\end{tabular}
+%	\caption{Lines of Code}
+%	\label{tab:loc_summary2}
+%\end{wraptable}
 %\vspace{-1.5\baselineskip} % nudge following text up a bit
-We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly available toolchain consisting of over $18{,}200$ LoC written mostly in \texttt{Rust} (see Table~\ref{tab:loc_summary2}).
+%We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly available toolchain 
+%%consisting of over $18{,}200$ LoC 
+%written mostly in \texttt{Rust}. 
+%(see Table~\ref{tab:loc_summary2})
+%
 %
 %We next elaborate on the architecture of our tool and the various optimizations we added to allow it to run efficiently.
 %
@@ -117,6 +122,10 @@ We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly
 %\end{wraptable}
 %
 %\noindent
+
+We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly available toolchain 
+%consisting of over $18{,}200$ LoC 
+written mostly in \texttt{Rust}. 
 %
 \toolname{} implements an end-to-end serializability checker for a given input program. If the program is serializable, we return a proof thereof; otherwise, if it is not serializable, a counterexample is given to the user for an interleaving that can result in request/response pairs that are unattainable in any serial execution.
 %

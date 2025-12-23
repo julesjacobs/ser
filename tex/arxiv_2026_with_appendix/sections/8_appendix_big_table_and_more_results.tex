@@ -1,0 +1,177 @@
+
+
+\section{Evaluation: Full Results}
+\label{appendix:full_results}
+
+See Table~\ref{tab:benchmarks-all}.
+%\begin{table}[htbp]
+%	\centering
+%	% Load the tabular from the external file:
+%	\input{tables/average_and_mean_values_of_big_table_simplified.tex}
+%	\caption{Average and median runtime. Values are rounded to the nearest integer, to reduce clutter. The \textit{total} column also includes the time for validation.}
+%	\label{tab:stats-summary}
+%\end{table}
+
+
+
+\begin{table}[htbp]
+	\centering
+	% Load the tabular from the external file:
+	\input{tables/big_table_summary.tex}
+	\caption{Overview of our benchmarks (\texttt{TIMEOUT} is 500 s).}
+	\label{tab:benchmarks-all}
+\end{table}
+
+
+
+
+
+\subsection{Optimization Analysis}
+\label{subsec:optimization-results}
+
+%Next of our four optimizations, and analyzed their effect on the overall runtime and space resources.
+%
+%All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
+
+
+\subsubsection{Runtime optimization.}
+
+We ran all benchmarks with each of the following six optimization configurations: 
+(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidirectional slicing (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
+(v) with strategic Kleene elimination (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
+and finally, (vi) with all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
+%
+The results of the aggregated runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log} and show that over $28\%$ more benchmarks are solved when using all optimizations compared to running without any optimization.
+%
+Not surprisingly, the best configuration is the one with all optimizations on. 
+%
+Furthermore, the best single-optimization configurations with regard to runtime are [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}] and [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}], solving over $74\%$ and $72\%$ of the benchmarks respectively. 
+%
+We also note that the two remaining optimizations, [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not significantly) than without the optimizations when counting overall timeouts.
+%
+However, when analyzing these configurations, it seems that there are instances in which each of these optimizations still \textit{strictly} improves runtime.
+%
+For example, there are instances (see \texttt{a3.ser} and \texttt{a7.ser} in Appendix~\ref{appendix:full_results}), in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}])
+affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks without this optimization.
+
+\subsubsection{Space optimization.}
+Our optimizations also reduce the space complexity of the two main components --- the Petri net and the semilinear set.
+
+\noindent
+(1) \textbf{Petri net.} Bidirectional slicing (Fig.~\ref{fig:petri_size_reduction}) 
+eliminates the average number of places \textit{by roughly half} --- from $23.91$ down to $12.79$. This optimization proved even more effective on transitions, \textit{eliminating about two-thirds}: from $37.3$ down to $12.61$. 
+%Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct.  
+%\\
+
+\noindent
+(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (i.e., all but PN slicing) was disabled. The redundant-constraint elimination ([\texttt{\textbf{\text{B}\textcolor{red}{-}\text{G}\text{S}}}]) and the fewer-constraint generation elimination ([\texttt{\textbf{\text{B}\text{R}\textcolor{red}{-}\text{S}}}]) \textit{drastically} reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$ smaller, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on ([\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]). 
+%
+For fairness, we measured only benchmarks completed under all configurations, excluding cases where semilinear sets exploded beyond $2^{30}$ components and timed out. Thus, our reported improvements actually \textit{understate} the true impact of these optimizations on memory. Such blowups, %especially common in state-machine benchmarks with NS loops, 
+render even simple programs intractable without these optimizations.
+
+
+%\subsubsection{Space Optimization}
+%
+%Our optimizations also reduce the space complexity of the two main components --- the Petri Net and the semilinear set.
+%
+%\smallskip
+%\noindent
+%\textbf{Petri Net size reduction.}
+%%
+%With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct. 
+%of our reachability query. 
+%These results are summarized in Fig.~\ref{fig:petri_size_reduction}.
+
+%When running our tool with all optimizations on, we analyzed the effect of our bidirectional pruning, This was done be counting the average number of places and transitions before and after pruning, on all benchmarks.
+%%
+%The pruning resulted in a reduction of about half the number of original places --- from $23.91$ places on average \textit{before} pruning to $12.79$ places on average \textit{after} pruning.
+%%
+%The bidirectional was even more effective in reducing the transitions, as demonstrated by a removing about two thirds of the transitions --- resulting in pruned Petri Nets with $37.30$ transitions on average \textit{before} pruning to $12.61$ transitions on average \textit{after} pruning.
+%%
+%We note that the averaging for the pre-pruning step was done on $47$ nets, once per each benchmark, while the averaging for the post-pruning step was done on $224$ nets, as each pre-pruning net can give rise to multiple post-pruning nets, one per each disjunct in our reachability query.
+%%
+%These results are presented in Fig.~\ref{fig:petri_size_reduction}.
+
+
+%Number of values for 'Before' bars:          47
+%Number of values for 'After' bars:           224
+%Average number of places before pruning:     23.91
+%Average number of places after pruning:      12.79
+%Average number of transitions before pruning: 37.30
+%Average number of transitions after pruning:  12.61
+
+
+
+
+
+
+%\smallskip
+%\noindent
+%\textbf{Semilinear set size reduction.}
+%%
+%Finally, our last experiment batch analyzed the size reduction among the semilinear sets.
+%%
+%Towards this end, we ran all our benchmarks with all optimizations to serve as a baseline. 
+%%
+%Then, we analyzed the effect of the three semilinear-related optimizations, i.e., all but the bidirectional pruning. For each of these three optimizations, we ran the benchmarks with all optimizations \textit{except} the one checked.
+%%
+%%Table~\ref{tab:semilinear-size-reduction} include a summary of the results, when comparing the semilinear set size.
+%%
+%Specifically, we compare both the average and the maximal (i) number of components; and (ii) period vectors per each component, as summarized in Table~\ref{tab:semilinear-size-reduction}.
+%%
+%The redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, as well as the average number of components to be $223$ times more compact, when compared to the baseline.
+%%
+%To ensure a fair comparison, we only measured benchmarks that were completed under every configuration, deliberately excluding any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth and the resulting timeouts are especially pervasive among our state-machine benchmarks due to loops in their NS, rendering even simple programs infeasible without optimizations.
+%
+%In fact, for both these optimizations are even more effective as, in order to conduct a fair comparison, we analyzed only benchmarks that terminated in all combinations, an hence we do not include cases in which these two optimizations rendered the original semilinear set intractable, due to having over $2^{30}$ components (!), hence timing-out and being excluded from the analysis.
+%%
+%This occurs pervasively in our state-machine benchmarks which have loops in their network systems --- and hence even simple programs of this category cannot be analyzed with respect to serializability.
+
+%\todo{understand why this is related to loops in the NS}
+
+
+\begin{center}
+	\begin{minipage}[htbp]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
+		\captionof{figure}{Solved instances (\texttt{TIMEOUT} $150$ s).}
+		\label{fig:timeout_cumulative_solved_log}
+	\end{minipage}\hfill
+	\begin{minipage}[htbp]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
+		\captionof{figure}{PN size reduction via slicing.}
+		%(timeout 150 seconds)
+		%.}
+	\label{fig:petri_size_reduction}
+\end{minipage}
+\end{center}
+
+%\begin{table}[!htbp]
+%\centering
+%\begin{minipage}[t]{0.48\linewidth}
+%	\centering
+%	\input{tables/average_and_mean_values_of_big_table_simplified_compact.tex}
+%	\caption{Runtime for generated certificates (\texttt{total} also includes validation).}
+%	%			Values are rounded to the nearest integer, to reduce clutter. 
+%	%The \textit{total} column also includes the time for validation.}
+%% NOTE - this excludes the 2 non-terminating runs (artifact also includes TIMEOUTs I think)
+%\label{tab:stats-summary}
+%\end{minipage}\hfill
+%\begin{minipage}[t]{0.48\linewidth}
+%\centering
+%\input{tables/semilinear_size_reduction_compact.tex}
+%\caption{Semilinear set size reduction via optimizations (baseline is [\texttt{\text{B}\text{R}\text{G}\text{S}}]).}
+%\label{tab:semilinear-size-reduction}
+%\end{minipage}
+%\end{table}
+
+
+
+
+\begin{table}[!htbp]
+	\centering
+	\input{tables/semilinear_size_reduction_compact.tex}
+	\caption{Semilinear set size reduction via optimizations (baseline is [\texttt{\text{B}\text{R}\text{G}\text{S}}]).}
+	\label{tab:semilinear-size-reduction}
+\end{table}
