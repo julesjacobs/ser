@@ -1,4 +1,4 @@
-
+\clearpage
 
 \section{Evaluation: Full Results}
 \label{appendix:full_results}
@@ -129,23 +129,41 @@ render even simple programs intractable without these optimizations.
 
 %\todo{understand why this is related to loops in the NS}
 
+%
+%\begin{center}
+%	\begin{minipage}[htbp]{0.48\textwidth}
+%		\centering
+%		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
+%		\captionof{figure}{Solved instances (\texttt{TIMEOUT} $150$ s).}
+%		\label{fig:timeout_cumulative_solved_log}
+%	\end{minipage}\hfill
+%	\begin{minipage}[htbp]{0.48\textwidth}
+%		\centering
+%		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
+%		\captionof{figure}{PN size reduction via slicing.}
+%		%(timeout 150 seconds)
+%		%.}
+%	\label{fig:petri_size_reduction}
+%\end{minipage}
+%\end{center}
 
-\begin{center}
-	\begin{minipage}[htbp]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
-		\captionof{figure}{Solved instances (\texttt{TIMEOUT} $150$ s).}
-		\label{fig:timeout_cumulative_solved_log}
-	\end{minipage}\hfill
-	\begin{minipage}[htbp]{0.48\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
-		\captionof{figure}{PN size reduction via slicing.}
-		%(timeout 150 seconds)
-		%.}
+%
+\begin{table}[!htbp]
+	\centering
+		\includegraphics[width=0.68\linewidth]{figures/cactus_plot.pdf}
+	\captionof{figure}{Solved instances (\texttt{TIMEOUT} $150$ seconds).}
+	\label{fig:timeout_cumulative_solved_log}
+\end{table}
+
+
+\begin{table}[!htbp]
+	\centering
+	\includegraphics[width=0.68\linewidth]{figures/petri_size_reduction_plot.pdf}
+	\captionof{figure}{PN size reduction via slicing.}
+	%(timeout 150 seconds)
+	%.}
 	\label{fig:petri_size_reduction}
-\end{minipage}
-\end{center}
+\end{table}
 
 %\begin{table}[!htbp]
 %\centering
