@@ -138,7 +138,7 @@ The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and
 
 \begin{enumerate}
 	\item \textbf{Input \& parsing.} 
-	Our framework receives either a \toolname{} program with the syntax described in~\Cref{sec:problem-definition}; or a \texttt{JSON} file directly encoding a network system. In the case of the former, an additional step takes place, parsing the input %(using the \texttt{parser.rs} module) 
+	Our framework receives either a \toolname{} program with the syntax described in~\Cref{sec:problem-definition}, or a \texttt{JSON} file directly encoding a network system. In the case of the former, an additional step takes place, parsing the input %(using the \texttt{parser.rs} module) 
 	to an expression tree that is translated to the equivalent NS.
 %	, represented as a struct in the \texttt{ns.rs} module. 
 	
@@ -249,7 +249,7 @@ Specifically, we wish to note our suite of benchmarks encoding \textit{network \
 %highlighting the serializability challenges inherent in real-world distributed programs.
 %
 %Here, we were motivated by 
-as motivated by real-world concurrency problems in this domain. One such example is our \textit{routing-cycle benchmark} in software-defined networks (motivated by~\cite{NaGhSa24}). Another real-world example is our \textit{snapshot isolation benchmark} (see Appendix~\ref{appendix:tour}), that was motivated by a real database bug, namely, duplicate-key errors~\cite{cockroach-issue-14099} in the popular \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}.
+as motivated by real-world concurrency problems in this domain. One such example is our \textit{routing-cycle benchmark} in software-defined networks (motivated by~\cite{NaGhSa24}). Another real-world example is our \textit{snapshot isolation benchmark} (see Appendix~\ref{appendix:tour}), which was motivated by a real database bug, namely, duplicate-key errors~\cite{cockroach-issue-14099} in the popular \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}.
 %
 In both cases and others, the non-serializable behavior was automatically identified by our toolchain.
 %

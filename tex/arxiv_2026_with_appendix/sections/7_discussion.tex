@@ -38,7 +38,7 @@ Moreover, we believe a further avenue for optimization lies in using \textit{app
 %
 Finally, other potential optimizations involve short-circuiting steps in our algorithmic pipeline. For instance, we currently generate the reachability query $\mathcal{F}$ in three stages: (i) translating the serial NFA into a regular expression via Kleene’s theorem; (ii) translating the regular expression into a semilinear set using Parikh’s construction; and (iii) complementing the resulting semilinear set.
 %
-However, there are techniques (e.g., Verma et al.~\cite{VeSeSc05}) that \textit{directly} compute the Parikh image of an automaton. We did not adopt this approach because, although their construction is linear in size, it relies heavily on Boolean logic, which we found \texttt{ISL} (the standard integer set library) handles poorly in practice.
+However, there are techniques (e.g., Verma et al.~\cite{VeSeSc05}) that \textit{directly} compute the Parikh image of an automaton. We did not adopt this approach because, although its construction is linear in size, it relies heavily on Boolean logic, which we found \texttt{ISL} (the standard integer set library) handles poorly in practice.
 %
  
  
@@ -114,12 +114,12 @@ broadening our framework to afford distributed-system guarantees.
 
 \subsection{Applicability to Real-World Programs}
 Real-world SDN programs typically satisfy our finite-reachable-state requirement due to bounded end-host buffers and limited switch memory. Moreover, \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can be translated to \toolname{} based on the following high-level mappings:
-(i) packets to requests, (ii) switch registers to global variables, (iii) packet header fields to local variables; and (iv) packet forwarding to yielding. 
+(i) packets to requests, (ii) switch registers to global variables, (iii) packet header fields to local variables, and (iv) packet forwarding to yielding. 
 %--- we can use \toolname{} to express high-level \texttt{P4} programs encoding SDN policies. 
 %
 This translation motivated us to evaluate our toolchain on \textit{stateful firewall} programs~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
 %
-Furthermore, we believe our framework transcends beyond SDNs. Specifically, our NS model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see Appendix~\ref{appendix:tour}). 
+Furthermore, we believe our framework transcends SDNs. Specifically, our NS model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see Appendix~\ref{appendix:tour}). 
 %that is motivated by a real bug~\cite{cockroach-issue-14099} in \texttt{CockroachDB}~\cite{cockroachdb-si-docs}.
 
 
@@ -133,6 +133,6 @@ Our approach bridges theory and practice, with the following key contributions:
 % by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
 %
 %Key contributions include: 
-(1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude; and (4) demonstrating feasibility on various benchmarks inspired by real-world systems.
+(1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude, and (4) demonstrating feasibility on various benchmarks inspired by real-world systems.
 %
 

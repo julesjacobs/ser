@@ -17,7 +17,7 @@ For instance, in the three examples presented in \Cref{sec:introduction} (Listin
 % 
 We analyze serializability through the lens of such {\color{ForestGreen}$\blacklozenge_\text{req}$}/{\color{red}$\blacklozenge_\text{resp}$} pairs. Specifically, the programs in Listings~\ref{lst:MotivatingExample1Ser} and~\ref{lst:MotivatingExample3Ser} only induce pairs of the type {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}, while the program in Listing~\ref{lst:MotivatingExample2NonSer} can also induce {\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_0$}, as formulated by our Network System framework (see \Cref{sec:problem-definition}). 
 %
-We depict global variables with upper-case characters, while local variables (per each request) are depicted with lower-case ones.
+We depict global variables with upper-case characters, while local variables (for each request) are depicted with lower-case ones.
 %
 Unless explicitly stated otherwise, all global and local variables are initialized to 0.
 %
@@ -27,7 +27,7 @@ The symbol \texttt{?} depicts a nondeterministic choice between 0 and 1. All oth
 
 %\subsubsection{Example 1}
 
-We start with a basic example, describing a single request {\color{ForestGreen}$\blacklozenge_\text{A}$}, a single local variable (\texttt{x}) per each request; and a single global variable (\texttt{FLAG}) shared among all in-flight requests. 
+We start with a basic example, describing a single request {\color{ForestGreen}$\blacklozenge_\text{A}$}, a single local variable (\texttt{x}) per request, and a single global variable (\texttt{FLAG}) shared among all in-flight requests. 
 %
 In Listing~\ref{lst:BasicSer}, an in-flight request assigns to \texttt{x} the value of \texttt{FLAG} (hence, initially, \texttt{[x:=0]}). Then, the request non-deterministically chooses whether to \texttt{yield} or to flip the value of \texttt{x}. Subsequently, \texttt{FLAG} is assigned 1 and the value of \texttt{x} is returned as the response to request {\color{ForestGreen}$\blacklozenge_\text{A}$}. 
 %
@@ -162,7 +162,7 @@ request A:
 \subsection{Example 2}
 
 %\subsubsection{Example 2}
-The following program pairs have a single global variable (\texttt{X}), and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments \texttt{X} by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements \texttt{X} by 1. Both programs have loops that guarantee that \texttt{X} will always be between 0 to 3, otherwise the \texttt{while} loop will yield ad infinitum. Both requests return the value of \texttt{X} after updating it.
+The following program pairs have a single global variable (\texttt{X}), and two requests --- {\color{ForestGreen}$\blacklozenge_\text{incr}$} which increments \texttt{X} by 1, and {\color{ForestGreen}$\blacklozenge_\text{decr}$} which decrements \texttt{X} by 1. Both programs have loops that guarantee that \texttt{X} will always be between 0 and 3, otherwise the \texttt{while} loop will yield ad infinitum. Both requests return the value of \texttt{X} after updating it.
 %
 In the first case, Listing~\ref{lst:FredSer} presents a serializable program, due to the absence of any \texttt{yield} between the increment/decrement of \texttt{X} and its return. Equivalently, in each of the requests, the update of \texttt{X} and the returned value can be thought of as \textit{a single atomic execution}.
 %
@@ -516,7 +516,7 @@ Each of the routing requests represents a single packet entering the network. Th
 %
 The return value of the {\color{ForestGreen}$\blacklozenge_\text{route\_west}$} requests is the sum \texttt{[current+current+visited\_east]}, an identifier encoding all possible \texttt{(current\_switch, visited\_east)} pairs.
 %
-The program is not serializable, as witnessed by an interleaving that can give rise to a final return value of \texttt{[current+current+visited\_east=1]} (due to \texttt{[current=0]} and \texttt{[visited\_east=1]}). This represents a \textit{routing cycle} in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet (e.g., {\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when a request has already been spawned and began routing based on the previous policy, subsequently yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting in a routing cycle.
+The program is not serializable, as witnessed by an interleaving that can give rise to a final return value of \texttt{[current+current+visited\_east=1]} (due to \texttt{[current=0]} and \texttt{[visited\_east=1]}). This represents a \textit{routing cycle} in the network, which is possible only when there is an interleaving between a control packet ({\color{ForestGreen}$\blacklozenge_\text{policy\_update}$}) and a routing packet (e.g., {\color{ForestGreen}$\blacklozenge_\text{route\_west}$}). Specifically, this occurs when a request has already been spawned and has begun routing based on the previous policy, then yields, and eventually returns after the policy was flipped based on another control packet --- hence resulting in a routing cycle.
 %
 More formally, this is conveyed by response values that represent these cycles and are obtained only via non-serial executions. For example, acyclic routes of this request have either a return value of 0 (in the case of [\texttt{current=0}, \texttt{visited\_east=0}]) or 7 (in the case of [\texttt{current=3}, \texttt{visited\_east=1}]).
 Dually, routing cycles could also occur in the case of {\color{ForestGreen}$\blacklozenge_\text{route\_east}$} interleavings.
