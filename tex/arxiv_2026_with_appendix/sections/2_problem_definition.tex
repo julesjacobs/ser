@@ -31,7 +31,7 @@ Surprisingly, even the \textit{unbounded} case, where places hold arbitrarily ma
 \textbf{Verdict proofs.} 
 If $\mathcal {F}$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models \mathcal {F}$ serves as a proof, and is verifiable by simulation of the Petri net.  
 If $\mathcal {F}$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ proving non-reachability: 
-(i) $M_0\models C$, (ii) $\forall t\in T \quad M\models C \wedge M\xrightarrow{t}M'\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg \mathcal {F}$.
+(i) $M_0\models C$, (ii) $\forall t\in T \quad (M\models C \wedge M\xrightarrow{t}M')\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg \mathcal {F}$.
 
 \medskip
 \noindent
@@ -69,8 +69,8 @@ Our \toolname{} syntax is defined as follows:
 
 \[
 \begin{aligned}
-	\mathbf{Expression}\quad e ::= &\ 0 \mid 1 \mid 2 \mid \dots            && \text{numeric const.}\\
-	&\mid \nondet                            && \text{nondet.\ value (0/1)}\\
+	\mathbf{Expression}\quad e ::= &\ 0 \mid 1 \mid 2 \mid \dots            && \text{numeric constant}\\
+	&\mid \nondet                            && \text{nondeterministic\ value (0/1)}\\
 %	&\mid x := e
 %	&&\text{write to local variable}\\
 %	&\mid x
@@ -79,8 +79,8 @@ Our \toolname{} syntax is defined as follows:
 %	&&\text{write to global variable}\\
 %	&\mid X
 %	&&\text{read from global variable}\\
-	&\mid x := e \mid x                      && \text{write/read local var}\\
-	&\mid X := e \mid X                      && \text{write/read global var}\\
+	&\mid x := e \mid x                      && \text{write/read local variable}\\
+	&\mid X := e \mid X                      && \text{write/read global variable}\\
 	&\mid e_1 == e_2                         && \text{equality test}\\
 	&\mid e_1 ; e_2                          && \text{sequencing}\\
 	&\mid \ifkw(e_1)\{e_2\}\elsekw\{e_3\}    && \text{conditional}\\
@@ -353,12 +353,12 @@ An NS $\mathcal{S}$ is \emph{serializable} if \(\mathsf{Int}(\mathcal{S})=\maths
 %
 %A network system $\mathcal{N}$ is \emph{serializable} if $\text{Int}(\mathcal{N}) = \text{Ser}(\mathcal{N})$, i.e., every multiset of request/response pairs attainable through an interleaved execution can also be attained through a serial one.
 
-\subsection{Translating \toolname{} Programs to Network Systems}
+\subsection{Translating SER Programs to Network Systems}
 \label{subsec:SerToNsTranslation}
 %
 The NS abstraction not only captures concurrent behaviors in software-defined networks but also enables a natural translation from \toolname{} programs. 
 Given a \toolname{} program \(P_0\) with local variables (\texttt{vars}), global variables (\texttt{VARS}), and mappings \(\rho,g\) from these to a finite value set \texttt{V}, we define the initial local/global states $\rho_0$ and $g_0$ assigning $0$ to all local and global variables, respectively. 
-Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:ser-semantics}), we construct the NS $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
+Using the small-step semantics ($\pstep$, defined in full in Appendix~\ref{appendix:ser-semantics}), we construct the NS $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
 
 %\todo{old}
 %The NS abstraction is useful beyond its capability to capture concurrent behaviors in software-defined networks.
@@ -383,7 +383,7 @@ Using the small-step semantics ($\pstep$, defined in full in App.~\ref{appendix:
 	REQ \;&=\; \{\, name_i \mid name_i\{e_i\}\!\in\! P_0 \,\},\quad RESP \;=\; \texttt{V},\\[0.3ex]
 	req \;&=\; \{\, (r,\ell) \mid r=name_i\!\in\!REQ,\ name_i\{e_i\}\!\in\! P_0,\ \ell=(e_i,\rho_0)\!\in\!L\},\\[0.3ex]
 	resp \;&=\; \{\, (\ell',r') \mid \exists v\!\in\!\texttt{V}.\ \ell'=(v,\rho')\!\in\!L,\ r'=v\!\in\!RESP \,\},\\[0.3ex]
-	\delta \;&=\; \bigl\{\, ((e,\rho),g)\!\to\!((e',\rho'),g') \ \bigm|\ ((e,\rho),(e',\rho'))\!\in\!L,\ g,g'\!\in\!G,\ 
+	\delta \;&=\; \bigl\{\, ((e,\rho),g)\!\to\!((e',\rho'),g') \ \bigm|\ (e,\rho),(e',\rho')\!\in\!L,\ g,g'\!\in\!G,\ 
 	\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'} \,\bigr\}.
 \end{aligned}
 \]

@@ -138,7 +138,7 @@ The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and
 
 \begin{enumerate}
 	\item \textbf{Input \& parsing.} 
-	Our framework receives either a \texttt{SER} program with the syntax described in~\Cref{sec:problem-definition}; or a \texttt{JSON} file directly encoding a network system. In the case of the former, an additional step takes place, parsing the input %(using the \texttt{parser.rs} module) 
+	Our framework receives either a \toolname{} program with the syntax described in~\Cref{sec:problem-definition}; or a \texttt{JSON} file directly encoding a network system. In the case of the former, an additional step takes place, parsing the input %(using the \texttt{parser.rs} module) 
 	to an expression tree that is translated to the equivalent NS.
 %	, represented as a struct in the \texttt{ns.rs} module. 
 	
@@ -239,7 +239,7 @@ To the best of our knowledge, ours is the first and only tool to: (i) statically
 Thus, due to a lack of standard benchmarks for evaluating serializability, we 
 assembled a suite of dozens of benchmarks (as part of our accompanying artifact~\cite{ArtifactRepository}).
 % additional part (from rebuttal to R4) - END
-Since automatically generating a syntactically-valid $\toolname$ program typically does not yield programs representative of real-world applications or recognizable concurrency patterns, we curated what we believe is the first benchmark suite for serializability in this setting, aiming to connect the programs to practical, real-world analogues.
+Typically, automatically generated $\toolname$ programs do not represent real-world applications or recognizable concurrency patterns. Thus, we curated what we believe is the first benchmark suite for serializability in this setting, aiming to connect \toolname{} programs to practical, real-world analogues.
 % additional part (from rebuttal to R4) - END
 These include both serializable and non-serializable instances encoded in both \texttt{SER} and \texttt{JSON} formats, and covering a broad range of features, including arithmetic, locks, loops, non-determinism, and more (see an overview of all our benchmarks in Table~\ref{tab:benchmarks-all} of Appendix~\ref{appendix:full_results}).
 %

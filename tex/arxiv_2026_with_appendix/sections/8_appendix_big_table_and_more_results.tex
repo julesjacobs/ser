@@ -18,7 +18,7 @@ See Table~\ref{tab:benchmarks-all}.
 	\centering
 	% Load the tabular from the external file:
 	\input{tables/big_table_summary.tex}
-	\caption{Overview of our benchmarks (\texttt{TIMEOUT} is 500 s).}
+	\caption{Overview of our benchmarks (\texttt{TIMEOUT} is $500$ seconds).}
 	\label{tab:benchmarks-all}
 \end{table}
 
@@ -49,10 +49,9 @@ Furthermore, the best single-optimization configurations with regard to runtime 
 %
 We also note that the two remaining optimizations, [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not significantly) than without the optimizations when counting overall timeouts.
 %
-However, when analyzing these configurations, it seems that there are instances in which each of these optimizations still \textit{strictly} improves runtime.
+However, when analyzing the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]), we identified instances in which it still \textit{strictly} improves runtime.
 %
-For example, there are instances (see \texttt{a3.ser} and \texttt{a7.ser} in Appendix~\ref{appendix:full_results}), in which the use of the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}])
-affords a speedup of between $72.2\%$ and $85.2\%$ over the same benchmarks without this optimization.
+For example, the optimization affords a speedup of between $72.2\%$ and $85.2\%$ for benchmarks \texttt{a3.ser} and \texttt{a7.ser},  when compared to the baseline.
 
 \subsubsection{Space optimization.}
 Our optimizations also reduce the space complexity of the two main components --- the Petri net and the semilinear set.
@@ -64,7 +63,7 @@ eliminates the average number of places \textit{by roughly half} --- from $23.91
 %\\
 
 \noindent
-(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (i.e., all but PN slicing) was disabled. The redundant-constraint elimination ([\texttt{\textbf{\text{B}\textcolor{red}{-}\text{G}\text{S}}}]) and the fewer-constraint generation elimination ([\texttt{\textbf{\text{B}\text{R}\textcolor{red}{-}\text{S}}}]) \textit{drastically} reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$ smaller, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on ([\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]). 
+(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (i.e., all but PN slicing) was disabled. The redundant-constraint elimination (with a negated effect in [\texttt{\textbf{\text{B}\textcolor{red}{-}\text{G}\text{S}}}]) and the fewer-constraint generation elimination (with a negated effect in [\texttt{\textbf{\text{B}\text{R}\textcolor{red}{-}\text{S}}}]) \textit{drastically} reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$ smaller, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on ([\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]). 
 %
 For fairness, we measured only benchmarks completed under all configurations, excluding cases where semilinear sets exploded beyond $2^{30}$ components and timed out. Thus, our reported improvements actually \textit{understate} the true impact of these optimizations on memory. Such blowups, %especially common in state-machine benchmarks with NS loops, 
 render even simple programs intractable without these optimizations.
@@ -151,7 +150,7 @@ render even simple programs intractable without these optimizations.
 \begin{table}[!htbp]
 	\centering
 		\includegraphics[width=0.68\linewidth]{figures/cactus_plot.pdf}
-	\captionof{figure}{Solved instances (\texttt{TIMEOUT} $150$ seconds).}
+	\captionof{figure}{Solved instances (\texttt{TIMEOUT} is $150$ seconds).}
 	\label{fig:timeout_cumulative_solved_log}
 \end{table}
 

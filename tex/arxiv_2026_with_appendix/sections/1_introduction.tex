@@ -86,7 +86,7 @@ For a tour of additional examples, we refer the reader to Appendix~\ref{appendix
 \smallskip
 \noindent
 \textbf{Problem Definition.}
-Formally, we define the \textbf{observable execution} of a \toolname{} program as a multiset of (request, response) pairs. The \textbf{observable behavior} of a \toolname{} program is the set of all possible observable executions that can occur such that the requests are executed concurrently to obtain their paired responses.
+Formally, we define the \textbf{observable execution} of a \toolname{} program as a multiset of (request, response) pairs induced by a specific interleaving. The \textbf{observable behavior} of a \toolname{} program is the set of all possible observable executions that can occur such that the requests are executed concurrently to obtain their paired responses.
 A \toolname{} program is \textbf{serializable} if every observable behavior is achievable serially (without interleavings). Differently put, removing all \texttt{yield} statements does not change the program's semantics.
 %
 \emph{This paper aims to present the \toolname{} language and decision procedure for this problem.} In particular, \toolname{} is the first toolchain to \textbf{automatically} prove serializability without requiring manual work by the user.
@@ -112,7 +112,7 @@ Towards this end, we developed multiple optimizations to make the approach pract
 As we demonstrate, these optimizations reduce the search space by \textit{orders of magnitude}, enabling us to scale to non-trivial programs.
 %
 Finally, 
-we extensively evaluated our \toolname{} toolchain on various programs, covering a broad spectrum of features such as loops, branching, locks, and nondeterminism; as well as SDN-inspired examples such as stateful firewalls, BGP routers, and online shopping backends.
+we extensively evaluated our \toolname{} toolchain on various programs, covering a broad spectrum of features such as loops, branching, locks, and nondeterminism; as well as SDN-inspired examples such as stateful firewalls, BGP routers, and more.
 %
 To our knowledge, this leads to the first \emph{implemented} decision procedure that: (i) automatically \textit{proves} serializability for \textit{unbounded} executions; (ii) generates \textit{proof certificates}; and (iii) handles \textit{non-trivial programs}.
 

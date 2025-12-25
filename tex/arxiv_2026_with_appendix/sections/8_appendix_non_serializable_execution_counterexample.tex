@@ -2,7 +2,7 @@
 
 \section{Non-Serializable Execution Counterexample}
 \label{appendix:non-serializable-execution-example}
-Continuing the running example presented in subsec.~\ref{subsec:SerToNsTranslation}, we present in Table~\ref{tab:PetriNetFiringCounterexample} a firing sequence of the Petri net (Fig.~\ref{fig:code2ExamplePN}) resulting in the marking \(M^*\):
+Continuing the running example presented in subsec.~\ref{subsec:SerToNsTranslation}, we present in Table~\ref{tab:PetriNetFiringCounterexample} a firing sequence of the Petri net (Fig.~\ref{fig:code2ExamplePN}) resulting in the marking \(M^*\) (satisfying $\mathcal {F}$):
 
 \[
 M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
@@ -127,7 +127,7 @@ M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8
 			\bottomrule
 		\end{tabular}
 	}
-	\caption{The firing sequence reaching marking $M^*$ which is in our target semilinear set. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens in place $P_i$. The initial marking has a single token in place $\textcolor{blue}{P_3}$, encoding $g_0$ ($\textcolor{blue}{\texttt{[X=0]}}$).}
+	\caption{The firing sequence reaching marking $M^*$ which is in our target semilinear set $\mathcal {F}$. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens in place $P_i$. The initial marking has a single token in place $\textcolor{blue}{P_3}$, encoding $g_0$ ($\textcolor{blue}{\texttt{[X=0]}}$).}
 	\label{tab:PetriNetFiringCounterexample}
 \end{table}
 

@@ -113,13 +113,13 @@ broadening our framework to afford distributed-system guarantees.
 
 
 \subsection{Applicability to Real-World Programs}
-Real-world SDN programs typically satisfy our finite-reachable-state requirement due to bounded end-host buffers and limited switch memory. Moreover, \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can translate \toolname{} based on the following high-level translation:
-mapping packets to requests, registers to global variables, packet header fields to local variables, and packet forwarding to yielding. 
+Real-world SDN programs typically satisfy our finite-reachable-state requirement due to bounded end-host buffers and limited switch memory. Moreover, \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can be translated to \toolname{} based on the following high-level mappings:
+(i) packets to requests, (ii) switch registers to global variables, (iii) packet header fields to local variables; and (iv) packet forwarding to yielding. 
 %--- we can use \toolname{} to express high-level \texttt{P4} programs encoding SDN policies. 
 %
 This translation motivated us to evaluate our toolchain on \textit{stateful firewall} programs~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
 %
-Furthermore, we believe our framework to transcends beyond SDNs. Specifically, our Network System model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see subsec.~\ref{app:snapshot-isolation-example} in the appendix). 
+Furthermore, we believe our framework transcends beyond SDNs. Specifically, our Network System model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see Appendix~\ref{appendix:tour}). 
 %that is motivated by a real bug~\cite{cockroach-issue-14099} in \texttt{CockroachDB}~\cite{cockroachdb-si-docs}.
 
 
@@ -128,7 +128,7 @@ Furthermore, we believe our framework to transcends beyond SDNs. Specifically, o
 %\smallskip
 %\noindent
 %\textbf{Conclusion.}
-We present the first end-to-end toolchain that automatically verifies serializability for unbounded concurrent systems and generates proof certificates thereof.
+We present the first end-to-end framework that automatically verifies serializability for unbounded concurrent systems and generates proof certificates thereof.
 Our approach bridges theory and practice, with the following key contributions:
 % by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
 %
