@@ -113,7 +113,7 @@ Specifically, this would likely require extending existing tactics such as \text
 
 
 \subsection{Applicability to Real-World Programs}
-Real-world SDN programs typically satisfy our finite-reachable-state requirement due to bounded end-host buffers and limited switch memory. Moreover, \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can be translated to \toolname{} based on the following high-level mappings:
+Real-world SDN programs typically satisfy our finite-reachable-state requirement due to bounded end-host buffers and limited switch memory. Moreover, we anticipate that \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can be translated to \toolname{} based on the following high-level mappings:
 (i) packets to requests, (ii) switch registers to global variables, (iii) packet header fields to local variables, and (iv) packet forwarding to yielding. 
 %--- we can use \toolname{} to express high-level \texttt{P4} programs encoding SDN policies. 
 %
