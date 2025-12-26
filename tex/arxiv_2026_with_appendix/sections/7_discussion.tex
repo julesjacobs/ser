@@ -52,13 +52,13 @@ Specifically, this would likely require extending existing tactics such as \text
 
  
 %\todo{fix}
-\medskip
-\noindent
-\textbf{Complex communication settings.}
-%
-within the SDN domain, we plan to \textit{extend our framework to richer communication patterns}, beyond the current independent-client model. These include inter-client communication ---
-which requires 
-broadening our framework to afford distributed-system guarantees.
+%\medskip
+%\noindent
+%\textbf{Complex communication settings.}
+%%
+%within the SDN domain, we plan to \textit{extend our framework to richer communication patterns}, beyond the current independent-client model. These include inter-client communication ---
+%which requires 
+%broadening our framework to afford distributed-system guarantees.
 
 %
 %Moreover, our support for arithmetic operations enables modeling commutative updates, covering a subset of PCM-style workloads.
@@ -117,7 +117,7 @@ Real-world SDN programs typically satisfy our finite-reachable-state requirement
 (i) packets to requests, (ii) switch registers to global variables, (iii) packet header fields to local variables, and (iv) packet forwarding to yielding. 
 %--- we can use \toolname{} to express high-level \texttt{P4} programs encoding SDN policies. 
 %
-This translation motivated us to evaluate our toolchain on \textit{stateful firewall} programs~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
+This translation motivated us to evaluate our toolchain on programs modeling\textit{stateful firewalls}~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
 %
 Furthermore, we believe our framework transcends SDNs. Specifically, our NS model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see Appendix~\ref{appendix:tour}). 
 %that is motivated by a real bug~\cite{cockroach-issue-14099} in \texttt{CockroachDB}~\cite{cockroachdb-si-docs}.
