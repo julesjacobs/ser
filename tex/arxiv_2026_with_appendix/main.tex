@@ -281,13 +281,13 @@
 	%
 	\toolname{} programs are suitably restricted to make this problem decidable, while still allowing for an \textit{unbounded} number of concurrent threads of execution, each potentially running for an \textit{unbounded} number of steps.
 	%
-	Building on prior theoretical results for this setting, we give the first end-to-end decision procedure that either proves serializability by producing a checkable certificate, or refutes it by producing a counterexample trace.
+	Building on prior theoretical results for this setting, we give the first automated end-to-end decision procedure that either proves serializability by producing a checkable certificate, or refutes it by producing a counterexample trace.
 	%
-	We also present a network-system abstraction to which \toolname{} programs compile. Our decision procedure then reduces serializability in this setting to a Petri-net reachability query.
+	We also present a network-system abstraction to which \toolname{} programs compile. Our decision procedure then reduces serializability in this setting to a Petri net reachability query.
 	%
-	Furthermore, in order to scale, we curtail the search space via multiple optimizations such as Petri net slicing, semilinear-set compression, and Presburger-formula manipulation.
+	Furthermore, in order to scale, we curtail the search space via multiple optimizations, including Petri net slicing, semilinear-set compression, and Presburger-formula manipulation.
 	%
-	We extensively evaluate our framework and show that, despite the theoretical hardness of the problem, it can successfully handle models of various real-world programs, including stateful firewalls, BGP routers, and more.
+	We extensively evaluate our framework and show that, despite the theoretical hardness of the problem, it can successfully handle various models of real-world programs, including stateful firewalls, BGP routers, and more.
 \end{abstract}
 
 % \keywords{programming languages, static analysis, verification}
