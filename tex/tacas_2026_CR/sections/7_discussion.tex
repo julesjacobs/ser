@@ -1,0 +1,138 @@
+
+
+\section{Discussion}
+\label{sec:discussion}
+
+%\subsection{Conclusion}
+
+
+%
+
+
+
+
+\subsection{Limitations}
+%\smallskip
+%\noindent
+%\textbf{Limitations.}
+While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
+First, the underlying Petri net reachability problem has \texttt{Ackermann}-complete complexity~\cite{CzWo22,Le22}, causing our tool to time out on some complex benchmarks. %despite optimizations.
+Second, our current implementation relies on \texttt{SMPT}~\cite{AmDa23}, which may fail to find proofs even when they exist, limiting completeness.
+Third, our network system model assumes a simple request/response pattern and cannot model more complex interactions, such as streaming, callbacks, or partial responses.
+%Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
+%
+Finally, \toolname{} targets finite-state programs: each request must have finite local state and the program must induce finite global state (with an unbounded number of requests). Thus, applying \toolname{} to real systems requires that executions generate only a finite \textit{reachable} state space, in order for the NS construction to terminate.
+%
+This setting is akin to model checkers such as \texttt{PRISM}~\cite{KwNoPa02} and \texttt{STORM}~\cite{DeJuKaVo17}.
+%
+%
+%These limitations suggest important directions for future research.
+
+\subsection{Future Work}
+%\smallskip
+%\noindent
+\textbf{Additional optimizations.}
+To improve scalability, we are adapting \textit{polyhedral reductions}~\cite{AmBeDa21,amat2022polyhedral}, a form of structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstruction of $N_1$’s state space. This would allow verification on the reduced net, with proofs lifted back to the original one.
+%
+Moreover, we believe a further avenue for optimization lies in using \textit{approximations} to decide serializability. Our approach already leverages this idea via the underlying model checker, which employs the \textit{state equation} abstraction~\cite{Mu77} to over-approximate the reachable state space. We expect that additional approximation-based techniques could yield further scalability gains.
+%
+Finally, other potential optimizations involve short-circuiting steps in our algorithmic pipeline. For instance, we currently generate the reachability query $\mathcal{F}$ in three stages: (i) translating the serial NFA into a regular expression via Kleene’s theorem; (ii) translating the regular expression into a semilinear set using Parikh’s construction; and (iii) complementing the resulting semilinear set.
+%
+However, there are techniques (e.g., Verma et al.~\cite{VeSeSc05}) that \textit{directly} compute the Parikh image of an automaton. We did not adopt this approach because, although its construction is linear in size, it relies heavily on Boolean logic, which we found \texttt{ISL} (the standard integer set library) handles poorly in practice.
+%
+ 
+ 
+\medskip
+\noindent
+\textbf{Proof assistants.}
+%
+Another natural next step is to formalize certificate checking in a proof assistant (e.g., \texttt{Rocq}~\cite{Rocq}). This would entail (i) developing a verifier for the PN invariants we use; and (ii) proving theorems that connect invariant validity to serializability.
+%
+Specifically, this would likely require extending existing tactics such as \texttt{LIA} (Linear Integer Arithmetic), which currently does not support full Presburger arithmetic, as required by our logic.
+
+ 
+%\todo{fix}
+%\medskip
+%\noindent
+%\textbf{Complex communication settings.}
+%%
+%within the SDN domain, we plan to \textit{extend our framework to richer communication patterns}, beyond the current independent-client model. These include inter-client communication ---
+%which requires 
+%broadening our framework to afford distributed-system guarantees.
+
+%
+%Moreover, our support for arithmetic operations enables modeling commutative updates, covering a subset of PCM-style workloads.
+%
+%or Lamport’s \textit{happens-before}~\cite{La78}, while weaker ones restrict post-response communication or allow only summaries. Addressing these 
+
+%decentralized or streaming certification under communication constraints, 
+
+%\todo{old}
+%
+%\paragraph{Scalability.}
+%
+%Our evaluation shows that some benchmarks still time out.
+%To improve \textit{scalability}, we are developing both theory and implementation of \textit{polyhedral reductions}~\cite{AmBeDa21} --- that are structural reductions~\cite{Be87,BeLeDa20} of the form $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri Net and $E$ is a formula enabling reconstruction of $N_1$'s state space from $N_2$'s. This would let us verify the reduced net and lift proofs back to the original net.
+%
+%\guy{Nicolas are you sure about the next sentence? Do you have an explanation or a "negative proof"?}
+%
+%Furthermore, we note that polyhedral reductions are the only type of structural reduction for which such a conversion is possible.
+%
+%We are developing both theory and implementation for this extension.
+%
+%\todo{Limitations?}
+%Examples we cannot solve, future work that would help
+%To conclude..
+%
+%
+%
+%In another axis, we aim to \textit{extend our framework to more diverse communication patterns.}
+%\paragraph{Extensions to diverse communication models.}
+%Currently, clients act independently: each issues a request, receives a response, then verification is centralized. Stronger models allow inter-client communication or partial orderings (Lamport’s \textit{happens-before}~\cite{La78}); weaker ones forbid post-response communication or permit only limited summaries. Addressing such settings will require decentralized certification or streaming proofs under communication constraints. Extending our framework along these axes would capture a broader class of practical distributed-system guarantees.
+
+
+%\paragraph{Extensions to diverse communication models.}
+%
+%Our current framework assumes that clients act independently --- each submits a request, receives a response, and only afterward collaborates to verify (in a centralized manner) whether the combined outcomes are serializable. However, in a stronger model, clients may communicate during execution or enforce partial ordering of their interactions. More generally, this can be formalized via Lamport’s \textit{happens‐before} relation over request/response pairs~\cite{La78}. 
+%%
+%In contrast, a weaker model disallows communication --- in which case clients either cannot communicate after receiving responses or may only share limited summaries. Jointly deciding serializability in this setting will require decentralized certification techniques or streaming proofs that respect tight communication constraints. 
+%%
+%By extending our theory and tool along these two axes, we aim to cover a broad spectrum of practical distributed‐system guarantees, that are more complex and match broader, real-world scenarios.
+
+%
+%
+%
+%\todo{Different notions of serializability}
+%\begin{itemize}
+%    \item \todo{Current notion: clients independently submit a request and get a response, and later they all get together and see if what they got was serializable}
+%    \item \todo{Stronger: clients are not independent, or sequentially execute some parts. General: we have some happens-before on the requests/responses}
+%    \item \todo{Weaker: the clients cannot communicate with each other afterwards to determine whether what they got was serializable, or they can only communicate in a limited way}
+%    \item \todo{Infinite / unbounded executions}
+%\end{itemize}
+
+
+
+\subsection{Applicability to Real-World Programs}
+Real-world SDN programs typically satisfy our finite-reachable-state requirement due to bounded end-host buffers and limited switch memory. Moreover, we anticipate that \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can be translated to \toolname{} based on the following high-level mappings:
+(i) packets to requests, (ii) switch registers to global variables, (iii) packet header fields to local variables, and (iv) packet forwarding to yielding. 
+%--- we can use \toolname{} to express high-level \texttt{P4} programs encoding SDN policies. 
+%
+This translation motivated us to evaluate our toolchain on programs modeling \textit{stateful firewalls}~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
+%
+Furthermore, we believe our framework is applicable beyond SDNs. Specifically, our NS model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see Appendix~\ref{appendix:tour}). 
+%that is motivated by a real bug~\cite{cockroach-issue-14099} in \texttt{CockroachDB}~\cite{cockroachdb-si-docs}.
+
+
+
+\subsection{Conclusion}
+%\smallskip
+%\noindent
+%\textbf{Conclusion.}
+We present the first end-to-end framework that automatically verifies serializability for unbounded concurrent systems and generates proof certificates thereof.
+Our approach bridges theory and practice, with the following key contributions:
+% by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
+%
+%Key contributions include: 
+(1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude, and (4) demonstrating feasibility on various benchmarks inspired by real-world systems.
+%
+

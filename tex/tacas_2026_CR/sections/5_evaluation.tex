@@ -1,0 +1,211 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+%\begin{enumerate}
+%    \item Benchmarks (describe our benchmarks)
+%    \item Results (total time, split out SMPT time from our rust code time)
+%    \item Analysis of optimizations (how much time they save, petri net sizes, semilinear set sizes)
+%    \item Limitations (examples we cannot solve, future work that would help)
+%\end{enumerate}
+
+
+\noindent
+\textbf{Experimental setup.}
+All experiments were run on a Lenovo ThinkPad P16s, with 16 AMD CPU cores and 64 GB of RAM, running Ubuntu 24.04.2.
+%
+%We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
+%
+We use \texttt{SMPT}~\cite{AmDa23} (built upon \texttt{Z3}~\cite{DeBj08}) as our backend Petri net model checker.
+ %
+Our code and benchmarks are publicly available~\cite{ArtifactRepository}.
+
+
+
+%
+\begin{wraptable}{r}{0.52\textwidth}
+	\vspace{-1.2\baselineskip} % pulls table upward (adjust if needed)
+	\centering
+	\small
+	\input{tables/average_and_mean_values_of_big_table_simplified_compact.tex}
+	\caption{Runtime for generating certificates (\texttt{cert.}) and the overall runtime (\texttt{total}), including for validation.}
+	\label{tab:stats-summary}
+	\vspace{-0.6\baselineskip} % adjusts spacing below
+\end{wraptable}
+\medskip
+%\subsection{Results}
+\noindent
+\textbf{Results.}
+%
+We ran \toolname{} on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
+For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
+%
+Within this time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see summary in Table~\ref{tab:stats-summary} and the full results in Table~\ref{tab:benchmarks-all} of the appendix).
+%
+% As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
+%and 19/20 non serializable benchmarks. 
+%
+The \textit{median} total runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.5$ ms ($830$ ms) when  solely focusing on serializable (non-serializable) benchmarks.
+%, as reported in Table~\ref{tab:stats-summary}.
+%
+The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when solely focusing on serializable (non-serializable) benchmarks.
+%
+We also observe a clear runtime split based on serializability: 
+%For serializable benchmarks, certificate validation takes much longer than proof generation. 
+among non-serializable benchmarks, counterexample generation takes much longer than validation, and dominates the overall runtime; whereas among serializable benchmarks the validation time dominates the overall runtime. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network system to confirm its feasibility.
+%
+%We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
+%
+%We report the full results in Table~\ref{tab:stats-summary} and Table~\ref{tab:benchmarks-all}.
+%, and elaborate on the per-benchmark results in Table~\ref{tab:benchmarks-all}.
+
+
+%\begin{table}[!htbp]
+%	\centering
+%	% Load the tabular from the external file:
+%	\input{tables/average_and_mean_values_of_big_table_simplified.tex}
+%	\caption{Average and median runtime. Values are rounded to the nearest integer, to reduce clutter. The \textit{total} column also includes the time for validation.}
+%	\label{tab:stats-summary}
+%\end{table}
+
+
+
+%\begin{table}[H]
+%	\centering
+%	% Load the tabular from the external file:
+%	\input{tables/average_and_mean_values_of_big_table.tex}
+%\caption{Average and median runtime. Values are rounded to the nearest integer, to reduce clutter.}
+%\label{tab:stats-summary}
+%\end{table}
+
+
+
+
+
+%=== Overall ===
+%Certificate running time:
+%Average = 39613.23
+%Median  = 797.00
+%
+%Certificate validation time:
+%Average = 13244.32
+%Median  = 151.00
+%
+%Total running time:
+%Average = 52857.55
+%Median  = 2080.00
+%
+%=== Serializable Only ===
+%Certificate running time:
+%Average = 2273.38
+%Median  = 1178.00
+%
+%Certificate validation time:
+%Average = 23257.31
+%Median  = 1299.50
+%
+%Total running time:
+%Average = 25530.69
+%Median  = 2238.50
+%
+%=== Non-Serializable Only ===
+%Certificate running time:
+%Average = 42075.84
+%Median  = 773.00
+%
+%Certificate validation time:
+%Average = 904.63
+%Median  = 78.00
+%
+%Total running time:
+%Average = 42980.47
+%Median  = 830.00
+%
+%=== Percentiles (Overall) ===
+%Certificate running time percentiles:
+%25th percentile = 553.50
+%50th percentile = 797.00
+%100th percentile = 502810.00
+%
+%Certificate validation time percentiles:
+%25th percentile = 66.50
+%50th percentile = 151.00
+%100th percentile = 282370.00
+%
+%Total running time percentiles:
+%25th percentile = 615.00
+%50th percentile = 2080.00
+%100th percentile = 503336.00
+%
+%=== Percentiles (Serializable) ===
+%Certificate running time percentiles:
+%25th percentile = 312.00
+%50th percentile = 1178.00
+%100th percentile = 9858.00
+%
+%Certificate validation time percentiles:
+%25th percentile = 115.75
+%50th percentile = 1299.50
+%100th percentile = 282370.00
+%
+%Total running time percentiles:
+%25th percentile = 456.50
+%50th percentile = 2238.50
+%100th percentile = 292228.00
+%
+%=== Percentiles (Non-Serializable) ===
+%Certificate running time percentiles:
+%25th percentile = 628.50
+%50th percentile = 773.00
+%100th percentile = 356195.00
+%
+%Certificate validation time percentiles:
+%25th percentile = 50.00
+%50th percentile = 78.00
+%100th percentile = 15227.00
+%
+%Total running time percentiles:
+%25th percentile = 707.00
+%50th percentile = 830.00
+%100th percentile = 356299.00
+
+
+
+
+
+\begin{table}[htbp]
+	\centering
+	% Load the tabular from the external file:
+	\input{tables/big_table_summary_only_networking_part.tex}
+	\caption{Overview of benchmarks from the \textit{network \(\&\) system protocols} category. 
+%	For our full benchmarks see Appendix~\ref{appendix:full_results}.
+}
+\label{tab:networking-benchmarks}
+\end{table}
+
+
+
+
+
+%\begin{table}[!htbp]
+%	\centering
+%	\input{tables/average_and_mean_values_of_big_table_simplified_compact.tex}
+%	\caption{Runtime for generated certificates (\texttt{total} also includes validation).}
+%	\label{tab:stats-summary}
+%\end{table}
+
+%\begin{table}[!htbp]
+%	\centering
+%	% Load the tabular from the external file:
+%	\input{tables/semilinear_size_reduction.tex}
+%	\caption{Semilinear set size reduction via optimizations.}
+%	\label{tab:semilinear-size-reduction}
+%\end{table}
+
+%\todo{Limitations?}
+%Examples we cannot solve, future work that would help
+
+%\newpage
+
+%\vspace{-5pt}
+
+

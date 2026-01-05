@@ -1,0 +1,134 @@
+\clearpage
+
+\section{Non-Serializable Execution Counterexample}
+\label{appendix:non-serializable-execution-example}
+Continuing the running example presented in subsec.~\ref{subsec:SerToNsTranslation}, we present in Table~\ref{tab:PetriNetFiringCounterexample} a firing sequence of the Petri net (Fig.~\ref{fig:code2ExamplePN}) resulting in the marking \(M^*\) (satisfying $\mathcal {F}$):
+
+\[
+M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
+\]
+%\medskip
+%\noindent
+%\textbf{Serializable NFA Extraction.}
+%%
+%
+%
+%
+%\begin{wrapfigure}{r}{0.5\textwidth}  % “r” = right, width = 0.5\textwidth
+%	\centering
+%	\includegraphics[width=0.48\textwidth,trim=0 0 0 0,clip]{plots/code_2_NFA.png}
+%	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample2NonSer}.}
+%	\label{fig:code2ExampleNFA}
+%\end{wrapfigure}
+
+%\begin{figure}[!htbp]
+%	\centering
+%	\includegraphics[width=0.5\textwidth,trim=0 0 0 0,clip]{plots/code_2_NFA.png}
+%	\caption{NFA for serialized executions of Listing~\ref{lst:MotivatingExample2NonSer}.}
+%	\label{fig:code2ExampleNFA}
+%\end{figure}
+%
+%\medskip
+%\noindent
+%\textbf{Petri Net Extraction.}
+%
+%
+%
+%\medskip
+%\noindent
+%\textbf{Counterexample Extraction.}
+%%
+%
+%%
+
+
+\begin{table}[H]
+	\centering
+	\label{tab:reach-seq}
+	\resizebox{0.9\textwidth}{!}{
+		\begin{tabular}{c l c c c c c c}
+			\toprule
+			\textbf{Step} 
+			& \textbf{Firing} 
+			& \multicolumn{3}{c}{\textbf{Marking (after firing)}} 
+			& \multicolumn{3}{c}{\textbf{Description (after firing)}} \\
+			\cmidrule(lr){3-5} \cmidrule(lr){6-8}
+			& 
+			& \textbf{Global} 
+			& \textbf{Local} 
+			& \textbf{Responses} 
+			& \textbf{Global state} 
+			& \textbf{In-flight requests} 
+			& \textbf{Responses} \\
+			\midrule
+			0 & --                                  
+			& {\color{blue}$P_3$(1)}                  
+			& --                                    
+			& --                                    
+			& {\color{blue}[X=0]}                   
+			& --                          
+			& --                                    \\
+			1 & $\textcolor{ForestGreen}{t_1}$ 
+			& {\color{blue}$P_3$(1)}                  
+			& $P_1$(1)                                
+			& --                                    
+			& {\color{blue}[X=0]}                   
+			& {\color{ForestGreen}$\blacklozenge_\text{main}$} 
+			& --                                    \\
+			2 & $\textcolor{ForestGreen}{t_1}$ 
+			& {\color{blue}$P_3$(1)}                  
+			& $P_1$(2)                                
+			& --                                    
+			& {\color{blue}[X=0]}                   
+			& {\color{ForestGreen}$\blacklozenge_\text{main}$}, {\color{ForestGreen}$\blacklozenge_\text{main}$}  
+			& --                                    \\
+			3 & $t_3$                                  
+			& {\color{blue}$P_2$(1)}                  
+			& $P_1$(1),$P_4$(1)                          
+			& --                                   
+			&                                    {\color{blue}[X=1]}    
+			&                                    {\color{black}$\blacklozenge_\text{until yield}$}, {\color{ForestGreen}$\blacklozenge_\text{main}$}   
+			& --                                    \\
+			4 & $t_2$                                  
+			& {\color{blue}$P_2$(1)}                  
+			& $P_4$(2)                                
+			& --                                    
+			&                                    {\color{blue}[X=1]}    
+			&                                    {\color{black}$\blacklozenge_\text{until yield}$}, {\color{black}$\blacklozenge_\text{until yield}$}   
+			& --                                    \\
+			5 & $t_4$                                  
+			& {\color{blue}$P_3$(1)}                  
+			& $P_5$(1),$P_4$(1)                          
+			& --                                    
+			&                                   {\color{blue}[X=0]}     
+			&                                    {\color{black}$\blacklozenge_\text{after yield}$}, {\color{black}$\blacklozenge_\text{until yield}$}   
+			& --                                    \\
+			6 & $\textcolor{red}{t_6}$                     
+			& {\color{blue}$P_3$(1)}                  
+			& $P_4$(1)                                
+			& {\color{red}$P_7$(1)}                    
+			&                                      	{\color{blue}[X=0]}  
+			&                                    {\color{black}$\blacklozenge_\text{until yield}$}   
+			&                                   {\color{red}$\blacklozenge_1$}     \\
+			7 & $t_5$                                  
+			& {\color{blue}$P_3$(1)}                  
+			& $P_6$(1)                                
+			& {\color{red}$P_7$(1)}                    
+			&                                   {\color{blue}[X=0]}    
+			&                                    {\color{black}$\blacklozenge_\text{after yield}$}      
+			&                                   {\color{red}$\blacklozenge_1$}        \\
+			8 & $\textcolor{red}{t_7}$                     
+			& {\color{blue}$P_3$(1)}                                  
+			& --                                    
+			& {\color{red}$P_7$(1),\color{red}$P_8$(1)}    
+			&                                   {\color{blue}[X=0]}    
+			&                                   --    
+			&                                   {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}       \\
+			\bottomrule
+		\end{tabular}
+	}
+	\caption{The firing sequence reaching marking $M^*$ which is in our target semilinear set $\mathcal {F}$. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens in place $P_i$. The initial marking has a single token in place $\textcolor{blue}{P_3}$, encoding $g_0$ ($\textcolor{blue}{\texttt{[X=0]}}$).}
+	\label{tab:PetriNetFiringCounterexample}
+\end{table}
+
+%\newpage
