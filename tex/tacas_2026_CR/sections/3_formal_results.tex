@@ -214,7 +214,7 @@ We define the \textit{transitions} between states to correspond to the \(\delta\
 %
 Finally, we define the initial marking \(M_0\) to be a single token in the place corresponding to the initial global state \(g_0\).
 %
-This construction (which is fully formalized in Appendix~\ref{appendix:NS-to-PN-formulation}) guarantees that the multiset of all reachable markings \(M\) (with \(M_0 \xrightarrow{}^{*} M\)) projected (\(\pi\)) to the sink places, corresponds to the multiset of all  (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs of the NS, as obtained by any interleaving, i.e., \(\mathsf{Int}(\mathcal S)=\{\pi(M) \mid M \in R(N_{\mathrm{int}}(\mathcal S))\}\).
+This construction (which is fully formalized in Appendix E of~\cite{AmBaAmJa26}) guarantees that the multiset of all reachable markings \(M\) (with \(M_0 \xrightarrow{}^{*} M\)) projected (\(\pi\)) to the sink places, corresponds to the multiset of all  (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs of the NS, as obtained by any interleaving, i.e., \(\mathsf{Int}(\mathcal S)=\{\pi(M) \mid M \in R(N_{\mathrm{int}}(\mathcal S))\}\).
 
 
 
@@ -300,7 +300,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 %		for \(\mathcal S\)
 		%
 %		back-translated to a validated by synthesizing an inductive invariant over the interleaving PN, thereby proving that the corresponding semilinear set cannot be realized by any interleaving 
-(see an example in Appendix~\ref{appendix:ns-serializable}).
+(see an example in Appendix F of our extended paper~\cite{AmBaAmJa26}).
 	\end{itemize}
 
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
@@ -311,7 +311,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 	M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
 	\]
 	
-	which is reachable by the PN in Fig.~\ref{fig:code2ExamplePN}. The full firing sequence leading to marking $M^*$ is given in Table~\ref{tab:PetriNetFiringCounterexample} (in Appendix~\ref{appendix:non-serializable-execution-example}).
+	which is reachable by the PN in Fig.~\ref{fig:code2ExamplePN}. The full firing sequence leading to marking $M^*$ is given in Table 3 (in Appendix G of our extended paper~\cite{AmBaAmJa26}).
 	%
 %	As the target set encodes request/response pairs that are \textit{unattainable} via serial executions, and as the PN encodes all possible interleavings, this firing sequence also corresponds as a counterexample demonstrating the program is non-serializable. 
 	%
@@ -371,7 +371,8 @@ Our optimizations (see subsec.~\ref{sec:optimizations}) \textit{drastically} red
 
 We apply four optimizations to the base algorithm to control intermediate blow‐up in the size of both the PN and the constructed semilinear set. 
 %
-An extensive empirical evaluation of these optimizations appears in Appendix~\ref{appendix:full_results}.
+An extensive empirical evaluation of these optimizations appears in Appendix I of our extended paper~\cite{AmBaAmJa26}.
+%~\ref{appendix:full_results}.
 
 \medskip
 \noindent
@@ -382,7 +383,7 @@ When solving Petri net reachability, many places and transitions might be irrele
 	the backward pass traverses in reverse from any place that can influence a target constraint (hence over-approximating the places that can contribute to it).
 	We iteratively remove non-forward-reachable and
 	non-backward-relevant places and transitions, to a fixed point.  
-	Appendix~\ref{appendix:BidirectionalProof} illustrates this (Fig.~\ref{fig:bidirectional_pruning}) and proves soundness (Theorem~\ref{thm:bidirectional-pruning}):
+	Appendix H of our extended paper~\cite{AmBaAmJa26} illustrates this (Fig. 14) and proves soundness (Theorem~\ref{thm:bidirectional-pruning}):
 
 
 %\guy{check with mark (M0 projected on P or P'?)}
@@ -512,7 +513,7 @@ The size of the generated semilinear set is not only impacted by how the
 	
 	\smallskip
 	\noindent
-	As we demonstrate in Appendix~\ref{appendix:full_results}, our optimizations expedite the search procedure and make the representations \textit{significantly} more compact. This, in turn, enables deciding serializability for instances that are otherwise intractable.
+	As we demonstrate in Appendix I of~\cite{AmBaAmJa26}, our optimizations expedite the search procedure and make the representations \textit{significantly} more compact. This, in turn, enables deciding serializability for instances that are otherwise intractable.
 
 
 %\medskip

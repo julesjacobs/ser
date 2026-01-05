@@ -20,7 +20,8 @@ We define the set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma}
 % 
 The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
 %
-Specifically, we focus on reachability of a linear-constraint formula $\mathcal {F}$; it is \sat\ if some marking $M\in R(N)$ satisfies $\mathcal {F}$ (denoted $M \models \mathcal {F}$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
+Specifically, we focus on reachability of a linear-constraint formula $\mathcal {F}$; it is \sat\ if some marking $M\in R(N)$ satisfies $\mathcal {F}$ (denoted $M \models \mathcal {F}$), and otherwise \unsat{} (see the toy example in Appendix B of our extended paper~\cite{AmBaAmJa26}).
+%~\ref{appendix:toyPN}).
 %
 Surprisingly, even the \textit{unbounded} case, where places hold arbitrarily many tokens, is decidable~\cite{Ma81,Ko82,La92}, although \texttt{Ackermann}-complete~\cite{CzWo22,Le22}.   
 
@@ -168,7 +169,8 @@ Our \toolname{} syntax is defined as follows:
 
 Given a program \(P_0\), we write \(name_i\{e_i\}\in P_0\) for each of the handlers \(name_i\{e_i\}\).
 %
-Our semantics is standard and fully formalized in Appendix~\ref{appendix:ser-semantics}. 
+Our semantics is standard and fully formalized in Appendix C of our extended paper~\cite{AmBaAmJa26}.
+%~\ref{appendix:ser-semantics}. 
  %
  In addition, arithmetic extensions are supported in the tool~\cite{ArtifactRepository} but omitted here for brevity.
 %Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
@@ -358,7 +360,7 @@ An NS $\mathcal{S}$ is \emph{serializable} if \(\mathsf{Int}(\mathcal{S})=\maths
 %
 The NS abstraction not only captures concurrent behaviors in software-defined networks but also enables a natural translation from \toolname{} programs. 
 Given a \toolname{} program \(P_0\) with local variables (\texttt{vars}), global variables (\texttt{VARS}), and mappings \(\rho,g\) from these to a finite value set \texttt{V}, we define the initial local/global states $\rho_0$ and $g_0$ assigning $0$ to all local and global variables, respectively. 
-Using the small-step semantics ($\pstep$, defined in full in Appendix~\ref{appendix:ser-semantics}), we construct the NS $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
+Using the small-step semantics ($\pstep$, defined in full in Appendix C of our extended paper~\cite{AmBaAmJa26}), we construct the NS $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$:
 
 %\todo{old}
 %The NS abstraction is useful beyond its capability to capture concurrent behaviors in software-defined networks.
@@ -491,7 +493,7 @@ The set of requests is $REQ = \{{\color{ForestGreen}\blacklozenge_\text{main}}\}
 The set of responses is $RESP = \{{\color{red}\blacklozenge_0},{\color{red}\blacklozenge_1}\}$.
 
 \item
-The function \(\delta\) is presented in Fig.~\ref{fig:code2ExampleNSSecondPart} (Appendix~\ref{appendix:MoreNsExamples}).
+The function \(\delta\) is presented in Fig. 10 (Appendix D of~\cite{AmBaAmJa26}).
 
 
 \end{itemize}
