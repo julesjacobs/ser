@@ -29,7 +29,7 @@ Surprisingly, even the \textit{unbounded} case, where places hold arbitrarily ma
 \medskip
 \noindent
 \textbf{Verdict proofs.} 
-If $\mathcal {F}$ is reachable, a witness $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models \mathcal {F}$ serves as a proof, and is verifiable by simulation of the Petri net.  
+If $\mathcal {F}$ is reachable, a witness sequence $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models \mathcal {F}$ serves as a proof, and is verifiable by simulation of the Petri net.  
 If $\mathcal {F}$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ proving non-reachability: 
 (i) $M_0\models C$, (ii) $\forall t\in T \quad (M\models C \wedge M\xrightarrow{t}M')\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg \mathcal {F}$.
 
