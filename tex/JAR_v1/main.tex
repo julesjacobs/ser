@@ -1,18 +1,17 @@
 % ---- Document Class ----
 \documentclass[sn-mathphys,Numbered]{sn-jnl}
 
+
 % ---- Essential Packages ----
 % FIX: Load xcolor ONCE with all necessary options to prevent "Option Clash"
 \usepackage[table,dvipsnames,svgnames]{xcolor}
-
 \usepackage{amsmath}
 % FIX: Handle \Bbbk conflict before loading amssymb
 \let\Bbbk\relax 
 \usepackage{amssymb}
 \usepackage{mathtools}
 \usepackage{amsthm}
-
-\usepackage[demo]{graphicx} % 'demo' allows compiling without images
+\usepackage{graphicx} % FIXED: Removed [demo] option
 \usepackage{hyperref}
 
 % ---- Formatting & Layout ----
@@ -46,7 +45,8 @@
 % ---- Other Utilities ----
 \usepackage{xspace}
 \usepackage{url}
-\usepackage{svg}
+% FIXED: Removed svg package (requires Inkscape/external tools)
+% \usepackage{svg}
 \usepackage{ifthen}
 \usepackage{etoolbox}
 \usepackage[outline]{contour}
@@ -59,7 +59,6 @@
 \usepackage[capitalize]{cleveref}
 
 % ---- Custom Definitions & Macros ----
-
 % Theorem environments
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -110,7 +109,6 @@
 	\addtocounter{footnote}{-1}%
 	\endgroup
 }
-
 \newcommand{\guy}[1]{\marginpar{\textcolor{orange}{Guy: #1}}}
 \newcommand{\jules}[1]{\marginpar{\textcolor{red}{Jules: #1}}}
 \newcommand{\markb}[1]{\marginpar{\textcolor{black}{Mark: #1}}}
@@ -123,7 +121,6 @@
 	morestring=[b]",
 	sensitive=true
 }
-
 \lstset{
 	language=CustomPseudoCode,
 	basicstyle=\ttfamily\small,
@@ -158,6 +155,9 @@
 {}{}
 \makeatother
 
+\let\Bbbk\relax
+
+
 % ==========================================
 %            DOCUMENT START
 % ==========================================
@@ -168,68 +168,67 @@
 	\author*[1]{\fnm{Guy}\sur{Amir}}\email{gda42@cornell.edu}
 	\author[1]{\fnm{Mark}\sur{Barbone}}\email{mlb494@cornell.edu}
 	\author[2]{\fnm{Nicolas}\sur{Amat}}\email{nicolas.amat@onera.fr}
-	\author[1]{\fnm{Jules}\sur{Jacobs}}\email{jj758@cornell.edu}
+	\author[1,3]{\fnm{Jules}\sur{Jacobs}}\email{jj758@cornell.edu}
 	
 	\affil[1]{\orgname{Cornell University}, \orgaddress{\city{Ithaca}, \country{United States}}}
+	
 	\affil[2]{\orgname{DTIS, ONERA, Universit\'e de Toulouse}, \orgaddress{\city{Toulouse}, \country{France}}}
+	
+	\affil[3]{\orgname{Jane Street Capital}, \orgaddress{\city{New York City}, \country{United States}}}
 	
 	\abstract{
 		We present the \toolname{} modeling language for automatically verifying \textit{serializability} of concurrent programs.
 		\toolname{} programs are suitably restricted to make this problem decidable, while still allowing for an \textit{unbounded} number of concurrent threads.
-		
 	}
 	
 	\keywords{Serializability, Concurrent programs, Network systems, Petri nets, Decision procedure}
 	
 	\maketitle
-	\pagestyle{plain}
-	\thispagestyle{plain}
+%	\pagestyle{plain}
+%	\thispagestyle{plain}
 	
-	% PLACEHOLDERS FOR CONTENT
-	% (Uncomment your \input lines when running locally)
+
+
+	 \input{sections/1_introduction}
+	 \input{sections/2_problem_definition}
+	 \input{sections/3_formal_results}
+	 \input{sections/4_implementation}
 	
-	\section{Introduction}
-	% \input{sections/1_introduction}
-	This is placeholder text for the introduction.
-	
-	\section{Problem Definition}
-	% \input{sections/2_problem_definition}
-	This is placeholder text for the problem definition.
-	
-	
-	\section{Formal Results}
-	% \input{sections/3_formal_results}
-	This is placeholder text for formal results.
-	
-	\section{Implementation}
-	% \input{sections/4_implementation}
-	This is placeholder text for implementation details.
-	
-	\section{Evaluation}
-	% \input{sections/5_evaluation}
+	\todo{FIX}
+%	 \input{sections/5_evaluation}
 	This is placeholder text for evaluation.
 	
-	\section{Related Work}
-	% \input{sections/6_related_work}
-	This is placeholder text for related work.
+	 \input{sections/6_related_work}
+	 \input{sections/7_discussion}
+
 	
-	\section{Discussion}
-	% \input{sections/7_discussion}
-	This is placeholder text for discussion.
-	
-	\section*{Data and Software Availability}
-	The data and software are available.
+
 	
 	\section*{Acknowledgements}
-	The work of Amir was partially supported by a Rothschild Fellowship.
+	The work of Amir was
+	partially supported by a Rothschild Fellowship from Yad Hanadiv (The Rothschild Foundation).
+	%
+	We thank Nate Foster, Fred B. Schneider, Lorin Hochstein, Petr Jancar, and Wolfgang Reisig for their contributions to this project.
 	
 	% Bibliography
-	% \bibliographystyle{splncs04}
-	% \bibliography{references}
+	 \bibliographystyle{splncs04}
+	 \bibliography{references}
 	
 	\newpage
+	%	Appendix
 	\appendix
-	\section{Appendix}
-	This is placeholder text for the appendix.
+	
+	\input{sections/8_appendix_tour}
+	\input{sections/8_appendix_toy_petri_net.tex}
+	\input{sections/8_appendix_ser_semantics}
+	\input{sections/8_appendix_more_NS_examples}
+	\input{sections/8_appendix_NS_to_PN_formulation}
+	\input{sections/8_appendix_serializable_program_proof_example}
+	\todo{fix-start}
+%	\input{sections/8_appendix_non_serializable_execution_counterexample}
+%	\input{sections/8_appendix_bidirectional_optimization_proof.tex}
+%	\input{sections/8_appendix_big_table_and_more_results.tex}
+	\todo{fix-end}
+	\input{sections/8_appendix_SMPT.tex}
 	
 \end{document}

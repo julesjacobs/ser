@@ -136,3 +136,33 @@ We discuss related work in \Cref{sec:related-work} and conclude in \Cref{sec:dis
 Our tool, benchmarks, and experiments are available as an accompanying artifact~\cite{ArtifactRepository}.
 % 
 We also include an appendix with technical details and examples.
+
+
+
+\medskip
+\noindent{\bf Note.} This is an extended version of our paper, titled ``\emph{Verifying Generalization in Deep Learning}''~\cite{AmMaZeKaSc23}, which appeared at the Computer Aided Verification (CAV) 2023 conference. 
+In the original paper, we presented a brief
+description of our method, and
+evaluated it on two DRL
+benchmarks, while giving a high-level description of its applicability to additional benchmarks. In this extended version, we significantly enhance our
+original paper along multiple axes, as explained next. In terms of our approach, we
+elaborate on how to strategically design a DNN verification query
+for the purpose of executing our methods, and elaborate on various distance functions
+leveraged in this context.
+We also incorporate a section on competing optimization methods, and
+showcase the advantages of our approach compared to gradient-based
+optimization techniques.
+We significantly enhance our evaluation in the following manner:
+\begin{inparaenum}[(i)]
+	\item
+	We demonstrate the applicability of our approach to supervised learning,
+	and specifically to \emph{Arithmetic} DNNs. (In fact, to the best of our knowledge, we are the first to verify
+	Arithmetic DNNs); and
+	\item
+	We enhance the previously presented DRL case study to include additional
+	results and benchmarks.
+	% \item 
+	% present additional results w.r.t. the real-world topic Internet congestion control.
+\end{inparaenum}
+The added material constitutes over 30\% increase in volume compared to the original paper.
+We believe these additions merit an extended paper, which complements our original, shorter paper\todo{cite}.
