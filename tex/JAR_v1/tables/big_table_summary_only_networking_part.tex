@@ -1,33 +1,28 @@
-\begin{table}[H] 
-	\centering
-	\small
-	% increase horizontal padding between columns
-	\setlength{\tabcolsep}{5pt}
-	\renewcommand{\arraystretch}{0.9}
-	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}%
-			p{2.5cm}     % Benchmark
-			c          % Serializable
-			c c c c c c % Features
-			c       % Cert, Total
-		}
-		\toprule
-		\textbf{Benchmark}
-		& \textbf{Serializable}
-		& \multicolumn{6}{c}{\textbf{Features}}
-		& \textbf{Runtime} \\
-		\cmidrule(lr){1-1} \cmidrule(lr){2-2} \cmidrule(lr){3-8} \cmidrule(lr){9-9}
-		& 
-		& If & While & \texttt{?} & Arith & Yield & Multi-req & (ms)
-		\\
-		\midrule
-		\texttt{banking (g1)}          & \xmark      & \cmark & \cmark &        & \cmark & \cmark & \cmark &  74{,}539 \\
-		\texttt{banking (g2)}          & \greencmark & \cmark & \cmark &        & \cmark & \cmark & \cmark & \texttt{TIMEOUT} \\
-		\texttt{routing (g3)}      & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark &  20{,}954 \\
-		\texttt{monitor (g4)}       & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark &  7{,}047 \\
-		\texttt{monitor (g5)}       & \greencmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark &  12{,}324 \\
-		\texttt{firewall (g6)}& \xmark      & \cmark &        & \cmark & \cmark & \cmark &       &  8{,}285 \\
-		\texttt{firewall (g7)}& \greencmark & \cmark &        & \cmark & \cmark &       &       & 252{,}752 \\
-		\midrule
-		\bottomrule
-	\end{tabular*}
-\end{table}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{0.9}
+
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}%
+		p{2.8cm} c c c c c c c
+	}
+	\toprule
+	\textbf{Benchmark}
+	& \textbf{Serializable}
+	& \multicolumn{6}{c}{\textbf{Features}}
+	& \textbf{Runtime (ms)} \\
+	\cmidrule(lr){1-1}
+	\cmidrule(lr){2-2}
+	\cmidrule(lr){3-8}
+	\cmidrule(lr){9-9}
+	&
+	& If & While & \texttt{?} & Arith & Yield & Multi-req
+	& \\
+	\midrule
+	\texttt{banking (g1)}   & \xmark      & \cmark & \cmark &        & \cmark & \cmark & \cmark & 74{,}539 \\
+	\texttt{banking (g2)}   & \greencmark & \cmark & \cmark &        & \cmark & \cmark & \cmark & \texttt{TIMEOUT} \\
+	\texttt{routing (g3)}   & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 20{,}954 \\
+	\texttt{monitor (g4)}   & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 7{,}047 \\
+	\texttt{monitor (g5)}   & \greencmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 12{,}324 \\
+	\texttt{firewall (g6)}  & \xmark      & \cmark &        & \cmark & \cmark & \cmark &        & 8{,}285 \\
+	\texttt{firewall (g7)}  & \greencmark & \cmark &        & \cmark & \cmark &        &        & 252{,}752 \\
+	\bottomrule
+\end{tabular*}

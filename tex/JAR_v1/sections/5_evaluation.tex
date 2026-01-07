@@ -171,16 +171,70 @@ among non-serializable benchmarks, counterexample generation takes much longer t
 
 
 
+\todo{check table}
 
-\begin{table}[htbp]
+\begin{table}[t]
 	\centering
-	% Load the tabular from the external file:
-	\input{tables/big_table_summary_only_networking_part.tex}
-	\caption{Overview of benchmarks from the \textit{network \(\&\) system protocols} category. 
-%	For our full benchmarks see Appendix~\ref{appendix:full_results}.
-}
-\label{tab:networking-benchmarks}
+	\small
+	% spacing tweaks
+	\setlength{\tabcolsep}{5pt}
+	\renewcommand{\arraystretch}{0.9}
+	
+	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}%
+			p{2.8cm} % Benchmark
+			c        % Serializable
+			c c c c c c % Features
+			c        % Runtime
+		}
+		\toprule
+		\textbf{Benchmark}
+		& \textbf{Serializable}
+		& \multicolumn{6}{c}{\textbf{Features}}
+		& \textbf{Runtime (ms)} \\
+		\cmidrule(lr){1-1}
+		\cmidrule(lr){2-2}
+		\cmidrule(lr){3-8}
+		\cmidrule(lr){9-9}
+		&
+		& If & While & \texttt{?} & Arith & Yield & Multi-req
+		& \\
+		\midrule
+		\texttt{banking (g1)}   & \xmark      & \cmark & \cmark &        & \cmark & \cmark & \cmark & 74{,}539 \\
+		\texttt{banking (g2)}   & \greencmark & \cmark & \cmark &        & \cmark & \cmark & \cmark & \texttt{TIMEOUT} \\
+		\texttt{routing (g3)}   & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 20{,}954 \\
+		\texttt{monitor (g4)}   & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 7{,}047 \\
+		\texttt{monitor (g5)}   & \greencmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 12{,}324 \\
+		\texttt{firewall (g6)}  & \xmark      & \cmark &        & \cmark & \cmark & \cmark &        & 8{,}285 \\
+		\texttt{firewall (g7)}  & \greencmark & \cmark &        & \cmark & \cmark &        &        & 252{,}752 \\
+		\bottomrule
+	\end{tabular*}
+	
+	\caption{Overview of benchmarks from the \textit{network \& system protocols} category.}
+	\label{tab:networking-benchmarks}
 \end{table}
+
+
+
+%\begin{table}[t]
+%	\centering
+%	\small
+%	\input{tables/big_table_summary_only_networking_part.tex}
+%	\caption{Overview of benchmarks from the \textit{network \& system protocols} category.}
+%	\label{tab:networking-benchmarks}
+%\end{table}
+
+
+
+
+%\begin{table}[htbp]
+%	\centering
+%	% Load the tabular from the external file:
+%	\input{tables/big_table_summary_only_networking_part.tex}
+%	\caption{Overview of benchmarks from the \textit{network \(\&\) system protocols} category. 
+%%	For our full benchmarks see Appendix~\ref{appendix:full_results}.
+%}
+%\label{tab:networking-benchmarks}
+%\end{table}
 
 
 

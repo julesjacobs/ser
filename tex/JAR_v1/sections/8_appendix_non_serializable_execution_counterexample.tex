@@ -7,6 +7,49 @@ Continuing the running example presented in subsec.~\ref{subsec:SerToNsTranslati
 \[
 M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
 \]
+
+\todo{check table}
+\begin{table}[!htbp]
+	\centering
+	\caption{The firing sequence reaching marking $M^*$ which is in our target semilinear set $\mathcal{F}$. 
+		The marking $P_i(n_j)$ indicates that there are $n_j$ tokens in place $P_i$. 
+		The initial marking has a single token in place \textcolor{blue}{$P_3$}, encoding $g_0$ (\textcolor{blue}{[X=0]}).}
+	\label{tab:PetriNetFiringCounterexample}
+	
+	\small
+	\begin{tabular}{c l c c c c c c}
+		\toprule
+		\textbf{Step} 
+		& \textbf{Firing} 
+		& \multicolumn{3}{c}{\textbf{Marking (after firing)}} 
+		& \multicolumn{3}{c}{\textbf{Description (after firing)}} \\
+		\cmidrule(lr){3-5} \cmidrule(lr){6-8}
+		& & \textbf{Global} & \textbf{Local} & \textbf{Responses} 
+		& \textbf{Global state} & \textbf{In-flight requests} & \textbf{Responses} \\
+		\midrule
+		0 & -- & {\color{blue}$P_3$(1)} & -- & -- & {\color{blue}[X=0]} & -- & -- \\
+		\midrule
+		1 & $\textcolor{ForestGreen}{t_1}$ & {\color{blue}$P_3$(1)} & $P_1$(1) & -- & {\color{blue}[X=0]} & {\color{ForestGreen}$\blacklozenge_\text{main}$} & -- \\
+		\midrule
+		2 & $\textcolor{ForestGreen}{t_1}$ & {\color{blue}$P_3$(1)} & $P_1$(2) & -- & {\color{blue}[X=0]} & \begin{tabular}[t]{@{}c@{}}{\color{ForestGreen}$\blacklozenge_\text{main}$}, \\ {\color{ForestGreen}$\blacklozenge_\text{main}$}\end{tabular} & -- \\
+		\midrule
+		3 & $t_3$ & {\color{blue}$P_2$(1)} & \begin{tabular}[t]{@{}c@{}}$P_1$(1),\\$P_4$(1)\end{tabular} & -- & {\color{blue}[X=1]} & \begin{tabular}[t]{@{}c@{}}{\color{black}$\blacklozenge_\text{until yield}$},\\{\color{ForestGreen}$\blacklozenge_\text{main}$}\end{tabular} & -- \\
+		\midrule
+		4 & $t_2$ & {\color{blue}$P_2$(1)} & $P_4$(2) & -- & {\color{blue}[X=1]} & \begin{tabular}[t]{@{}c@{}}{\color{black}$\blacklozenge_\text{until yield}$},\\{\color{black}$\blacklozenge_\text{until yield}$}\end{tabular} & -- \\
+		\midrule
+		5 & $t_4$ & {\color{blue}$P_3$(1)} & \begin{tabular}[t]{@{}c@{}}$P_5$(1),\\$P_4$(1)\end{tabular} & -- & {\color{blue}[X=0]} & \begin{tabular}[t]{@{}c@{}}{\color{black}$\blacklozenge_\text{after yield}$},\\{\color{black}$\blacklozenge_\text{until yield}$}\end{tabular} & -- \\
+		\midrule
+		6 & $\textcolor{red}{t_6}$ & {\color{blue}$P_3$(1)} & $P_4$(1) & {\color{red}$P_7$(1)} & {\color{blue}[X=0]} & {\color{black}$\blacklozenge_\text{until yield}$} & {\color{red}$\blacklozenge_1$} \\
+		\midrule
+		7 & $t_5$ & {\color{blue}$P_3$(1)} & $P_6$(1) & {\color{red}$P_7$(1)} & {\color{blue}[X=0]} & {\color{black}$\blacklozenge_\text{after yield}$} & {\color{red}$\blacklozenge_1$} \\
+		\midrule
+		8 & $\textcolor{red}{t_7}$ & {\color{blue}$P_3$(1)} & -- & \begin{tabular}[t]{@{}c@{}}{\color{red}$P_7$(1)},\\{\color{red}$P_8$(1)}\end{tabular} & {\color{blue}[X=0]} & -- & \begin{tabular}[t]{@{}c@{}}{\color{red}$\blacklozenge_0$},\\{\color{red}$\blacklozenge_1$}\end{tabular} \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+
 %\medskip
 %\noindent
 %\textbf{Serializable NFA Extraction.}
@@ -42,93 +85,36 @@ M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8
 %%
 
 
-\begin{table}[H]
-	\centering
-	\label{tab:reach-seq}
-	\resizebox{0.9\textwidth}{!}{
-		\begin{tabular}{c l c c c c c c}
-			\toprule
-			\textbf{Step} 
-			& \textbf{Firing} 
-			& \multicolumn{3}{c}{\textbf{Marking (after firing)}} 
-			& \multicolumn{3}{c}{\textbf{Description (after firing)}} \\
-			\cmidrule(lr){3-5} \cmidrule(lr){6-8}
-			& 
-			& \textbf{Global} 
-			& \textbf{Local} 
-			& \textbf{Responses} 
-			& \textbf{Global state} 
-			& \textbf{In-flight requests} 
-			& \textbf{Responses} \\
-			\midrule
-			0 & --                                  
-			& {\color{blue}$P_3$(1)}                  
-			& --                                    
-			& --                                    
-			& {\color{blue}[X=0]}                   
-			& --                          
-			& --                                    \\
-			1 & $\textcolor{ForestGreen}{t_1}$ 
-			& {\color{blue}$P_3$(1)}                  
-			& $P_1$(1)                                
-			& --                                    
-			& {\color{blue}[X=0]}                   
-			& {\color{ForestGreen}$\blacklozenge_\text{main}$} 
-			& --                                    \\
-			2 & $\textcolor{ForestGreen}{t_1}$ 
-			& {\color{blue}$P_3$(1)}                  
-			& $P_1$(2)                                
-			& --                                    
-			& {\color{blue}[X=0]}                   
-			& {\color{ForestGreen}$\blacklozenge_\text{main}$}, {\color{ForestGreen}$\blacklozenge_\text{main}$}  
-			& --                                    \\
-			3 & $t_3$                                  
-			& {\color{blue}$P_2$(1)}                  
-			& $P_1$(1),$P_4$(1)                          
-			& --                                   
-			&                                    {\color{blue}[X=1]}    
-			&                                    {\color{black}$\blacklozenge_\text{until yield}$}, {\color{ForestGreen}$\blacklozenge_\text{main}$}   
-			& --                                    \\
-			4 & $t_2$                                  
-			& {\color{blue}$P_2$(1)}                  
-			& $P_4$(2)                                
-			& --                                    
-			&                                    {\color{blue}[X=1]}    
-			&                                    {\color{black}$\blacklozenge_\text{until yield}$}, {\color{black}$\blacklozenge_\text{until yield}$}   
-			& --                                    \\
-			5 & $t_4$                                  
-			& {\color{blue}$P_3$(1)}                  
-			& $P_5$(1),$P_4$(1)                          
-			& --                                    
-			&                                   {\color{blue}[X=0]}     
-			&                                    {\color{black}$\blacklozenge_\text{after yield}$}, {\color{black}$\blacklozenge_\text{until yield}$}   
-			& --                                    \\
-			6 & $\textcolor{red}{t_6}$                     
-			& {\color{blue}$P_3$(1)}                  
-			& $P_4$(1)                                
-			& {\color{red}$P_7$(1)}                    
-			&                                      	{\color{blue}[X=0]}  
-			&                                    {\color{black}$\blacklozenge_\text{until yield}$}   
-			&                                   {\color{red}$\blacklozenge_1$}     \\
-			7 & $t_5$                                  
-			& {\color{blue}$P_3$(1)}                  
-			& $P_6$(1)                                
-			& {\color{red}$P_7$(1)}                    
-			&                                   {\color{blue}[X=0]}    
-			&                                    {\color{black}$\blacklozenge_\text{after yield}$}      
-			&                                   {\color{red}$\blacklozenge_1$}        \\
-			8 & $\textcolor{red}{t_7}$                     
-			& {\color{blue}$P_3$(1)}                                  
-			& --                                    
-			& {\color{red}$P_7$(1),\color{red}$P_8$(1)}    
-			&                                   {\color{blue}[X=0]}    
-			&                                   --    
-			&                                   {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}       \\
-			\bottomrule
-		\end{tabular}
-	}
-	\caption{The firing sequence reaching marking $M^*$ which is in our target semilinear set $\mathcal {F}$. The marking $P_i(n_j)$ indicates that there are $n_j$ tokens in place $P_i$. The initial marking has a single token in place $\textcolor{blue}{P_3}$, encoding $g_0$ ($\textcolor{blue}{\texttt{[X=0]}}$).}
-	\label{tab:PetriNetFiringCounterexample}
-\end{table}
+%\begin{table}[H]
+%	\centering
+%	%\begin{threeparttable} % uncomment if you want notes
+%	\resizebox{0.9\textwidth}{!}{%
+%		\begin{tabular}{c l c c c c c c}
+%			\toprule
+%			\textbf{Step} 
+%			& \textbf{Firing} 
+%			& \multicolumn{3}{c}{\textbf{Marking (after firing)}} 
+%			& \multicolumn{3}{c}{\textbf{Description (after firing)}} \\
+%			\cmidrule(lr){3-5} \cmidrule(lr){6-8}
+%			& & \textbf{Global} & \textbf{Local} & \textbf{Responses} 
+%			& \textbf{Global state} & \textbf{In-flight requests} & \textbf{Responses} \\
+%			\midrule
+%			0 & -- & {\color{blue}$P_3$(1)} & -- & -- & {\color{blue}[X=0]} & -- & -- \\
+%			1 & {\color{ForestGreen}$t_1$} & {\color{blue}$P_3$(1)} & $P_1$(1) & -- & {\color{blue}[X=0]} & {\color{ForestGreen}$\blacklozenge_\text{main}$} & -- \\
+%			2 & {\color{ForestGreen}$t_1$} & {\color{blue}$P_3$(1)} & $P_1$(2) & -- & {\color{blue}[X=0]} & {\color{ForestGreen}$\blacklozenge_\text{main}$}, {\color{ForestGreen}$\blacklozenge_\text{main}$} & -- \\
+%			3 & $t_3$ & {\color{blue}$P_2$(1)} & $P_1$(1),$P_4$(1) & -- & {\color{blue}[X=1]} & {\color{black}$\blacklozenge_\text{until yield}$}, {\color{ForestGreen}$\blacklozenge_\text{main}$} & -- \\
+%			4 & $t_2$ & {\color{blue}$P_2$(1)} & $P_4$(2) & -- & {\color{blue}[X=1]} & {\color{black}$\blacklozenge_\text{until yield}$}, {\color{black}$\blacklozenge_\text{until yield}$} & -- \\
+%			5 & $t_4$ & {\color{blue}$P_3$(1)} & $P_5$(1),$P_4$(1) & -- & {\color{blue}[X=0]} & {\color{black}$\blacklozenge_\text{after yield}$}, {\color{black}$\blacklozenge_\text{until yield}$} & -- \\
+%			6 & {\color{red}$t_6$} & {\color{blue}$P_3$(1)} & $P_4$(1) & {\color{red}$P_7$(1)} & {\color{blue}[X=0]} & {\color{black}$\blacklozenge_\text{until yield}$} & {\color{red}$\blacklozenge_1$} \\
+%			7 & $t_5$ & {\color{blue}$P_3$(1)} & $P_6$(1) & {\color{red}$P_7$(1)} & {\color{blue}[X=0]} & {\color{black}$\blacklozenge_\text{after yield}$} & {\color{red}$\blacklozenge_1$} \\
+%			8 & {\color{red}$t_7$} & {\color{blue}$P_3$(1)} & -- & {\color{red}$P_7$(1),\color{red}$P_8$(1)} & {\color{blue}[X=0]} & -- & {\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$} \\
+%			\bottomrule
+%		\end{tabular}%
+%	}
+%	\caption{The firing sequence reaching marking $M^*$ in our target semilinear set $\mathcal{F}$. The marking $P_i(n_j)$ indicates $n_j$ tokens in place $P_i$. The initial marking has a single token in place {\color{blue}$P_3$}, encoding $g_0$ ({\color{blue}\texttt{[X=0]}}).}
+%	\label{tab:reach-seq}
+%	%\end{threeparttable}
+%\end{table}
+
 
 %\newpage
