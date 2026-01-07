@@ -12,7 +12,7 @@
 \usepackage{mathtools}
 \usepackage{amsthm}
 \usepackage{graphicx} % FIXED: Removed [demo] option
-\usepackage{hyperref}
+%\usepackage{hyperref}
 
 % ---- Formatting & Layout ----
 \usepackage{alltt}
@@ -20,12 +20,14 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{arydshln}
-\usepackage{wrapfig}
+%\usepackage{wrapfig}
+\usepackage{hyperref}
+\usepackage[capitalize]{cleveref}
 \usepackage[export]{adjustbox}
 \usepackage{enumitem}
 \usepackage{float}
-\usepackage{caption}
-\usepackage{subcaption}
+%\usepackage{caption}
+%\usepackage{subcaption}
 \usepackage{tcolorbox}
 \usepackage{nicefrac}
 
@@ -143,17 +145,17 @@
 }
 
 % Hyperref fixes
-\makeatletter
-\renewcommand*{\theHsection}{\thesection}
-\renewcommand*{\theHsubsection}{\thesubsection}
-\renewcommand*{\theHsubsubsection}{\thesubsubsection}
-\patchcmd{\@sect}
-{\@tempskipa #5\relax}
-{\refstepcounter{#1}%
-	\Hy@raisedlink{\hyper@anchorstart{#1.\csname the#1\endcsname}\hyper@anchorend}%
-	\@tempskipa #5\relax}
-{}{}
-\makeatother
+%\makeatletter
+%\renewcommand*{\theHsection}{\thesection}
+%\renewcommand*{\theHsubsection}{\thesubsection}
+%\renewcommand*{\theHsubsubsection}{\thesubsubsection}
+%\patchcmd{\@sect}
+%{\@tempskipa #5\relax}
+%{\refstepcounter{#1}%
+%	\Hy@raisedlink{\hyper@anchorstart{#1.\csname the#1\endcsname}\hyper@anchorend}%
+%	\@tempskipa #5\relax}
+%{}{}
+%\makeatother
 
 \let\Bbbk\relax
 
@@ -196,7 +198,7 @@
 	
 	\todo{FIX}
 %	 \input{sections/5_evaluation}
-	This is placeholder text for evaluation.
+%	This is placeholder text for evaluation.
 	
 	 \input{sections/6_related_work}
 	 \input{sections/7_discussion}
