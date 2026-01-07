@@ -1,0 +1,138 @@
+\section{Introduction}
+\label{sec:introduction}
+
+In the domain of concurrent systems, from databases to software-defined networks (SDNs)~\cite{KrRaVePaRoAzUh14,XiWeFoNiXi15}, a cornerstone correctness criterion is \emph{serializability}: every concurrent execution must produce outcomes equivalent to some serial ordering of requests. Violations of serializability can lead to subtle anomalies, such as lost updates in databases or routing cycles in SDNs.
+While we can check serializability for a fixed number of requests with known execution traces (e.g., by enumerating all possible interleavings), the problem is undecidable for general programs, requiring techniques such as runtime verification or incomplete bounded model checking~\cite{WaSt06a,WaSt06b,FlFrYi08,FaMa08,SiMaWaGu11a,SiMaWaGu11b,Pa79,AlMcPe96,BiEn19}.
+
+However, Bouajjani et al.~\cite{BoEmEnHa13} have shown (as a special case of bounded-barrier linearizability) that for programs with bounded-size state, this problem is decidable even for an \emph{unbounded} number of in-flight requests, each performing an \emph{unbounded} number of steps. The purpose of this paper is to make this theoretical decidability result a reality by designing the first decision procedure and putting forth practical algorithms that either prove serializability (with a proof certificate) or prove non-serializability (with a counterexample trace).
+% 
+We illustrate the problem by example:
+
+% examples in Listings~\ref{lst:MotivatingExample1Ser},~\ref{lst:MotivatingExample2NonSer}, and ~\ref{lst:MotivatingExample3Ser}, written in our modeling language called \toolname.
+
+\noindent
+\begin{minipage}[t]{0.55\textwidth}
+	\begin{minipage}[t]{\textwidth}
+		\begin{lstlisting}[caption={Without yielding (serializable)},
+			label={lst:MotivatingExample1Ser}]
+  // request handler           
+  request main: 
+      X := 1 // X is global
+      y := X // y is local
+      X := 0
+      return y 
+		\end{lstlisting}
+	\end{minipage}
+	\vspace{1em}
+	\begin{minipage}[t]{\textwidth}
+		\begin{lstlisting}[caption={With yielding (not serializable)},
+			label={lst:MotivatingExample2NonSer}]
+  request main: 
+      X := 1 
+      yield // another request
+      y := X // can read 0!
+      X := 0
+      return y 	
+		\end{lstlisting}
+	\end{minipage}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.35\textwidth}
+	\begin{lstlisting}[caption={With yielding and a spin-lock (serializable)},
+		label={lst:MotivatingExample3Ser}]
+  request main: 
+      // lock
+      while (L == 1): 
+          yield
+      L := 1 
+
+      X := 1
+      yield
+      y := X 
+      X := 0
+
+      // unlock    
+      L := 0
+      return y 
+	\end{lstlisting}
+\end{minipage}
+
+These examples are written in our modeling language called \toolname.
+A \toolname{} program has a set of named \textbf{request handlers} (one handler, \texttt{main}, in the examples) that are arbitrarily invoked concurrently by the external environment.
+Each incoming request processes its request handler's body until it returns a value as its \textbf{response}. Concurrency is managed by the \(\yieldkw\)
+ statement, which pauses the current request and gives other requests a chance to run. \toolname{} programs have uppercase \textbf{global shared variables} (\texttt{X} in the examples) and lowercase \textbf{request-local variables} (\texttt{y} in the examples).
+%
+%
+%
+The first program (Listing~\ref{lst:MotivatingExample1Ser}) is clearly serializable because there are no yields, and hence, no interleavings: each \texttt{main} request returns 1.
+In the second program (Listing~\ref{lst:MotivatingExample2NonSer}), the \texttt{yield} allows interleavings that make the program \emph{non-serializable}. For instance, consider two concurrent requests to \texttt{main}:
+%\begin{enumerate}
+%\item 
+Request A executes \texttt{[X := 1]} then yields to Request B; which then
+%\item
+executes \texttt{[X := 1]}, yields to itself, reads \texttt{X} (getting 1), sets \texttt{[X := 0]}, and returns 1.
+Finally, 
+%\item 
+Request A resumes, reads \texttt{X} (now 0), and returns 0.
+%\end{enumerate}
+This produces the multiset \{(\texttt{main}, 0), (\texttt{main}, 1)\} of (request, response) pairs, which is impossible in any serial execution (where all \texttt{main} requests return 1 and never 0).
+Of course, having \texttt{yield}s does not guarantee that an execution is necessarily not serializable, as observed in the third snippet (Listing~\ref{lst:MotivatingExample3Ser}). This program uses an additional lock variable (\texttt{L}), which guarantees that even if an interleaving occurs, the program is semantically equivalent to the first one.
+%
+These examples demonstrate that reasoning about serializability can be complex even for very simple programs with few requests running concurrently.
+%
+For a tour of additional examples, we refer the reader to Appendix~\ref{appendix:tour}.
+%\vspace{-.5em}
+
+\smallskip
+\noindent
+\textbf{Problem Definition.}
+Formally, we define the \textbf{observable execution} of a \toolname{} program as a multiset of (request, response) pairs induced by a specific interleaving. The \textbf{observable behavior} of a \toolname{} program is the set of all possible observable executions that can occur such that the requests are executed concurrently to obtain their paired responses.
+A \toolname{} program is \textbf{serializable} if every observable behavior is achievable serially (without interleavings). Differently put, removing all \texttt{yield} statements does not change the program's semantics.
+%
+\emph{This paper aims to present the \toolname{} language and decision procedure for this problem.} In particular, \toolname{} is the first toolchain to \textbf{automatically} prove serializability without requiring manual work by the user.
+
+%\vspace{-.5em}
+\smallskip
+\noindent
+\textbf{Challenges.}
+To our knowledge, no prior implementation exists that can automatically generate proof certificates for this class of concurrent systems.
+Why not?
+Our decision procedure builds on Bouajjani et al.'s reduction from serializability to Petri net (PN) reachability~\cite{BoEmEnHa13}. However, since PN reachability is \texttt{Ackermann}-complete~\cite{CzWo22,Le22}, a naive implementation would fail on all but simple programs. 
+
+%\vspace{-.5em}
+\smallskip
+\noindent
+\textbf{Our Approach.}
+To address this, we first introduce the abstraction of \textit{network systems} (NS) --- modeling concurrent programs where users send \textit{requests} that manipulate local and shared state before returning \textit{responses}. A \toolname{} program is compiled into a network system, on which our decision procedure operates via reduction to Petri net reachability and semilinear set analysis.
+%
+%As a backend solver, we use SMPT~\cite{AmDa23}, which is a state-of-the-art tool for Petri net reachability.
+We note that while our approach is sound (never incorrectly claims serializability), the underlying reachability query may time out on complex instances, limiting completeness in practice (this is unavoidable, given the \texttt{Ackermann}-hardness of the problem).
+%
+Towards this end, we developed multiple optimizations to make the approach practical, including Petri net slicing, semilinear set compression, and additional manipulations with Presburger formulas.
+As we demonstrate, these optimizations reduce the search space by \textit{orders of magnitude}, enabling us to scale to non-trivial programs.
+%
+Finally, 
+we extensively evaluated our \toolname{} toolchain on various programs, covering a broad spectrum of features such as loops, branching, locks, and nondeterminism; as well as SDN-inspired examples such as stateful firewalls, BGP routers, and more.
+%
+To our knowledge, this leads to the first \emph{implemented} decision procedure that: (i) automatically \textit{proves} serializability for \textit{unbounded} executions; (ii) generates \textit{proof certificates}; and (iii) handles \textit{non-trivial programs}.
+
+
+\smallskip
+\noindent
+\textbf{Contributions.}
+%We present the following contributions:
+%\begin{itemize}
+%    \item 
+%    Following a brief background in \Cref{sec:background}, 
+We introduce in  \Cref{sec:problem-definition} our \toolname{} language and the Network System program abstraction that captures the essence of concurrent systems.
+    %
+    In \Cref{sec:formal-results} we present the core decision procedure with proof certificates, and our various optimizations.
+    %
+%    presents techniques for semilinear set reductions and Petri-net reductions.
+    The implementation of the \toolname{} toolchain is covered in \Cref{sec:implementation}, and its evaluation is presented in \Cref{sec:evaluation}. 
+%    
+We discuss related work in \Cref{sec:related-work} and conclude in \Cref{sec:discussion}.
+%
+Our tool, benchmarks, and experiments are available as an accompanying artifact~\cite{ArtifactRepository}.
+% 
+We also include an appendix with technical details and examples.

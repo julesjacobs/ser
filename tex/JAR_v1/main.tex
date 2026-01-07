@@ -1,0 +1,235 @@
+% ---- Document Class ----
+\documentclass[sn-mathphys,Numbered]{sn-jnl}
+
+% ---- Essential Packages ----
+% FIX: Load xcolor ONCE with all necessary options to prevent "Option Clash"
+\usepackage[table,dvipsnames,svgnames]{xcolor}
+
+\usepackage{amsmath}
+% FIX: Handle \Bbbk conflict before loading amssymb
+\let\Bbbk\relax 
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+\usepackage[demo]{graphicx} % 'demo' allows compiling without images
+\usepackage{hyperref}
+
+% ---- Formatting & Layout ----
+\usepackage{alltt}
+\usepackage{paralist}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{arydshln}
+\usepackage{wrapfig}
+\usepackage[export]{adjustbox}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tcolorbox}
+\usepackage{nicefrac}
+
+% ---- Code Listings ----
+\usepackage{listings}
+\usepackage{verbatim}
+
+% ---- Math & Symbols ----
+\usepackage{mathpartir}
+\usepackage{wasysym}
+\usepackage{pifont}
+\usepackage{stmaryrd}
+\usepackage{bussproofs}
+\usepackage{gensymb}
+\usepackage[per-mode=symbol,detect-all]{siunitx}
+
+% ---- Other Utilities ----
+\usepackage{xspace}
+\usepackage{url}
+\usepackage{svg}
+\usepackage{ifthen}
+\usepackage{etoolbox}
+\usepackage[outline]{contour}
+
+% ---- TikZ Graphics ----
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,positioning,arrows}
+
+% ---- Cleveref (Must be loaded after hyperref) ----
+\usepackage[capitalize]{cleveref}
+
+% ---- Custom Definitions & Macros ----
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Colors
+\definecolor{brightyellow}{RGB}{255,247,192}
+\definecolor{lightchacki}{RGB}{245,237,205}
+\definecolor{darkorange}{RGB}{255,140,0}
+\definecolor{headerbg}{RGB}{220,230,241}
+
+% Symbols
+\newcommand{\cmark}{\checkmark}
+\newcommand{\xmark}{\textcolor{red}{\ding{55}}}
+\newcommand{\greencmark}{\textcolor{green}{\ding{51}}}
+
+% Math Macros
+\newcommand{\cfg}[3]{\langle #1,\; #2,\; #3\rangle}
+\newcommand{\update}[3]{#1[#2 \mapsto #3]}
+\newcommand{\step}{\mathrel{\rightarrow}}
+\newcommand{\pstep}{\mathrel{\Rightarrow}}
+\newcommand{\Pre}{\mathsf{pre}}
+\newcommand{\Post}{\mathsf{post}}
+\newcommand{\toolname}{\textsc{Ser}}
+\newcommand{\grammartag}[1]{\qquad\qquad\emph{(#1)}}
+
+% Keywords
+\newcommand{\kw}[1]{\textbf{#1}}
+\newcommand{\nondet}{\kw{?}}
+\newcommand{\ifkw}{\kw{if}}
+\newcommand{\elsekw}{\kw{else}}
+\newcommand{\whilekw}{\kw{while}}
+\newcommand{\yieldkw}{\kw{yield}}
+\newcommand{\requestkw}{\kw{request}}
+\newcommand{\sat}{\texttt{SAT}}
+\newcommand{\unsat}{\texttt{UNSAT}}
+\newcommand{\Parikh}{\mathsf{Parikh}}
+
+% Helper commands
+\newcommand\blfootnote[1]{%
+	\begingroup
+	\renewcommand\thefootnote{}\footnote{#1}%
+	\addtocounter{footnote}{-1}%
+	\endgroup
+}
+
+\newcommand{\guy}[1]{\marginpar{\textcolor{orange}{Guy: #1}}}
+\newcommand{\jules}[1]{\marginpar{\textcolor{red}{Jules: #1}}}
+\newcommand{\markb}[1]{\marginpar{\textcolor{black}{Mark: #1}}}
+\newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
+
+% Listings Configuration
+\lstdefinelanguage{CustomPseudoCode}{
+	morekeywords={request, yield, return, if, else, while, and, or},
+	morecomment=[l]{//},
+	morestring=[b]",
+	sensitive=true
+}
+
+\lstset{
+	language=CustomPseudoCode,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\color{blue}\bfseries,
+	commentstyle=\color{gray}\itshape,
+	stringstyle=\color{orange},
+	numbers=left,
+	numberstyle=\tiny,
+	stepnumber=1,
+	numbersep=5pt,
+	backgroundcolor=\color{white},
+	frame=single,
+	rulecolor=\color{black},
+	tabsize=2,
+	captionpos=b,
+	breaklines=true,
+	breakatwhitespace=false,
+	showstringspaces=false,
+	escapeinside={(*@}{@*)},
+}
+
+% Hyperref fixes
+\makeatletter
+\renewcommand*{\theHsection}{\thesection}
+\renewcommand*{\theHsubsection}{\thesubsection}
+\renewcommand*{\theHsubsubsection}{\thesubsubsection}
+\patchcmd{\@sect}
+{\@tempskipa #5\relax}
+{\refstepcounter{#1}%
+	\Hy@raisedlink{\hyper@anchorstart{#1.\csname the#1\endcsname}\hyper@anchorend}%
+	\@tempskipa #5\relax}
+{}{}
+\makeatother
+
+% ==========================================
+%            DOCUMENT START
+% ==========================================
+\begin{document}
+	
+	\title{Deciding Serializability in Network Systems}
+	
+	\author*[1]{\fnm{Guy}\sur{Amir}}\email{gda42@cornell.edu}
+	\author[1]{\fnm{Mark}\sur{Barbone}}\email{mlb494@cornell.edu}
+	\author[2]{\fnm{Nicolas}\sur{Amat}}\email{nicolas.amat@onera.fr}
+	\author[1]{\fnm{Jules}\sur{Jacobs}}\email{jj758@cornell.edu}
+	
+	\affil[1]{\orgname{Cornell University}, \orgaddress{\city{Ithaca}, \country{United States}}}
+	\affil[2]{\orgname{DTIS, ONERA, Universit\'e de Toulouse}, \orgaddress{\city{Toulouse}, \country{France}}}
+	
+	\abstract{
+		We present the \toolname{} modeling language for automatically verifying \textit{serializability} of concurrent programs.
+		\toolname{} programs are suitably restricted to make this problem decidable, while still allowing for an \textit{unbounded} number of concurrent threads.
+		
+	}
+	
+	\keywords{Serializability, Concurrent programs, Network systems, Petri nets, Decision procedure}
+	
+	\maketitle
+	\pagestyle{plain}
+	\thispagestyle{plain}
+	
+	% PLACEHOLDERS FOR CONTENT
+	% (Uncomment your \input lines when running locally)
+	
+	\section{Introduction}
+	% \input{sections/1_introduction}
+	This is placeholder text for the introduction.
+	
+	\section{Problem Definition}
+	% \input{sections/2_problem_definition}
+	This is placeholder text for the problem definition.
+	
+	
+	\section{Formal Results}
+	% \input{sections/3_formal_results}
+	This is placeholder text for formal results.
+	
+	\section{Implementation}
+	% \input{sections/4_implementation}
+	This is placeholder text for implementation details.
+	
+	\section{Evaluation}
+	% \input{sections/5_evaluation}
+	This is placeholder text for evaluation.
+	
+	\section{Related Work}
+	% \input{sections/6_related_work}
+	This is placeholder text for related work.
+	
+	\section{Discussion}
+	% \input{sections/7_discussion}
+	This is placeholder text for discussion.
+	
+	\section*{Data and Software Availability}
+	The data and software are available.
+	
+	\section*{Acknowledgements}
+	The work of Amir was partially supported by a Rothschild Fellowship.
+	
+	% Bibliography
+	% \bibliographystyle{splncs04}
+	% \bibliography{references}
+	
+	\newpage
+	\appendix
+	\section{Appendix}
+	This is placeholder text for the appendix.
+	
+\end{document}
