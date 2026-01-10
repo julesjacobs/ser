@@ -39,7 +39,7 @@ Our code and benchmarks are publicly available~\cite{ArtifactRepository}.
 We ran \toolname{} on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
 For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
 %
-Within this time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see summary in Table~\ref{tab:stats-summary} and the full results in Table~\ref{tab:benchmarks-all} of the appendix).
+Within this time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see summary in Table~\ref{tab:stats-summary} and the full results in Table~\ref{tab:benchmarks-all}).
 %
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 
@@ -171,47 +171,6 @@ among non-serializable benchmarks, counterexample generation takes much longer t
 
 
 
-\todo{check table}
-
-\begin{table}[t]
-	\centering
-	\small
-	% spacing tweaks
-	\setlength{\tabcolsep}{5pt}
-	\renewcommand{\arraystretch}{0.9}
-	
-	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}%
-			p{2.8cm} % Benchmark
-			c        % Serializable
-			c c c c c c % Features
-			c        % Runtime
-		}
-		\toprule
-		\textbf{Benchmark}
-		& \textbf{Serializable}
-		& \multicolumn{6}{c}{\textbf{Features}}
-		& \textbf{Runtime (ms)} \\
-		\cmidrule(lr){1-1}
-		\cmidrule(lr){2-2}
-		\cmidrule(lr){3-8}
-		\cmidrule(lr){9-9}
-		&
-		& If & While & \texttt{?} & Arith & Yield & Multi-req
-		& \\
-		\midrule
-		\texttt{banking (g1)}   & \xmark      & \cmark & \cmark &        & \cmark & \cmark & \cmark & 74{,}539 \\
-		\texttt{banking (g2)}   & \greencmark & \cmark & \cmark &        & \cmark & \cmark & \cmark & \texttt{TIMEOUT} \\
-		\texttt{routing (g3)}   & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 20{,}954 \\
-		\texttt{monitor (g4)}   & \xmark      & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 7{,}047 \\
-		\texttt{monitor (g5)}   & \greencmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 12{,}324 \\
-		\texttt{firewall (g6)}  & \xmark      & \cmark &        & \cmark & \cmark & \cmark &        & 8{,}285 \\
-		\texttt{firewall (g7)}  & \greencmark & \cmark &        & \cmark & \cmark &        &        & 252{,}752 \\
-		\bottomrule
-	\end{tabular*}
-	
-	\caption{Overview of benchmarks from the \textit{network \& system protocols} category.}
-	\label{tab:networking-benchmarks}
-\end{table}
 
 
 
@@ -261,5 +220,4 @@ among non-serializable benchmarks, counterexample generation takes much longer t
 %\newpage
 
 %\vspace{-5pt}
-
 
