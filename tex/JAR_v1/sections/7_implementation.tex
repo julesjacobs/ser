@@ -123,67 +123,70 @@
 %
 %\noindent
 
-We implemented our approach in \toolname{}~\cite{ArtifactRepository}, a publicly available toolchain 
+Our decision procedure is implemented in \toolname{}~\cite{ArtifactRepository}, a publicly available toolchain 
 %consisting of over $18{,}200$ LoC 
 written mostly in \texttt{Rust}. 
 %
-\toolname{} implements an end-to-end serializability checker for a given input program. If the program is serializable, we return a proof thereof; otherwise, if it is not serializable, a counterexample is given to the user for an interleaving that can result in request/response pairs that are unattainable in any serial execution.
+The toolchain receives an input program (which can be written in the \toolname{} syntax), and runs the end-to-end serializability checker on it. If the program is serializable, the toolchain returns a network-system level proof thereof; otherwise, if it is not serializable, the toolchain provides a counterexample, i.e., a specific interleaving that induces a multiset of request/response pairs that cannot be obtained in any serial execution of the network system.
 %
-Our workflow translates the decidability problem to an equivalent Petri net reachability question (for an unbounded number of tokens), in which (i) the Petri net represents all possible interleavings of the program; and (ii) the reachability query represents a semilinear set (equivalently, a Presburger arithmetic encoding) of all request/response pairs that \textit{cannot} be obtained by any serial execution.
+Our toolchain reduces the problem of deciding the networks system's serializability to an equivalent Petri net reachability problem over an unbounded number of tokens. Our construction guarantees that (i) the Petri net represents every possible request/response multiset that is induced by an interleaving of the original program; and (ii) the encoded reachability query represents a Presburger arithmetic encoding (or equivalently, a semilinear set) over the token distributions that represent multisets of request/response pairs that \textit{cannot} be induced by serial executions.
 %
-As Petri net reachability is \texttt{Ackermann}-complete~\cite{CzWo22,Le22}, we added various optimizations to expedite the search process, both at the PN level and the property-encoding level.
+In order to cope with the \texttt{Ackermann}-completeness of unbounded Petri net reachability~\cite{CzWo22,Le22}, we implemented the various optimizations that expedite the search procedure, both at the Petri net level, and also, at the property-encoding level.
 %
-The pipeline of \toolname{} is depicted in Fig.~\ref{fig:full_program_flow}, and includes:
+We illustrate the pipeline of \toolname{} in Fig.~\ref{fig:full_program_flow}, which includes the following modules:
  
 
 \begin{enumerate}
 	\item \textbf{Input \& parsing.} 
-	Our framework receives either a \toolname{} program with the syntax described in~\Cref{sec:problem-definition}, or a \texttt{JSON} file directly encoding a network system. In the case of the former, an additional step takes place, parsing the input %(using the \texttt{parser.rs} module) 
-	to an expression tree that is translated to the equivalent NS.
+	Our toolchain receives as input either a \toolname{} program with the syntax described in~\Cref{sec:problem-definition}, or alternatively, a \texttt{JSON} file that directly encodes a network system. In the case of the former, the toolchain does an additional step in which is parses the input %(using the \texttt{parser.rs} module) 
+	to an expression tree that is then translated into the equivalent network system.
 %	, represented as a struct in the \texttt{ns.rs} module. 
 	
-	\item \textbf{Petri net conversion.} The NS is then translated into a Petri net 
+	\item \textbf{Petri net conversion.} The network system is subsequently translated into a Petri net 
 %	(see the \texttt{petri.rs} module) 
-which represents all possible interleavings. 
-%	.as depicted, for example, in subsec.~\ref{subsec:ns-not-serializable}.
-%	Each place represents a state (either global or local) or a response. Each token represents a single in-flight request or a terminated response. 
-The PN is encoded in the de facto standard \texttt{NET} format, to support off-the-shelf PN model checkers. 
+representing all possible interleavings of the original program, 
+	.as depicted, for example, in Fig.~\ref{fig:code2ExamplePN}.
+	Each place represents a state (either global or local) or a response. Each token represents a single in-flight request or a terminated response. 
+Furthermore, we note that the Petri net is encoded in the de facto standard \texttt{NET} format, to support off-the-shelf Petri net model checkers. 
 	
 	\item \textbf{Semilinear conversion.} 
 %	This includes a set of modules (\texttt{kleene.rs}, \texttt{semilinear.rs}, and \texttt{presburger.rs}) which 
-We generate a semilinear set encoding all non-serializable outputs, via translation of the serialized NFA (e.g., Fig.~\ref{fig:code2ExampleNFA}) to a regex, which is then projected (via the Parikh image) and complemented. 
+We construct a semilinear set that encodes all the request/response multisets that cannot be induced by any serial exection.
+This step is done via translation of the serialized NFA (e.g., Fig.~\ref{fig:code2ExampleNFA}) to a regular expression, which is then projected (using the Parikh image) and complemented. 
 %	This conversion is done by the following pipeline: (1) the NS is translated to an NFA encoding all possible request/response pairs of the input program; (2) This NFA is translated to a regex (via Kleene's Theorem) and then projected (via the Parikh Image) to a semilinear set. The (finite) encoding of the semilinear set symbolically represents all outputs attained via serializable executions of the program, running for an unbounded number of steps; (3) finally, we complement the semilinear set to encode all outputs unattainable via serial executions. 
-	At the end of the pipeline, an \texttt{XML}-formatted output encodes a reachability query that encapsulates constraints over the PN token count.
+	After this stage, our toolchain generates an \texttt{XML}-formatted file encoding a reachability query over the token distribution of the Petri net.
 	
 	
-	\item \textbf{Reachability engine.} The PN and the reachability query are fed to a  PN model checker, which combines \textit{bounded model checking} (BMC)~\cite{BiCiClZh99} in search of a counterexample; and \textit{state equation reasoning}~\cite{Mu77} in order to prove non-reachability. 
+	\item \textbf{Reachability engine.} Both the Peri net and the accompanying reachability query are fed to a Petri net model checker, which combines techniques such as \textit{bounded model checking} (BMC)~\cite{BiCiClZh99} in search of a counterexample; and \textit{state equation reasoning}~\cite{Mu77} in order to prove non-reachability. 
 %	This engine is implemented in the \texttt{reachability.rs} and \texttt{reachability\_with\_proofs.rs}  modules.
 	%
-	In order to expedite the search, ``large'' (PN, query) pairs are replaced with multiple sliced PNs (generated by the reachability engine), each coupled with a sub-query encoding a separate disjunct. 
+	Furthermore, in order to curtail the search space, we replace ``large'' (Petri net, reachability query) pairs with multiple sliced Petri nets, with each sliced Petri net coupled with a sub-query encoding a separate disjunct in the original, full query. 
 %	of the original query.
-%	We iteratively solve the 
-The disjuncts are solved on the fly, until reaching \texttt{SAT}, in which case, we have a counterexample; otherwise, if all disjuncts are \texttt{UNSAT}, we render the original program as serializable.
+	We iteratively solve the 
+	disjuncts on the fly, until either \texttt{SAT} is reached, in which case, we have a concrete counterexample; or otherwise, if all disjuncts are found to be \texttt{UNSAT}, we deduce that the original program is serializable.
 	
 	
 	\item \textbf{Proof \& certification.} 
-	If \texttt{SAT}, we reconstruct and validate an NS-level counterexample. Otherwise, if all disjuncts are \texttt{UNSAT}, we extract per-disjunct proofs and ``stitch'' these to a single inductive serializability certificate, which we then project to the NS and validate (i) initiation, (ii) inductiveness, and (iii) query refutation.
+	If the query is \texttt{SAT}, we reconstruct the reachable marking and validate a network-system level counterexample. Otherwise, if the query is \texttt{UNSAT}, we extract an inductive, per-disjunct proof for non-satisfiability, and then ``stitch'' these to a single inductive serializability certificate. This certificate is then project to the network system, over which we validate (i) initiation, (ii) inductiveness, and (iii) query refutation.
 	%
 %	If the query is \texttt{SAT}, we reconstruct a non-serializable NS-level execution and validate its correctness. Otherwise, if all disjuncts are \texttt{UNSAT}, our proof module extracts a separate proof for each disjunct. We subsequently ``stitch'' these proofs to a single inductive invariant, and project it to the NS-level, representing a full inductive proof certificate for serializability. Our checker also validates that the inductive invariant is correct, i.e., (i) includes the initial state; (ii) is inductive with regard to the transitions; and (iii) implies that the reachability query is \texttt{UNSAT}.
 	%, and hence, implying serializability. 
 	
 	
-	\item \textbf{Instrumentation \& logging.} Throughout the pipeline, we record various intermediate representations and performance metrics.  
-%	input size and performance metrics (number of places, transitions, constraint complexity, timings) 
+	\item \textbf{Instrumentation \& logging.} Throughout execution, we record various 
+%	intermediate representations and performance metrics.  
+	input size and performance metrics, such as number of places, transitions, constraint complexity, timings and more.
 %
-%The logger outputs 
-%We generate \texttt{CSV} and \texttt{JSON} logs along with
-% analysis. 
+The logger outputs 
+We generate \texttt{CSV} and \texttt{JSON} logs along with
+ analysis. 
 	%
-%	We also assemble 
-%an \texttt{HTML} report embedding the original net, symbolic constraints, reachability results, proofs, etc.
-%	\item \textbf{Debug Report Generation.} Finally, a human-readable \texttt{HTML} report is assembled: it embeds the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs. This interactive report allows users to drill down into each transition firing, constraint check, and proof obligation.
+	We also assemble 
+an \texttt{HTML} report embedding the original net, symbolic constraints, reachability results, proofs, etc.
+
+\item \textbf{Debug Report Generation.} Finally, a human-readable \texttt{HTML} report is assembled: it embeds the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs. This interactive report allows users to drill down into each transition firing, constraint check, and proof obligation.
 	
-%	\item \textbf{Output Delivery.} The crate exposes a simple CLI and library API. Users obtain either a Boolean reachability verdict (with optional certificate), raw log files, or a full HTML debug report, depending on invocation flags.
+	\item \textbf{Output Delivery.} The crate exposes a simple CLI and library API. Users obtain either a Boolean reachability verdict (with optional certificate), raw log files, or a full \texttt{HTML} debug report, depending on invocation flags.
 	
 %	\item \textbf{Optimizations.} As formalized in the previous section, we implement multiple optimizations throughout the process.
 %	, both for representing the semilinear sets succinctly and for pruning the Petri Nets. These optimizations significantly reduce the search space and expedite the model-checking process.
@@ -231,28 +234,42 @@ The disjuncts are solved on the fly, until reaching \texttt{SAT}, in which case,
 
 
 
-
-\subsection{Benchmark Overview} 
-\label{subsec:benchmarks}
-To the best of our knowledge, ours is the first and only tool to: (i) statically check serializability on \textit{unbounded} programs; and (ii) \textit{prove serializability holds}.
+\subsection{SMPT}
+For the underlying Petri Net model checker, we use \texttt{SMPT}~\cite{AmDa23},though other off-the-shelf solvers can be used as well.
 %
-Thus, due to a lack of standard benchmarks for evaluating serializability, we 
-assembled a suite of dozens of benchmarks (as part of our accompanying artifact~\cite{ArtifactRepository}).
+\texttt{SMPT} incorporates a portfolio of symbolic model checking techniques --- including bounded model checking (BMC)~\cite{BiCiClZh99}, state equation reasoning~\cite{Mu77}, $k$-induction~\cite{BeDaWe18,ShSiSt20}, property directed reachability (PDR)~\cite{Br11,AmDaHu22,ViGu14,BjGa15,BlLa23,CiGrMoTo14,CiGrMoTo16,DuRo17}, and random state space exploration. It acts as a front-end to an \texttt{SMT} solver (\texttt{Z3}~\cite{DeBj08}, although other solvers could also be used, e.g., \texttt{cvc5}~\cite{BaCoDeHaJoKiReTi11,BaBaBrKrLaMaMoMoNiNo22}, \texttt{MathSAT}~\cite{CiGrScSe13}, etc.), while also incorporating domain-specific knowledge from Petri net theory, such as invariants and structural properties. \texttt{SMPT} has also participated in the last five editions of the \textit{Model Checking Contest} (MCC), an international competition for model-checking tools. In its most recent participation, it achieved a bronze medal and a confidence level score of  $\texttt{100\%}$, indicating it never returned an incorrect verdict~\cite{mcc:2025}.
+
+\medskip
+\noindent
+\texttt{SMPT} distinguishes itself from other tools in two ways that are particularly relevant to our setting and motivate its adoption. First, to the best of our knowledge, it is the only model checker for Petri nets that provides a proof of its verdict, regardless of the underlying verification technique. This means it either produces a witness trace when the property is reachable, or, more interestingly, a certificate of non-reachability~\cite{AmDaHu22} when the property is found to be unreachable.
+%
+The second distinguishing feature relates to our ongoing work on polyhedral reductions~\cite{AmBeDa21,amat2022polyhedral}, as elaborated further in~\Cref{sec:discussion}.
+
+
+\subsection{Benchmarks} 
+\label{subsec:benchmarks}
+To the best of our knowledge, our tool is the first and only tool capable of (i) checking serializability on programs running \textit{unbounded} threads; and (ii) \textit{proving that serializability holds}.
+%
+Thus, we have found a lack of standard serializability benchmarks for evaluating our tool. Towards this end, we bridged this gap in the literature by assembling a suite of dozens of benchmarks (which we also uploaded online~\cite{ArtifactRepository}).
 % additional part (from rebuttal to R4) - END
 %Typically, automatically generated $\toolname$ programs do not represent real-world applications or recognizable concurrency patterns. Thus, 
-We believe this is the first benchmark suite for serializability in this setting, aiming to connect \toolname{} programs to practical, real-world analogues.
+We believe that this is the first benchmark suite for serializability, and includes instances of \toolname{} programs that are motivated by practical, real-world analogues.
 % additional part (from rebuttal to R4) - END
-These include both serializable and non-serializable instances encoded in both \texttt{SER} and \texttt{JSON} formats, and covering a broad range of features, including arithmetic, locks, loops, non-determinism, and more (see an overview of all our benchmarks in Table~\ref{tab:benchmarks-all} of Appendix~\ref{appendix:full_results}).
+Specifically, our suite includes both \texttt{SER} and \texttt{JSON} foramtted programs, with both serializable and non-serializable instances.
 %
-We note that although the benchmarks themselves are not the main part of the paper, we believe that they have merit on their own, due to their relevance to various real-world systems of interest.
+Furthermore, our benchmarks (see Table~\ref{tab:benchmarks-all}) cover a broad range of features, including loops, branching, arithmetic, locks, non-determinism, and more.
 %
-Specifically, we wish to note our suite of benchmarks encoding \textit{network \& system protocols} (see Table~\ref{tab:networking-benchmarks}), which include models of stateful firewalls, BGP routing programs, network monitors, and more --- 
+While the benchmarks are not the paper’s primary focus, we believe they stand on their own, given their strong relevance to a range of real-world systems and applications of interest.
+%
+In particular, we highlight our benchmark suite encoding \textit{network \& system protocols} (see Table~\ref{tab:networking-benchmarks}), which includes models of real-world BGP routing programs, stateful firewalls, asynchronous network monitors, and additional
 %highlighting the serializability challenges inherent in real-world distributed programs.
 %
 %Here, we were motivated by 
-as motivated by real-world concurrency problems in this domain. One such example is our \textit{routing-cycle benchmark} in software-defined networks (motivated by~\cite{NaGhSa24}). Another real-world example is our \textit{snapshot isolation benchmark} (see Appendix~\ref{appendix:tour}), which was motivated by a real database bug, namely, duplicate-key errors~\cite{cockroach-issue-14099} in the popular \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}.
+examples motivated by real-world concurrency problems. 
 %
-In both cases and others, the non-serializable behavior was automatically identified by our toolchain.
+For example, our \textit{routing-cycle benchmark} in SDN is motivated by a recent networking paper~\cite{NaGhSa24}. Another interesting real-world example is illustrated by our \textit{snapshot isolation benchmark} --- motivated by a real duplicate-key error bug~\cite{cockroach-issue-14099} in the \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}.
+%
+In both cases and others, the unwanted behavior was expressed by serializability violations that our toolchain successfully and automatically identified.
 %
 %Our benchmarks include both serializable and non-serializable instances, and their features and categorization appears in Table~\ref{tab:benchmarks-all}. 
 
@@ -292,15 +309,5 @@ In both cases and others, the non-serializable behavior was automatically identi
 %
 
 	
-\subsection{SMPT}
-For the underlying Petri Net model checker, we use \texttt{SMPT}~\cite{AmDa23},though other off-the-shelf solvers can be used as well.
-%
-\texttt{SMPT} incorporates a portfolio of symbolic model checking techniques --- including bounded model checking (BMC)~\cite{BiCiClZh99}, state equation reasoning~\cite{Mu77}, $k$-induction~\cite{BeDaWe18,ShSiSt20}, property directed reachability (PDR)~\cite{Br11,AmDaHu22,ViGu14,BjGa15,BlLa23,CiGrMoTo14,CiGrMoTo16,DuRo17}, and random state space exploration. It acts as a front-end to an \texttt{SMT} solver (\texttt{Z3}~\cite{DeBj08}, although other solvers could also be used, e.g., \texttt{cvc5}~\cite{BaCoDeHaJoKiReTi11,BaBaBrKrLaMaMoMoNiNo22}, \texttt{MathSAT}~\cite{CiGrScSe13}, etc.), while also incorporating domain-specific knowledge from Petri net theory, such as invariants and structural properties. \texttt{SMPT} has also participated in the last five editions of the \textit{Model Checking Contest} (MCC), an international competition for model-checking tools. In its most recent participation, it achieved a bronze medal and a confidence level score of  $\texttt{100\%}$, indicating it never returned an incorrect verdict~\cite{mcc:2025}.
-
-\medskip
-\noindent
-\texttt{SMPT} distinguishes itself from other tools in two ways that are particularly relevant to our setting and motivate its adoption. First, to the best of our knowledge, it is the only model checker for Petri nets that provides a proof of its verdict, regardless of the underlying verification technique. This means it either produces a witness trace when the property is reachable, or, more interestingly, a certificate of non-reachability~\cite{AmDaHu22} when the property is found to be unreachable.
-%
-The second distinguishing feature relates to our ongoing work on polyhedral reductions~\cite{AmBeDa21,amat2022polyhedral}, as elaborated in~\Cref{sec:discussion}.
 
 %\newpage
