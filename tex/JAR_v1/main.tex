@@ -166,7 +166,7 @@
 % ==========================================
 \begin{document}
 	
-	\title{Deciding Serializability in Network Systems}
+	\title{Verifying Unbounded Serializability in\\ Network Systems}
 	
 	\author*[1]{\fnm{Guy}\sur{Amir}}\email{gda42@cornell.edu}
 	\author[1]{\fnm{Mark}\sur{Barbone}}\email{mlb494@cornell.edu}
@@ -180,15 +180,15 @@
 	\affil[3]{\orgname{Jane Street Capital}, \orgaddress{\city{New York City}, \country{United States}}}
 	
 	\abstract{
-		We present the \toolname{} modeling language and toolchain for automatically verifying \textit{serializability} of concurrent programs, i.e., whether every concurrent execution of the program is equivalent to some serial execution.
+		We present the \toolname{} toolchain and modeling language for automatically verifying \textit{serializability} of concurrent programs, i.e., whether every concurrent execution of the program is equivalent to some serial execution.
 		%
-		\toolname{} programs are suitably restricted to make this problem decidable, while still allowing for an unbounded number of concurrent threads of execution, each potentially running for an unbounded number of steps.
+		\toolname{} programs are deliberately restricted in order to make this problem decidable, while allowing an unbounded number of concurrent threads, each potentially running for an unbounded number of steps.
 		%
 		Prior work has shown the theoretical decidability of this problem, but \toolname{} is the first to provide an end-to-end decision procedure and toolchain that proves serializability (generating a certificate) or non-serializability (generating a counterexample trace).
 		%
 		Our verifier translates network system programs into Petri nets, and curtails the search space by employing various optimizations, such as Petri net slicing, semilinear-set compression, and Presburger-formula manipulation.
 		%
-		We extensively evaluate our toolchain and demonstrate that, despite the theoretical hardness of the problem, it can successfully run on various models of real-world programs, including stateful firewalls, BGP routers, online shopping backends, and more.
+		We extensively evaluate our toolchain and demonstrate that, despite the theoretical hardness of the problem, it can successfully run on various models of real-world programs, including BGP routers, stateful firewalls,  online shopping backends, and more.
 	}
 	
 	\keywords{Serializability, Concurrent programs, Network systems, Petri nets, Decision procedure}
@@ -200,7 +200,10 @@
 
 
 	 \input{sections/1_introduction}
-	 \input{sections/2_problem_definition}
+	 \input{sections/2_tour}
+	 \input{sections/3_background}
+	 \input{sections/4_problem_definition}
+	 \todo{from here}
 	 \input{sections/3_formal_results}
 	 \input{sections/4_implementation}
 	 \input{sections/5_evaluation}
@@ -224,9 +227,6 @@
 	%	Appendix
 	\appendix
 	
-	\input{sections/8_appendix_tour}
-	\input{sections/8_appendix_toy_petri_net.tex}
-	\input{sections/8_appendix_ser_semantics}
 	\input{sections/8_appendix_more_NS_examples}
 	\input{sections/8_appendix_NS_to_PN_formulation}
 	\input{sections/8_appendix_serializable_program_proof_example}

@@ -5,66 +5,10 @@
 %\guy{Can someone check Sections 3-4-5? Especially the formulations}
 
 
-\subsection{Background}
-\label{subsec:background}
-
-\textbf{Petri nets.} 
-A Petri net is $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with a set of places $P$, a set of transitions $T$, flow functions $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$, and an initial marking (token distribution) $M_0\in\mathbb N^P$.  
-A transition $t$ is \textit{enabled} at marking $M \in \mathbb N^P$ if $M\ge \mathsf{pre}(t)$ coordinate-wise, i.e., $M$ provides at least as many tokens as required by $\mathsf{pre}(t)$.
-%
-If an enabled transition \(t\) \textit{fires}, it produces the marking $M'$ (denoted $M\xrightarrow{t}M'$), with $M'= M - \mathsf{pre}(t) + \mathsf{post}(t)$ consuming input tokens and producing output tokens.
-%
-This can extend naturally to a sequence of firings $\sigma = t_1\cdots t_k$ (denoted $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ with $M=M_0$, $M'=M_k$, and $M_i \xrightarrow{t_{i}} M_{i+1}$ for all $i$. 
-% 
-We define the set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all markings reachable from the initial state $M_0$.
-% 
-The \textit{reachability problem} asks, given a Petri net $N$ and a marking $M$, whether $M\in R(N)$. 
-%
-Specifically, we focus on reachability of a linear-constraint formula $\mathcal {F}$; it is \sat\ if some marking $M\in R(N)$ satisfies $\mathcal {F}$ (denoted $M \models \mathcal {F}$), and otherwise \unsat{} (see the toy example in 	Appendix~\ref{appendix:toyPN}).
-%
-Surprisingly, even the \textit{unbounded} case, where places hold arbitrarily many tokens, is decidable~\cite{Ma81,Ko82,La92}, although \texttt{Ackermann}-complete~\cite{CzWo22,Le22}.   
-
-
-
-\medskip
-\noindent
-\textbf{Verdict proofs.} 
-If $\mathcal {F}$ is reachable, a witness sequence $\sigma\in T^*$ with $M_0\xrightarrow{\sigma}M$ and $M\models \mathcal {F}$ serves as a proof, and is verifiable by simulation of the Petri net.  
-If $\mathcal {F}$ is unreachable, there exists~\cite{Le09} an inductive Presburger certificate $C$ proving non-reachability: 
-(i) $M_0\models C$, (ii) $\forall t\in T \quad (M\models C \wedge M\xrightarrow{t}M')\Rightarrow M'\models C$, and (iii) $C\Rightarrow \neg \mathcal {F}$.
-
-\medskip
-\noindent
-\textbf{Semilinear sets and Parikh’s theorem.}
-A set $S\subseteq\mathbb N^k$ is \textit{semilinear} if 
-$S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\mathbb N\}$ 
-for some $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$. 
-Such sets coincide with those definable by \textit{Presburger arithmetic}~\cite{Pr29}. 
-By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh image} of any context-free language (CFL) is semilinear. 
-For an alphabet $\Sigma=\{a_1,\dots,a_k\}$ and a word $w\in L\subseteq\Sigma^*$,  the multiset
-$\mathsf{Parikh}(w)=\{\,a_i^{|w|_{a_i}}\mid a_i\in\Sigma\,\}$ counts symbol occurrences in $w$.
-
-%\medskip
-%\noindent
-%\textbf{Semilinear sets and Parikh’s theorem.} 
-%A set $S\subseteq\mathbb N^k$ is \textit{semilinear} iff  
-%$S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\mathbb N\}$,  
-%for $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$.  
-%Semilinear sets coincide with sets defined by \textit{Presburger arithmetic}~\cite{Pr29}.  
-%By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh Image} of any context-free language is semilinear, with an effective construction.
-%%
-%For an alphabet $\Sigma=\{a_1,\dots,a_k\}$ and any word $w\in L\subseteq\Sigma^*$, the $\mathsf{Parikh}$ image is $\mathsf{Parikh}(w)=\{\,a_i^{|w|_{a_i}}\mid a_i\in\Sigma\,\}$, the multiset of symbols appearing in $w$ according to their number of occurrences.
-
-
-\medskip
-\noindent
-\textbf{Deciding serializability in unbounded systems.} 
-Bouajjani et al.~\cite{BoEmEnHa13} have proved that serializability in unbounded systems reduces to Petri net reachability, as a special case of \textit{bounded-barrier linearizability}.
-
-%\clearpage
 \subsection{The SER Language}
-%\subsection{Syntax}
-Our \toolname{} syntax is defined as follows: 
+
+\subsubsection{Syntax}
+We define the syntax of our \toolname{} language as follows: 
 %of Fig.~\ref{fig:syntax}.
 
 \[
@@ -168,7 +112,7 @@ Our \toolname{} syntax is defined as follows:
 
 Given a program \(P_0\), we write \(name_i\{e_i\}\in P_0\) for each of the handlers \(name_i\{e_i\}\).
 %
-Our semantics is standard and fully formalized in Appendix~\ref{appendix:ser-semantics}. 
+Our semantics is standard and fully formalized in subsection~\ref{subsec:ser-semantics}. 
  %
  In addition, arithmetic extensions are supported in the tool~\cite{ArtifactRepository} but omitted here for brevity.
 %Our semantics is straightforward, and fully formalized in Appendix~\ref{appendix:ser-semantics}.
@@ -177,27 +121,106 @@ Our semantics is standard and fully formalized in Appendix~\ref{appendix:ser-sem
 %
 %Furthermore, we note that our syntax and semantics can both be extended to include \textit{arithmetic operations} (as in our implementation~\cite{ArtifactRepository}); however, we omit these for simplicity. 
     
-    
-\subsection{Network System}    
-We now present our abstract network system (NS) model, motivated by software-defined networks. In the networking domain, spawning a request corresponds to sending a \textit{packet}, with each local variable mapped to a unique \textit{packet header field}; global variables correspond to variables on \textit{programmable switches}, as they are shared among all requests visiting the switch. Throughout this paper, we use the term \emph{request} to refer to a concurrent computation unit. 
+\subsubsection{Small-Step Semantics}
+\label{subsec:ser-semantics}
 %
-We define a network system $\mathcal{N}$ as a tuple $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
+%
+%\subsection{Semantics}
+%
+The set \(\texttt{V}\) is a finite set of numeric constants; booleans use $0/1$. We respectively denote with \(\texttt{VARS}\) and \(\texttt{vars}\) the (finite) sets of global and local variables. Mappings $\rho:{\texttt{vars}}\to \texttt{V}$ and $g:{\texttt{VARS}}\to \texttt{V}$ respectively map a local or global variable to its current value in \(\texttt{V}\).
+%
+Configurations are denoted as $\cfg{e}{\rho}{g}$, with \(e\) being a valid \toolname{} expression. 
+%
+Small steps are denoted $(\step)$, while big steps are denoted $(\pstep)$, and may comprise of a sequence of small steps (denoted $\step^{*}$).
+%
+%program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
+%
+%We denote with \(\ell_0\) the initial local state of every packet.
+
+\smallskip
+\noindent\textit{Small step} $(\step)$.
+\begin{mathpar}
+	\inferrule*[right=ND-0]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{0}{\rho}{g}}
+	\and
+	\inferrule*[right=ND-1]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{1}{\rho}{g}}\\
+	
+	\inferrule*[right=LOCAL-READ]{\rho(x)=v\quad v\in{\texttt{V}}}{\cfg{x}{\rho}{g} \step \cfg{v}{\rho}{g}}
+	\and
+	\inferrule*[right=GLOBAL-READ]{g(X)=v \quad v\in{\texttt{V}}}{\cfg{X}{\rho}{g} \step \cfg{v}{\rho}{g}}\\
+	
+	\inferrule*[right=LOCAL-WRITE-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{x := e}{\rho}{g} \step \cfg{x := e'}{\rho'}{g'}}
+	\and
+	\inferrule*[right=LOCAL-WRITE-DONE]{v\in{\texttt{V}}}{\cfg{x := v}{\rho}{g} \step \cfg{v}{\update{\rho}{x}{v}}{g}}
+	
+	\inferrule*[right=GLOBAL-WRITE-STEP]{\cfg{e}{\rho}{g} \step \cfg{e'}{\rho'}{g'}}{\cfg{X := e}{\rho}{g} \step \cfg{X := e'}{\rho'}{g'}}
+	\and
+	\inferrule*[right=GLOBAL-WRITE-DONE]{v\in{\texttt{V}}}{\cfg{X := v}{\rho}{g} \step \cfg{v}{\rho}{\update{g}{X}{v}}}
+	
+	\inferrule*[right=EQ-L]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 == e_2}{\rho}{g} \step \cfg{e_1' == e_2}{\rho'}{g'}}
+	\and
+	\inferrule*[right=EQ-R]{\cfg{e_2}{\rho}{g} \step \cfg{e_2'}{\rho'}{g'}}{\cfg{v_1 == e_2}{\rho}{g} \step \cfg{v_1 == e_2'}{\rho'}{g'}}
+	\and
+	\inferrule*[right=EQ-T]{v_1=v_2\quad v_1, v_2\in{\texttt{V}}}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{1}{\rho}{g}}
+	\and
+	\inferrule*[right=EQ-F]{v_1\neq v_2 \quad v_1, v_2\in{\texttt{V}}}{\cfg{v_1 == v_2}{\rho}{g} \step \cfg{0}{\rho}{g}}
+\end{mathpar}
+
+\begin{mathpar}
+	\inferrule*[right=SEQ-STEP]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{e_1 ; e_2}{\rho}{g} \step \cfg{e_1' ; e_2}{\rho'}{g'}}
+	\and
+	\inferrule*[right=SEQ-DONE]{v\in{\texttt{V}}}{\cfg{v ; e_2}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
+	
+	\inferrule*[right=IF-GUARD]{\cfg{e_1}{\rho}{g} \step \cfg{e_1'}{\rho'}{g'}}{\cfg{\ifkw(e_1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{\ifkw(e_1')\{e_2\}\elsekw\{e_3\}}{\rho'}{g'}}
+	\and
+	\inferrule*[right=IF-T]{ }{\cfg{\ifkw(1)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{e_2}{\rho}{g}}
+	\and
+	\inferrule*[right=IF-F]{ }{\cfg{\ifkw(0)\{e_2\}\elsekw\{e_3\}}{\rho}{g} \step \cfg{e_3}{\rho}{g}}
+	
+	\inferrule*[right=WHILE-UNFOLD]{ }{\cfg{\whilekw(e_1)\{e_2\}}{\rho}{g}
+		\step
+		\cfg{\ifkw(e_1)\{\,e_2 ; \whilekw(e_1)\{e_2\}\,\}\elsekw\{0\}}{\rho}{g}}
+\end{mathpar}
+
+\noindent\textit{Big step} $(\pstep)$ and scheduling.
+\begin{mathpar}
+	\inferrule*[right=YIELD]{\cfg{e}{\rho}{g} \step^{*} \cfg{\yieldkw ; e'}{\rho'}{g'}}{\cfg{e}{\rho}{g} \pstep \cfg{e'}{\rho'}{g'}}
+	\\
+	%	\inferrule*[right=START]{\cfg{e_i}{\rho}{g}\pstep \cfg{e'_i}{\rho'}{g'} \quad name_i\{e_i\}\in P_0}{\langle \requestkw\ name_i\{e_i\}, \rho, g \rangle \pstep  \cfg{e'_i}{\rho'}{g'} }
+	%	\and
+	\inferrule*[right=TERMINATE]{\cfg{e}{\rho}{g} \step^{*} \cfg{v}{\rho'}{g'} \quad v\in{\texttt{V}}}{\cfg{e}{\rho}{g} \pstep \cfg{v}{\rho'}{g'}}	
+\end{mathpar}
+
+
+
+\smallskip
+\noindent
+\textbf{Note.}
+Instead of defining a \texttt{spawn} instruction, as exists in some languages --- \toolname{} captures \textit{external} spawning via requests.
+%
+This setting can equivalently capture self-spawning (by using additional global variables), while translating more naturally to the networking domain --- in which threads are captured by packets sent by an external user.
+
+
+\subsection{Network System}    
+Motivated by software-defined networks, we present our abstract network system (NS) abstraction model. Specifically, spawning a new request corresponds to sending a \textit{packet} in the SDN domain --- with each unique \textit{packet header field} representing a request-local \toolname{} variable;
+shared variables on \textit{programmable switches}, correspond to global variables, as they are seen by all the requests (packets) visiting the switch. Furthermore, we note that throughout this paper, we use the term \emph{request} to refer to a thread of a concurrent computation unit. 
+%
+Formally, a network system $\mathcal{N}$ is defined as an eight-tuple $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
-\item $G$ is a set of \textit{global network states} (e.g., the values of variables on a switch)
+\item $G$ is defined as the set of reachable \textit{global network states} (for example, the values of switch variables)
 
-\item $L$ is a set of \textit{local packet states} (e.g., packet header values)
+\item $L$ is defined as the set of reachable \textit{local packet states} (e.g., the values of packet header variables)
 
-\item $\mathit{REQ}$ is a finite set of \textit{request labels} (each marked {\color{ForestGreen}$\blacklozenge_\text{req}$})
+\item $\mathit{REQ}$ is a finite set of \textit{request label strings} (with each request label denoted as {\color{ForestGreen}$\blacklozenge_\text{req}$})
 
-\item $\mathit{RESP}$ is a finite set of \textit{response labels} (each marked {\color{red}$\blacklozenge_\text{resp}$})
+\item $\mathit{RESP}$ is a finite set of \textit{response label strings} (with each response label denoted as {\color{red}$\blacklozenge_\text{resp}$})
 
-\item $g_0 \in G$ is the \textit{initial global state} of the network system
+\item $g_0 \in G$ is the networks system's \textit{initial global state}
 
-\item $\mathit{req} \subseteq \mathit{REQ} \times  L$ maps each request to its corresponding (initial) local state --- this represents externally spawning a packet matching the request type
+\item $\mathit{req} \subseteq \mathit{REQ} \times  L$ is a mapping from each request label to its corresponding (initial) local state; we note that this represents an external user that spawns a packet as part of the system interface
 
-\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ maps a (final) local state to its corresponding response (this represents a packet exiting the network and returning the computation)
+\item $\mathit{resp} \subseteq L \times \mathit{RESP}$ is a mapping from a final local state to the corresponding response; we note that this represents a packet that exits the network and returns a computation to the user
 
-\item $\delta \subseteq  (L \times G) \times ( L \times G)$ defines atomic execution steps that update both global and local state (this represents a packet doing a single hop in the network)
+\item $\delta \subseteq  (L \times G) \times ( L \times G)$ is a mapping that corresponds to the atomic execution steps updating both (request) local and (system) global state; intuitively, this represents a single hop of a single packet in the network
 %(and the corresponding SER expressions); as based on SER's small-step semantics
 \end{itemize}
 
