@@ -12,13 +12,13 @@ An extensive empirical evaluation of these optimizations appears in Appendix~\re
 %\noindent
 %\textbf{(1) Bidirectional slicing.} 
 \subsection{Bidirectional slicing} 
-When solving Petri net reachability, many places and transitions might be irrelevant to the specific target set~\cite{Ra12}.  
-	We slice them before symbolic reasoning by combining forward and backward passes:  
-	the forward pass over-approximates the places reachable from $M_0$; and symmetrically,   
-	the backward pass traverses in reverse from any place that can influence a target constraint (hence over-approximating the places that can contribute to it).
-	We iteratively remove non-forward-reachable and
-	non-backward-relevant places and transitions, to a fixed point.  
-	This process is illustrated in Fig.~\ref{fig:bidirectional_pruning}, and its soundness is proven in Theorem~\ref{thm:bidirectional-pruning}.
+When checking for Petri net reachability, many transitions and places might be irrelevant to the specific target set that is checked~\cite{Ra12}.  
+	Before symbolic reasoning, we slice irrelevant places and transitions by iteratively combining forward passes and backward passes:  
+	the forward passes over-approximate the places that are reachable from the initial marking $M_0$; and symmetrically,   
+	the backward passes traverse in reverse from any place that can potentially influence a target constraint (and hence, over-approximating the places that can contribute to it).
+	Then, until reaching a fixed point, we iteratively remove places and transitions that are non-forward-reachable and
+	non-backward-relevant.  
+	This process is formally defined in Theorem~\ref{thm:bidirectional-pruning}, and is illustrated in Fig.~\ref{fig:bidirectional_pruning}.We prove the theorem's soundness in Appendix~\ref{appendix:BidirectionalProof}.
 
 
 
@@ -66,15 +66,18 @@ When solving Petri net reachability, many places and transitions might be irrele
 	\label{fig:bidirectional_pruning}
 \end{figure}
 
-
+%\medspace
 %\guy{check with mark (M0 projected on P or P'?)}
-
+%\noindent\fbox{%
+%	\begin{minipage}{\linewidth}
 \begin{theorem}[Bidirectional Slicing Soundness]
 	\label{thm:bidirectional-pruning}
 	Let $N = (P, T, \Pre, \Post, M_0)$ be a Petri net and $S$ a target set.  
 	Let $N' = (P',T',\,\Pre|_{P'\times T'},\,\Post|_{P'\times T'},\,M_0|_{P'})$ be the sliced net.  
 	Then $S$ is reachable from $N$ iff it is reachable from $N'$.
 \end{theorem}
+%\end{minipage}%
+%}
 %
 %We depict this in Fig.~\ref{fig:bidirectional_pruning}, and prove Theorem~\ref{thm:bidirectional-pruning} in Appendix~\ref{appendix:BidirectionalProof}.
 % (see the proof in Appendix~\ref{appendix:BidirectionalProof}).
@@ -87,13 +90,15 @@ When solving Petri net reachability, many places and transitions might be irrele
 %\medskip
 %\noindent
 \subsection{Semilinear set pruning}  
-A semilinear set $S=\bigcup_{i=1}^m L_i$ with 
-	$L_i=\{\,\mathbf{b}_i+\sum_{\mathbf{p}\in P_i}n_p \mathbf{p} \mid n_p\in\mathbb N\}$ may contain redundant 
-	period vectors or components.  
-	Thus, during construction, we:
-	(1) remove any period vector $\mathbf{p}\in P_i$ expressible as a nonnegative combination of $P_i\setminus\{\mathbf{p}\}$; 
-	and (2) drop $L_i$ when $L_i\subseteq L_j$ (for \(i \neq j\)).  
-	This pruning keeps formulas compact and solver calls tractable.
+A semilinear set is defined as a finite union of linear sets: $S=\bigcup_{i=1}^m L_i$, with each set of the form 
+	\[L_i=\{\,\mathbf{b}_i+\sum_{\mathbf{p}\in P_i}n_p \mathbf{p} \mid n_p\in\mathbb N\}.\] 
+	
+	Each linear set may contain redundant 
+	period vectors or redundant components.  
+	Thus, during construction of the semilinear set, we:
+	(1) remove any period vector $\mathbf{p}\in P_i$ that is also expressible as a nonnegative combination of the remaining period vectors $P_i\setminus\{\mathbf{p}\}$; 
+	and (2) drop a linear set $L_i$ when it does not add expressiveness, i.e., $L_i\subseteq L_j$ (for \(i \neq j\)).  
+	This pruning procedure keeps the solver calls tractable by making the underlying formulas compact.
 
 
 
@@ -110,17 +115,17 @@ A semilinear set $S=\bigcup_{i=1}^m L_i$ with
 %\medskip
 %\noindent
 \subsection{Generating fewer constraints}  
-When computing the Parikh image of a regular expression as a semilinear set,
-	most regex operations can be implemented without an exponential blow-up.
-	However, the Kleene star is a notable exception. Given $S=\bigcup_{i=1}^m L_i$,  the Kleene closure $S^\ast$ can be expressed as a semilinear set by: 
+When applying the Parikh image of a regular expression, generating a semilinear set,
+	most regex operations can be implemented without exponential blow-ups.
+	However, the Kleene star operation is an exception. Given a semilinear set $S=\bigcup_{i=1}^m L_i$,  the Kleene closure $S^\ast$ can be expressed as a semilinear set by: 
 	\[
 	S^\ast=\bigcup_{I \subseteq \{1,...,m\}} 
 	\Big\{\sum_{i \in I} \mathbf{b}_i + \sum_{\mathbf{p} \in \bigcup_{i \in I} (P_i\cup \{\mathbf{b}_i\})} n_p \mathbf{p}\Big\},
 	\]
-	yielding $2^m$ components. To mitigate this:
-	(i) if $L_i=\{\mathbf{b}_i\}$ (period-less component), factor it out, star the rest, then add $\mathbf{b}_i$ as a period;  
-	(ii) if $L_i=\{\sum_{\mathbf{p}\in P_i}n_p\mathbf{p}\}$ (zero base), likewise star the rest and add each $\mathbf{p}\in P_i$ as a period vector to the resulting set.  
-	Each such case halves the component count and circumvents exponential blow-ups.
+	yielding $2^m$ components. To mitigate this exponential blow-up:
+	(i) if a linear set has a period-less component ($L_i=\{\mathbf{b}_i\}$), then we factor it out, star the rest, and then add the base vector $\mathbf{b}_i$ as a period;  
+	(ii) if there is a zero base ($L_i=\{\sum_{\mathbf{p}\in P_i}n_p\mathbf{p}\}$), likewise, we star the rest and add each period vector $\mathbf{p}\in P_i$ as a period vector to the resulting set.  
+	In each such case, we halve the total component count and circumvent exponential blow-ups.
 
 
 
@@ -175,18 +180,18 @@ When computing the Parikh image of a regular expression as a semilinear set,
 %\noindent
 \subsection{Strategic Kleene elimination order} 
 %
-We use \textit{Kleene's algorithm}~\cite{Kl56} to translate the serializability NFA into a regex.
+After generating the serializability NFA from the network system, we use \textit{Kleene's algorithm}~\cite{Kl56} to translate the NFA into a regex.
 % 
-The size of the generated semilinear set is not only impacted by how the
-	semilinear set operations are implemented, but also by what \textit{specific} regular
-	expression is given as input: a single regular language may be represented by a
-	number of equivalent regexes, each of different complexity.
+However, the size of the generated semilinear set is not only impacted by \textit{how} the operations of the
+	semilinear set are implemented, but also by what \textit{specific} regular
+	expression input is given. 
+	Differently put, a regular language may be represented by various equivalent regular expressions, each with different translation complexity.
 	%
-	In particular, as Kleene star can cause a large blow-up in the semilinear set size,
-	we are especially sensitive to the \emph{star height} of the generated regex.
+	Specifically, as the Kleene star operation can potentially cause a large blow-up in the size of the semilinear set,
+	we are sensitive to the \emph{star height} of the regular expression that is generated.
 	%
-	Naive Kleene elimination may introduce many nested stars.  
-	We reduce this by strategically choosing to eliminate lower-degree states first:
+	Moreover, naive Kleene elimination may introduce many nested stars operations.  
+	Thus, we reduce this by strategically eliminating lower-degree states first:
 	\[
 	q^*=\arg\min_{q\in Q}\bigl(|\delta^A_{\mathrm{in}}(q)|+|\delta^A_{\mathrm{out}}(q)|\bigr).
 	\]
@@ -194,7 +199,8 @@ The size of the generated semilinear set is not only impacted by how the
 	
 	\smallskip
 	\noindent
-	As we demonstrate in Appendix~\ref{appendix:full_results}, our optimizations expedite the search procedure and make the representations \textit{significantly} more compact. This, in turn, enables deciding serializability for instances that are otherwise intractable.
+	As we demonstrate in \Cref{sec:evaluation}, these optimizations make the representations \textit{significantly} more compact, and thus,
+	expedite the search procedure --- allowing us to scale and decide serializability for programs that would otherwise be intractable.
 
 
 %\medskip

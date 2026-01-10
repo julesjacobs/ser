@@ -32,7 +32,7 @@
 %
 %
 %We next elaborate on the architecture of our tool and the various optimizations we added to allow it to run efficiently.
-%
+%For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23},though other off-the-shelf solvers can be used as well.
 %For the underlying Petri Net model checker, we use SMPT~\cite{AmDa23} which supports \textit{unbounded} reachability queries (see Appendix~\ref{appendix:smpt}).
 %, and which uses Z3 as an underlying SMT solver~\cite{DeBj08}. 
 %and which we extended to support our setting (for example, we needed to extend the solver to support proof generation). 
@@ -198,11 +198,11 @@ The disjuncts are solved on the fly, until reaching \texttt{SAT}, in which case,
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=1.0\textwidth]{plots/full_program_flow.pdf}
-	\caption{Full program flow 
+	\caption{The full decision procedure scheme 
 %		If the target set is unreachable --- a serializability proof is produced; otherwise, if it is reachable --- a counterexample trace is generated.
-	(simplified, without backward arrows 
+	(simplified version, excluding backward arrows 
 %	translating invariants (if serializable) or counterexample traces (if non-serializable) back 
-	to the NS level).}
+	to the network system level).}
 	\label{fig:full_program_flow}
 \end{figure}
 
@@ -293,11 +293,12 @@ In both cases and others, the non-serializable behavior was automatically identi
 
 	
 \subsection{SMPT}
-
-
+For the underlying Petri Net model checker, we use \texttt{SMPT}~\cite{AmDa23},though other off-the-shelf solvers can be used as well.
+%
 \texttt{SMPT} incorporates a portfolio of symbolic model checking techniques --- including bounded model checking (BMC)~\cite{BiCiClZh99}, state equation reasoning~\cite{Mu77}, $k$-induction~\cite{BeDaWe18,ShSiSt20}, property directed reachability (PDR)~\cite{Br11,AmDaHu22,ViGu14,BjGa15,BlLa23,CiGrMoTo14,CiGrMoTo16,DuRo17}, and random state space exploration. It acts as a front-end to an \texttt{SMT} solver (\texttt{Z3}~\cite{DeBj08}, although other solvers could also be used, e.g., \texttt{cvc5}~\cite{BaCoDeHaJoKiReTi11,BaBaBrKrLaMaMoMoNiNo22}, \texttt{MathSAT}~\cite{CiGrScSe13}, etc.), while also incorporating domain-specific knowledge from Petri net theory, such as invariants and structural properties. \texttt{SMPT} has also participated in the last five editions of the \textit{Model Checking Contest} (MCC), an international competition for model-checking tools. In its most recent participation, it achieved a bronze medal and a confidence level score of  $\texttt{100\%}$, indicating it never returned an incorrect verdict~\cite{mcc:2025}.
 
 \medskip
+\noindent
 \texttt{SMPT} distinguishes itself from other tools in two ways that are particularly relevant to our setting and motivate its adoption. First, to the best of our knowledge, it is the only model checker for Petri nets that provides a proof of its verdict, regardless of the underlying verification technique. This means it either produces a witness trace when the property is reachable, or, more interestingly, a certificate of non-reachability~\cite{AmDaHu22} when the property is found to be unreachable.
 %
 The second distinguishing feature relates to our ongoing work on polyhedral reductions~\cite{AmBeDa21,amat2022polyhedral}, as elaborated in~\Cref{sec:discussion}.
