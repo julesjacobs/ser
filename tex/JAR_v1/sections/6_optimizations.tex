@@ -8,9 +8,10 @@ We apply four optimizations to the base algorithm to control intermediate blow�
 %
 An extensive empirical evaluation of these optimizations appears in Appendix~\ref{appendix:full_results}.
 
-\medskip
-\noindent
-\textbf{(1) Bidirectional slicing.}  
+%\medskip
+%\noindent
+%\textbf{(1) Bidirectional slicing.} 
+\subsection{Bidirectional slicing} 
 When solving Petri net reachability, many places and transitions might be irrelevant to the specific target set~\cite{Ra12}.  
 	We slice them before symbolic reasoning by combining forward and backward passes:  
 	the forward pass over-approximates the places reachable from $M_0$; and symmetrically,   
@@ -21,7 +22,7 @@ When solving Petri net reachability, many places and transitions might be irrele
 
 
 
-\todo{check figure}
+
 \begin{figure}[h]
 	\centering
 	
@@ -83,9 +84,9 @@ When solving Petri net reachability, many places and transitions might be irrele
 % \noindent\textit{\textbf{Intuition.}}
 % Before any heavy symbolic reasoning takes place, we apply bidirectional pruning on the underlying PN.  In the forward pass, we traverse from the initial marking to identify an over-approximation of all places and transitions that could ever fire; in the backward pass, we traverse backward from any place that can influence a target constraint, and identify over-approximations on transitions and places that cannot contribute to reaching it.  By iteratively repeating forward passes and backward passes until convergence, we remove every component of the net that cannot both originate and contribute to the reachable target set.  This dramatically shrinks the net in practice, often converting an intractably large model into one small enough for exhaustive analysis.
 
-\medskip
-\noindent
-\textbf{(2) Semilinear set pruning.}  
+%\medskip
+%\noindent
+\subsection{Semilinear set pruning}  
 A semilinear set $S=\bigcup_{i=1}^m L_i$ with 
 	$L_i=\{\,\mathbf{b}_i+\sum_{\mathbf{p}\in P_i}n_p \mathbf{p} \mid n_p\in\mathbb N\}$ may contain redundant 
 	period vectors or components.  
@@ -106,9 +107,9 @@ A semilinear set $S=\bigcup_{i=1}^m L_i$ with
 % \],
 % Dropping any ``redundant'' periods, and removing any \(L_j\subseteq L_i\) for \(i\neq j\), iterating to a fixed point so no two components subsume one another.
 
-\medskip
-\noindent
-\textbf{(3) Generating fewer constraints.}  
+%\medskip
+%\noindent
+\subsection{Generating fewer constraints}  
 When computing the Parikh image of a regular expression as a semilinear set,
 	most regex operations can be implemented without an exponential blow-up.
 	However, the Kleene star is a notable exception. Given $S=\bigcup_{i=1}^m L_i$,  the Kleene closure $S^\ast$ can be expressed as a semilinear set by: 
@@ -170,9 +171,9 @@ When computing the Parikh image of a regular expression as a semilinear set,
 % %
 % During set construction --- especially when introducing new existentially‐quantified variables or combining transition effects, we selectively avoid generating any marking that would strictly dominate an already‐seen solution.  In effect, whenever a candidate disjunct would yield a superset of an existing one, it is skipped entirely.  This ``generate‐less” heuristic stops the proliferation of large, overlapping regions in the semilinear description.  In benchmarks with large state spaces, it can reduce the number of intermediate branches by orders of magnitude.
 
-\medskip
-\noindent
-\textbf{(4) Strategic Kleene elimination order.} 
+%\medskip
+%\noindent
+\subsection{Strategic Kleene elimination order} 
 %
 We use \textit{Kleene's algorithm}~\cite{Kl56} to translate the serializability NFA into a regex.
 % 
