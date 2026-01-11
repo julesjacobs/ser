@@ -32,13 +32,13 @@ This setting is akin to model checkers such as \texttt{PRISM}~\cite{KwNoPa02} an
 %\smallskip
 %\noindent
 \textbf{Additional optimizations.}
-To improve scalability, we are adapting \textit{polyhedral reductions}~\cite{AmBeDa21,amat2022polyhedral}, a form of structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstruction of $N_1$’s state space. This would allow verification on the reduced net, with proofs lifted back to the original one.
+To further improve scalability, we are adapting \textit{polyhedral reductions}~\cite{AmBeDa21,amat2022polyhedral}, a structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstructing the state space of $N_1$. If successful, this could allow verifying the reduced net $N_2$, and then lifting the proofs back to the original net $N_1$.
 %
-Moreover, we believe a further avenue for optimization lies in using \textit{approximations} to decide serializability. Our approach already leverages this idea via the underlying model checker, which employs the \textit{state equation} abstraction~\cite{Mu77} to over-approximate the reachable state space. We expect that additional approximation-based techniques could yield further scalability gains.
+Furthermore, we believe an additional optimization avenue lies in \textit{over-approximating} the state space to decide serializability faster. In this context, our current approach already leverages this concept in the underlying model checker, which leverages the \textit{state equation} abstraction~\cite{Mu77}. We expect further approximation-based techniques to improve scalability gains even more.
 %
-Finally, other potential optimizations involve short-circuiting steps in our algorithmic pipeline. For instance, we currently generate the reachability query $\mathcal{F}$ in three stages: (i) translating the serial NFA into a regular expression via Kleene’s theorem; (ii) translating the regular expression into a semilinear set using Parikh’s construction; and (iii) complementing the resulting semilinear set.
+Finally, additional optimizations involve  steps to short-circuit the algorithmic pipeline of our decision procedure. For example, we currently generate the reachability query $\mathcal{F}$ by: (i) using Kleene’s theorem to translate the serial NFA into a regular expression; (ii) using Parikh’s construction to translate the regular expression into a semilinear set; and then (iii) complementing this resulting semilinear set.
 %
-However, there are techniques (e.g., Verma et al.~\cite{VeSeSc05}) that \textit{directly} compute the Parikh image of an automaton. We did not adopt this approach because, although its construction is linear in size, it relies heavily on Boolean logic, which we found \texttt{ISL} (the standard integer set library) handles poorly in practice.
+However, there are methods (for example, by Verma et al.~\cite{VeSeSc05}) that can \textit{directly} compute the automaton's Parikh image. Although the construction of this approach is linear in size, we have not adopted it because is heavily relies on Boolean logic, which we found to be handled poorly by the standard integer set library (\texttt{ISL}).
 %
  
  
@@ -46,9 +46,9 @@ However, there are techniques (e.g., Verma et al.~\cite{VeSeSc05}) that \textit{
 \noindent
 \textbf{Proof assistants.}
 %
-Another natural next step is to formalize certificate checking in a proof assistant (e.g., \texttt{Rocq}~\cite{Rocq}). This would entail (i) developing a verifier for the PN invariants we use; and (ii) proving theorems that connect invariant validity to serializability.
+Another next step we plan is formalizing  the certificate checking procedure in a proof assistant (such as \texttt{Rocq}~\cite{Rocq}). This extension would entail (i) developing a novel verifier for the Petri net invariants that we use; and also (ii) proving theorems connecting serializability to invariant validity.
 %
-Specifically, this would likely require extending existing tactics such as \texttt{LIA} (Linear Integer Arithmetic), which currently does not support full Presburger arithmetic, as required by our logic.
+This would likely also require highly non-trivial steps, e.g., extending existing tactics such as \texttt{LIA} (Linear Integer Arithmetic), as it currently does not support full Presburger arithmetic --- an important requirement of our underlying logic.
 
  
 %\todo{fix}
@@ -113,14 +113,14 @@ Specifically, this would likely require extending existing tactics such as \text
 
 
 \subsection{Applicability to Real-World Programs}
-Real-world SDN programs typically satisfy our finite-reachable-state requirement due to bounded end-host buffers and limited switch memory. Moreover, we anticipate that \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can be translated to \toolname{} based on the following high-level mappings:
-(i) packets to requests, (ii) switch registers to global variables, (iii) packet header fields to local variables, and (iv) packet forwarding to yielding. 
-%--- we can use \toolname{} to express high-level \texttt{P4} programs encoding SDN policies. 
+Due to limited switch memory and bounded-buffers on end-hosts, various real-world SDN programs satisfy our finite-reachable-state requirement. Furthermore, we anticipate that by using the following high-level mappings, \texttt{P4} programs~\cite{BoDaGiIzMcReScTaVaVaWa14} can be translated to equivalent \toolname{} code:
+(i) packets correspond to requests, (ii) registers on switches correspond to global variables, (iii) header fields of packets correspond to local (per-request) variables, and (iv) forwarding packets corresponds to yielding. 
 %
-This translation motivated us to evaluate our toolchain on programs modeling \textit{stateful firewalls}~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
+This natural translation also motivated us to evaluate our toolchain on models of SDN programs, such as \textit{stateful firewalls}~\cite{KiLiZhKiLeSeSe20,HoLaArReWa22}.
 %
-Furthermore, we believe our framework is applicable beyond SDNs. Specifically, our NS model abstracts distributed state with message-passing/RPC-style concurrency, which aligns naturally with database transactions. One such example is our \textit{snapshot-monitoring benchmark} (see \Cref{sec:tour}). 
-%that is motivated by a real bug~\cite{cockroach-issue-14099} in \texttt{CockroachDB}~\cite{cockroachdb-si-docs}.
+Moreover, we view our framework to be applicable beyond the SDN domain.
+%
+More concretely, our network system model captures distributed state together with message-passing/RPC-style concurrency, which maps naturally onto database transactions. As an illustration, consider our \textit{snapshot-monitoring benchmark} (see \Cref{sec:tour}). 
 
 
 
@@ -128,11 +128,12 @@ Furthermore, we believe our framework is applicable beyond SDNs. Specifically, o
 %\smallskip
 %\noindent
 %\textbf{Conclusion.}
-We present the first end-to-end framework that automatically verifies serializability for unbounded concurrent systems and generates proof certificates thereof.
-Our approach bridges theory and practice, with the following key contributions:
+%We present the first end-to-end framework that automatically verifies serializability for unbounded concurrent systems and generates proof certificates thereof.
+%Our approach bridges theory and practice, with the following key contributions:
+We introduce the first end-to-end framework capable of automatically verifying serializability for unbounded concurrent systems and generating corresponding proof certificates. Our approach bridges the gap between theory and practice through the following key contributions:
 % by implementing Bouajjani et al.'s decision procedure with crucial optimizations that make it practical.
 %
 %Key contributions include: 
-(1) formalizing serializability for network systems, (2) implementing the decision procedure with proof generation, (3) developing optimizations that reduce complexity by orders of magnitude, and (4) demonstrating feasibility on various benchmarks inspired by real-world systems.
+(1) formalizing the network system abstraction for concurrent systems, (2) implementing a full-blown decision procedure with proof certification, (3) reducing the space and time complexity significantly by adding multiple optimizations, and (4) extensively evaluating our approach on benchmarks inspired by real-world systems.
 %
 
