@@ -136,9 +136,12 @@ Small steps are denoted $(\step)$, while big steps are denoted $(\pstep)$, and m
 %program configurations $\langle g , \Pi\rangle$ with \(g\) being a global state and \(\Pi\) being set of in-flight \((e,\ell)\) pairs.
 %
 %We denote with \(\ell_0\) the initial local state of every packet.
-
+%\clearpage
+\clearpage
 \smallskip
-\noindent\textit{Small step} $(\step)$.
+\noindent
+\vspace{-2.8em} % <--- Add this line. Adjust -1em to -2em if needed.
+%\textit{Small step} $(\step)$.\\
 \begin{mathpar}
 	\inferrule*[right=ND-0]{ }{\cfg{\nondet}{\rho}{g} \step \cfg{0}{\rho}{g}}
 	\and

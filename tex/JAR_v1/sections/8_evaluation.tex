@@ -9,18 +9,34 @@
 %\end{enumerate}
 
 
-\noindent
-\textbf{Experimental setup.}
-All experiments were run on a Lenovo ThinkPad P16s, with 16 AMD CPU cores and 64 GB of RAM, running Ubuntu 24.04.2.
+%\noindent
+\subsection{Experimental setup}
+Our experimental evaluation ran on a Lenovo ThinkPad P16s machine, with 16 AMD CPU cores and a RAM of 64 GB, running Ubuntu 24.04.2.
 %
 %We plan on making all our code, benchmarks raw results publicly available with the final version of this paper.
 %
-We use \texttt{SMPT}~\cite{AmDa23} (built upon \texttt{Z3}~\cite{DeBj08}) as our backend Petri net model checker.
- %
-Our code and benchmarks are publicly available~\cite{ArtifactRepository}.
+We use \texttt{SMPT}~\cite{AmDa23} (coupled with \texttt{Z3}~\cite{DeBj08}) as our Petri net model checker backend.
+%
+Our code and benchmarks have been made publicly available and are permanently hosted online~\cite{ArtifactRepository}.
 
 
 
+%\medskip
+%\subsection{Results}
+%\noindent
+\subsection{Results}
+%
+\textbf{Summary.} 
+%
+We ran the \toolname{} toolchain on all 47 benchmarks, of which 20 are non-serializable, and the remaining 27 are serializable. 
+For every benchmark, we measured the wall-clock time for deciding the reachability query, and the total end-to-end wall-clock time, which includes the validation of the counterexample (if \sat, i.e., not serializable), or of the proof certificate (if \unsat, i.e., serializable). These experiments were run in parallel over $16$ CPU cores with a \texttt{TIMEOUT} threshold of $500$ seconds and with
+all four optimizations.
+%
+Within the \texttt{TIMEOUT} limit, \toolname{} successfully solved 45 of the 47 benchmarks: 26 of the 27 serializable programs and 19 of the 20 non-serializable programs. 
+%
+A summary appears in Table~\ref{tab:stats-summary} and the full results appear in Table~\ref{tab:benchmarks-all}.
+%
+%\clearpage
 %
 \begin{table}[t]
 	\vspace{-1.2\baselineskip} % pulls table upward (adjust if needed)
@@ -31,27 +47,28 @@ Our code and benchmarks are publicly available~\cite{ArtifactRepository}.
 	\label{tab:stats-summary}
 	\vspace{-0.6\baselineskip} % adjusts spacing below
 \end{table}
-\medskip
-%\subsection{Results}
-\noindent
-\textbf{Results.}
 %
-We ran \toolname{} on all 47 benchmarks, out of which 27 are serializable, and the remaining 20 are non-serializable. 
-For each benchmark, we measured the time for deciding the reachability query, as well as the overall time, including validation of the invariant proof (if serializable) or of the counterexample (if not serializable). These experiments ran in parallel on $16$ cores with all four optimizations and a \texttt{TIMEOUT} threshold of $500$ seconds.
-%
-Within this time limit, \toolname{} solved 26 of the 27 serializable benchmarks and 19 of the 20 non-serializable benchmarks (see summary in Table~\ref{tab:stats-summary} and the full results in Table~\ref{tab:benchmarks-all}).
 %
 % As can be seen by our results (summarized in Table~\ref{tab:benchmarks-all}), withing this time limit, our tool fully solved 26/27 serializable benchmarks 
 %and 19/20 non serializable benchmarks. 
 %
-The \textit{median} total runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.5$ ms ($830$ ms) when  solely focusing on serializable (non-serializable) benchmarks.
+
+
+\medskip
+\noindent
+\textbf{Median and average time.} 
+%
+The \textit{median} total recorded runtime was $1{,}909$ ms across all benchmarks, and $2{,}238.5$ ms ($830$ ms) when focusing solely on the serializable (non-serializable) benchmarks.
 %, as reported in Table~\ref{tab:stats-summary}.
 %
-The \textit{average} total runtime was $32{,}898.38$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when solely focusing on serializable (non-serializable) benchmarks.
+The \textit{average} total recorded runtime was $32{,}898.38$ ms across all benchmarks, and $25{,}530.69$ ms ($42{,}980.47$ ms) when focusing solely on serializable (non-serializable) benchmarks.
 %
-We also observe a clear runtime split based on serializability: 
+Furthermore, based on whether the benchmark is serializable or not, we also observe a clear runtime split: 
 %For serializable benchmarks, certificate validation takes much longer than proof generation. 
-among non-serializable benchmarks, counterexample generation takes much longer than validation, and dominates the overall runtime; whereas among serializable benchmarks the validation time dominates the overall runtime. This is not surprising, as validating a given counterexample only requires a polynomial-time simulation of the network system to confirm its feasibility.
+among benchmarks of non-serializable programs, the counterexample generation process takes significantly longer than the validation process, and dominates the overall runtime. 
+However, among serializable benchmarks, an opposite trend is observed --- with the validation time dominating the overall runtime. 
+%
+This is unsurprising, since validating a candidate counterexample amounts to a polynomial-time simulation of the networked system to confirm its feasibility.
 %
 %We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
 %
@@ -220,4 +237,331 @@ among non-serializable benchmarks, counterexample generation takes much longer t
 %\newpage
 
 %\vspace{-5pt}
+
+
+\subsection{Optimization Analysis}
+\label{subsec:optimization-results}
+
+%Next of our four optimizations, and analyzed their effect on the overall runtime and space resources.
+%
+%All experiments were run with a \texttt{TIMEOUT} value of $150$ seconds.
+
+
+%\subsubsection{Runtime optimization.}
+\medskip
+\noindent
+\textbf{Runtime optimization.} 
+We ran all benchmarks with each of the following six optimization configurations: 
+(i) without any optimization (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{-}}}] in Fig.~\ref{fig:timeout_cumulative_solved_log}); (ii) with bidirectional slicing (marked [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}]); (iii) with redundant constraint elimination (marked [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]); (iv) with generation of fewer constraints (marked [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}]);
+(v) with strategic Kleene elimination (marked [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}]);
+and finally, (vi) with all optimizations altogether (marked [\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]).
+%
+The results of the aggregated runtimes are presented in Fig.~\ref{fig:timeout_cumulative_solved_log} and show that over $28\%$ more benchmarks are solved when using all optimizations compared to running without any optimization.
+%
+Not surprisingly, the best configuration is the one with all optimizations on. 
+%
+Furthermore, the best single-optimization configurations with regard to runtime are [\texttt{\textbf{\text{-}\text{-}\text{G}\text{-}}}] and [\texttt{\textbf{\text{B}\text{-}\text{-}\text{-}}}], solving over $74\%$ and $72\%$ of the benchmarks respectively. 
+%
+We also note that the two remaining optimizations, [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}] and [\texttt{\textbf{\text{-}\text{-}\text{-}\text{S}}}], performed slightly worse (although not significantly) than without the optimizations when counting overall timeouts.
+%
+However, when analyzing the redundant constraint optimization (  [\texttt{\textbf{\text{-}\text{R}\text{-}\text{-}}}]), we identified instances in which it still \textit{strictly} improves runtime.
+%
+For example, the optimization affords a speedup of between $72.2\%$ and $85.2\%$ for benchmarks \texttt{a3.ser} and \texttt{a7.ser},  when compared to the baseline.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.58\linewidth]{figures/cactus_plot.pdf}
+	\caption{Solved instances (\texttt{TIMEOUT} is 150 seconds).}
+	\label{fig:timeout_cumulative_solved_log}
+\end{figure}
+
+%\subsubsection{Space optimization.}
+\medskip
+\noindent
+\textbf{Space optimization.} 
+Our optimizations also reduce the space complexity of the two main components --- the Petri net and the semilinear set.
+
+%\noindent
+(1) \textbf{Petri net.} Bidirectional slicing (Fig.~\ref{fig:petri_size_reduction}) 
+eliminates the average number of places \textit{by roughly half} --- from $23.91$ down to $12.79$. This optimization proved even more effective on transitions, \textit{eliminating about two-thirds}: from $37.3$ down to $12.61$. 
+%Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct.  
+%\\
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.58\linewidth]{figures/petri_size_reduction_plot.pdf}
+	\caption{Petri net size reduction via slicing.}
+	\label{fig:petri_size_reduction}
+\end{figure}
+
+
+%\noindent
+(2) \textbf{Semilinear sets.} We ran an ablation experiment in which we compared all optimizations against runs where each of the three semilinear optimizations (i.e., all but PN slicing) was disabled. The redundant-constraint elimination (with a negated effect in [\texttt{\textbf{\text{B}\textcolor{red}{-}\text{G}\text{S}}}]) and the fewer-constraint generation elimination (with a negated effect in [\texttt{\textbf{\text{B}\text{R}\textcolor{red}{-}\text{S}}}]) \textit{drastically} reduced component counts, with the latter being especially effective in reducing the \textit{maximal} number of components to be up to $\mathbf{931\times}$ smaller, and the \textit{average} number of components to be up to $\mathbf{223\times}$ smaller (Table~\ref{tab:semilinear-size-reduction}), when compared to the baseline executions configured with all optimizations on ([\texttt{\textbf{\text{B}\text{R}\text{G}\text{S}}}]). 
+%
+For fairness, we measured only benchmarks completed under all configurations, excluding cases where semilinear sets exploded beyond $2^{30}$ components and timed out. Thus, our reported improvements actually \textit{understate} the true impact of these optimizations on memory. Such blowups, %especially common in state-machine benchmarks with NS loops, 
+render even simple programs intractable without these optimizations.
+
+
+%\subsubsection{Space Optimization}
+%
+%Our optimizations also reduce the space complexity of the two main components --- the Petri Net and the semilinear set.
+%
+%\smallskip
+%\noindent
+%\textbf{Petri Net size reduction.}
+%%
+%With all optimizations enabled, we evaluated (Fig.~\ref{fig:petri_size_reduction}) the impact of our bidirectional pruning by comparing, across all benchmarks, the average number of places and transitions removed due to this optimization. On average, pruning reduced the number of places \textit{by roughly half} --- dropping from $23.91$ places before pruning to $12.79$ places afterward. Pruning proved even more effective on transitions, \textit{eliminating about two-thirds} of them: from $37.3$ transitions on average before pruning down to $12.61$ afterward. Note that the pre-pruning averages were computed over $47$ nets (one per benchmark), whereas the post-pruning averages span $224$ nets, since each pre-pruning net gives rise to a separate pruned net per each disjunct. 
+%of our reachability query. 
+%These results are summarized in Fig.~\ref{fig:petri_size_reduction}.
+
+%When running our tool with all optimizations on, we analyzed the effect of our bidirectional pruning, This was done be counting the average number of places and transitions before and after pruning, on all benchmarks.
+%%
+%The pruning resulted in a reduction of about half the number of original places --- from $23.91$ places on average \textit{before} pruning to $12.79$ places on average \textit{after} pruning.
+%%
+%The bidirectional was even more effective in reducing the transitions, as demonstrated by a removing about two thirds of the transitions --- resulting in pruned Petri Nets with $37.30$ transitions on average \textit{before} pruning to $12.61$ transitions on average \textit{after} pruning.
+%%
+%We note that the averaging for the pre-pruning step was done on $47$ nets, once per each benchmark, while the averaging for the post-pruning step was done on $224$ nets, as each pre-pruning net can give rise to multiple post-pruning nets, one per each disjunct in our reachability query.
+%%
+%These results are presented in Fig.~\ref{fig:petri_size_reduction}.
+
+
+%Number of values for 'Before' bars:          47
+%Number of values for 'After' bars:           224
+%Average number of places before pruning:     23.91
+%Average number of places after pruning:      12.79
+%Average number of transitions before pruning: 37.30
+%Average number of transitions after pruning:  12.61
+
+
+
+
+
+
+%\smallskip
+%\noindent
+%\textbf{Semilinear set size reduction.}
+%%
+%Finally, our last experiment batch analyzed the size reduction among the semilinear sets.
+%%
+%Towards this end, we ran all our benchmarks with all optimizations to serve as a baseline. 
+%%
+%Then, we analyzed the effect of the three semilinear-related optimizations, i.e., all but the bidirectional pruning. For each of these three optimizations, we ran the benchmarks with all optimizations \textit{except} the one checked.
+%%
+%%Table~\ref{tab:semilinear-size-reduction} include a summary of the results, when comparing the semilinear set size.
+%%
+%Specifically, we compare both the average and the maximal (i) number of components; and (ii) period vectors per each component, as summarized in Table~\ref{tab:semilinear-size-reduction}.
+%%
+%The redundant constraint elimination and the generate-less-constraints optimizations had a highly significant effect on the number of components, with the latter being especially effective in reducing the maximal number of components to be $931$ times more compact, as well as the average number of components to be $223$ times more compact, when compared to the baseline.
+%%
+%To ensure a fair comparison, we only measured benchmarks that were completed under every configuration, deliberately excluding any case where the optimized semilinear set exploded beyond $2^{30}$ components and timed out. By excluding these intractable runs, our reported performance improvements actually \textit{understate} the true impact of these optimizations. This explosive growth and the resulting timeouts are especially pervasive among our state-machine benchmarks due to loops in their NS, rendering even simple programs infeasible without optimizations.
+%
+%In fact, for both these optimizations are even more effective as, in order to conduct a fair comparison, we analyzed only benchmarks that terminated in all combinations, an hence we do not include cases in which these two optimizations rendered the original semilinear set intractable, due to having over $2^{30}$ components (!), hence timing-out and being excluded from the analysis.
+%%
+%This occurs pervasively in our state-machine benchmarks which have loops in their network systems --- and hence even simple programs of this category cannot be analyzed with respect to serializability.
+
+%\todo{understand why this is related to loops in the NS}
+
+%
+%\begin{center}
+%	\begin{minipage}[htbp]{0.48\textwidth}
+	%		\centering
+	%		\includegraphics[width=\linewidth]{figures/cactus_plot.pdf}
+	%		\captionof{figure}{Solved instances (\texttt{TIMEOUT} $150$ s).}
+	%		\label{fig:timeout_cumulative_solved_log}
+	%	\end{minipage}\hfill
+%	\begin{minipage}[htbp]{0.48\textwidth}
+	%		\centering
+	%		\includegraphics[width=\linewidth]{figures/petri_size_reduction_plot.pdf}
+	%		\captionof{figure}{PN size reduction via slicing.}
+	%		%(timeout 150 seconds)
+	%		%.}
+%	\label{fig:petri_size_reduction}
+%\end{minipage}
+%\end{center}
+
+%
+
+
+
+
+%\begin{table}[!htbp]
+%	\centering
+%		\includegraphics[width=0.68\linewidth]{figures/cactus_plot.pdf}
+%	\captionof{figure}{Solved instances (\texttt{TIMEOUT} is $150$ seconds).}
+%	\label{fig:timeout_cumulative_solved_log}
+%\end{table}
+
+
+
+
+%\begin{table}[!htbp]
+%	\centering
+%	\includegraphics[width=0.68\linewidth]{figures/petri_size_reduction_plot.pdf}
+%	\captionof{figure}{PN size reduction via slicing.}
+%	%(timeout 150 seconds)
+%	%.}
+%	\label{fig:petri_size_reduction}
+%\end{table}
+
+%\begin{table}[!htbp]
+%\centering
+%\begin{minipage}[t]{0.48\linewidth}
+%	\centering
+%	\input{tables/average_and_mean_values_of_big_table_simplified_compact.tex}
+%	\caption{Runtime for generated certificates (\texttt{total} also includes validation).}
+%	%			Values are rounded to the nearest integer, to reduce clutter. 
+%	%The \textit{total} column also includes the time for validation.}
+%% NOTE - this excludes the 2 non-terminating runs (artifact also includes TIMEOUTs I think)
+%\label{tab:stats-summary}
+%\end{minipage}\hfill
+%\begin{minipage}[t]{0.48\linewidth}
+%\centering
+%\input{tables/semilinear_size_reduction_compact.tex}
+%\caption{Semilinear set size reduction via optimizations (baseline is [\texttt{\text{B}\text{R}\text{G}\text{S}}]).}
+%\label{tab:semilinear-size-reduction}
+%\end{minipage}
+%\end{table}
+
+
+
+
+
+%\begin{table}[!htbp]
+%	\centering
+%	\input{tables/semilinear_size_reduction_compact.tex}
+%	\caption{Semilinear set size reduction via optimizations (baseline is [\texttt{\text{B}\text{R}\text{G}\text{S}}]).}
+%	\label{tab:semilinear-size-reduction}
+%\end{table}
+
+\medspace
+%
+\begin{table}[h]
+\centering
+\begin{tabular}{l c c c c}
+\toprule
+& \multicolumn{2}{c}{components} & \multicolumn{2}{c}{periods/component} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+& average & max & average & max \\
+\midrule
+\texttt{BRGS} & 2.91 & 22 & 1.33 & 4 \\
+\texttt{B}\textcolor{red}{-}\texttt{GS} & 8.79 & 194 & \textbf{1.64} & 11 \\
+\texttt{BR}\textcolor{red}{-}\texttt{S} & \textbf{651.41} & \textbf{20{,}484} & 1.28 & \textbf{15} \\
+\texttt{BRG}\textcolor{red}{-} & 2.91 & 22 & 1.35 & 4 \\
+\bottomrule
+\end{tabular}
+\caption{Semilinear set size reduction via optimizations (baseline is \texttt{[BRGS]}).}
+\label{tab:semilinear-size-reduction}
+\end{table}
+
+
+
+\begin{table}[h!]
+	\centering
+	\small
+	\setlength{\tabcolsep}{5pt}
+	\renewcommand{\arraystretch}{0.9}
+	
+	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}%
+			p{1.5cm}   % Category
+			p{1.0cm}   % Benchmark
+			c          % Serializable
+			c c c c c c % Features
+			r r        % Cert, Total
+		}
+		\toprule
+		\multicolumn{2}{c}{\textbf{Benchmark}}
+		& \textbf{Serializable}
+		& \multicolumn{6}{c}{\textbf{Features}}
+		& \multicolumn{2}{c}{\textbf{Runtime (ms)}} \\
+		\cmidrule(lr){1-2} \cmidrule(lr){3-3} \cmidrule(lr){4-9} \cmidrule(lr){10-11}
+		&
+		&
+		& If & While & \texttt{?} & Arith & Yield & Multi-req
+		& Cert. & Total \\
+		\midrule
+		
+		% Core expressions
+		\multirow{7}{=}{Core expressions} 
+		& \texttt{a1.ser} & \greencmark &  & \cmark &  &  &       &   & 2 & 47 \\
+		& \texttt{a2.ser} & \xmark &  &        &  &  & \cmark &   & 280 & 296 \\
+		& \texttt{a3.ser} & \greencmark &  &        &  &  &       &   & 1 & 32 \\
+		& \texttt{a4.ser} & \greencmark &  &        &  &  & \cmark & \cmark & 637 & 1{,}071 \\
+		& \texttt{a5.ser} & \greencmark &  & \cmark &  &  & \cmark & \cmark & 3{,}234 & 13{,}624 \\
+		& \texttt{a6.ser} & \xmark &  &        &  &  & \cmark & \cmark & 757 & 775 \\
+		& \texttt{a7.ser} & \greencmark & \cmark & \cmark &  &  & \cmark &   & 4 & 33 \\
+		\midrule
+		
+		% State machines
+		\multirow{4}{=}{State machines} 
+		& \texttt{b1.json} & \greencmark & \cmark &        &  &  & \cmark & \cmark & 683 & 968 \\
+		& \texttt{b2.json} & \greencmark & \cmark &        &  &  & \cmark & \cmark & 2{,}063 & 7{,}802 \\
+		& \texttt{b3.json} & \greencmark & \cmark &        &  &  & \cmark & \cmark & 730 & 2{,}080 \\
+		& \texttt{b4.json} & \greencmark & \cmark &        &  &  & \cmark & \cmark & 660 & 1{,}909 \\
+		\midrule
+		
+		% Mixed arithmetic
+		\multirow{8}{=}{Mixed arithmetic} 
+		& \texttt{c1.ser} & \xmark &  & \cmark &  & \cmark & \cmark & \cmark & 356{,}195 & 356{,}299 \\
+		& \texttt{c2.ser} & \greencmark &  & \cmark &  & \cmark & \cmark & \cmark & 9{,}858 & 292{,}228 \\
+		& \texttt{c3.ser} & \greencmark &  & \cmark &  & \cmark & \cmark & \cmark & 1{,}886 & 2{,}397 \\
+		& \texttt{c4.ser} & \greencmark &  & \cmark &  & \cmark & \cmark & \cmark & 4{,}336 & 7{,}193 \\
+		& \texttt{c5.ser} & \xmark &  & \cmark &  & \cmark & \cmark & \cmark & 43{,}694 & 43{,}735 \\
+		& \texttt{c6.ser} & \xmark &  & \cmark &  & \cmark & \cmark & \cmark & 629 & 698 \\
+		& \texttt{c7.ser} & \xmark &  & \cmark &  & \cmark & \cmark & \cmark & 797 & 875 \\
+		& \texttt{c8.ser} & \greencmark &  & \cmark &  & \cmark & \cmark & \cmark & 4{,}357 & 8{,}931 \\
+		\midrule
+		
+		% Circular increment
+		\multirow{5}{=}{Circular increment} 
+		& \texttt{d1.ser} & \greencmark & \cmark & \cmark & \cmark &  & \cmark &   & 2{,}391 & 5{,}373 \\
+		& \texttt{d2.ser} & \xmark & \cmark &        & \cmark &  &   \cmark &   & 628 & 731 \\
+		& \texttt{d3.ser} & \greencmark & \cmark & \cmark & \cmark &  &  \cmark &   & 2{,}642 & 10{,}266 \\
+		& \texttt{d4.ser} & \greencmark & \cmark & \cmark & \cmark &  &     \cmark &   & 5{,}604 & 22{,}249 \\
+		& \texttt{d5.ser} & \xmark & \cmark &        &  &  & \cmark &   & 495 & 554 \\
+		\midrule
+		
+		% Concurrency & locking loops
+		\multirow{7}{=}{Concurrency \& locking loops} 
+		& \texttt{e1.ser} & \greencmark &  & \cmark &  &  & \cmark &   & 351 & 502 \\
+		& \texttt{e2.ser} & \xmark & \cmark & \cmark &  & \cmark & \cmark & \cmark & \texttt{TIMEOUT} & \texttt{TIMEOUT} \\
+		& \texttt{e3.ser} & \xmark & \cmark & \cmark &  & \cmark &   \cmark & \cmark & 24{,}899 & 25{,}039 \\
+		& \texttt{e4.ser} & \xmark & \cmark & \cmark &  &  \cmark &   \cmark & \cmark & 273{,}062 & 273{,}351 \\
+		& \texttt{e5.ser} & \greencmark & \cmark & \cmark & \cmark &  & \cmark &   & 2 & 55 \\
+		& \texttt{e6.ser} & \greencmark & \cmark & \cmark & \cmark &  & \cmark &   & 10 & 114 \\
+		& \texttt{e7.ser} & \greencmark &  & \cmark &  &  &   \cmark &   & 299 & 444 \\
+		\midrule
+		
+		% Non-determinism
+		\multirow{9}{=}{Non-determinism} 
+		& \texttt{f1.ser} & \greencmark & \cmark &    \cmark    & \cmark &  & \cmark &   & 388 & 494 \\
+		& \texttt{f2.ser} & \xmark & \cmark &   \cmark     & \cmark &  & \cmark &   & 612 & 676 \\
+		& \texttt{f3.ser} & \xmark &  &        &  & \cmark &   \cmark & \cmark & 653 & 716 \\
+		& \texttt{f4.ser} & \greencmark &  &     \cmark   &  & \cmark & \cmark & \cmark & 1{,}626 & 9{,}515 \\
+		& \texttt{f5.ser} & \greencmark & \cmark &        & \cmark &  &       &   & 7{,}401 & 11{,}301 \\
+		& \texttt{f6.ser} & \xmark & \cmark &        & \cmark &  & \cmark &   & 646 & 830 \\
+		& \texttt{f7.ser} & \xmark & \cmark &        & \cmark &  &  \cmark &   & 400 & 427 \\
+		& \texttt{f8.ser} & \xmark & \cmark &        & \cmark &  &   \cmark &   & 773 & 802 \\
+		& \texttt{f9.ser} & \greencmark & \cmark &        & \cmark &  &  \cmark &   & 10 & 94 \\
+		\midrule
+		
+		% Network & system protocols
+		\multirow{7}{=}{Network \& system protocols} 
+		& \texttt{g1.ser} & \xmark & \cmark & \cmark &  & \cmark & \cmark & \cmark & 59{,}312 & 74{,}539 \\
+		& \texttt{g2.ser} & \greencmark & \cmark & \cmark &  & \cmark & \cmark & \cmark & \texttt{TIMEOUT} & \texttt{TIMEOUT} \\
+		& \texttt{g3.ser} & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 20{,}557 & 20{,}954 \\
+		& \texttt{g4.ser} & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & 6{,}859 & 7{,}047 \\
+		& \texttt{g5.ser} & \greencmark & \cmark & \cmark & \cmark & \cmark &   \cmark & \cmark & 3{,}047 & 12{,}324 \\
+		& \texttt{g6.ser} & \xmark & \cmark &        & \cmark & \cmark & \cmark &   & 8{,}193 & 8{,}285 \\
+		& \texttt{g7.ser} & \greencmark & \cmark &        & \cmark & \cmark &       &   & 6{,}886 & 252{,}752 \\
+		\bottomrule
+	\end{tabular*}
+	
+	\caption{Overview of our benchmarks (\texttt{TIMEOUT} is 500 seconds).}
+	\label{tab:benchmarks-all}
+\end{table}
+
+\clearpage
+
+
 
