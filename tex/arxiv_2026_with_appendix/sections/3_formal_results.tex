@@ -214,7 +214,7 @@ We define the \textit{transitions} between states to correspond to the \(\delta\
 %
 Finally, we define the initial marking \(M_0\) to be a single token in the place corresponding to the initial global state \(g_0\).
 %
-This construction (which is fully formalized in Appendix~\ref{appendix:NS-to-PN-formulation}) guarantees that the multiset of all reachable markings \(M\) (with \(M_0 \xrightarrow{}^{*} M\)) projected (\(\pi\)) to the sink places, corresponds to the multiset of all  (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs of the NS, as obtained by any interleaving, i.e., \(\mathsf{Int}(\mathcal S)=\{\pi(M) \mid M \in R(N_{\mathrm{int}}(\mathcal S))\}\).
+This construction (which is fully formalized in Appendix~\ref{appendix:NS-to-PN-formulation}) guarantees that any reachable marking \(M\) (i.e., \(M_0 \xrightarrow{}^{*} M\)), when projected (\(\pi\)) to the sink places, corresponds to a multiset of  (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs of the NS, as obtained by an interleaving (and vice versa), i.e., \(\mathsf{Int}(\mathcal S)=\{\pi(M) \mid M \in R(N_{\mathrm{int}}(\mathcal S))\}\).
 
 
 
