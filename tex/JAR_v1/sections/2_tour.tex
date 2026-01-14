@@ -170,7 +170,7 @@ However, in Listing~\ref{lst:FredNonSer}, we add an additional \texttt{yield} (a
 %
 This change allows requests of the same type to update \texttt{X} to the same value ---  resulting in outputs such as
 $\{{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{1}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{incr}}/{\color{red}\blacklozenge_\text{3}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}},{\color{ForestGreen}\blacklozenge_\text{decr}}/{\color{red}\blacklozenge_\text{2}}\}$ which cannot be obtained in any serial execution.
-
+\clearpage
 %
 %
 %
@@ -250,9 +250,9 @@ Specifically, given at least \texttt{[i=5]} interleavings of in-flight {\color{F
 %
 %Here is some text that will flow around the code listing. You can introduce the snippet and then let the text wrap naturally alongside it.
 
-\vspace{1em}  
+%\vspace{1em}  
 \begin{wrapfigure}{r}{0.38\textwidth}
-	  \vspace{-2em}  % pull the top of the figure up by 1em
+	  \vspace{-5em}  % pull the top of the figure up by 1em
 	\centering
 	\begin{lstlisting}[caption={Not serializable},label={lst:ComplexWhileNonSer},numbers=none]
 request flip: 
@@ -421,7 +421,7 @@ request interest:
 The following example is motivated by~\cite{NaGhSa24} and demonstrates how reasoning about serializability corresponds to correctness of routing policies in software‐defined networks (SDNs). In an SDN, switches not only forward packets but can also be programmed in domain‐specific languages (e.g., \texttt{P4}~\cite{BoDaGiIzMcReScTaVaVaWa14}). At runtime, a centralized controller node can adjust the global network policy by periodically sending control packets to each switch, causing it to adjust its routing policy.
 %
 An instance of a simple network with two competing policies is shown in Fig.~\ref{fig:BgpRoutingPolicies}. This network consists of four nodes (numbered \texttt{0} through \texttt{3}), with the two middle nodes --- node \texttt{1} (labeled \texttt{WEST}) and node \texttt{2} (labeled \texttt{EAST}), serving as ingress points from where traffic nondeterministically enters the network. The controller selects one of two policies: a \textcolor{NavyBlue}{blue} policy, which routes traffic from West to East, or an \textcolor{darkorange}{orange} policy, which routes it in the opposite direction.
-
+\clearpage
 %
 %
 %// [WEST, switch 1] ---> [EAST, switch 2] ---> [out, switch 3] 
@@ -543,7 +543,7 @@ We note that the program is not serializable due to the \texttt{yield} statement
 We note that in any serial execution, no two {\color{ForestGreen}$\blacklozenge_\text{main}$} requests can \textit{simultaneously} record both monitors as active, and hence, a response of {\color{red}$\blacklozenge_0$} cannot be obtained by serial executions.
 
 
-
+\clearpage
 
 \begin{minipage}[htbp]{1.1\textwidth}
 	\begin{lstlisting}[caption={Snapshot-based monitor deactivation (not serializable)},numbers=none]

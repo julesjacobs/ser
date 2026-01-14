@@ -116,12 +116,21 @@ However, in the case that formula $\mathcal {F}$ is \textit{unreachable}, then t
 
 \subsection{Semilinear sets and Parikh’s theorem}
 A set $S\subseteq\mathbb N^k$ is \textit{semilinear} if and only if it is a finite union of linear sets, i.e., for some $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$ it holds that:
-$S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\mathbb N\}$. 
+\[S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\mathbb N\}.\]
 Furthermore, semilinear sets coincide with sets that can be defined by \textit{Presburger arithmetic}~\cite{Pr29}. 
 %
 In the context of automata theory, Parikh’s theorem~\cite{Parikh66} proves that by applying the \textit{Parikh image} of any context-free language (CFL) --- we can obtain a semilinear set. 
-Specifically, given an alphabet $\Sigma=\{a_1,\dots,a_k\}$ and a word $w\in L\subseteq\Sigma^*$ over $\Sigma$, the multiset
-$\mathsf{Parikh}(w)=\{\,a_i^{|w|_{a_i}}\mid a_i\in\Sigma\,\}$ counts symbol occurrences of all the letters from $\Sigma$ appearing in $w$.
+%
+The \emph{Parikh image} of a word $w$ over $\Sigma=\{a_1,\dots,a_k\}$ is defined as the vector:
+\[
+\mathsf{Parikh}(w)\;=\;\bigl(|w|_{a_1},\dots,|w|_{a_k}\bigr)\in\mathbb{N}^k,
+\]
+with $|w|_{a_i}$ counting occurrences of $a_i$ in $w$.
+More generally, for a language $L\subseteq\Sigma^*$:
+\[
+\mathsf{Parikh}(L)\;=\;\{\mathsf{Parikh}(w)\mid w\in L\}\subseteq\mathbb{N}^k.
+\]
+
 
 %\medskip
 %\noindent

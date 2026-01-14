@@ -42,8 +42,16 @@ $S=\bigcup_{i=1}^m \{\mathbf b_i+\sum_{j=1}^{r_i} n_j\mathbf p_{i,j}\mid n_j\in\
 for some $\mathbf b_i,\mathbf p_{i,j}\in\mathbb N^k$. 
 Such sets coincide with those definable by \textit{Presburger arithmetic}~\cite{Pr29}. 
 By Parikh’s theorem~\cite{Parikh66}, the \textit{Parikh image} of any context-free language (CFL) is semilinear. 
-For an alphabet $\Sigma=\{a_1,\dots,a_k\}$ and a word $w\in L\subseteq\Sigma^*$,  the multiset
-$\mathsf{Parikh}(w)=\{\,a_i^{|w|_{a_i}}\mid a_i\in\Sigma\,\}$ counts symbol occurrences in $w$.
+%
+For an alphabet $\Sigma=\{a_1,\dots,a_k\}$ and a word $w\in\Sigma^*$, the \emph{Parikh image} of $w$ is the vector
+\(
+\mathsf{Parikh}(w)\;=\;\bigl(|w|_{a_1},\dots,|w|_{a_k}\bigr)\in\mathbb{N}^k,
+\)
+where $|w|_{a_i}$ denotes the number of occurrences of the symbol $a_i$ in $w$.
+For a language $L\subseteq\Sigma^*$, we write
+\(
+\mathsf{Parikh}(L)\;=\;\{\mathsf{Parikh}(w)\mid w\in L\}\subseteq\mathbb{N}^k
+\).
 
 %\medskip
 %\noindent
