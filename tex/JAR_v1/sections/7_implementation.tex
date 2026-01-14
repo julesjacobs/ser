@@ -127,26 +127,25 @@ Our decision procedure is implemented in \toolname{}~\cite{ArtifactRepository}, 
 %consisting of over $18{,}200$ LoC 
 written mostly in \texttt{Rust}. 
 %
-The toolchain receives an input program (which can be written in the \toolname{} syntax), and runs the end-to-end serializability checker on it. If the program is serializable, the toolchain returns a network-system level proof thereof; otherwise, if it is not serializable, the toolchain provides a counterexample, i.e., a specific interleaving that induces a multiset of request/response pairs that cannot be obtained in any serial execution of the network system.
+The toolchain receives an input program (which can be written in the \toolname{} syntax), and runs the end-to-end serializability checker on it. If the program is serializable, the toolchain returns a network-system level proof thereof; otherwise, if it is not serializable, the toolchain provides a counterexample, i.e., a specific interleaving that induces a multiset of request/response pairs that cannot be obtained in \textit{any} serial execution of the network system.
 %
-Our toolchain reduces the problem of deciding the networks system's serializability to an equivalent Petri net reachability problem over an unbounded number of tokens. Our construction guarantees that (i) the Petri net represents every possible request/response multiset that is induced by an interleaving of the original program; and (ii) the encoded reachability query represents a Presburger arithmetic encoding (or equivalently, a semilinear set) over the token distributions that represent multisets of request/response pairs that \textit{cannot} be induced by serial executions.
+Our toolchain reduces the problem of deciding the networks system's serializability to an equivalent Petri net reachability problem over an unbounded number of tokens. Our construction guarantees that (i) the Petri net represents every possible request/response multiset that is induced by an interleaving of the original program; and (ii) the reachability query encodes multisets of request/response pairs that \textit{cannot} be induced by serial executions.
 %
 In order to cope with the \texttt{Ackermann}-completeness of unbounded Petri net reachability~\cite{CzWo22,Le22}, we implemented the various optimizations that expedite the search procedure, both at the Petri net level, and also, at the property-encoding level.
 %
-We illustrate the pipeline of \toolname{} in Fig.~\ref{fig:full_program_flow}, which includes the following modules:
+We illustrate the pipeline of \toolname{} in Fig.~\ref{fig:full_program_flow}. \toolname{} has the following modules:
  
 
 \begin{enumerate}
 	\item \textbf{Input \& parsing.} 
-	Our toolchain receives as input either a \toolname{} program with the syntax described in~\Cref{sec:problem-definition}, or alternatively, a \texttt{JSON} file that directly encodes a network system. In the case of the former, the toolchain does an additional step in which is parses the input %(using the \texttt{parser.rs} module) 
+	Our toolchain receives as input either a \toolname{} program with the syntax described in~\Cref{sec:problem-definition}, or alternatively, a \texttt{JSON} file that directly encodes a network system. In the case of the former, the toolchain does an additional step in which it parses the input %(using the \texttt{parser.rs} module) 
 	to an expression tree that is then translated into the equivalent network system.
 %	, represented as a struct in the \texttt{ns.rs} module. 
 	
 	\item \textbf{Petri net conversion.} The network system is subsequently translated into a Petri net 
 %	(see the \texttt{petri.rs} module) 
-representing all possible interleavings of the original program, 
-	.as depicted, for example, in Fig.~\ref{fig:code2ExamplePN}.
-	Each place represents a state (either global or local) or a response. Each token represents a single in-flight request or a terminated response. 
+representing all possible interleavings of the original program as depicted, for example, in Fig.~\ref{fig:code2ExamplePN}.
+	Each place represents a state (either global or local) or a response. Each token that is not in a place encoding a global state, represents a single in-flight request or a terminated response. 
 Furthermore, we note that the Petri net is encoded in the de facto standard \texttt{NET} format, to support off-the-shelf Petri net model checkers. 
 	
 	\item \textbf{Semilinear conversion.} 
@@ -177,7 +176,7 @@ This step is done via translation of the serialized NFA (e.g., Fig.~\ref{fig:cod
 %	intermediate representations and performance metrics.  
 	input size and performance metrics, such as number of places, transitions, constraint complexity, timings and more.
 %
-The logger outputs 
+%
 We generate \texttt{CSV} and \texttt{JSON} logs along with
  analysis. 
 	%
@@ -235,7 +234,7 @@ an \texttt{HTML} report embedding the original net, symbolic constraints, reacha
 
 
 \subsection{SMPT}
-For the underlying Petri Net model checker, we use \texttt{SMPT}~\cite{AmDa23},though other off-the-shelf solvers can be used as well.
+For the underlying Petri net model checker, we use \texttt{SMPT}~\cite{AmDa23}, though other off-the-shelf solvers can be used as well.
 %
 \texttt{SMPT} incorporates a portfolio of symbolic model checking techniques --- including bounded model checking (BMC)~\cite{BiCiClZh99}, state equation reasoning~\cite{Mu77}, $k$-induction~\cite{BeDaWe18,ShSiSt20}, property directed reachability (PDR)~\cite{Br11,AmDaHu22,ViGu14,BjGa15,BlLa23,CiGrMoTo14,CiGrMoTo16,DuRo17}, and random state space exploration. It acts as a front-end to an \texttt{SMT} solver (\texttt{Z3}~\cite{DeBj08}, although other solvers could also be used, e.g., \texttt{cvc5}~\cite{BaCoDeHaJoKiReTi11,BaBaBrKrLaMaMoMoNiNo22}, \texttt{MathSAT}~\cite{CiGrScSe13}, etc.), while also incorporating domain-specific knowledge from Petri net theory, such as invariants and structural properties. \texttt{SMPT} has also participated in the last five editions of the \textit{Model Checking Contest} (MCC), an international competition for model-checking tools. In its most recent participation, it achieved a bronze medal and a confidence level score of  $\texttt{100\%}$, indicating it never returned an incorrect verdict~\cite{mcc:2025}.
 
@@ -267,7 +266,7 @@ In particular, we highlight our benchmark suite encoding \textit{network \& syst
 %Here, we were motivated by 
 examples motivated by real-world concurrency problems. 
 %
-For example, our \textit{routing-cycle benchmark} in SDN is motivated by a recent networking paper~\cite{NaGhSa24}. Another interesting real-world example is illustrated by our \textit{snapshot isolation benchmark} --- motivated by a real duplicate-key error bug~\cite{cockroach-issue-14099} in the \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}.
+For example, our \textit{routing-cycle benchmark} in SDN is motivated by a recent networking paper~\cite{NaGhSa24}. Another interesting example is illustrated by our \textit{snapshot isolation benchmark} --- motivated by a reported duplicate-key bug~\cite{cockroach-issue-14099} in the \texttt{CockroachDB} system~\cite{cockroachdb-si-docs}.
 %
 In both cases and others, the unwanted behavior was expressed by serializability violations that our toolchain successfully and automatically identified.
 %

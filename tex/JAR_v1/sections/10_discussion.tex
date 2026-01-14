@@ -15,15 +15,15 @@
 %\smallskip
 %\noindent
 %\textbf{Limitations.}
-While our approach advances the state of the art in verifying unbounded serializability, several limitations remain.
-First, the underlying Petri net reachability problem has \texttt{Ackermann}-complete complexity~\cite{CzWo22,Le22}, causing our tool to time out on some complex benchmarks. %despite optimizations.
-Second, our current implementation relies on \texttt{SMPT}~\cite{AmDa23}, which may fail to find proofs even when they exist, limiting completeness.
-Third, our network system model assumes a simple request/response pattern and cannot model more complex interactions, such as streaming, callbacks, or partial responses.
+Our approach advances the state of the art in the important task of verifying unbounded serializability. However, several limitations still remain.
+First, the \texttt{Ackermann}-completeness of Petri net reachability~\cite{CzWo22,Le22} can cause time-outs. %despite optimizations.
+Second, we currently build on \texttt{SMPT}~\cite{AmDa23}, which is incomplete and can fail to find existing proofs.
+Third, our network system abstraction is currently restricted to a simple request/response pattern and cannot capture more complex interactions, such as callbacks, streaming, or partial responses.
 %Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
 %
-Finally, \toolname{} targets finite-state programs: each request must have finite local state and the program must induce finite global state (with an unbounded number of requests). Thus, applying \toolname{} to real systems requires that executions generate only a finite \textit{reachable} state space, in order for the NS construction to terminate.
+Finally, \toolname{} targets programs with finite reachable state: each request must be restricted to finite (reachable) local state and the program must induce finite (reachable) global state, though with unlimited requests. Hence, applying \toolname{} to real-world systems requires that the systems generate only a finite \textit{reachable} state space, otherwise, the network system is intractable.
 %
-This setting is akin to model checkers such as \texttt{PRISM}~\cite{KwNoPa02} and \texttt{STORM}~\cite{DeJuKaVo17}.
+This setting is similar to the one assumed by probabilistic model checkers such as \texttt{STORM}~\cite{DeJuKaVo17} and \texttt{PRISM}~\cite{KwNoPa02}.
 %
 %
 %These limitations suggest important directions for future research.

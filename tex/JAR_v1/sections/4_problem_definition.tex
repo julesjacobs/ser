@@ -204,14 +204,14 @@ This setting can equivalently capture self-spawning (by using additional global 
 
 
 \subsection{Network System}    
-Motivated by software-defined networks, we present our abstract network system (NS) abstraction model. Specifically, spawning a new request corresponds to sending a \textit{packet} in the SDN domain --- with each unique \textit{packet header field} representing a request-local \toolname{} variable;
-shared variables on \textit{programmable switches}, correspond to global variables, as they are seen by all the requests (packets) visiting the switch. Furthermore, we note that throughout this paper, we use the term \emph{request} to refer to a thread of a concurrent computation unit. 
+Motivated by software-defined networks, we present our network system (NS) abstraction model. Spawning a new request corresponds to sending a \textit{packet} in the SDN domain --- with each unique \textit{packet header field} representing a request-local \toolname{} variable;
+shared variables on \textit{programmable switches} correspond to global variables, as they are seen by all the requests (packets) visiting the switch. Furthermore, we note that throughout this paper, we use the term \emph{request} to refer to a thread of a concurrent computation unit. 
 %
 Formally, a network system $\mathcal{N}$ is defined as an eight-tuple $(G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ where:
 \begin{itemize}
 \item $G$ is defined as the set of reachable \textit{global network states} (for example, the values of switch variables)
 
-\item $L$ is defined as the set of reachable \textit{local packet states} (e.g., the values of packet header variables)
+\item $L$ is defined as the set of reachable \textit{local packet states} (for example, the values of packet header variables)
 
 \item $\mathit{REQ}$ is a finite set of \textit{request label strings} (with each request label denoted as {\color{ForestGreen}$\blacklozenge_\text{req}$})
 
@@ -233,7 +233,7 @@ Formally, a network system $\mathcal{N}$ is defined as an eight-tuple $(G, L, \m
 %\smallskip
 \noindent
 \textbf{Request and response.}
-A \emph{request} label ${\color{ForestGreen}\blacklozenge_\text{req}}\in\mathit{REQ}$ spawns a new request thread (i.e., a packet) which is computed concurrently based on the program; a \emph{response} label ${\color{red}\blacklozenge_\text{resp}}\in\mathit{RESP}$ is the returned value of this computation. Together, the $({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})$ pair captures the observable input/output behavior of a single with regard to a single request from a single concurrent execution of the network system.
+A \emph{request} label ${\color{ForestGreen}\blacklozenge_\text{req}}\in\mathit{REQ}$ spawns a new request thread (i.e., a packet) which is computed concurrently based on the program; a \emph{response} label ${\color{red}\blacklozenge_\text{resp}}\in\mathit{RESP}$ is the returned value of this computation. Together, the $({\color{ForestGreen}\blacklozenge_\text{req}},{\color{red}\blacklozenge_\text{resp}})$ pair captures the observable input/output behavior with regard to a single request from a single concurrent execution of the network system.
 
 
 
@@ -316,7 +316,7 @@ Intuitively, serial runs process at every time-step a single request until compl
 %	whereas \emph{interleaved} runs may have multiple requests in flight at once.
 	%
 	%
-	Given a network system \(\mathcal{S}\), we respectively denote by \(\mathsf{Int}(\mathcal{S})\) and \(\mathsf{Ser}(\mathcal{S})\) the (infinite) sets of request/response multisets, as induced by the interleaved and serial runs of \(\mathcal{S}\) accordingly:
+	Given a network system \(\mathcal{S}\), we respectively denote by \(\mathsf{Int}(\mathcal{S})\) and \(\mathsf{Ser}(\mathcal{S})\) the (infinite) sets of request/response multisets, as induced by the interleaved and serial runs of \(\mathcal{S}\):
 %
 \[
 \mathsf{Int}(\mathcal{S})=\{\,\mathcal{Z}\mid \exists\text{ \textit{interleaved} run }(g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z})\,\},
@@ -337,7 +337,7 @@ Intuitively, serial runs process at every time-step a single request until compl
 %\;\big|\; \exists\ \text{\textit{serial} run } (g_0,\varnothing,\varnothing)\rightarrow^{*}(g_n,\varnothing,\mathcal{Z}) \,\bigr\}.
 %\]
 
-The network system $\mathcal{S}$ is said to be \emph{serializable} if and only if \(\mathsf{Int}(\mathcal{S})=\mathsf{Ser}(\mathcal{S})\). Differently put, every multiset of request/response pairs that can be induced by an interleaved execution can also be induced by a serial one.
+The network system $\mathcal{S}$ is said to be \emph{serializable} if and only if \(\mathsf{Int}(\mathcal{S})=\mathsf{Ser}(\mathcal{S})\). Differently put, every multiset of request/response pairs that is induced by an interleaved execution can also be induced by a serial one.
 
 
 %
@@ -380,8 +380,8 @@ The network system $\mathcal{S}$ is said to be \emph{serializable} if and only i
 \subsection{From SER Programs to Network Systems}
 \label{subsec:SerToNsTranslation}
 %
-The network system abstraction does not merely encode concurrent behaviors in the SDN domain, but also can be naturally translated from \toolname{} programs. 
-More formally, given an input \toolname{} program \(P_0\) with global variables (\texttt{VARS}), local variables (\texttt{vars}), mappings \(g,\rho\) from these global/local assignments to a finite number of elements from a value set \texttt{V} --- we define the initial global/local states, $g_0$ and $\rho_0$, which respectively assign $0$ to all global and local variables. 
+The network system abstraction does not merely encode concurrent behaviors in the SDN domain, but can also be naturally translated from \toolname{} programs. 
+More formally, given an input \toolname{} program \(P_0\) with global variables (\texttt{VARS}), local variables (\texttt{vars}), mappings \(g,\rho\) from these global/local variables to a finite number of elements from a value set \texttt{V} --- we define the initial global/local states, $g_0$ and $\rho_0$, which respectively assign $0$ to all global and local variables. 
 Building on the small-step semantics ($\pstep$, defined in full in subsec.~\ref{subsec:ser-semantics}), we define the network system $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ as follows:
 
 %\todo{old}
@@ -523,6 +523,8 @@ Finally, we define the \(\delta\) function to capture the program behavior. This
 
 Fig.~\ref{fig:code2ExampleNS} presents the explicit network system that
 resulted from this translation. This NS can also be seen as a mapping from request labels ({\color{ForestGreen}$\blacklozenge_\text{main}$}) to response labels ({\color{red}$\blacklozenge_0$}, {\color{red}$\blacklozenge_1$}).
+%
+Additional examples appear in Appendix~\ref{appendix:MoreNsExamples}.
 %
 %We note that, for simplicity, we depict only \textit{reachable} states.
 %
@@ -971,10 +973,10 @@ return y
 	\end{tikzpicture}
 	\caption{
 	The network system from the translated \toolname{} program in Listing~\ref{lst:MotivatingExample2NonSer}. 
-	Local states (depicted by yellow rectangles \fcolorbox{black}{brightyellow}{\rule{0pt}{7pt}\rule{7pt}{0pt}}) present the request-local variable assignments coupled with the remaining code; edges indicate transitions of global states  (depicted by blue rectangles \fcolorbox{black}{blue!10}{\rule{0pt}{7pt}\rule{7pt}{0pt}}). 
+	Local states (depicted by yellow rectangles \fcolorbox{black}{brightyellow}{\rule{0pt}{7pt}\rule{7pt}{0pt}}) are the request-local variable assignments coupled with the remaining code; edges indicate transitions of global states  (depicted by blue rectangles \fcolorbox{black}{blue!10}{\rule{0pt}{7pt}\rule{7pt}{0pt}}). 
 	The request and response labels are denoted by {\color{ForestGreen!20}$\blacklozenge$} (green) and
 		{\color{RedViolet!20}$\blacklozenge$} (red) diamonds, respectively.
-		From left to right: a request label ${\color{ForestGreen}\blacklozenge_{\text{main}}}$ spawns a new request with initial local variable assignment \texttt{[y=0]} coupled with the full, remaining program to execute; after yielding, the $\delta$ transition steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, and subsequently updates the local variable \texttt{y} based on the global value of \texttt{[X]}, which is then returned as the final response to the user (either as {\color{red}$\blacklozenge_0$} or as {\color{red}$\blacklozenge_1$}).
+		From left to right: a request label ${\color{ForestGreen}\blacklozenge_{\text{main}}}$ spawns a new request with initial local variable assignment \texttt{[y=0]} coupled with the full, remaining program to execute; after yielding, the $\delta$ transition steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, and subsequently updates the local variable \texttt{y} based on the global value of \texttt{X}, which is then returned as the final response to the user (either as {\color{red}$\blacklozenge_0$} or {\color{red}$\blacklozenge_1$}).
 		}
 		%
 %	\caption{The Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 

@@ -4,7 +4,7 @@
 
 %\todo{check}
 
-We apply four optimizations to the base algorithm to control intermediate blow‐up in the size of both the PN and the constructed semilinear set. 
+We apply four optimizations to the base algorithm to control intermediate blow‐ups in the size of both the PN and the constructed semilinear set. 
 %
 An extensive empirical evaluation of these optimizations appears in \Cref {sec:evaluation}.
 
@@ -18,7 +18,7 @@ When checking for Petri net reachability, many transitions and places might be i
 	the backward passes traverse in reverse from any place that can potentially influence a target constraint (and hence, over-approximating the places that can contribute to it).
 	Then, until reaching a fixed point, we iteratively remove places and transitions that are non-forward-reachable and
 	non-backward-relevant.  
-	This process is formally defined in Theorem~\ref{thm:bidirectional-pruning}, and is illustrated in Fig.~\ref{fig:bidirectional_pruning}.We prove the theorem's soundness in Appendix~\ref{appendix:BidirectionalProof}.
+	This process is formally defined in Theorem~\ref{thm:bidirectional-pruning}, and is illustrated in Fig.~\ref{fig:bidirectional_pruning}. We prove the theorem's soundness in Appendix~\ref{appendix:BidirectionalProof}.
 
 
 
@@ -93,6 +93,7 @@ When checking for Petri net reachability, many transitions and places might be i
 A semilinear set is defined as a finite union of linear sets: $S=\bigcup_{i=1}^m L_i$, with each set of the form 
 	\[L_i=\{\,\mathbf{b}_i+\sum_{\mathbf{p}\in P_i}n_p \mathbf{p} \mid n_p\in\mathbb N\}.\] 
 	
+	\noindent
 	Each linear set may contain redundant 
 	period vectors or redundant components.  
 	Thus, during construction of the semilinear set, we:
@@ -115,7 +116,7 @@ A semilinear set is defined as a finite union of linear sets: $S=\bigcup_{i=1}^m
 %\medskip
 %\noindent
 \subsection{Generating fewer constraints}  
-When applying the Parikh image of a regular expression, generating a semilinear set,
+When applying the Parikh image of a regular expression, to generate a semilinear set,
 	most regex operations can be implemented without exponential blow-ups.
 	However, the Kleene star operation is an exception. Given a semilinear set $S=\bigcup_{i=1}^m L_i$,  the Kleene closure $S^\ast$ can be expressed as a semilinear set by: 
 	\[

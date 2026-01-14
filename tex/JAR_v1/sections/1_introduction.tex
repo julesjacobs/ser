@@ -1,13 +1,14 @@
 \section{Introduction}
 \label{sec:introduction}
 
-Concurrent systems, from software-defined networks (SDNs) to databases~\cite{KrRaVePaRoAzUh14,XiWeFoNiXi15}, a standard correctness criterion is \emph{serializability}: every interleaving of parallel threads must produce equivalent outcomes to some serial scheduling of the same threads. 
+In the concurrent systems domains, from software-defined networks (SDNs) to databases~\cite{KrRaVePaRoAzUh14,XiWeFoNiXi15}, a standard correctness criterion is \emph{serializability}: every interleaving of parallel threads should produce equivalent outcomes to some serial scheduling of the same threads. 
 %
-Serializable program are strongly coupled with modular code (as the programmer need only prove that every separate function behave correctly).
+%Serializable program are strongly coupled with modular code (as the programmer need only prove that every separate function behave correctly).
+%
 Furthermore, serializability violations can lead to various anomalies, including routing cycles in SDNs, and lost database updates.
-Although serializability can trivially be checked for a \textit{fixed} number of threads with known execution traces (e.g., by enumerating every interleaving possible) --- deciding serializability is \textit{undecidable} for general programs, and requires incomplete bounded model checking, runtime verification, and additional methods~\cite{WaSt06a,WaSt06b,FlFrYi08,FaMa08,SiMaWaGu11a,SiMaWaGu11b,Pa79,AlMcPe96,BiEn19}.
+Although serializability can be trivially checked for a \textit{fixed} number of threads with known execution traces (e.g., by enumerating every interleaving possible) --- it is \textit{undecidable} for general programs, and requires incomplete bounded model checking, runtime verification, and additional methods~\cite{WaSt06a,WaSt06b,FlFrYi08,FaMa08,SiMaWaGu11a,SiMaWaGu11b,Pa79,AlMcPe96,BiEn19}.
 
-About a decade ago, Bouajjani et al.~\cite{BoEmEnHa13} have proven that for programs with bounded-size state (and hence, a special case of bounded-barrier linearizability), this problem is, in fact, decidable even for an \emph{unbounded} number of in-flight threads, with each thread running for an \emph{unbounded} number of steps. Our paper makes this theoretical decidability result a reality and presents the first decision procedure. Specifically, we put forth practical algorithms that either prove non-serializability (with a counterexample interleaving trace), or alternatively, prove serializability (with a proof certificate).
+About a decade ago, Bouajjani et al.~\cite{BoEmEnHa13} have proven that for programs with bounded-size state, serializability is, in fact, decidable even for an \emph{unbounded} number of in-flight threads, with each thread running for an \emph{unbounded} number of steps. Our paper makes this theoretical decidability result a reality and presents the first decision procedure. Towards this end, we put forth practical algorithms that either prove non-serializability (with a counterexample interleaving trace), or alternatively, prove serializability (with a proof certificate).
 % 
 We illustrate the problem with the following toy examples:
 
@@ -60,15 +61,15 @@ We illustrate the problem with the following toy examples:
 	\end{lstlisting}
 \end{minipage}
 
-These toy programs are written in our \toolname language for modeling serializability.
+These toy programs are written in our \toolname{} language for modeling serializability.
 Every \toolname{} program defines \textbf{request handlers} (one handler, \texttt{main}, in the examples) that the external environment (the user) can invoke arbitrarily as a thread of execution.
 After generating a request, it is processed based on the associated program (the body of the handler of that request), until a final \textbf{response} (a value) is returned to the user. Concurrent interleavings of all active requests is expressed via the \(\yieldkw\)
  statement which, when called, pauses the current request and dispatches another request which can continue from where it last stopped. In \toolname{} programs, we denote \textbf{shared (global) variables} with uppercase characters (e.g., \texttt{X} in our running example) and \textbf{request-specific (local) variables} are denoted with lowercase characters (e.g., \texttt{y} in our running example).
 %
 %
 %
-Observe the first program (denoted in Listing~\ref{lst:MotivatingExample1Ser}). It is trivially serializable because there are no yields, and hence, no interleavings: each \texttt{main} request (thread) must run continuously until completion, and eventually returns 1.
-However, in the second program (denoted in Listing~\ref{lst:MotivatingExample2NonSer}), the \texttt{yield} command allows requests to interleave which, in turn, makes the program \emph{non-serializable}, i.e., can generate observable behaviors that no serial execution can induce. For example, consider two requests to \texttt{main} that interleave concurrently:
+Observe the first program presented in Listing~\ref{lst:MotivatingExample1Ser}. It is trivially serializable because there are no yields, and hence, no interleavings: each \texttt{main} request (thread) must run continuously until completion, and eventually returns 1.
+However, in the second program (Listing~\ref{lst:MotivatingExample2NonSer}), the \texttt{yield} command allows requests to interleave which, in turn, makes the program \emph{non-serializable}, i.e., can generate observable behaviors that no serial execution can induce. For example, consider two requests to \texttt{main} that interleave concurrently:
 %\begin{enumerate}
 %\item 
 Request A executes \texttt{[X := 1]}, subsequently yielding to Request B; which is then run and executes
@@ -77,8 +78,8 @@ Finally,
 %\item 
 Request A resumes from where it previously yielded, reads \texttt{X} (which is now 0), and returns 0 to the user.
 %\end{enumerate}
-This interleaving induces a multiset \{(\texttt{main}, 0), (\texttt{main}, 1)\} of (request, response) pairs, which cannot be obtained via any serial execution (in which any \texttt{main} request always returns 1 and never 0).
-Of course, having \texttt{yield} commands does not automatically guarantee that an execution is non-serializable. For example, observe our third code snippet (presented in Listing~\ref{lst:MotivatingExample3Ser}). At first glance, it seems different than the first program (Listing~\ref{lst:MotivatingExample1Ser}), however, both programs are semantically equivalent. This program uses an additional global variable \texttt{L} (a \textit{lock}), that guarantees that any interleaving will still constrain two threads from generating non-serial behaviors, such as returning a response of 0.
+This interleaving induces a multiset \{(\texttt{main}, 0), (\texttt{main}, 1)\} of (request, response) pairs, which cannot be obtained via any serial execution --- in which any \texttt{main} request always returns 1 and never 0.
+Of course, having \texttt{yield} commands does not automatically guarantee that an execution is non-serializable. For example, observe our third code snippet (Listing~\ref{lst:MotivatingExample3Ser}). At first glance, it seems different than the first program (Listing~\ref{lst:MotivatingExample1Ser}), however, both programs are semantically equivalent. This program uses an additional global variable \texttt{L} (a \textit{lock}), that guarantees that any interleaving will still constrain two threads from generating non-serial behaviors, such as returning a response of 0.
 %
 These toy examples demonstrate that even for simply programs with few threads --- reasoning about serializability could be quite complex.
 %
@@ -88,10 +89,10 @@ For a tour of additional examples, we refer the reader to Sec~\ref{sec:tour}.
 \smallskip
 \noindent
 \textbf{Problem Definition.}
-We formally define an \textbf{observable execution} of a given \toolname{} program as a (finite) multiset of (request, response) pairs induced by a \textit{specific} interleaving of requests. More generally, this allows defining the \textbf{observable behavior} as the (infinite) set of induced (request,response) multisets. this infinite set captures all possible observable executions that are induced such that the requests are concurrently executed in order to obtain their paired responses.
+We formally define an \textbf{observable execution} of a given \toolname{} program as a (finite) multiset of (request, response) pairs induced by a \textit{specific} interleaving of requests. More generally, this allows defining the \textbf{observable behavior} as the (infinite) set of induced (request,response) multisets. This infinite set captures all possible observable executions that are induced.
 We say that a \toolname{} program is \textbf{serializable} if and only if every possible observable behavior can be induced by a serial execution without interleavings, i.e., when running each request, one at a time, until completion. Intuitively, a \toolname{} program is serializable if and only if removing all \texttt{yield} statements doesn't change the program's semantics, and hence, the observable behavior.
 %
-\emph{In this paper, we present our \toolname{} language and the accompanying decision procedure for this problem.} Specifically, we note that, to our knowledge, \toolname{} is the first tool capable of \textbf{automatically} proving that serializability holds --- without requiring any manual work by the user or assuming specific relaxations.
+\emph{In this paper, we present our \toolname{} language and the accompanying decision procedure for this problem.} Specifically, we note that, to our knowledge, \toolname{} is the first tool capable of \textbf{automatically} proving that serializability holds --- without requiring any manual work by the user or assuming specific relaxations on the underlying program.
 
 %\vspace{-.5em}
 \smallskip
@@ -99,13 +100,13 @@ We say that a \toolname{} program is \textbf{serializable} if and only if every 
 \textbf{Challenges.}
 As far as we are aware, there does not exist any prior implementation that can automatically generate proof certificates for this important class of concurrent systems.
 A reader may ask --- why not?
-Our decision procedure builds on theory presented by Bouajjani et al.'s reduction from serializability to (unbounded) Petri net reachability~\cite{BoEmEnHa13}. However, as Patri net reachability is \texttt{Ackermann}-complete~\cite{CzWo22,Le22}, any naive implementation would fail on even simple, toy programs. 
+Our decision procedure builds on theory presented by Bouajjani et al.'s reduction from serializability to (unbounded) Petri net reachability~\cite{BoEmEnHa13}. However, as Petri net reachability is \texttt{Ackermann}-complete~\cite{CzWo22,Le22}, any naive implementation would fail on even simple, toy programs. 
 
 %\vspace{-.5em}
 \smallskip
 \noindent
 \textbf{Our Approach.}
-To address this challenge, we introduce our \textit{network systems} abstraction, which models concurrent programs of users spawning \textit{request} threads, which subsequently, manipulate shared and local state, and eventually return a \textit{response} to the user. In practice, \toolname{} programs are compiled into abstract network systems, which we reduce to Petri nets that capture the concurrent nature of the original program. Then, our decision procedure translates the serializability question on unbounded threads to a Presburger set reachability problem on the Petri net.
+To address this challenge, we introduce our \textit{network systems} abstraction, which models concurrent programs of users spawning \textit{request} threads, which subsequently, manipulate shared and local state, and eventually return a \textit{response} to the user. In practice, \toolname{} programs are compiled into abstract network systems, which we reduce to Petri nets that capture the concurrent nature of the original program. Then, our decision procedure translates the serializability question on unbounded threads to a Presburger set reachability problem on the Petri net markings.
 %
 %As a backend solver, we use SMPT~\cite{AmDa23}, which is a state-of-the-art tool for Petri net reachability.
 While our approach is sound (and never incorrectly claims serializability), and despite being theoretically complete --- the underlying reachability query may time out on some complex instances, thus limiting completeness in practice. However, this is unavoidable due to the \texttt{Ackermann}-hardness of the unbounded PN reachability problem.
@@ -115,9 +116,9 @@ We extensively demonstrate how these optimizations curtail the search space by \
 
 %
 Finally, 
-we implemented our \toolname{} toolchain and evaluated it extensively on programs with a broad spectrum of features such as locks, arithmetic, branching, loops, nondeterminism, as more. We have also evaluated it on  models of BGP routers, stateful firewalls, shopping backends, and additional SDN-inspired protocols.
+we implemented our \toolname{} toolchain and evaluated it extensively on programs with a broad spectrum of features such as locks, arithmetic, branching, loops, nondeterminism, and more. We have also evaluated it on  models of BGP routers, stateful firewalls, shopping backends, and additional SDN-inspired protocols.
 %
-To our knowledge, this work is the first to \emph{implement} a decision procedure that: (i) automatically \textit{proves} serializability for programs with \textit{unbounded} executions; (ii) generates \textit{certificates proofs} for serializability; and also (iii) handles models of highly \textit{non-trivial programs}.
+To our knowledge, this work is the first to implement a decision procedure that: (i) automatically \textit{proves} serializability for programs with \textit{unbounded} executions; (ii) generates \textit{certificate proofs} for serializability; and also (iii) handles models of highly \textit{non-trivial programs}.
 
 
 \smallskip
@@ -129,22 +130,22 @@ To our knowledge, this work is the first to \emph{implement} a decision procedur
 %    Following a brief background in \Cref{sec:background}, 
 %
 %
-In \Cref{sec:tour} we present a tour of additional serializability examples that we solve, in a wide range of complexity.
+In \Cref{sec:tour} we present a tour of additional serializability examples that we solve, in a wide range of complexity levels.
 %
 Relevant background on semilinear sets, Petri nets, and their reachability problem is covered in \Cref{sec:background}.
 %
-In \Cref{sec:problem-definition} we present our \toolname{} concurrency language and the accompanying Network System program abstraction that \toolname{} programs translate to.
+Then, in \Cref{sec:problem-definition}, we present our \toolname{} concurrency language and the accompanying Network System program abstraction that \toolname{} programs translate to.
 %
 The decision procedure, as well as its proof certificate engine are presented in \Cref{sec:formal-results}.
 %
-Our various optimizations which curtail the search space are presented in \Cref{sec:optimizations}.
+Our multiple optimizations are presented in \Cref{sec:optimizations}.
 %
 %    presents techniques for semilinear set reductions and Petri-net reductions.
 The \toolname{} toolchain  implementation is covered in \Cref{sec:implementation}, and its extensive evaluation is presented in \Cref{sec:evaluation}. 
 %    
 Related work is covered in \Cref{sec:related-work} and we conclude in \Cref{sec:discussion}.
 %
-We also include three technical appendices. Furthermore, our tool, benchmarks, and raw experimental results are all publicly available online, and hosted on a permanent repository~\cite{ArtifactRepository}.
+We also include four technical appendices. Furthermore, our tool, benchmarks, and raw experimental results are all publicly available online, and hosted on a permanent repository~\cite{ArtifactRepository}.
 % 
 
 
@@ -155,29 +156,29 @@ In the original paper, we presented our method and a brief evaluation. In this e
 shorter, published paper across multiple axes, including: 
 \begin{enumerate}
 	\item 
-	A new section with various \toolname{} programs, including both serializable and non-serializable cases. These also cover programs motivated by real world SDN protocols, such as stateful firewalls, network monitors, and more.
+	A new section with various \toolname{} programs, including both serializable and non-serializable cases. These also cover programs motivated by real-world SDN protocols, such as stateful firewalls, network monitors, and more.
 	
 	\item 
-	We formalize in full the semantics of our \toolname{} concurrency language.
+	We fully formalize the semantics of our \toolname{} concurrency language.
 	
 	\item 
-	We extend the material on optimizations to include a proof of the bidirectional slicing soundness in a technical appendix.
+	We extend the material on optimizations to include a proof of the bidirectional slicing soundness.
 	
 	\item
-	We extensively evaluate all four optimizations. This evaluation demonstrates that our optimizations indeed reduce the space and time complexity by orders of magnitude, as presented by experiments that are not included in the main text of our TACAS proceedings paper.
+	We extensively evaluate all four optimizations, demonstrating that our optimizations indeed reduce the space and time complexity by orders of magnitude, as presented by experiments that were not included in the main text of our TACAS proceedings paper.
 	
 	\item 
-	We add a table elaborating all our test suite of both serializable and non-serializable benchmarks.
+	We elaborate on all the test suite programs, including both serializable and non-serializable benchmarks.
 	
 	\item 
-	We include an appendix formalizing the translation of network systems models to Petri nets representing interleaved programs.
+	We formalize the translation of network systems models to Petri nets representing interleaved programs.
 	
 	
 	\item 
 	We add examples for both proofs of serializability and counterexamples of non-serializable programs.
 	
 	\item 
-	We extended to related work to cover VASS reachability and Petri net model checkers.
+	We extend the related work to cover additional literature, with an emphasis on VASS reachability and Petri net model checking.
 	
 	\item 
 	We also include extended background material, figures, and more.
@@ -186,4 +187,4 @@ shorter, published paper across multiple axes, including:
 
 We believe the additional material constitutes well over 30\% increase in volume compared to our original paper, which included 17 pages (excluding references).
 %
-Furthermore, we believe these additions merit an extended paper, which can complement our original, shorter once~\cite{AmBaAmJa26}.
+%Furthermore, we believe these additions merit an extended paper, which can complement our original, shorter once~\cite{AmBaAmJa26}.

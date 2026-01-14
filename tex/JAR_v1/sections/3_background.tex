@@ -17,13 +17,13 @@ A transition \(t\) that is enabled may or may not \textit{fire}. If it fires, it
 %
 A single firing can naturally be extended to a firing \textit{sequence} $\sigma = t_1\cdots t_k$ (denoted as $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ such that $M=M_0$, $M'=M_k$, and for all $i$ it holds that $M_i \xrightarrow{t_{i}} M_{i+1}$. 
 % 
-We define the (possibly, infinite) set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all the markings of the Petri net, that are reachable from the initial marking $M_0$.
+We define the (possibly infinite) set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all the markings of the Petri net, that are reachable from the initial marking $M_0$.
 % 
 Given a Petri net $N$ and a marking $M$, the \textit{reachability problem} asks  whether $M\in R(N)$. 
 %
-Specifically, in this work we focus on reachability of a linear-constraint formula $\mathcal {F}$ over tokens. The formula is \sat\ if there exists a reachable marking $M\in R(N)$ which satisfies the constraints of $\mathcal {F}$ (this is denoted as $M \models \mathcal {F}$); otherwise, the formula is said to be \unsat{} (see the toy example in 	 Fig.~\ref{fig:toyPN}).
+Specifically, in this work we focus on reachability of a linear-constraint formula $\mathcal {F}$ over tokens. The formula is \sat\ if there exists a reachable marking $M\in R(N)$ which satisfies the constraints of $\mathcal {F}$ (this is denoted as $M \models \mathcal {F}$); otherwise, the formula is said to be \unsat{}.
 %
-Surprisingly, the Petri net reachability problem is decidable (though \texttt{Ackermann}-complete~\cite{CzWo22,Le22}) even in the \textit{unbounded} case, in which the net's places may hold an arbitrary number of tokens~\cite{Ma81,Ko82,La92}. 
+Surprisingly, the Petri net reachability problem is decidable even in the \textit{unbounded} case, in which the net's places may hold an arbitrary number of tokens~\cite{Ma81,Ko82,La92}. 
 
 \medskip
 \noindent
@@ -63,12 +63,12 @@ and the flow functions $\mathsf{pre}$,$\mathsf{post}$ are given as
 	\mathsf{post}(t_5) & 0 & 0 & 1 & 0 & 0 & 0
 \end{array}
 \]
-The initial marking is
+The initial marking includes a single token in place $P_2$:
 \[
-M_0 = (0,1,0,0,0,0)^\top 
+M_0 = (0,1,0,0,0,0)^\top.
 \]
 
-Differently put, there is a single token in place $P_2$.
+%Differently put, there is .
 
 
 \begin{itemize}

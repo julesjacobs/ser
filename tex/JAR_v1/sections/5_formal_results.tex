@@ -14,7 +14,7 @@
 
 \subsection{The Algorithm (without Optimizations)}
 
-Given a network system $\mathcal S$, defined as \(\mathcal S= (G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})\), our decision procedure runs the following steps:  
+Given a network system, defined as \(\mathcal S= (G, L, \mathit{REQ},  \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})\), our decision procedure runs the following steps:  
 
 %\begin{enumerate}
 %	\item  
@@ -95,7 +95,7 @@ $	{\color{ForestGreen}\blacklozenge_{\mathit{req}}}$, then upon some \textit{ful
 %	
 The NFA's language
 	\(L(\mathcal A_{\mathrm{ser}}(\mathcal S))\subseteq\Sigma^*\) is the set of
-	request/response traces induced by serial executions, form any reachable global state.
+	request/response traces induced by serial executions, from any reachable global state.
 	Hence, by definition, applying the Parikh image on this regular language induces the (infinite) set of all (order-less) multisets of request/response pairs that are obtained by serial executions:
 	\(
 	\mathsf{Ser}(\mathcal S)
@@ -241,9 +241,9 @@ In this case, serial executionsinduce only ({\color{ForestGreen}$\blacklozenge_\
 %	\item 
 	\textbf{Step 2: Interleaving Petri net.}
 %	
-Next, we translate the network system into a Petri net \(N_{\mathrm{int}}(\mathcal S)\). Each \textit{non-sink place} of the Petri net represents either a global state assignment or a local states of in-flight packets. Each \textit{sink place} represents request/response pairs of terminated packets after they finished running the program.
+Next, we translate the network system into a Petri net \(N_{\mathrm{int}}(\mathcal S)\). Each \textit{non-sink place} of the Petri net represents either a global state assignment or a local states of in-flight packets. Each \textit{sink place} represents request/response pairs of terminated packets.
 %
-The \textit{transitions} between states are defined to correspond to the \(\delta\),\(req\), and \(resp\) mappings of the network system. We note that the \(req\) transitions can fire without any input tokens in order to correspond to external spawning of arbitrarily-many requests.
+The \textit{transitions} between states are defined to correspond to the \(\delta\), \(req\), and \(resp\) mappings of the network system. We note that the \(req\) transitions can fire without any input tokens in order to correspond to external spawning of arbitrarily-many requests.
 %
 Finally, we define \(M_0\) to be an initial marking encoding a single token in the non-sink place corresponding to \(g_0\), i.e., the initial global state of the network system.
 %
@@ -254,7 +254,7 @@ This construction is formalized in full in  Appendix~\ref{appendix:NS-to-PN-form
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
 %	\textit{Notation.}
-Continuing our running example, the network system induces the Petri net presented in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings of the NS. The places \textcolor{blue}{$P_2$} and \textcolor{blue}{$P_3$} respectively correspond to the global states \textcolor{blue}{[X=1]} and \textcolor{blue}{[X=0]}, and places $P_1$, $P_4$, $P_5$, and $P_6$ correspond to the local states of in-flight requests, i.e., the assignments to each request’s local variables, coupled with the remaining \toolname{} program code to execute. Similarly, places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} correspond to responses {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$},respectively. Thus, each token models either an active (in-flight) request, a completed request/response pair, or --- when the token resides in a place denoting the global state --- the current global state of the network system. Finally, transitions are induced by the network system’s mappings ($\delta/req/resp$): they either advance the program by a single step (e.g., \(t_2,t_3,t_4,\) and \(t_5\), based on $\delta$), represent external spawning of a new request (e.g., transition $\textcolor{ForestGreen}{t_1}$, which corresponds to request {\color{ForestGreen}$\blacklozenge_{\mathrm{main}}$} based on $req$),
+Continuing our running example, the network system induces the Petri net presented in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings. The places \textcolor{blue}{$P_2$} and \textcolor{blue}{$P_3$} respectively correspond to the global states \textcolor{blue}{[X=1]} and \textcolor{blue}{[X=0]}, and places $P_1$, $P_4$, $P_5$, and $P_6$ correspond to the local states of in-flight requests, i.e., the assignments to each request’s local variables, coupled with the remaining \toolname{} program code to execute. Similarly, places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} correspond to responses {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$}, respectively. Thus, each token models either an active (in-flight) request, a completed request/response pair, or --- when the token resides in a place denoting the global state --- the current global state of the network system. Finally, transitions are induced by the network system’s mappings ($\delta/req/resp$): they either advance the program by a single step (e.g., \(t_2,t_3,t_4,\) and \(t_5\), based on $\delta$), represent external spawning of a new request (e.g., transition $\textcolor{ForestGreen}{t_1}$, which corresponds to request {\color{ForestGreen}$\blacklozenge_{\mathrm{main}}$} based on $req$),
 or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{red}{t_7}$, based on $resp$).
 \end{tcolorbox}
 
@@ -286,7 +286,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 %	\item 
 	\textbf{Step 3: Non-serializable set.}  
 	We define
-	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., the (possibly, empty) set of all multisets of (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs that \textit{cannot} be obtained by serial executions of the network system $\mathcal S$.
+	\(\;\mathsf{NonSer}(\mathcal S)=\mathbb N^{|\Sigma|}\setminus \mathsf{Ser}(\mathcal S)\), i.e., the (possibly empty) set of all multisets of (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs that \textit{cannot} be obtained by any serial execution of the network system $\mathcal S$.
 	
 	\begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
@@ -300,7 +300,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 	\wedge P_5 = 0 \wedge P_6 = 0 \wedge \textcolor{red}{P_7} \ge 0 \wedge \textcolor{red}{P_8} \ge 1.
 	\]
 	
-	Specifically, this constrains places $P_1,P_4,P_5,P_6$ to include no tokens, and requires at least a single token on place $\textcolor{red}{P_8}$ (i.e., which corresponds to response {\color{red}$\blacklozenge_0$}). Furthermore, there are no constraints on the token count
+	Specifically, this constrains places $P_1,P_4,P_5,P_6$ to include no tokens, and requires at least a single token on place $\textcolor{red}{P_8}$ (which corresponds to response {\color{red}$\blacklozenge_0$}). Furthermore, there are no constraints on the token count
 	of places $\textcolor{blue}{P_2},\textcolor{blue}{P_3},\textcolor{red}{P_7}$. 
 	%
 %	Note that \(\textcolor{red}{P_8} \ge 1\) requires at least one {\color{red}$\blacklozenge_0$}, as expected (see \Cref{sec:introduction}).
@@ -351,7 +351,7 @@ We also present in Table~\ref{tab:PetriNetFiringCounterexample} the full, step-b
 	%
 %	As the target set encodes request/response pairs that are \textit{unattainable} via serial executions, and as the PN encodes all possible interleavings, this firing sequence also corresponds as a counterexample demonstrating the program is non-serializable. 
 	%
-	Specifically, this reachable marking encodes the outputs $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ which, indeed, can only be induced by a non-serial execution of Listing~\ref{lst:MotivatingExample2NonSer}.
+	Specifically, this reachable marking encodes $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ which, indeed, can only be induced by a non-serial execution of Listing~\ref{lst:MotivatingExample2NonSer}.
 \end{tcolorbox} 
 
 

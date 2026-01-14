@@ -116,16 +116,16 @@ and later motivated Herlihy and Wing's~\cite{HeWe87,HeWi90} similar notion of th
 %giving rise to additional consistency models~\cite{ZhChWa13, RaMeBrKoSi93, La78,AhNeBuKoHu95}, 
 %inspiring extensive research on model-checking and complexity analyses~\cite{BoEnGuHa17,ZeBiBoEnEr19,LaBo20}.
 %
-The \emph{membership problem}, i.e., the problem of deciding if a specific interleaving is serializable, was proven to be \texttt{NP}-complete~\cite{Pa79}. This result was later extended to linearizability~\cite{GiKo97} as well as to other consistency models~\cite{BiEn19}. 
+The \emph{membership problem}, i.e., the problem of deciding whether a specific interleaving is serializable, was proven to be \texttt{NP}-complete~\cite{Pa79}. This result was later extended to linearizability~\cite{GiKo97} as well as to other consistency models~\cite{BiEn19}. 
 %Likewise, membership for 
 % 
 %(and  
 %is also \texttt{NP}-complete in general
 % --- a result that was later 
 %extended to \textit{collections}~\cite{EmEn18}).
-The \emph{correctness problem}, i.e., the problem of deciding whether \emph{all} executions of a system satisfy this criterion, was proven to be in \texttt{EXPSPACE} if threads are bounded~\cite{AlMcPe96}. Otherwise, for unbounded threads this problem is undecidable~\cite{BoEmEnHa13}, though decidable if the unbounded threads have the bounded-barrier property (which includes our setting, in which serializability is decidable). Bouajjani et al.~\cite{BoEmEnHa18} further prove that, for specific ADTs, unbounded-thread linearizability can be reduced to VASS coverability which is in \texttt{EXPSPACE}~\cite{Ra78}. 
+The \emph{correctness problem}, i.e., the problem of deciding whether \emph{all} executions of a system satisfy this criterion, was proven to be in \texttt{EXPSPACE} if threads are bounded~\cite{AlMcPe96}. Otherwise, for unbounded threads this problem is undecidable~\cite{BoEmEnHa13}, though decidable if the bounded-barrier property holds (which includes our setting, implying that serializability is decidable). Bouajjani et al.~\cite{BoEmEnHa18} further prove that, for specific ADTs, unbounded-thread linearizability can be reduced to VASS coverability which is in \texttt{EXPSPACE}~\cite{Ra78}. 
 %
-To our knowledge, the \toolname{} toolchain is the first to implement the serializability algorithm by Bouajjani et al. ~\cite{BoEmEnHa13}, while also adapting it to to distributed transactions, as well as extending it with a proof certification engine, and adding multiple optimizations to scale it to various models of real-world programs. 
+To our knowledge, the \toolname{} toolchain is the first to implement the serializability algorithm by Bouajjani et al. ~\cite{BoEmEnHa13}, while also adapting it to distributed transactions, as well as extending it with a proof certification engine, and adding multiple optimizations to scale to various models of real-world programs. 
 %Furthermore, we harness research theoretical advancements in PN model checking and are the first to generate serializability proofs for arbitrary programs.
 
 %\todo{original}
@@ -179,10 +179,10 @@ To our knowledge, the \toolname{} toolchain is the first to implement the serial
 %
 Wang and Stoller~\cite{WaSt06a,WaSt06b} proposed runtime checks for serializability as well as for conflict/view‐serializability.  
 Lamport's TLA logic~\cite{La94} is capable of expressing various forms of serializability~\cite{CoOlPnTuZu07}, however, such approaches~\cite{SoVaVi20,Ho24} are limited to bounded systems due to finite‐state tools, such as \texttt{TLC} and \texttt{Apalache}~\cite{YuMaLa99,KoKuTr19}.  
-Model checkers that rely on heuristics or Enumeration include \texttt{LinTSO}~\cite{BuGoMuYa12}, \texttt{Line-up}~\cite{BuDeMuTa10} (built on \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{Violat}~\cite{EmEn19} and its precursor~\cite{EmEn18}, PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}, and bridge‐predicate methods~\cite{BuNeSe11,BuSe09}. 
+Model checkers that rely on heuristics or enumeration include \texttt{LinTSO}~\cite{BuGoMuYa12}, \texttt{Line-up}~\cite{BuDeMuTa10} (built on \texttt{CHESS}~\cite{MuQaBaBaNaNe08}), \texttt{Violat}~\cite{EmEn19} and its precursor~\cite{EmEn18}, PAT‐based refinement checking~\cite{LiChLiSuZhDo12,SuLuDoPa09,LiChLiSu09,Zh11}, and bridge‐predicate methods~\cite{BuNeSe11,BuSe09}. 
 Recently, \texttt{RELINCHE} has been proposed for bounded linearizability~\cite{GoKoVa25}. Other tools for this task include \texttt{Lincheck}~\cite{KoDeSoTsAl23}, \texttt{CDSSpec}~\cite{OuDe17} (for \texttt{C/C++11}), and \texttt{SAT}‐based~\cite{BiHeCa09,ViWeMa15} methods~\cite{BuAlMa07}.  
 Furthermore, symbolic testing techniques~\cite{EmEnHa15} can be used to expose violations of observational refinement~\cite{FiOhRiYa10,BoEmCoHa15}.  
-Other model checkers, e.g. \texttt{SPIN}/\texttt{PARGLIDER}~\cite{Fl04,VeYaYo09,Ho97,VeYa08} and others, rely on explicit linearization points, which can be quite difficult to determine~\cite{VeYaYo09}.  
+Other model checkers, e.g., \texttt{SPIN}/\texttt{PARGLIDER}~\cite{Fl04,VeYaYo09,Ho97,VeYa08}, rely on explicit linearization points, which can be quite difficult to determine~\cite{VeYaYo09}.  
 Overall, the existing methods are typically bounded, incomplete, or assume some prior knowledge on the concurrent system in question.  
 By contrast, our approach handles unbounded threads and as far as we are aware, is the only one capable of producing a serializability certificate proof.
 
@@ -291,7 +291,7 @@ By contrast, our approach handles unbounded threads and as far as we are aware, 
 %\medskip
 %\noindent
 \subsection{Static Analysis}
-Static methods have been used to prove linearizability for both bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded systems~\cite{BeLeMaRaSa08,Va09,Va10}. However, these techniques typically build on on heuristics or annotated linearization points (for example,~\cite{DrPe14}).  
+Static methods have been used to prove linearizability for both bounded~\cite{AmRiReSaYa07,MaLeSaRaBe08} and unbounded systems~\cite{BeLeMaRaSa08,Va09,Va10}. However, these techniques typically build on heuristics or annotated linearization points (for example,~\cite{DrPe14}).  
 	Lian and Feng~\cite{LiFe13} have also put forth a logic for non‐fixed points.  
 %	Other approaches also depend on linearization points~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16}.  
 	However, we note that annotation‐based analyses~\cite{OhRiVeYaYo10,ZhPeHa15,AbJoTr16} can be inconclusive, as failures can also stem from incorrect annotation by the user, rather than from ``true'' violations of the property checked~\cite{BoEmCoHa15}.
