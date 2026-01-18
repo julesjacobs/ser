@@ -127,13 +127,13 @@ Our decision procedure is implemented in \toolname{}~\cite{ArtifactRepository}, 
 %consisting of over $18{,}200$ LoC 
 written mostly in \texttt{Rust}. 
 %
-The toolchain receives an input program (which can be written in the \toolname{} syntax), and runs the end-to-end serializability checker on it. If the program is serializable, the toolchain returns a network-system level proof thereof; otherwise, if it is not serializable, the toolchain provides a counterexample, i.e., a specific interleaving that induces a multiset of request/response pairs that cannot be obtained in \textit{any} serial execution of the network system.
+The toolchain receives an input program (which can be written in the \toolname{} syntax), and runs the end-to-end serializability checker on it. If the program is serializable, the toolchain returns a network-system level proof thereof; otherwise, if it is not serializable, the toolchain provides a counterexample, i.e., a specific interleaving that induces a multiset of request/response pairs that cannot be obtained in \textit{any} serial execution.
 %
 Our toolchain reduces the problem of deciding the networks system's serializability to an equivalent Petri net reachability problem over an unbounded number of tokens. Our construction guarantees that (i) the Petri net represents every possible request/response multiset that is induced by an interleaving of the original program; and (ii) the reachability query encodes multisets of request/response pairs that \textit{cannot} be induced by serial executions.
 %
 In order to cope with the \texttt{Ackermann}-completeness of unbounded Petri net reachability~\cite{CzWo22,Le22}, we implemented the various optimizations that expedite the search procedure, both at the Petri net level, and also, at the property-encoding level.
 %
-We illustrate the pipeline of \toolname{} in Fig.~\ref{fig:full_program_flow}. \toolname{} has the following modules:
+We illustrate the pipeline of \toolname{} in Fig.~\ref{fig:full_program_flow}. Furthermore, \toolname{} includes the following modules:
  
 
 \begin{enumerate}
@@ -146,7 +146,7 @@ We illustrate the pipeline of \toolname{} in Fig.~\ref{fig:full_program_flow}. \
 %	(see the \texttt{petri.rs} module) 
 representing all possible interleavings of the original program as depicted, for example, in Fig.~\ref{fig:code2ExamplePN}.
 	Each place represents a state (either global or local) or a response. Each token that is not in a place encoding a global state, represents a single in-flight request or a terminated response. 
-Furthermore, we note that the Petri net is encoded in the de facto standard \texttt{NET} format, to support off-the-shelf Petri net model checkers. 
+Furthermore, we note that the Petri net is encoded in the de facto standard \texttt{NET} format, to allow support by off-the-shelf Petri net model checkers. 
 	
 	\item \textbf{Semilinear conversion.} 
 %	This includes a set of modules (\texttt{kleene.rs}, \texttt{semilinear.rs}, and \texttt{presburger.rs}) which 
@@ -166,7 +166,7 @@ This step is done via translation of the serialized NFA (e.g., Fig.~\ref{fig:cod
 	
 	
 	\item \textbf{Proof \& certification.} 
-	If the query is \texttt{SAT}, we reconstruct the reachable marking and validate a network-system level counterexample. Otherwise, if the query is \texttt{UNSAT}, we extract an inductive, per-disjunct proof for non-satisfiability, and then ``stitch'' these to a single inductive serializability certificate. This certificate is then project to the network system, over which we validate (i) initiation, (ii) inductiveness, and (iii) query refutation.
+	If the query is \texttt{SAT}, we reconstruct the reachable marking and validate a network-system level counterexample. Otherwise, if the query is \texttt{UNSAT}, we extract an inductive, per-disjunct proof for non-satisfiability, and then ``stitch'' these to a single inductive serializability certificate. This certificate is then projected to the network system, over which we validate (i) initiation, (ii) inductiveness, and (iii) query refutation.
 	%
 %	If the query is \texttt{SAT}, we reconstruct a non-serializable NS-level execution and validate its correctness. Otherwise, if all disjuncts are \texttt{UNSAT}, our proof module extracts a separate proof for each disjunct. We subsequently ``stitch'' these proofs to a single inductive invariant, and project it to the NS-level, representing a full inductive proof certificate for serializability. Our checker also validates that the inductive invariant is correct, i.e., (i) includes the initial state; (ii) is inductive with regard to the transitions; and (iii) implies that the reachability query is \texttt{UNSAT}.
 	%, and hence, implying serializability. 
@@ -177,15 +177,12 @@ This step is done via translation of the serialized NFA (e.g., Fig.~\ref{fig:cod
 	input size and performance metrics, such as number of places, transitions, constraint complexity, timings and more.
 %
 %
-We generate \texttt{CSV} and \texttt{JSON} logs along with
- analysis. 
-	%
-	We also assemble 
+We generate \texttt{CSV} and \texttt{JSON} analysis logs, and we also assemble 
 an \texttt{HTML} report embedding the original net, symbolic constraints, reachability results, proofs, etc.
 
-\item \textbf{Debug Report Generation.} Finally, a human-readable \texttt{HTML} report is assembled: it embeds the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs. This interactive report allows users to drill down into each transition firing, constraint check, and proof obligation.
+\item \textbf{Debug report generation.} Finally, a human-readable \texttt{HTML} report is assembled: it embeds the original net, symbolic constraints, reachability results, proof outlines, and profiling graphs. This interactive report allows users to drill down into each transition firing, constraint check, and proof obligation.
 	
-	\item \textbf{Output Delivery.} The crate exposes a simple CLI and library API. Users obtain either a Boolean reachability verdict (with optional certificate), raw log files, or a full \texttt{HTML} debug report, depending on invocation flags.
+	\item \textbf{Output delivery.} The toolchain exposes a simple CLI and library API. Users obtain either a Boolean reachability verdict, raw log files, or a full \texttt{HTML} debug report, depending on invocation flags.
 	
 %	\item \textbf{Optimizations.} As formalized in the previous section, we implement multiple optimizations throughout the process.
 %	, both for representing the semilinear sets succinctly and for pruning the Petri Nets. These optimizations significantly reduce the search space and expedite the model-checking process.
@@ -247,14 +244,14 @@ The second distinguishing feature relates to our ongoing work on polyhedral redu
 
 \subsection{Benchmarks} 
 \label{subsec:benchmarks}
-To the best of our knowledge, our tool is the first and only tool capable of (i) checking serializability on programs running \textit{unbounded} threads; and (ii) \textit{proving that serializability holds}.
+To the best of our knowledge, ours is the first and only tool capable of (i) checking serializability on programs running \textit{unbounded} threads; and (ii) \textit{proving that serializability holds}.
 %
 Thus, we have found a lack of standard serializability benchmarks for evaluating our tool. Towards this end, we bridged this gap in the literature by assembling a suite of dozens of benchmarks (which we also uploaded online~\cite{ArtifactRepository}).
 % additional part (from rebuttal to R4) - END
 %Typically, automatically generated $\toolname$ programs do not represent real-world applications or recognizable concurrency patterns. Thus, 
 We believe that this is the first benchmark suite for serializability, and includes instances of \toolname{} programs that are motivated by practical, real-world analogues.
 % additional part (from rebuttal to R4) - END
-Specifically, our suite includes both \texttt{SER} and \texttt{JSON} foramtted programs, with both serializable and non-serializable instances.
+Specifically, our suite includes both \texttt{SER} and \texttt{JSON} formatted programs, with both serializable and non-serializable instances.
 %
 Furthermore, our benchmarks (see Table~\ref{tab:benchmarks-all}) cover a broad range of features, including loops, branching, arithmetic, locks, non-determinism, and more.
 %

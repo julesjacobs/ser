@@ -116,7 +116,7 @@ The NFA's language
 	%
 	A trace of request/response pairs is accepted by the NFA iff there exists a serial execution of the network system that induces it.
 	%	
-In this case, serial executionsinduce only ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), and the only reachable global state is [\texttt{X=0}].
+In this case, serial executions induce only ({\color{ForestGreen}$\blacklozenge_\text{main}$}/{\color{red}$\blacklozenge_1$}), and the only reachable global state is [\texttt{X=0}].
 %	Due to the aforementioned construction, a string of request/response pairs is accepted by the NFA iff there exists a serial execution of the NS that induces it.
 %
 %	As the states encode the global variable values, and the edges encode request/response pairs for all serial executions, the  
@@ -241,20 +241,20 @@ In this case, serial executionsinduce only ({\color{ForestGreen}$\blacklozenge_\
 %	\item 
 	\textbf{Step 2: Interleaving Petri net.}
 %	
-Next, we translate the network system into a Petri net \(N_{\mathrm{int}}(\mathcal S)\). Each \textit{non-sink place} of the Petri net represents either a global state assignment or a local states of in-flight packets. Each \textit{sink place} represents request/response pairs of terminated packets.
+Next, we translate the network system into a Petri net \(N_{\mathrm{int}}(\mathcal S)\). Each \textit{non-sink place} of the Petri net represents either a global state assignment or a local state of in-flight packets. Each \textit{sink place} represents request/response pairs of terminated packets.
 %
 The \textit{transitions} between states are defined to correspond to the \(\delta\), \(req\), and \(resp\) mappings of the network system. We note that the \(req\) transitions can fire without any input tokens in order to correspond to external spawning of arbitrarily-many requests.
 %
 Finally, we define \(M_0\) to be an initial marking encoding a single token in the non-sink place corresponding to \(g_0\), i.e., the initial global state of the network system.
 %
-This construction is formalized in full in  Appendix~\ref{appendix:NS-to-PN-formulation}, and guarantees that each multiset of all markings \(M\) (with \(M_0 \xrightarrow{}^{*} M\)) when projected (via \(\pi\)) to the sink places, corresponds to a multiset of (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs, as induced by a network system interleaving, i.e., \(\mathsf{Int}(\mathcal S)=\{\pi(M) \mid M \in R(N_{\mathrm{int}}(\mathcal S))\}\).
+This construction is formalized in full in  Appendix~\ref{appendix:NS-to-PN-formulation}, and guarantees that each token multiset capturing a marking \(M\) (with \(M_0 \xrightarrow{}^{*} M\)) when projected (via \(\pi\)) to the sink places, corresponds to a multiset of (${{\color{ForestGreen}\blacklozenge_{\mathit{req}}}/{\color{red}\blacklozenge_{\mathit{resp}}}}$) pairs, as induced by a network system interleaving, i.e., \(\mathsf{Int}(\mathcal S)=\{\pi(M) \mid M \in R(N_{\mathrm{int}}(\mathcal S))\}\).
 
 
 
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
 %	\textit{Notation.}
-Continuing our running example, the network system induces the Petri net presented in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings. The places \textcolor{blue}{$P_2$} and \textcolor{blue}{$P_3$} respectively correspond to the global states \textcolor{blue}{[X=1]} and \textcolor{blue}{[X=0]}, and places $P_1$, $P_4$, $P_5$, and $P_6$ correspond to the local states of in-flight requests, i.e., the assignments to each request’s local variables, coupled with the remaining \toolname{} program code to execute. Similarly, places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} correspond to responses {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$}, respectively. Thus, each token models either an active (in-flight) request, a completed request/response pair, or --- when the token resides in a place denoting the global state --- the current global state of the network system. Finally, transitions are induced by the network system’s mappings ($\delta/req/resp$): they either advance the program by a single step (e.g., \(t_2,t_3,t_4,\) and \(t_5\), based on $\delta$), represent external spawning of a new request (e.g., transition $\textcolor{ForestGreen}{t_1}$, which corresponds to request {\color{ForestGreen}$\blacklozenge_{\mathrm{main}}$} based on $req$),
+Continuing our running example, the network system induces the Petri net presented in Fig.~\ref{fig:code2ExamplePN}, encoding all possible interleavings. The places \textcolor{blue}{$P_2$} and \textcolor{blue}{$P_3$} respectively correspond to the global states \textcolor{blue}{[X=1]} and \textcolor{blue}{[X=0]}, and places $P_1$, $P_4$, $P_5$, and $P_6$ correspond to the local states of in-flight requests, i.e., the assignments to each request’s local variables, coupled with the remaining \toolname{} program code to execute. Similarly, places \textcolor{red}{$P_7$} and \textcolor{red}{$P_8$} correspond to responses {\color{red}$\blacklozenge_1$} and {\color{red}$\blacklozenge_0$}, respectively. Thus, each token models either an active (in-flight) request, a completed request/response pair, or --- when the token resides in a place denoting the global state --- the current global state of the network system. Finally, transitions are induced by the network system’s mappings ($\delta/req/resp$): they either advance the program by a single step (e.g., \(t_2,t_3,t_4,\) and \(t_5\), based on $\delta$), represent external spawning of a new request (e.g., transition $\textcolor{ForestGreen}{t_1}$, which corresponds to spawning request {\color{ForestGreen}$\blacklozenge_{\mathrm{main}}$} based on $req$),
 or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{red}{t_7}$, based on $resp$).
 \end{tcolorbox}
 
@@ -290,7 +290,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 	
 	\begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
-	In our running example, we automatically generate the following reachability query\footnote{Note that, if not for the equality constraints, the problem would have been a PN \textit{coverability} query, which is easier~\cite{Ra78} that general reachability.} for the Petri net presented in Fig.~\ref{fig:code2ExamplePN}. The query encodes a target semilinear set by imposing on the tokens the following constraints:
+	In our running example, we automatically generate the following reachability query\footnote{Note that, if not for the equality constraints, the problem would have been a PN \textit{coverability} query, which is easier~\cite{Ra78} than general reachability.} for the Petri net presented in Fig.~\ref{fig:code2ExamplePN}. The query encodes a target semilinear set by imposing on the tokens the following constraints:
 	%
 	%Regarding the aforementioned program, we automatically generate the following reachability query~\footnote{If not the equality constraints, the problem would have been considered a \textit{coverability} query which is easier~\cite{Ra78}.} for the Petri net in Figure~\ref{fig:code2ExamplePN} we encode a target semilinear set with the following constraints on the token distribution:
 	%
@@ -321,11 +321,11 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 	\]
 	
 	\begin{itemize}
-		\item [\sat]: induces a counterexample interleaving \(M\) with
+		\item [\sat]: is induced by a counterexample interleaving \(M\) with
 		\(\pi(M)\notin \mathsf{Ser}(\mathcal S)\), which can further be validated by simulating the network system \(\mathcal S\).
 %		We validate a reachable trace and embed it into the NS semantics, yielding a valid interleaving that produces request/response pairs unattainable under any serial execution.
 		
-		\item [\unsat]: induces an inductive invariant of
+		\item [\unsat]: is induced by an inductive invariant of
 		\(N_{\mathrm{int}}(\mathcal S)\), which we then back-translate to a network-system-level proof of serializability 
 %		(Appendix~\ref{appendix:ns-serializable}).
 %		
@@ -339,7 +339,7 @@ or return a response (e.g., transitions $\textcolor{red}{t_6}$ and $\textcolor{r
 
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 	\textbf{Example.}
-	In the running example, the target semilinear set \(\mathcal {F}\) is reachable (this is not surprising, as it corresponds to a non-serial \toolname{} program). For examples, the following marking is included in \(\mathcal {F}\):
+	In the running example, the target semilinear set \(\mathcal {F}\) is reachable (this is not surprising, as it corresponds to a non-serial \toolname{} program). For example, the following marking is included in \(\mathcal {F}\):
 	
 	\[
 	M^* = \{\textcolor{blue}{P_3}(1),\;\textcolor{red}{P_7}(1),\;\textcolor{red}{P_8}(1)\}
@@ -351,7 +351,7 @@ We also present in Table~\ref{tab:PetriNetFiringCounterexample} the full, step-b
 	%
 %	As the target set encodes request/response pairs that are \textit{unattainable} via serial executions, and as the PN encodes all possible interleavings, this firing sequence also corresponds as a counterexample demonstrating the program is non-serializable. 
 	%
-	Specifically, this reachable marking encodes $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ which, indeed, can only be induced by a non-serial execution of Listing~\ref{lst:MotivatingExample2NonSer}.
+	Specifically, this reachable marking encodes $\{{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_0},{\color{ForestGreen}\blacklozenge_\text{main}}/{\color{red}\blacklozenge_1}\}$ which, indeed, can only be induced by a non-serial execution of the program in Listing~\ref{lst:MotivatingExample2NonSer}.
 \end{tcolorbox} 
 
 
@@ -427,7 +427,7 @@ We also present in Table~\ref{tab:PetriNetFiringCounterexample} the full, step-b
 Our core decision procedure reduces serializability to checking Petri net reachability over a target semilinear set. 
 As the serial executions form a regular language (step 1), their Parikh image is semilinear by Parikh's theorem, with size that is exponential in the NFA.
 The PN encoding the interleavings (step 2) has $O(|G| + (|\mathit{REQ}| \times |L|) + (|\mathit{REQ}| \times |\mathit{RESP}|))$ places and has $O(|\mathit{REQ}|\times (1+ |\delta| + |\mathit{RESP}|))$ transitions.
-The reachability query (step 3) asks whether the Petri net can reach a marking in the semilinear set of the outputs that cannot be obtained by non-serial executions. This is decidable, but with \texttt{Ackermann}-complete~\cite{CzWo22,Le22} complexity.
+The reachability query (step 3) asks whether the Petri net can reach a marking that cannot be obtained by serial executions. This is decidable, but with \texttt{Ackermann}-complete~\cite{CzWo22,Le22} complexity.
 Thus, without further optimizations, even simple examples can generate queries that are intractable in practice. 
 Our optimizations (see \Cref{sec:optimizations}) \textit{drastically} reduce both the time and space complexity, as elaborated next.
 

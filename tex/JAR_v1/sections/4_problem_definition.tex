@@ -380,7 +380,8 @@ The network system $\mathcal{S}$ is said to be \emph{serializable} if and only i
 \subsection{From SER Programs to Network Systems}
 \label{subsec:SerToNsTranslation}
 %
-The network system abstraction does not merely encode concurrent behaviors in the SDN domain, but can also be naturally translated from \toolname{} programs. 
+The network system abstraction not only captures concurrent behaviors in the SDN domain, but also arises naturally as a translation target for \toolname{} programs.
+%
 More formally, given an input \toolname{} program \(P_0\) with global variables (\texttt{VARS}), local variables (\texttt{vars}), mappings \(g,\rho\) from these global/local variables to a finite number of elements from a value set \texttt{V} --- we define the initial global/local states, $g_0$ and $\rho_0$, which respectively assign $0$ to all global and local variables. 
 Building on the small-step semantics ($\pstep$, defined in full in subsec.~\ref{subsec:ser-semantics}), we define the network system $(G, L, \mathit{REQ}, \mathit{RESP}, g_0, \delta, \mathit{req}, \mathit{resp})$ as follows:
 
@@ -492,7 +493,7 @@ Building on the small-step semantics ($\pstep$, defined in full in subsec.~\ref{
 %
 \begin{tcolorbox}[colback=black!5!white, colframe=black, boxrule=1pt]
 \textbf{Example.}
-We demonstrate the network system corresponding to the non-serializable \toolname{} program in Listing~\ref{lst:MotivatingExample2NonSer}:
+We demonstrate this translation for the network system corresponding to the non-serializable \toolname{} program in Listing~\ref{lst:MotivatingExample2NonSer}:
 %
 \begin{itemize}
 \item 
@@ -973,10 +974,10 @@ return y
 	\end{tikzpicture}
 	\caption{
 	The network system from the translated \toolname{} program in Listing~\ref{lst:MotivatingExample2NonSer}. 
-	Local states (depicted by yellow rectangles \fcolorbox{black}{brightyellow}{\rule{0pt}{7pt}\rule{7pt}{0pt}}) are the request-local variable assignments coupled with the remaining code; edges indicate transitions of global states  (depicted by blue rectangles \fcolorbox{black}{blue!10}{\rule{0pt}{7pt}\rule{7pt}{0pt}}). 
+	Local states are the request-local variable assignments (depicted by yellow rectangles \fcolorbox{black}{brightyellow}{\rule{0pt}{7pt}\rule{7pt}{0pt}}) coupled with the remaining code; edges indicate transitions of global states  (depicted by blue rectangles \fcolorbox{black}{blue!10}{\rule{0pt}{7pt}\rule{7pt}{0pt}}). 
 	The request and response labels are denoted by {\color{ForestGreen!20}$\blacklozenge$} (green) and
 		{\color{RedViolet!20}$\blacklozenge$} (red) diamonds, respectively.
-		From left to right: a request label ${\color{ForestGreen}\blacklozenge_{\text{main}}}$ spawns a new request with initial local variable assignment \texttt{[y=0]} coupled with the full, remaining program to execute; after yielding, the $\delta$ transition steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, and subsequently updates the local variable \texttt{y} based on the global value of \texttt{X}, which is then returned as the final response to the user (either as {\color{red}$\blacklozenge_0$} or {\color{red}$\blacklozenge_1$}).
+		From left to right: a request label ${\color{ForestGreen}\blacklozenge_{\text{main}}}$ spawns a new request with an initial local variable assignment \texttt{[y=0]} coupled with the full, remaining program to execute; after yielding, the $\delta$ transition steps with global state \texttt{[X=1]} and local state \texttt{[y=0]}, and subsequently updates the local variable \texttt{y} based on the global value of \texttt{X}, which is then returned as the final response to the user (either as {\color{red}$\blacklozenge_0$} or {\color{red}$\blacklozenge_1$}).
 		}
 		%
 %	\caption{The Network system for Listing~\ref{lst:MotivatingExample2NonSer}. 

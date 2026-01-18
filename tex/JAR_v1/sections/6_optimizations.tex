@@ -15,7 +15,7 @@ An extensive empirical evaluation of these optimizations appears in \Cref {sec:e
 When checking for Petri net reachability, many transitions and places might be irrelevant to the specific target set that is checked~\cite{Ra12}.  
 	Before symbolic reasoning, we slice irrelevant places and transitions by iteratively combining forward passes and backward passes:  
 	the forward passes over-approximate the places that are reachable from the initial marking $M_0$; and symmetrically,   
-	the backward passes traverse in reverse from any place that can potentially influence a target constraint (and hence, over-approximating the places that can contribute to it).
+	the backward passes traverse in reverse from any place that can potentially influence a target constraint (and hence, over-approximate the places that can contribute to it).
 	Then, until reaching a fixed point, we iteratively remove places and transitions that are non-forward-reachable and
 	non-backward-relevant.  
 	This process is formally defined in Theorem~\ref{thm:bidirectional-pruning}, and is illustrated in Fig.~\ref{fig:bidirectional_pruning}. We prove the theorem's soundness in Appendix~\ref{appendix:BidirectionalProof}.

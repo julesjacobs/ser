@@ -21,7 +21,7 @@ Second, we currently build on \texttt{SMPT}~\cite{AmDa23}, which is incomplete a
 Third, our network system abstraction is currently restricted to a simple request/response pattern and cannot capture more complex interactions, such as callbacks, streaming, or partial responses.
 %Fourth, while we can verify programs with nondeterministic choice operators, we cannot handle programs with unbounded data domains or complex data structures beyond integer variables.
 %
-Finally, \toolname{} targets programs with finite reachable state: each request must be restricted to finite (reachable) local state and the program must induce finite (reachable) global state, though with unlimited requests. Hence, applying \toolname{} to real-world systems requires that the systems generate only a finite \textit{reachable} state space, otherwise, the network system is intractable.
+Finally, \toolname{} targets programs with finite reachable state: each request must be restricted to finite (reachable) local state and the program must induce finite (reachable) global state, though with unlimited requests. Hence, applying \toolname{} to real-world systems requires that these generate only a finite \textit{reachable} state space, otherwise, the network system is intractable.
 %
 This setting is similar to the one assumed by probabilistic model checkers such as \texttt{STORM}~\cite{DeJuKaVo17} and \texttt{PRISM}~\cite{KwNoPa02}.
 %
@@ -34,7 +34,7 @@ This setting is similar to the one assumed by probabilistic model checkers such 
 \textbf{Additional optimizations.}
 To further improve scalability, we are adapting \textit{polyhedral reductions}~\cite{AmBeDa21,amat2022polyhedral}, a structural reduction~\cite{Be87,BeLeDa20} $(N_1, m_1) \vartriangleright_E (N_2, m_2)$ where $N_2$ is a simpler Petri net and $E$ allows reconstructing the state space of $N_1$. If successful, this could allow verifying the reduced net $N_2$, and then lifting the proofs back to the original net $N_1$.
 %
-Furthermore, we believe an additional optimization avenue lies in \textit{over-approximating} the state space to decide serializability faster. In this context, our current approach already leverages this concept in the underlying model checker, which leverages the \textit{state equation} abstraction~\cite{Mu77}. We expect further approximation-based techniques to improve scalability gains even more.
+Furthermore, we believe an additional optimization avenue lies in \textit{over-approximating} the state space to decide serializability faster. In this context, our current approach already leverages this concept in the underlying model checker, which uses the \textit{state equation} abstraction~\cite{Mu77}. We expect further approximation-based techniques to improve scalability gains even more.
 %
 Finally, additional optimizations involve  steps to short-circuit the algorithmic pipeline of our decision procedure. For example, we currently generate the reachability query $\mathcal{F}$ by: (i) using Kleene’s theorem to translate the serial NFA into a regular expression; (ii) using Parikh’s construction to translate the regular expression into a semilinear set; and then (iii) complementing this resulting semilinear set.
 %
@@ -48,7 +48,7 @@ However, there are methods (for example, by Verma et al.~\cite{VeSeSc05}) that c
 %
 Another next step we plan is formalizing  the certificate checking procedure in a proof assistant (such as \texttt{Rocq}~\cite{Rocq}). This extension would entail (i) developing a novel verifier for the Petri net invariants that we use; and also (ii) proving theorems connecting serializability to invariant validity.
 %
-This would likely also require highly non-trivial steps, e.g., extending existing tactics such as \texttt{LIA} (Linear Integer Arithmetic), as it currently does not support full Presburger arithmetic --- an important requirement of our underlying logic.
+This would also require highly non-trivial steps, e.g., extending existing tactics such as \texttt{LIA} (Linear Integer Arithmetic), as it currently does not support full Presburger arithmetic --- an important requirement of our underlying logic.
 
  
 %\todo{fix}
@@ -120,7 +120,7 @@ This natural translation also motivated us to evaluate our toolchain on models o
 %
 Moreover, we view our framework to be applicable beyond the SDN domain.
 %
-More concretely, our network system model captures distributed state together with message-passing/RPC-style concurrency, which maps naturally onto database transactions. As an illustration, consider our \textit{snapshot-monitoring benchmark} (see \Cref{sec:tour}). 
+Specifically, our network system model captures distributed state together with message-passing/RPC-style concurrency, which maps naturally onto database transactions. As an illustration, consider our \textit{snapshot-monitoring benchmark} (see \Cref{sec:tour}). 
 
 
 

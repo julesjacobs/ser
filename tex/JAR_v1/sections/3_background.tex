@@ -10,14 +10,14 @@
 
 %\textbf{Petri nets.} 
 \subsection{Petri Nets}
-A Petri net $N$ is defined as a five-tuple $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with $P$ being a set of places, $T$ being a set of transitions, $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$ being flow functions, and  $M_0\in\mathbb N^P$ being an initial distribution (a.k.a. \textit{marking}) of tokens on places.  
+A Petri net $N$ is defined as a five-tuple $N=(P,T,\mathsf{pre},\mathsf{post},M_0)$ with $P$ being a set of places, $T$ being a set of transitions, $\mathsf{pre},\mathsf{post}:T\to\mathbb N^P$ being flow functions, and  $M_0\in\mathbb N^P$ being an initial distribution (a.k.a. \textit{marking}) of tokens in places.  
 Transition $t$ is said to be \textit{enabled} at marking $M \in \mathbb N^P$ iff coordinate-wise it holds that $M\ge \mathsf{pre}(t)$, i.e., marking $M$ has at least as many tokens as is required by the flow function $\mathsf{pre}(t)$.
 %
 A transition \(t\) that is enabled may or may not \textit{fire}. If it fires, it consumes tokens based on $\mathsf{pre}(t)$, and produces tokens based on $\mathsf{post}(t)$. Firing a transition results in a new marking $M'$ (denoted as $M\xrightarrow{t}M'$), and with $M'= M - \mathsf{pre}(t) + \mathsf{post}(t)$. Differently put, firing a transition consumes input tokens and produces output tokens.
 %
 A single firing can naturally be extended to a firing \textit{sequence} $\sigma = t_1\cdots t_k$ (denoted as $M \xrightarrow{\sigma} M'$), giving rise to a sequence of markings $M_0,\ldots,M_k$ such that $M=M_0$, $M'=M_k$, and for all $i$ it holds that $M_i \xrightarrow{t_{i}} M_{i+1}$. 
 % 
-We define the (possibly infinite) set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all the markings of the Petri net, that are reachable from the initial marking $M_0$.
+We define the (possibly infinite) set $R(N)=\{M \mid \exists \sigma\in T^*. M_0 \xrightarrow{\sigma} M\}$ to include all the markings of the Petri net that are reachable from the initial marking $M_0$.
 % 
 Given a Petri net $N$ and a marking $M$, the \textit{reachability problem} asks  whether $M\in R(N)$. 
 %
@@ -92,7 +92,7 @@ M_0 = (0,1,0,0,0,0)^\top.
 	\[
 	M_{nr} = (0,1,1,0,0,0)^\top.
 	\]
-	Since producing a token at \(P_3\) (via \(t_2\)) necessarily consumes the only token in \(P_2\) and, as no transition replenishes \(P_2\), then it is impossible for these two places to \textit{simultaneously} hold a single token in any reachable firing. However, we note that if the initial marking were 
+	Since producing a token at \(P_3\) (via \(t_2\)) necessarily consumes the only token in \(P_2\) and, as no transition replenishes \(P_2\), it is impossible for these two places to \textit{simultaneously} hold a single token in any reachable firing. However, we note that if the initial marking were 
 	
 	\[
 	M_0' = (0,2,0,0,0,0)^\top,

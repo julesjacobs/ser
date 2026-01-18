@@ -8,7 +8,7 @@ In the concurrent systems domains, from software-defined networks (SDNs) to data
 Furthermore, serializability violations can lead to various anomalies, including routing cycles in SDNs, and lost database updates.
 Although serializability can be trivially checked for a \textit{fixed} number of threads with known execution traces (e.g., by enumerating every interleaving possible) --- it is \textit{undecidable} for general programs, and requires incomplete bounded model checking, runtime verification, and additional methods~\cite{WaSt06a,WaSt06b,FlFrYi08,FaMa08,SiMaWaGu11a,SiMaWaGu11b,Pa79,AlMcPe96,BiEn19}.
 
-About a decade ago, Bouajjani et al.~\cite{BoEmEnHa13} have proven that for programs with bounded-size state, serializability is, in fact, decidable even for an \emph{unbounded} number of in-flight threads, with each thread running for an \emph{unbounded} number of steps. Our paper makes this theoretical decidability result a reality and presents the first decision procedure. Towards this end, we put forth practical algorithms that either prove non-serializability (with a counterexample interleaving trace), or alternatively, prove serializability (with a proof certificate).
+About a decade ago, Bouajjani et al.~\cite{BoEmEnHa13} have proven that for programs with bounded-size state, serializability is, in fact, decidable even for an \emph{unbounded} number of in-flight threads, with each thread running for an \emph{unbounded} number of steps. Our paper makes this theoretical decidability result a reality by introducing the first decision procedure. Towards this end, we put forth practical algorithms that either prove non-serializability (with a counterexample interleaving trace), or alternatively, prove serializability (with a proof certificate).
 % 
 We illustrate the problem with the following toy examples:
 
@@ -64,7 +64,7 @@ We illustrate the problem with the following toy examples:
 These toy programs are written in our \toolname{} language for modeling serializability.
 Every \toolname{} program defines \textbf{request handlers} (one handler, \texttt{main}, in the examples) that the external environment (the user) can invoke arbitrarily as a thread of execution.
 After generating a request, it is processed based on the associated program (the body of the handler of that request), until a final \textbf{response} (a value) is returned to the user. Concurrent interleavings of all active requests is expressed via the \(\yieldkw\)
- statement which, when called, pauses the current request and dispatches another request which can continue from where it last stopped. In \toolname{} programs, we denote \textbf{shared (global) variables} with uppercase characters (e.g., \texttt{X} in our running example) and \textbf{request-specific (local) variables} are denoted with lowercase characters (e.g., \texttt{y} in our running example).
+ statement which, when called, pauses the current request and dispatches another request which can continue from where it last stopped. In \toolname{} programs, we denote \textbf{shared (global) variables} with uppercase characters (e.g., \texttt{X} in our running examples) and \textbf{request-specific (local) variables} are denoted with lowercase characters (e.g., \texttt{y} in our running examples).
 %
 %
 %
@@ -72,13 +72,13 @@ Observe the first program presented in Listing~\ref{lst:MotivatingExample1Ser}. 
 However, in the second program (Listing~\ref{lst:MotivatingExample2NonSer}), the \texttt{yield} command allows requests to interleave which, in turn, makes the program \emph{non-serializable}, i.e., can generate observable behaviors that no serial execution can induce. For example, consider two requests to \texttt{main} that interleave concurrently:
 %\begin{enumerate}
 %\item 
-Request A executes \texttt{[X := 1]}, subsequently yielding to Request B; which is then run and executes
+Request A executes \texttt{[X := 1]}, subsequently yielding to Request B; which executes
 \texttt{[X := 1]}, then yields to itself, reads \texttt{X} (which is 1), assigns \texttt{[X := 0]}, and then returns 1 to the user.
 Finally, 
 %\item 
 Request A resumes from where it previously yielded, reads \texttt{X} (which is now 0), and returns 0 to the user.
 %\end{enumerate}
-This interleaving induces a multiset \{(\texttt{main}, 0), (\texttt{main}, 1)\} of (request, response) pairs, which cannot be obtained via any serial execution --- in which any \texttt{main} request always returns 1 and never 0.
+This interleaving induces a multiset \{(\texttt{main}, 0), (\texttt{main}, 1)\} of (request, response) pairs, which cannot be obtained via any serial execution --- where a \texttt{main} request always returns 1 and never 0.
 Of course, having \texttt{yield} commands does not automatically guarantee that an execution is non-serializable. For example, observe our third code snippet (Listing~\ref{lst:MotivatingExample3Ser}). At first glance, it seems different than the first program (Listing~\ref{lst:MotivatingExample1Ser}), however, both programs are semantically equivalent. This program uses an additional global variable \texttt{L} (a \textit{lock}), that guarantees that any interleaving will still constrain two threads from generating non-serial behaviors, such as returning a response of 0.
 %
 These toy examples demonstrate that even for simply programs with few threads --- reasoning about serializability could be quite complex.
@@ -90,7 +90,7 @@ For a tour of additional examples, we refer the reader to Sec~\ref{sec:tour}.
 \noindent
 \textbf{Problem Definition.}
 We formally define an \textbf{observable execution} of a given \toolname{} program as a (finite) multiset of (request, response) pairs induced by a \textit{specific} interleaving of requests. More generally, this allows defining the \textbf{observable behavior} as the (infinite) set of induced (request,response) multisets. This infinite set captures all possible observable executions that are induced.
-We say that a \toolname{} program is \textbf{serializable} if and only if every possible observable behavior can be induced by a serial execution without interleavings, i.e., when running each request, one at a time, until completion. Intuitively, a \toolname{} program is serializable if and only if removing all \texttt{yield} statements doesn't change the program's semantics, and hence, the observable behavior.
+We say that a \toolname{} program is \textbf{serializable} if and only if every possible observable execution can be induced by a serial execution without interleavings, i.e., when running each request, one at a time, until completion. Intuitively, a \toolname{} program is serializable if and only if removing all \texttt{yield} statements doesn't change the program's semantics, and hence, the observable behavior.
 %
 \emph{In this paper, we present our \toolname{} language and the accompanying decision procedure for this problem.} Specifically, we note that, to our knowledge, \toolname{} is the first tool capable of \textbf{automatically} proving that serializability holds --- without requiring any manual work by the user or assuming specific relaxations on the underlying program.
 
@@ -106,7 +106,7 @@ Our decision procedure builds on theory presented by Bouajjani et al.'s reductio
 \smallskip
 \noindent
 \textbf{Our Approach.}
-To address this challenge, we introduce our \textit{network systems} abstraction, which models concurrent programs of users spawning \textit{request} threads, which subsequently, manipulate shared and local state, and eventually return a \textit{response} to the user. In practice, \toolname{} programs are compiled into abstract network systems, which we reduce to Petri nets that capture the concurrent nature of the original program. Then, our decision procedure translates the serializability question on unbounded threads to a Presburger set reachability problem on the Petri net markings.
+To address this challenge, we introduce our \textit{network systems} abstraction, which models concurrent programs of users spawning \textit{request} threads that manipulate shared and local state, and eventually return a \textit{response} to the user. In practice, \toolname{} programs are compiled into abstract network systems, which we reduce to Petri nets that capture the concurrent nature of the original program. Then, our decision procedure translates the serializability question on unbounded threads to a Presburger set reachability problem on the Petri net markings.
 %
 %As a backend solver, we use SMPT~\cite{AmDa23}, which is a state-of-the-art tool for Petri net reachability.
 While our approach is sound (and never incorrectly claims serializability), and despite being theoretically complete --- the underlying reachability query may time out on some complex instances, thus limiting completeness in practice. However, this is unavoidable due to the \texttt{Ackermann}-hardness of the unbounded PN reachability problem.
@@ -136,7 +136,7 @@ Relevant background on semilinear sets, Petri nets, and their reachability probl
 %
 Then, in \Cref{sec:problem-definition}, we present our \toolname{} concurrency language and the accompanying Network System program abstraction that \toolname{} programs translate to.
 %
-The decision procedure, as well as its proof certificate engine are presented in \Cref{sec:formal-results}.
+The decision procedure and its proof certificate engine are presented in \Cref{sec:formal-results}.
 %
 Our multiple optimizations are presented in \Cref{sec:optimizations}.
 %
@@ -165,13 +165,13 @@ shorter, published paper across multiple axes, including:
 	We extend the material on optimizations to include a proof of the bidirectional slicing soundness.
 	
 	\item
-	We extensively evaluate all four optimizations, demonstrating that our optimizations indeed reduce the space and time complexity by orders of magnitude, as presented by experiments that were not included in the main text of our TACAS proceedings paper.
+	We extensively evaluate all four optimizations, demonstrating that they indeed curtail the search space by orders of magnitude, as supported by experiments that were not included in the main text of our TACAS proceedings paper.
 	
 	\item 
 	We elaborate on all the test suite programs, including both serializable and non-serializable benchmarks.
 	
 	\item 
-	We formalize the translation of network systems models to Petri nets representing interleaved programs.
+	We formalize the translation of network system models to Petri nets representing interleaved programs.
 	
 	
 	\item 

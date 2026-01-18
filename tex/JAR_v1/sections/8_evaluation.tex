@@ -68,7 +68,7 @@ Furthermore, based on whether the benchmark is serializable or not, we also obse
 among benchmarks of non-serializable programs, the counterexample generation process takes significantly longer than the validation process, and dominates the overall runtime. 
 However, among serializable benchmarks, an opposite trend is observed --- with the validation time dominating the overall runtime. 
 %
-This is unsurprising, since validating a candidate counterexample amounts to a polynomial-time simulation of the networked system to confirm its feasibility.
+This is unsurprising, since validating a candidate counterexample amounts to a polynomial-time simulation of the network system to confirm its feasibility.
 %
 %We also note that when analyzing the benchmarks based on their serializability, there is a clear difference in their average runtime --- while in the serializable benchmarks the validation of the certificate takes significantly longer than generating the certificate (i.e., the proof) --- in the non serializable benchmarks this trend is reversed, with the overall time being dominated by the generation of the counterexample. This of course is not surprising, as counterexample generation can be done in polynomial time by emulating our network system and checking that the final counterexample can indeed be attained.
 %
